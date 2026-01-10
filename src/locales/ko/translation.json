@@ -3,6 +3,10 @@
     "title": "BrainRush",
     "subtitle": "Speed & Intelligence"
   },
+  "common": {
+    "cancel": "취소",
+    "confirm": "확인"
+  },
   "menu": {
     "normal": {
       "title": "일반 모드",
@@ -18,6 +22,7 @@
     },
     "settings": "설정",
     "login": "로그인",
+    "logout": "로그아웃",
     "profile": "프로필"
   },
   "user": {
@@ -30,7 +35,8 @@
     "sound": "소리",
     "masterVolume": "마스터 볼륨",
     "deleteAccount": "회원 탈퇴",
-    "deleteAccountConfirm": "정말로 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+    "deleteAccountConfirm": "정말로 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+    "logoutConfirm": "정말로 로그아웃 하시겠습니까?"
   },
   "profile": {
     "nicknamePlaceholder": "닉네임",

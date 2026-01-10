@@ -31,6 +31,13 @@ const Profile = () => {
     };
 
     const handleLogout = async () => {
+        const confirmed = await confirm(
+            t('menu.logout'),
+            t('settings.logoutConfirm')
+        );
+
+        if (!confirmed) return;
+
         playSound('click');
         await signOut();
         navigate('/');
@@ -70,7 +77,7 @@ const Profile = () => {
     const handleDeleteAccount = async () => {
         const confirmed = await confirm(
             t('settings.deleteAccount'),
-            t('deleteAccountConfirm') || 'Are you sure you want to delete your account? This action cannot be undone.'
+            t('settings.deleteAccountConfirm')
         );
 
         if (!confirmed) return;

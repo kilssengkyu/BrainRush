@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 interface ConfirmDialogProps {
     title: string;
@@ -20,6 +21,8 @@ const modalVariants = {
 };
 
 export const ConfirmDialog = ({ title, message, onConfirm, onCancel }: ConfirmDialogProps) => {
+    const { t } = useTranslation();
+
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <motion.div
@@ -44,13 +47,13 @@ export const ConfirmDialog = ({ title, message, onConfirm, onCancel }: ConfirmDi
                         onClick={onCancel}
                         className="px-4 py-2 rounded-lg text-gray-300 hover:bg-gray-700 transition-colors"
                     >
-                        Cancel
+                        {t('common.cancel')}
                     </button>
                     <button
                         onClick={onConfirm}
                         className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-medium transition-colors"
                     >
-                        Confirm
+                        {t('common.confirm')}
                     </button>
                 </div>
             </motion.div>

@@ -1,10 +1,15 @@
 {
     "title": "BrainRush",
+    "common": {
+        "cancel": "キャンセル",
+        "confirm": "確認"
+    },
     "menu": {
         "play": "ゲーム開始",
         "rank": "ランク戦",
         "friendly": "フレンド対戦",
-        "settings": "設定"
+        "settings": "設定",
+        "logout": "ログアウト"
     },
     "settings": {
         "title": "設定",
@@ -12,7 +17,10 @@
         "sound": "効果音",
         "masterVolume": "マスターボリューム",
         "volume": "音量",
-        "back": "戻る"
+        "back": "戻る",
+        "deleteAccount": "アカウント削除",
+        "deleteAccountConfirm": "本当にアカウントを削除しますか？この操作は取り消せません。",
+        "logoutConfirm": "本当にログアウトしますか？"
     },
     "game": {
         "waiting": "ゲーム待機中...",

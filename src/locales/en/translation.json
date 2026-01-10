@@ -3,6 +3,10 @@
         "title": "BrainRush",
         "subtitle": "Speed & Intelligence"
     },
+    "common": {
+        "cancel": "Cancel",
+        "confirm": "Confirm"
+    },
     "menu": {
         "normal": {
             "title": "Normal Mode",
@@ -18,6 +22,7 @@
         },
         "settings": "Settings",
         "login": "Login",
+        "logout": "Logout",
         "profile": "Profile"
     },
     "user": {
@@ -30,7 +35,8 @@
         "sound": "Sound",
         "masterVolume": "Master Volume",
         "deleteAccount": "Delete Account",
-        "deleteAccountConfirm": "Are you sure you want to delete your account? This action cannot be undone."
+        "deleteAccountConfirm": "Are you sure you want to delete your account? This action cannot be undone.",
+        "logoutConfirm": "Are you sure you want to logout?"
     },
     "profile": {
         "nicknamePlaceholder": "Nickname",
