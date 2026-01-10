@@ -10,29 +10,37 @@ export const useMatchmaking = (
     const [searchRange, setSearchRange] = useState<number>(0);
     const searchInterval = useRef<ReturnType<typeof setInterval> | null>(null);
 
-    const startSearch = async () => {
-        console.log('startSearch called. Profile:', profile);
+    const startSearch = async (mode: 'rank' | 'normal' = 'rank') => {
+        console.log(`startSearch called. Mode: ${mode}, Profile:`, profile);
+
         if (!profile) {
             console.error('startSearch aborted: No profile found.');
             return;
         }
+
         setStatus('searching');
-        setSearchRange(50);
 
-        let currentRange = 50;
+        // If Normal Mode, Start with huge range immediately (Ignore Elo)
+        const initialRange = mode === 'normal' ? 2000 : 50;
+        setSearchRange(initialRange);
+
+        let currentRange = initialRange;
         const myMMR = profile.mmr || 1000;
-
-        console.log(`Starting search. My MMR: ${myMMR}`);
 
         // Initial attempt
         await attemptMatch(myMMR, currentRange);
 
         // Start Loop
         searchInterval.current = setInterval(async () => {
-            currentRange += 50; // Expand range by 50 every second
+            if (mode === 'rank') {
+                currentRange += 50; // Slowly expand for Rank
+            } else {
+                // Keep wide range for Normal
+                currentRange = 5000;
+            }
             setSearchRange(currentRange);
             await attemptMatch(myMMR, currentRange);
-        }, 3000); // Check every 3 seconds to avoid spamming RPC too hard, but expand range internally
+        }, 3000);
     };
 
     const attemptMatch = async (mmr: number, range: number) => {
@@ -51,7 +59,7 @@ export const useMatchmaking = (
 
             if (roomId) {
                 console.log('Match Found! Room:', roomId);
-                clearInterval(searchInterval.current!);
+                if (searchInterval.current) clearInterval(searchInterval.current);
                 setStatus('matched');
 
                 // Fetch opponent ID (Derived from room info if needed, but for now just navigate)
