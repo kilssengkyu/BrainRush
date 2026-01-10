@@ -1,0 +1,41 @@
+{
+    "title": "BrainRush",
+    "menu": {
+        "play": "开始游戏",
+        "rank": "排名赛",
+        "friendly": "好友对战",
+        "settings": "设置"
+    },
+    "settings": {
+        "title": "设置",
+        "language": "语言",
+        "sound": "音效",
+        "masterVolume": "主音量",
+        "volume": "音量",
+        "back": "返回"
+    },
+    "game": {
+        "waiting": "等待游戏...",
+        "victory": "胜利",
+        "defeat": "失败",
+        "returnMenu": "返回菜单"
+    },
+    "matchmaking": {
+        "searching": "搜索中...",
+        "description": "正在寻找合适的对手",
+        "cancel": "取消",
+        "found": "匹配成功!",
+        "entering": "正在进入游戏..."
+    },
+    "rps": {
+        "ready": "准备...",
+        "beatIt": "赢他!",
+        "round": "回合"
+    },
+    "number": {
+        "asc": "从小到大按数字!",
+        "desc": "从大到小按数字!",
+        "ready": "准备",
+        "panel": "面板"
+    }
+}

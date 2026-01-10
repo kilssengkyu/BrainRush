@@ -1,0 +1,68 @@
+{
+  "app": {
+    "title": "BrainRush",
+    "subtitle": "Speed & Intelligence"
+  },
+  "menu": {
+    "normal": {
+      "title": "일반 모드",
+      "subtitle": "기본적인 두뇌 회전 게임"
+    },
+    "rank": {
+      "title": "랭크 모드",
+      "subtitle": "전 세계 플레이어와 경쟁"
+    },
+    "friendly": {
+      "title": "친선 모드",
+      "subtitle": "친구와 함께하는 1:1 대결"
+    },
+    "settings": "설정",
+    "login": "로그인",
+    "profile": "프로필"
+  },
+  "user": {
+    "level": "레벨",
+    "rank": "랭크"
+  },
+  "settings": {
+    "title": "설정",
+    "language": "언어",
+    "sound": "소리",
+    "masterVolume": "마스터 볼륨",
+    "deleteAccount": "회원 탈퇴",
+    "deleteAccountConfirm": "정말로 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+  },
+  "profile": {
+    "nicknamePlaceholder": "닉네임",
+    "edit": "수정",
+    "record": "전적",
+    "updateSuccess": "프로필이 업데이트되었습니다!",
+    "updateFail": "프로필 업데이트 실패",
+    "deleteSuccess": "계정이 삭제되었습니다.",
+    "deleteFail": "계정 삭제 실패"
+  },
+  "game": {
+    "waiting": "게임 대기 중...",
+    "victory": "승리",
+    "defeat": "패배",
+    "returnMenu": "메뉴로 돌아가기"
+  },
+  "matchmaking": {
+    "searching": "상대 찾는 중...",
+    "description": "적절한 상대를 찾고 있습니다",
+    "cancel": "취소",
+    "found": "매치 성사!",
+    "entering": "게임장으로 이동합니다..."
+  },
+  "rps": {
+    "ready": "준비...",
+    "beatIt": "이기세요!",
+    "round": "라운드"
+  },
+  "number": {
+    "asc": "작은 수에서 큰 수를 누르세요!",
+    "desc": "큰 수에서 작은 수를 누르세요!",
+    "ready": "준비",
+    "panel": "패널"
+  }
+}

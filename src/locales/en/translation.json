@@ -1,0 +1,68 @@
+{
+    "app": {
+        "title": "BrainRush",
+        "subtitle": "Speed & Intelligence"
+    },
+    "menu": {
+        "normal": {
+            "title": "Normal Mode",
+            "subtitle": "Basic Brain Training"
+        },
+        "rank": {
+            "title": "Rank Mode",
+            "subtitle": "Compete globally"
+        },
+        "friendly": {
+            "title": "Friendly Mode",
+            "subtitle": "1vs1 with Friends"
+        },
+        "settings": "Settings",
+        "login": "Login",
+        "profile": "Profile"
+    },
+    "user": {
+        "level": "Level",
+        "rank": "Rank"
+    },
+    "settings": {
+        "title": "Settings",
+        "language": "Language",
+        "sound": "Sound",
+        "masterVolume": "Master Volume",
+        "deleteAccount": "Delete Account",
+        "deleteAccountConfirm": "Are you sure you want to delete your account? This action cannot be undone."
+    },
+    "profile": {
+        "nicknamePlaceholder": "Nickname",
+        "edit": "Edit",
+        "record": "Record",
+        "updateSuccess": "Profile updated successfully!",
+        "updateFail": "Failed to update profile",
+        "deleteSuccess": "Account deleted successfully.",
+        "deleteFail": "Failed to delete account."
+    },
+    "game": {
+        "waiting": "Waiting for game...",
+        "victory": "VICTORY",
+        "defeat": "DEFEAT",
+        "returnMenu": "Return to Menu"
+    },
+    "matchmaking": {
+        "searching": "Searching...",
+        "description": "Looking for a worthy opponent",
+        "cancel": "Cancel",
+        "found": "Match Found!",
+        "entering": "Entering game arena..."
+    },
+    "rps": {
+        "ready": "READY...",
+        "beatIt": "BEAT IT!",
+        "round": "Round"
+    },
+    "number": {
+        "asc": "Press numbers Low to High!",
+        "desc": "Press numbers High to Low!",
+        "ready": "READY",
+        "panel": "Panel"
+    }
+}
