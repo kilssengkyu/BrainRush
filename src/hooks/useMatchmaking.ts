@@ -1,85 +1,95 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { RealtimeChannel } from '@supabase/supabase-js';
-
-interface Player {
-    id: string;
-    joined_at: number;
-}
+import { useAuth } from '../contexts/AuthContext';
 
 export const useMatchmaking = (
     onMatchFound: (roomId: string, opponentId: string) => void
 ) => {
+    const { profile } = useAuth();
     const [status, setStatus] = useState<'idle' | 'searching' | 'matched'>('idle');
-    const [channel, setChannel] = useState<RealtimeChannel | null>(null);
-    const myId = useRef<string>(Math.random().toString(36).substring(7));
+    const [searchRange, setSearchRange] = useState<number>(0);
+    const searchInterval = useRef<ReturnType<typeof setInterval> | null>(null);
 
-    const startSearch = () => {
+    const startSearch = async () => {
+        console.log('startSearch called. Profile:', profile);
+        if (!profile) {
+            console.error('startSearch aborted: No profile found.');
+            return;
+        }
         setStatus('searching');
+        setSearchRange(50);
 
-        const room = supabase.channel('matchmaking');
+        let currentRange = 50;
+        const myMMR = profile.mmr || 1000;
 
-        room
-            .on('presence', { event: 'sync' }, () => {
-                const state = room.presenceState();
-                const players = (Object.values(state).flat() as unknown) as Player[];
+        console.log(`Starting search. My MMR: ${myMMR}`);
 
-                if (players.length >= 2) {
-                    // Determine pair
-                    // Sort by joined_at to ensure consistent pairing logic across clients
-                    const sortedPlayers = players.sort((a, b) => a.joined_at - b.joined_at);
+        // Initial attempt
+        await attemptMatch(myMMR, currentRange);
 
-                    const meIndex = sortedPlayers.findIndex(p => p.id === myId.current);
-
-                    if (meIndex === -1) return;
-
-                    const opponentIndex = meIndex % 2 === 0 ? meIndex + 1 : meIndex - 1;
-
-                    if (sortedPlayers[opponentIndex]) {
-                        const opponent = sortedPlayers[opponentIndex];
-
-                        // Generate a deterministic room ID
-                        const p1 = sortedPlayers[Math.min(meIndex, opponentIndex)];
-                        const p2 = sortedPlayers[Math.max(meIndex, opponentIndex)];
-                        const roomId = `room_${p1.id}_${p2.id}`;
-
-                        // Prevent multiple triggers
-                        if (status === 'matched') return;
-
-                        setStatus('matched');
-
-                        // Delay navigation to ensure other client receives presence update
-                        setTimeout(() => {
-                            onMatchFound(roomId, opponent.id);
-                        }, 1500);
-                    }
-                }
-            })
-            .subscribe(async (status) => {
-                if (status === 'SUBSCRIBED') {
-                    await room.track({
-                        id: myId.current,
-                        joined_at: Date.now(),
-                    });
-                }
-            });
-
-        setChannel(room);
+        // Start Loop
+        searchInterval.current = setInterval(async () => {
+            currentRange += 50; // Expand range by 50 every second
+            setSearchRange(currentRange);
+            await attemptMatch(myMMR, currentRange);
+        }, 3000); // Check every 3 seconds to avoid spamming RPC too hard, but expand range internally
     };
 
-    const cancelSearch = () => {
-        if (channel) {
-            supabase.removeChannel(channel);
-            setChannel(null);
+    const attemptMatch = async (mmr: number, range: number) => {
+        try {
+            const minMMR = Math.max(0, mmr - range);
+            const maxMMR = mmr + range;
+
+            console.log(`Searching match: ${minMMR} ~ ${maxMMR}`);
+
+            const { data: roomId, error } = await supabase.rpc('find_match', {
+                p_min_mmr: minMMR,
+                p_max_mmr: maxMMR
+            });
+
+            if (error) throw error;
+
+            if (roomId) {
+                console.log('Match Found! Room:', roomId);
+                clearInterval(searchInterval.current!);
+                setStatus('matched');
+
+                // Fetch opponent ID (Derived from room info if needed, but for now just navigate)
+                // In a real scenario, we might want to know WHO we matched against before navigating
+                // But Home.tsx just needs roomId to enter the game.
+
+                // Let's verify who is in the session to get opponentId
+                const { data: session } = await supabase.from('game_sessions').select('*').eq('id', roomId).single();
+                const opponentId = session.player1_id === profile!.id ? session.player2_id : session.player1_id;
+
+                onMatchFound(roomId, opponentId);
+            }
+        } catch (err) {
+            console.error('Matchmaking error:', err);
         }
+    };
+
+    const cancelSearch = async () => {
+        if (searchInterval.current) {
+            clearInterval(searchInterval.current);
+            searchInterval.current = null;
+        }
+
+        // Remove from queue (Optional: Create a leave_queue RPC, or just let it expire/be ignored)
+        // ideally: await supabase.from('matchmaking_queue').delete().eq('player_id', profile.id);
+        if (profile) {
+            await supabase.from('matchmaking_queue').delete().eq('player_id', profile.id);
+        }
+
         setStatus('idle');
+        setSearchRange(0);
     };
 
     useEffect(() => {
         return () => {
-            if (channel) supabase.removeChannel(channel);
+            if (searchInterval.current) clearInterval(searchInterval.current);
         };
-    }, [channel]);
+    }, []);
 
-    return { status, startSearch, cancelSearch, myId: myId.current };
+    return { status, startSearch, cancelSearch, searchRange };
 };

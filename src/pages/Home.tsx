@@ -1,10 +1,11 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Settings, User, Trophy, Zap, Users, Loader2 } from 'lucide-react';
+import { Settings, User, Trophy, Zap, Users, Loader2, Lock } from 'lucide-react';
 import { useMatchmaking } from '../hooks/useMatchmaking';
 import { useSound } from '../contexts/SoundContext';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabaseClient';
 
 const Home = () => {
     const navigate = useNavigate();
@@ -19,9 +20,9 @@ const Home = () => {
     const avatarUrl = profile?.avatar_url;
 
     // Matchmaking Hook
-    const { status, startSearch, cancelSearch, myId } = useMatchmaking((roomId, opponentId) => {
+    const { status, startSearch, cancelSearch, searchRange } = useMatchmaking((roomId, opponentId) => {
         playSound('match_found');
-        navigate('/game', { state: { roomId, opponentId, myId, mode: 'normal' } });
+        navigate('/game', { state: { roomId, opponentId, mode: 'rank' } });
     });
 
     // Animation variants
@@ -41,10 +42,32 @@ const Home = () => {
         visible: { y: 0, opacity: 1 }
     };
 
-    const handleModeSelect = (mode: string) => {
+    const handleModeSelect = async (mode: string) => {
         playSound('click');
-        if (mode === 'normal') {
-            startSearch();
+
+        if (mode === 'rank') {
+            if (!user) {
+                navigate('/login');
+                return;
+            }
+            startSearch('rank');
+        } else if (mode === 'normal') {
+            // Guest Logic: If not logged in, sign in anonymously
+            if (!user) {
+                try {
+                    const { error } = await supabase.auth.signInAnonymously();
+                    if (error) {
+                        console.error('Anon login failed:', error);
+                        return;
+                    }
+                    // Slight delay to ensure profile is created/propagated context
+                    setTimeout(() => startSearch('normal'), 1000);
+                } catch (e) {
+                    console.error(e);
+                }
+            } else {
+                startSearch('normal');
+            }
         } else {
             console.log(`Selected mode: ${mode} `);
             navigate('/game', { state: { mode } });
@@ -102,12 +125,13 @@ const Home = () => {
                                 <>
                                     <Loader2 className="w-16 h-16 text-blue-500 animate-spin mb-6" />
                                     <h2 className="text-3xl font-bold mb-2">{t('matchmaking.searching')}</h2>
-                                    <p className="text-gray-400 mb-8">{t('matchmaking.description')}</p>
+                                    <p className="text-gray-400 mb-2">{t('matchmaking.description')}</p>
+                                    <p className="text-sm text-blue-400 mb-8 font-mono">Range: ±{searchRange}</p>
                                     <button
                                         onClick={() => { playSound('click'); cancelSearch(); }}
                                         className="px-6 py-3 rounded-xl bg-gray-700 hover:bg-gray-600 font-bold transition-colors"
                                     >
-                                        {t('matchmaking.cancel')}
+                                        {t('common.cancel')}
                                     </button>
                                 </>
                             ) : (
@@ -144,7 +168,7 @@ const Home = () => {
                     <button
                         onMouseEnter={() => playSound('hover')}
                         onClick={() => handleModeSelect('normal')}
-                        className="group relative w-full p-6 bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-300 hover:border-blue-500 hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] active:scale-95 text-left flex items-center gap-4 cursor-pointer"
+                        className={`group relative w-full p-6 bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-300 hover:border-blue-500 hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] active:scale-95 cursor-pointer`}
                     >
                         <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                         <div className="p-3 rounded-full bg-blue-500/20 group-hover:bg-blue-500/30 transition-colors">
@@ -160,7 +184,7 @@ const Home = () => {
                     <button
                         onMouseEnter={() => playSound('hover')}
                         onClick={() => handleModeSelect('rank')}
-                        className="group relative w-full p-6 bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-300 hover:border-purple-500 hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] active:scale-95 text-left flex items-center gap-4 cursor-pointer"
+                        className={`group relative w-full p-6 bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-300 ${user ? 'hover:border-purple-500 hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] active:scale-95 cursor-pointer' : 'opacity-50 grayscale cursor-not-allowed'}`}
                     >
                         <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                         <div className="p-3 rounded-full bg-purple-500/20 group-hover:bg-purple-500/30 transition-colors">
@@ -170,13 +194,19 @@ const Home = () => {
                             <h3 className="text-2xl font-bold group-hover:text-purple-400 transition-colors">{t('menu.rank.title')}</h3>
                             <p className="text-gray-500 text-sm mt-1">{t('menu.rank.subtitle')}</p>
                         </div>
+
+                        {!user && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/60 z-10">
+                                <Lock className="w-8 h-8 text-white/80" />
+                            </div>
+                        )}
                     </button>
 
                     {/* Friendly Mode */}
                     <button
                         onMouseEnter={() => playSound('hover')}
                         onClick={() => handleModeSelect('friendly')}
-                        className="group relative w-full p-6 bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-300 hover:border-green-500 hover:shadow-[0_0_20px_rgba(34,197,94,0.5)] active:scale-95 text-left flex items-center gap-4 cursor-pointer"
+                        className={`group relative w-full p-6 bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-300 ${user ? 'hover:border-green-500 hover:shadow-[0_0_20px_rgba(34,197,94,0.5)] active:scale-95 cursor-pointer' : 'opacity-50 grayscale cursor-not-allowed'}`}
                     >
                         <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                         <div className="p-3 rounded-full bg-green-500/20 group-hover:bg-green-500/30 transition-colors">
@@ -186,6 +216,12 @@ const Home = () => {
                             <h3 className="text-2xl font-bold group-hover:text-green-400 transition-colors">{t('menu.friendly.title')}</h3>
                             <p className="text-gray-500 text-sm mt-1">{t('menu.friendly.subtitle')}</p>
                         </div>
+
+                        {!user && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/60 z-10">
+                                <Lock className="w-8 h-8 text-white/80" />
+                            </div>
+                        )}
                     </button>
                 </motion.div>
 
