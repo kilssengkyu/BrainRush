@@ -53,18 +53,20 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
         const endTime = record.phase_end_at ? new Date(record.phase_end_at).getTime() : now;
         const remaining = Math.max(0, Math.ceil((endTime - now) / 1000));
 
-        // Result Message
-        let result = null;
-        if (record.status === 'round_end') {
-            if (myScore > gameState.scores.me) result = 'WIN';
-            else if (opScore > gameState.scores.opponent) result = 'LOSE';
-            else result = 'DRAW';
-        }
-
         setGameState(prev => {
-            let finalResult = result;
-            if (prev.status === 'round_end' && prev.round === record.current_round && prev.resultMessage) {
-                finalResult = prev.resultMessage;
+            // Determine Result Message
+            let result = prev.resultMessage;
+
+            // Only calculate new result if we just entered round_end state
+            if (record.status === 'round_end') {
+                // Check if scores actually changed compared to our LOCAL previous state
+                // This implies a win/loss just happened.
+                if (myScore > prev.scores.me) result = 'WIN';
+                else if (opScore > prev.scores.opponent) result = 'LOSE';
+                else if (prev.status !== 'round_end') result = 'DRAW'; // No score change but ended? Timeout Draw.
+                // If already in round_end, keep the result (don't overwrite with DRAW potentially)
+            } else if (record.status === 'countdown' || record.status === 'playing') {
+                result = null; // Reset result for new round
             }
 
             return {
@@ -74,7 +76,7 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
                 scores: { me: myScore, opponent: opScore },
                 gameData: record.game_data,
                 targetMove: record.target_move,
-                resultMessage: finalResult,
+                resultMessage: result,
                 timeLeft: remaining,
                 mmrChange: myMmrChange
             };
@@ -87,7 +89,6 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
                 console.log('Both players ready! Starting game...');
                 supabase.rpc('start_next_round', { p_room_id: roomId }).then();
             }
-
             // COUNTDOWN -> PLAYING
             if (record.status === 'countdown' && remaining <= 0) {
                 supabase.rpc('trigger_game_start', { p_room_id: roomId }).then();
@@ -97,7 +98,7 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
                 supabase.rpc('resolve_round', { p_room_id: roomId }).then();
             }
         }
-    }, [myId, isHost, roomId, gameState.scores]);
+    }, [myId, isHost, roomId]);
 
     // --- Actions ---
     const startRoundRpc = useCallback(async () => {
