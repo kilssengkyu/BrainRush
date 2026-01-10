@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -5,13 +6,17 @@ import { Settings, User, Trophy, Zap, Users, Loader2, Lock } from 'lucide-react'
 import { useMatchmaking } from '../hooks/useMatchmaking';
 import { useSound } from '../contexts/SoundContext';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../lib/supabaseClient';
 
 const Home = () => {
     const navigate = useNavigate();
     const { t } = useTranslation();
     const { playSound } = useSound();
-    const { user, profile } = useAuth();
+    const { user, profile, refreshProfile } = useAuth();
+
+    // Refresh profile on mount to get latest MMR after game
+    useEffect(() => {
+        refreshProfile();
+    }, []);
 
     // Calculate Level from MMR (Temporary: MMR / 100)
     const level = profile?.mmr ? Math.floor(profile.mmr / 100) : 1;
@@ -19,10 +24,13 @@ const Home = () => {
     const nickname = profile?.nickname || user?.email?.split('@')[0] || 'Unknown';
     const avatarUrl = profile?.avatar_url;
 
+    // Track selected mode for navigation callback
+    const currentMode = useRef('rank');
+
     // Matchmaking Hook
-    const { status, startSearch, cancelSearch, searchRange } = useMatchmaking((roomId, opponentId) => {
+    const { status, startSearch, cancelSearch, searchRange, playerId } = useMatchmaking((roomId, opponentId) => {
         playSound('match_found');
-        navigate('/game', { state: { roomId, opponentId, mode: 'rank' } });
+        navigate('/game', { state: { roomId, myId: playerId, opponentId, mode: currentMode.current } });
     });
 
     // Animation variants
@@ -44,6 +52,7 @@ const Home = () => {
 
     const handleModeSelect = async (mode: string) => {
         playSound('click');
+        currentMode.current = mode;
 
         if (mode === 'rank') {
             if (!user) {
@@ -52,22 +61,9 @@ const Home = () => {
             }
             startSearch('rank');
         } else if (mode === 'normal') {
-            // Guest Logic: If not logged in, sign in anonymously
-            if (!user) {
-                try {
-                    const { error } = await supabase.auth.signInAnonymously();
-                    if (error) {
-                        console.error('Anon login failed:', error);
-                        return;
-                    }
-                    // Slight delay to ensure profile is created/propagated context
-                    setTimeout(() => startSearch('normal'), 1000);
-                } catch (e) {
-                    console.error(e);
-                }
-            } else {
-                startSearch('normal');
-            }
+            // "Normal" mode supports both Guests and Logged-in users.
+            // Hybrid logic handles the rest in useMatchmaking.
+            startSearch('normal');
         } else {
             console.log(`Selected mode: ${mode} `);
             navigate('/game', { state: { mode } });
@@ -168,7 +164,7 @@ const Home = () => {
                     <button
                         onMouseEnter={() => playSound('hover')}
                         onClick={() => handleModeSelect('normal')}
-                        className={`group relative w-full p-6 bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-300 hover:border-blue-500 hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] active:scale-95 cursor-pointer`}
+                        className={`group relative w-full p-6 bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-300 hover:border-blue-500 hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] active:scale-95 cursor-pointer flex items-center gap-4 text-left`}
                     >
                         <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                         <div className="p-3 rounded-full bg-blue-500/20 group-hover:bg-blue-500/30 transition-colors">
@@ -184,7 +180,7 @@ const Home = () => {
                     <button
                         onMouseEnter={() => playSound('hover')}
                         onClick={() => handleModeSelect('rank')}
-                        className={`group relative w-full p-6 bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-300 ${user ? 'hover:border-purple-500 hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] active:scale-95 cursor-pointer' : 'opacity-50 grayscale cursor-not-allowed'}`}
+                        className={`group relative w-full p-6 bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-300 ${user ? 'hover:border-purple-500 hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] active:scale-95 cursor-pointer' : 'opacity-50 grayscale cursor-not-allowed'} flex items-center gap-4 text-left`}
                     >
                         <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                         <div className="p-3 rounded-full bg-purple-500/20 group-hover:bg-purple-500/30 transition-colors">
@@ -206,7 +202,7 @@ const Home = () => {
                     <button
                         onMouseEnter={() => playSound('hover')}
                         onClick={() => handleModeSelect('friendly')}
-                        className={`group relative w-full p-6 bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-300 ${user ? 'hover:border-green-500 hover:shadow-[0_0_20px_rgba(34,197,94,0.5)] active:scale-95 cursor-pointer' : 'opacity-50 grayscale cursor-not-allowed'}`}
+                        className={`group relative w-full p-6 bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-300 ${user ? 'hover:border-green-500 hover:shadow-[0_0_20px_rgba(34,197,94,0.5)] active:scale-95 cursor-pointer' : 'opacity-50 grayscale cursor-not-allowed'} flex items-center gap-4 text-left`}
                     >
                         <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                         <div className="p-3 rounded-full bg-green-500/20 group-hover:bg-green-500/30 transition-colors">

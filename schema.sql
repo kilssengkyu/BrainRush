@@ -323,3 +323,113 @@ begin
   delete from auth.users where id = auth.uid();
 end;
 $$ language plpgsql security definer;
+
+-- 10. Matchmaking Queue
+create table matchmaking_queue (
+  player_id uuid references auth.users not null primary key,
+  mmr int not null,
+  created_at timestamptz default now()
+);
+
+-- 11. RPC: Find Match (Window Expansion Logic)
+create or replace function find_match(p_min_mmr int, p_max_mmr int)
+returns uuid as $$
+declare
+  v_my_id uuid := auth.uid();
+  v_opponent_id uuid;
+  v_room_id uuid;
+  v_my_mmr int;
+begin
+  -- Get my current MMR for the queue record
+  select mmr into v_my_mmr from public.profiles where id = v_my_id;
+
+  -- 1. Try to find an opponent
+  -- Lock the row to prevent race conditions
+  select player_id into v_opponent_id
+  from matchmaking_queue
+  where mmr >= p_min_mmr 
+    and mmr <= p_max_mmr
+    and player_id != v_my_id
+  order by created_at asc
+  limit 1
+  for update skip locked;
+
+  if v_opponent_id is not null then
+    -- 2. Match Found!
+    -- Remove both from queue
+    delete from matchmaking_queue where player_id in (v_my_id, v_opponent_id);
+    
+    -- Create session (I am P1, Opponent is P2 - or random)
+    insert into game_sessions (player1_id, player2_id, status, current_round)
+    values (v_my_id::text, v_opponent_id::text, 'waiting', 0)
+    returning id into v_room_id;
+    
+    return v_room_id;
+  else
+    -- 3. No match found, ensure I am in the queue
+    insert into matchmaking_queue (player_id, mmr)
+    values (v_my_id, v_my_mmr)
+    on conflict (player_id) do update
+    set mmr = v_my_mmr, created_at = now(); -- Update heartbeat
+    
+    return null;
+  end if;
+end;
+$$ language plpgsql security definer;
+
+-- 12. RPC: Update MMR (Elo System)
+-- Called at the end of the game
+create or replace function update_mmr(p_room_id uuid)
+returns void as $$
+declare
+  v_p1 uuid;
+  v_p2 uuid;
+  v_p1_score int;
+  v_p2_score int;
+  
+  v_p1_mmr int;
+  v_p2_mmr int;
+  
+  v_k_factor int := 32;
+  v_expected_p1 float;
+  v_expected_p2 float;
+  v_actual_p1 float;
+  v_new_p1_mmr int;
+  v_new_p2_mmr int;
+begin
+  -- Get Game Info
+  select player1_id::uuid, player2_id::uuid, player1_score, player2_score
+  into v_p1, v_p2, v_p1_score, v_p2_score
+  from game_sessions
+  where id = p_room_id;
+
+  -- Check if already processed (optional guard)
+  -- For now, relying on this being called once by client or trigger
+
+  -- Get current MMRs
+  select mmr into v_p1_mmr from public.profiles where id = v_p1;
+  select mmr into v_p2_mmr from public.profiles where id = v_p2;
+
+  -- Calculate Expected Score
+  -- Expected_A = 1 / (1 + 10 ^ ((Rating_B - Rating_A) / 400))
+  v_expected_p1 := 1.0 / (1.0 + power(10.0, (v_p2_mmr - v_p1_mmr)::float / 400.0));
+  v_expected_p2 := 1.0 / (1.0 + power(10.0, (v_p1_mmr - v_p2_mmr)::float / 400.0));
+
+  -- Determine Actual Score (1=Win, 0.5=Draw, 0=Loss)
+  if v_p1_score > v_p2_score then
+    v_actual_p1 := 1.0;
+  elsif v_p2_score > v_p1_score then
+    v_actual_p1 := 0.0;
+  else
+    v_actual_p1 := 0.5;
+  end if;
+
+  -- Calculate New Ratings
+  v_new_p1_mmr := round(v_p1_mmr + v_k_factor * (v_actual_p1 - v_expected_p1));
+  v_new_p2_mmr := round(v_p2_mmr + v_k_factor * ((1.0 - v_actual_p1) - v_expected_p2));
+
+  -- Update Profiles
+  update public.profiles set mmr = v_new_p1_mmr, wins = wins + (case when v_actual_p1 = 1.0 then 1 else 0 end), losses = losses + (case when v_actual_p1 = 0.0 then 1 else 0 end) where id = v_p1;
+  update public.profiles set mmr = v_new_p2_mmr, wins = wins + (case when v_actual_p1 = 0.0 then 1 else 0 end), losses = losses + (case when v_actual_p1 = 1.0 then 1 else 0 end) where id = v_p2;
+end;
+$$ language plpgsql security definer;
