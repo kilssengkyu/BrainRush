@@ -19,7 +19,7 @@ const modalVariants = {
     exit: { scale: 0.8, opacity: 0 },
 };
 
-const ConfirmDialog = ({ title, message, onConfirm, onCancel }: ConfirmDialogProps) => {
+export const ConfirmDialog = ({ title, message, onConfirm, onCancel }: ConfirmDialogProps) => {
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <motion.div
@@ -58,4 +58,4 @@ const ConfirmDialog = ({ title, message, onConfirm, onCancel }: ConfirmDialogPro
     );
 };
 
-export default ConfirmDialog;
+

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, type ReactNode } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import Toast from '../components/ui/Toast';
-import ConfirmDialog from '../components/ui/ConfirmDialog';
+import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 
 interface ToastData {
     id: string;
