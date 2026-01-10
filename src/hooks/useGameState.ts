@@ -10,9 +10,10 @@ export interface GameState {
     targetMove: string | null;
     resultMessage: string | null;
     timeLeft: number;
+    mmrChange: number | null;
 }
 
-export const useGameState = (myId: string, opponentId: string) => {
+export const useGameState = (roomId: string, myId: string, opponentId: string) => {
     const [gameState, setGameState] = useState<GameState>({
         status: 'waiting',
         gameType: null,
@@ -21,14 +22,13 @@ export const useGameState = (myId: string, opponentId: string) => {
         gameData: null,
         targetMove: null,
         resultMessage: null,
-        timeLeft: 0
+        timeLeft: 0,
+        mmrChange: null
     });
 
-    const [sessionId, setSessionId] = useState<string | null>(null);
     const isHost = myId < opponentId;
-    const p1Id = isHost ? myId : opponentId;
-    const p2Id = isHost ? opponentId : myId;
 
+    // Using Ref to track round changes for UI effects
     const lastRoundRef = useRef<number>(0);
     const isCountingDownRef = useRef<boolean>(false);
 
@@ -39,6 +39,7 @@ export const useGameState = (myId: string, opponentId: string) => {
         const isPlayer1 = myId === record.player1_id;
         const myScore = isPlayer1 ? record.player1_score : record.player2_score;
         const opScore = isPlayer1 ? record.player2_score : record.player1_score;
+        const myMmrChange = isPlayer1 ? record.player1_mmr_change : record.player2_mmr_change;
 
         // Detect New Round
         if (record.current_round > lastRoundRef.current) {
@@ -61,9 +62,6 @@ export const useGameState = (myId: string, opponentId: string) => {
         }
 
         setGameState(prev => {
-            // Fix WIN -> DRAW glitch:
-            // If we are already in 'round_end' for this round, preserve the calculated result
-            // because 'prev.scores' will catch up to 'record.scores' causing the diff check to fail.
             let finalResult = result;
             if (prev.status === 'round_end' && prev.round === record.current_round && prev.resultMessage) {
                 finalResult = prev.resultMessage;
@@ -77,126 +75,90 @@ export const useGameState = (myId: string, opponentId: string) => {
                 gameData: record.game_data,
                 targetMove: record.target_move,
                 resultMessage: finalResult,
-                timeLeft: remaining
+                timeLeft: remaining,
+                mmrChange: myMmrChange
             };
         });
 
-        // Host Logic: Trigger Transitions (Only if Host)
-        if (isHost && sessionId) {
-            // End of Countdown -> Start Game
-            if (record.status === 'countdown' && remaining <= 0) {
-                supabase.rpc('trigger_game_start', { p_room_id: sessionId }).then();
+        // Host Logic: Trigger Transitions (Server Authoritative via RPC)
+        if (isHost) {
+            // WAITING -> COUNTDOWN (Only when BOTH are ready)
+            if (record.status === 'waiting' && record.player1_ready && record.player2_ready) {
+                console.log('Both players ready! Starting game...');
+                supabase.rpc('start_next_round', { p_room_id: roomId }).then();
             }
-            // End of Playing -> Resolve Round (Timeout / Sudden Death)
+
+            // COUNTDOWN -> PLAYING
+            if (record.status === 'countdown' && remaining <= 0) {
+                supabase.rpc('trigger_game_start', { p_room_id: roomId }).then();
+            }
+            // PLAYING -> ROUND END
             if (record.status === 'playing' && remaining <= 0) {
-                supabase.rpc('resolve_round', { p_room_id: sessionId }).then();
+                supabase.rpc('resolve_round', { p_room_id: roomId }).then();
             }
         }
-    }, [myId, isHost, sessionId, gameState.scores]);
+    }, [myId, isHost, roomId, gameState.scores]);
 
     // --- Actions ---
-    const startRoundRpc = useCallback(async (sid: string) => {
-        const { error } = await supabase.rpc('start_next_round', { p_room_id: sid });
+    const startRoundRpc = useCallback(async () => {
+        const { error } = await supabase.rpc('start_next_round', { p_room_id: roomId });
         if (error) console.error('[Game] start_next_round Failed:', error);
-    }, []);
+    }, [roomId]);
 
     const submitMove = useCallback(async (move: string) => {
-        if (!sessionId) return;
-        const { error } = await supabase.rpc('submit_move', { p_room_id: sessionId, p_player_id: myId, p_move: move });
+        const { error } = await supabase.rpc('submit_move', { p_room_id: roomId, p_player_id: myId, p_move: move });
         if (error) console.error('[Game] submitMove Failed:', error);
-    }, [sessionId, myId]);
+    }, [roomId, myId]);
 
 
     // --- Effects ---
 
-    // 1. UI Countdown Timer
+    // 0. SIGNAL READY ON MOUNT
     useEffect(() => {
-        if (!sessionId) return;
+        if (!roomId || !myId) return;
+        console.log('Signaling READY...');
+        supabase.rpc('set_player_ready', { p_room_id: roomId, p_player_id: myId }).then(({ error }) => {
+            if (error) console.error('Failed to set ready:', error);
+        });
+    }, [roomId, myId]);
+
+    // 1. UI Countdown Timer & Initial Fetch
+    useEffect(() => {
+        // Initial Fetch
+        supabase.from('game_sessions').select('*').eq('id', roomId).single()
+            .then(({ data }) => {
+                if (data) {
+                    handleGameUpdate(data);
+                }
+            });
+
         const timer = setInterval(() => {
-            supabase.from('game_sessions').select('*').eq('id', sessionId).single()
+            supabase.from('game_sessions').select('*').eq('id', roomId).single()
                 .then(({ data }) => { if (data) handleGameUpdate(data); });
         }, 1000);
         return () => clearInterval(timer);
-    }, [sessionId, handleGameUpdate]);
+    }, [roomId, handleGameUpdate]);
 
-    // 2. Initial Discovery (Find or Create Session)
+    // 2. Realtime Subscription
     useEffect(() => {
-        let mounted = true;
-        let pollInterval: ReturnType<typeof setInterval> | null = null;
-
-        const init = async () => {
-            const { data: existing } = await supabase.from('game_sessions')
-                .select('*')
-                .eq('player1_id', p1Id).eq('player2_id', p2Id)
-                .neq('status', 'finished')
-                .order('created_at', { ascending: false }).limit(1).maybeSingle();
-
-            if (!mounted) return;
-
-            if (existing) {
-                setSessionId(existing.id);
-                handleGameUpdate(existing);
-                // Host Resume
-                if (isHost && existing.status === 'waiting') {
-                    startRoundRpc(existing.id);
-                }
-                return;
-            }
-
-            if (isHost) {
-                // Host Create
-                const { data: newId, error: createError } = await supabase.rpc('create_session', { p_player1_id: p1Id, p_player2_id: p2Id });
-                if (createError) console.error('[Game] create_session Failed:', createError);
-
-                if (newId && mounted) {
-                    setSessionId(newId);
-                    startRoundRpc(newId);
-                }
-            } else {
-                // Guest Poll
-                pollInterval = setInterval(async () => {
-                    const { data: found } = await supabase.from('game_sessions')
-                        .select('*').eq('player1_id', p1Id).eq('player2_id', p2Id)
-                        .neq('status', 'finished').order('created_at', { ascending: false }).limit(1).maybeSingle();
-
-                    if (found && mounted) {
-                        setSessionId(found.id);
-                        handleGameUpdate(found);
-                        if (pollInterval) clearInterval(pollInterval);
-                    }
-                }, 1000);
-            }
-        };
-
-        init();
-
-        return () => {
-            mounted = false;
-            if (pollInterval) clearInterval(pollInterval);
-        };
-    }, [isHost, p1Id, p2Id, handleGameUpdate, startRoundRpc]);
-
-    // 3. Realtime Subscription
-    useEffect(() => {
-        if (!sessionId) return;
-        const channel = supabase.channel(`game_${sessionId}`)
-            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'game_sessions', filter: `id=eq.${sessionId}` },
+        const channel = supabase.channel(`game_${roomId}`)
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'game_sessions', filter: `id=eq.${roomId}` },
                 (payload) => handleGameUpdate(payload.new)
             )
             .subscribe();
         return () => { supabase.removeChannel(channel); };
-    }, [sessionId, handleGameUpdate]);
+    }, [roomId, handleGameUpdate]);
 
-    // 4. Host Auto-Next-Round (3s after Result)
+    // 3. Host Auto-Next-Round (3s after Result)
     useEffect(() => {
-        if (!isHost || !sessionId) return;
+        if (!isHost) return;
         if (gameState.status === 'round_end') {
             const t = setTimeout(() => {
-                startRoundRpc(sessionId);
+                startRoundRpc();
             }, 3000);
             return () => clearTimeout(t);
         }
-    }, [gameState.status, isHost, sessionId, startRoundRpc]);
+    }, [gameState.status, isHost, startRoundRpc]);
 
     return { gameState, submitMove };
 };

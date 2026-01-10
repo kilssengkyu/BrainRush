@@ -1,21 +1,23 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import GameLayout from '../components/GameLayout';
 import RockPaperScissors from '../components/minigames/RockPaperScissors';
 import { useTranslation } from 'react-i18next';
-import { motion } from 'framer-motion';
+import { motion, animate } from 'framer-motion';
 import NumberOrder from '../components/minigames/NumberOrder';
 import { useGameState } from '../hooks/useGameState';
+import { useAuth } from '../contexts/AuthContext';
 
 const Game = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const { t } = useTranslation();
+    const { profile } = useAuth();
 
     // Retrieve state from navigation
     const { roomId, myId, opponentId } = location.state || {};
 
-    // Redirect if no roomId (e.g., direct access)
+    // Redirect if no roomId
     useEffect(() => {
         if (!roomId || !myId || !opponentId) {
             navigate('/');
@@ -23,7 +25,23 @@ const Game = () => {
     }, [roomId, myId, opponentId, navigate]);
 
     // Use Game Hook
-    const { gameState, submitMove } = useGameState(myId, opponentId);
+    const { gameState, submitMove } = useGameState(roomId, myId, opponentId);
+
+    // Animation State for MMR
+    const [displayMMR, setDisplayMMR] = useState(profile?.mmr || 1000);
+
+    useEffect(() => {
+        if (gameState && gameState.mmrChange !== null) {
+            const start = profile?.mmr || 1000;
+            const end = start + gameState.mmrChange;
+            // animate
+            animate(start, end, {
+                duration: 2.5,
+                ease: "circOut",
+                onUpdate: (latest) => setDisplayMMR(Math.floor(latest))
+            });
+        }
+    }, [gameState?.mmrChange]);
 
     // Mock Names
     const PLAYER_ME = { name: 'You', score: gameState.scores.me, avatar: undefined };
@@ -78,6 +96,27 @@ const Game = () => {
                     <h2 className={`text-6xl font-black ${gameState.scores.me >= 3 ? 'text-green-400' : 'text-red-500'}`}>
                         {gameState.scores.me >= 3 ? t('game.victory') : t('game.defeat')}
                     </h2>
+
+                    {/* Display MMR Change with Animation */}
+                    {gameState.mmrChange !== null && gameState.mmrChange !== undefined && (
+                        <div className="flex flex-col items-center gap-2 mb-8">
+                            <motion.div
+                                initial={{ scale: 0.5, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                className="text-4xl font-bold text-white flex items-center gap-2"
+                            >
+                                MMR {displayMMR}
+                            </motion.div>
+                            <motion.div
+                                initial={{ y: 20, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                transition={{ delay: 0.5 }}
+                                className={`text-2xl font-bold ${gameState.mmrChange >= 0 ? 'text-blue-400' : 'text-red-400'}`}
+                            >
+                                ({gameState.mmrChange >= 0 ? '+' : ''}{gameState.mmrChange})
+                            </motion.div>
+                        </div>
+                    )}
                     <div className="flex gap-4">
                         <button
                             onClick={() => navigate('/')}
