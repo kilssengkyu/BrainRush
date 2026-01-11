@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import GameLayout from '../components/GameLayout';
 import RockPaperScissors from '../components/minigames/RockPaperScissors';
 import { useTranslation } from 'react-i18next';
-import { motion, animate } from 'framer-motion';
+import { motion, animate, AnimatePresence } from 'framer-motion';
 import NumberOrder from '../components/minigames/NumberOrder';
 import { useGameState } from '../hooks/useGameState';
 import { useAuth } from '../contexts/AuthContext';
@@ -25,7 +25,7 @@ const Game = () => {
     }, [roomId, myId, opponentId, navigate]);
 
     // Use Game Hook
-    const { gameState, submitMove } = useGameState(roomId, myId, opponentId);
+    const { gameState, submitMove, isReconnecting, reconnectTimer, serverOffset } = useGameState(roomId, myId, opponentId);
 
     // Animation State for MMR
     const [displayMMR, setDisplayMMR] = useState(profile?.mmr || 1000);
@@ -52,19 +52,47 @@ const Game = () => {
             opponent={PLAYER_OPPONENT}
             me={PLAYER_ME}
         >
+            {/* Reconnection Overlay */}
+            <AnimatePresence>
+                {isReconnecting && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex flex-col items-center justify-center p-8"
+                    >
+                        <div className="bg-gray-800 p-8 rounded-3xl border border-red-500/50 flex flex-col items-center text-center shadow-2xl max-w-md w-full">
+                            <span className="loading loading-ring loading-lg text-red-500 mb-6 w-20 h-20"></span>
+                            <h2 className="text-3xl font-bold mb-2 text-white">{t('game.reconnecting')}</h2>
+                            <p className="text-gray-400 mb-6">{t('game.reconnectingDesc')}</p>
+
+                            <div className="w-full h-4 bg-gray-700 rounded-full overflow-hidden mb-4 relative">
+                                <motion.div
+                                    className="absolute top-0 left-0 h-full bg-red-500"
+                                    initial={{ width: '100%' }}
+                                    animate={{ width: '0%' }}
+                                    transition={{ duration: 30, ease: 'linear' }}
+                                />
+                            </div>
+                            <p className="text-3xl font-mono font-bold text-red-400">{reconnectTimer}s</p>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             {!gameState.gameType ? (
                 // Generic Loading / Waiting Screen
                 <div className="flex flex-col items-center justify-center h-full gap-4 text-blue-400">
                     <div className="text-2xl font-bold animate-pulse">{t('game.waiting')}</div>
                     <span className="loading loading-spinner loading-lg"></span>
                 </div>
+
+
             ) : gameState.scores.me < 3 && gameState.scores.opponent < 3 ? (
                 gameState.gameType === 'RPS' ? (
                     <RockPaperScissors
                         round={gameState.round}
                         targetMove={gameState.targetMove as any}
-                        // Map status to legacy 'phase' or update component. 
-                        // RPS component expects 'countdown' | 'playing' | 'result'
                         phase={
                             gameState.status === 'countdown' ? 'countdown' :
                                 gameState.status === 'round_end' ? 'result' :
@@ -72,12 +100,13 @@ const Game = () => {
                         }
                         resultMessage={gameState.resultMessage}
                         onMoveSelected={(move) => submitMove(move)}
+                        phaseEndAt={gameState.phaseEndAt}
+                        serverOffset={serverOffset}
                     />
                 ) : (
                     <NumberOrder
                         gameType={gameState.gameType}
                         seed={gameState.gameData?.seed || 0}
-                        // Map status for NumberOrder
                         phase={
                             gameState.status === 'countdown' ? 'countdown' :
                                 gameState.status === 'round_end' ? 'result' :
@@ -85,6 +114,8 @@ const Game = () => {
                         }
                         resultMessage={gameState.resultMessage}
                         onGameComplete={(duration) => submitMove(`DONE:${duration}`)}
+                        phaseEndAt={gameState.phaseEndAt}
+                        serverOffset={serverOffset}
                     />
                 )
             ) : (
@@ -127,7 +158,7 @@ const Game = () => {
                     </div>
                 </motion.div>
             )}
-        </GameLayout>
+        </GameLayout >
     );
 };
 

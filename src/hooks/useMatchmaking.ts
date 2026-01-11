@@ -6,9 +6,11 @@ export const useMatchmaking = (
     onMatchFound: (roomId: string, opponentId: string) => void
 ) => {
     const { profile, user } = useAuth();
-    const [status, setStatus] = useState<'idle' | 'searching' | 'matched'>('idle');
+    const [status, setStatus] = useState<'idle' | 'searching' | 'matched' | 'timeout'>('idle');
     const [searchRange, setSearchRange] = useState<number>(0);
+    const [elapsedTime, setElapsedTime] = useState<number>(0);
     const searchInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+    const searchStartTime = useRef<number>(0);
 
     // Generate a transient Guest ID if not logged in
     const guestId = useRef(`guest_${Math.random().toString(36).substring(2, 9)}`);
@@ -28,6 +30,8 @@ export const useMatchmaking = (
         }
 
         setStatus('searching');
+        searchStartTime.current = Date.now();
+        setElapsedTime(0);
 
         // If Normal Mode, Start with huge range immediately (Ignore Elo)
         const initialRange = mode === 'normal' ? 2000 : 50;
@@ -41,28 +45,52 @@ export const useMatchmaking = (
 
         // Start Loop
         searchInterval.current = setInterval(async () => {
+            // Update Timer
+            setElapsedTime(Math.floor((Date.now() - searchStartTime.current) / 1000));
+
+            // Check for Timeout (60 seconds)
+            if (Date.now() - searchStartTime.current > 60000) {
+                console.log('Matchmaking timed out');
+                await cancelSearch(false); // Do not reset to idle immediately, set to timeout
+                setStatus('timeout');
+                return;
+            }
+
             // 1. Passive Check: Check if someone else already matched me
+            // Look back 1 hour to allow reconnection to active games
+            const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
             const { data: passiveMatch } = await supabase.from('game_sessions')
                 .select('*')
                 .or(`player1_id.eq.${playerId},player2_id.eq.${playerId}`)
                 .neq('status', 'finished')
-                .lt('player1_score', 3) // Ignore games that are effectively finished
+                .lt('player1_score', 3)
                 .lt('player2_score', 3)
+                .gt('created_at', oneHourAgo)
                 .order('created_at', { ascending: false })
                 .limit(1)
                 .maybeSingle();
 
             if (passiveMatch) {
-                console.log('Passive Match Detected!', passiveMatch.id);
-                if (searchInterval.current) clearInterval(searchInterval.current);
-                setStatus('matched');
+                // Smart Filter:
+                // 1. If status is 'waiting' and it's old (> 5 mins), it's a ghost room. Ignore it.
+                // 2. If status is 'playing' (or others), it's an active game. Reconnect even if > 1 min.
+                const isStaleWaitingRoom = passiveMatch.status === 'waiting' &&
+                    (Date.now() - new Date(passiveMatch.created_at).getTime() > 5 * 60 * 1000);
 
-                // Add delay to show "Matched!" modal
-                setTimeout(() => {
-                    const opponentId = passiveMatch.player1_id === playerId ? passiveMatch.player2_id : passiveMatch.player1_id;
-                    onMatchFound(passiveMatch.id, opponentId);
-                }, 1500);
-                return;
+                if (isStaleWaitingRoom) {
+                    console.log('Ignoring stale waiting session:', passiveMatch.id);
+                } else {
+                    console.log('Passive Match Detected! Reconnecting/Matching:', passiveMatch.id);
+                    if (searchInterval.current) clearInterval(searchInterval.current);
+                    setStatus('matched');
+
+                    // Add delay to show "Matched!" modal
+                    setTimeout(() => {
+                        const opponentId = passiveMatch.player1_id === playerId ? passiveMatch.player2_id : passiveMatch.player1_id;
+                        onMatchFound(passiveMatch.id, opponentId);
+                    }, 1500);
+                    return;
+                }
             }
 
             if (mode === 'rank') {
@@ -110,7 +138,7 @@ export const useMatchmaking = (
         }
     };
 
-    const cancelSearch = async () => {
+    const cancelSearch = async (resetToIdle = true) => {
         if (searchInterval.current) {
             clearInterval(searchInterval.current);
             searchInterval.current = null;
@@ -121,8 +149,11 @@ export const useMatchmaking = (
         // Note: Make sure RLS allows this delete or use an RPC
         await supabase.from('matchmaking_queue').delete().eq('player_id', playerId);
 
-        setStatus('idle');
+        if (resetToIdle) {
+            setStatus('idle');
+        }
         setSearchRange(0);
+        setElapsedTime(0);
     };
 
     useEffect(() => {
@@ -131,5 +162,5 @@ export const useMatchmaking = (
         };
     }, []);
 
-    return { status, startSearch, cancelSearch, searchRange, playerId: getPlayerId() };
+    return { status, startSearch, cancelSearch: () => cancelSearch(true), searchRange, elapsedTime, playerId: getPlayerId() };
 };

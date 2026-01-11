@@ -10,6 +10,8 @@ interface RPSProps {
     phase: 'countdown' | 'playing' | 'result';
     resultMessage: string | null;
     round: number;
+    phaseEndAt: string | null;
+    serverOffset: number;
 }
 
 const MOVES: Move[] = ['rock', 'paper', 'scissors'];
@@ -19,10 +21,38 @@ const RockPaperScissors: React.FC<RPSProps> = ({
     targetMove,
     phase,
     resultMessage,
-    round
+    round,
+    phaseEndAt,
+    serverOffset
 }) => {
     const { t } = useTranslation();
     const [shake, setShake] = useState<Move | null>(null);
+    const [countdown, setCountdown] = useState<string | null>(null);
+
+    // Precise Countdown Logic
+    React.useEffect(() => {
+        if (phase === 'countdown' && phaseEndAt) {
+            let animationFrameId: number;
+
+            const animate = () => {
+                const now = Date.now() + serverOffset;
+                const target = new Date(phaseEndAt).getTime();
+                const diff = (target - now) / 1000;
+
+                if (diff > 0) {
+                    setCountdown(diff.toFixed(1)); // Show 1 decimal place
+                    animationFrameId = requestAnimationFrame(animate);
+                } else {
+                    setCountdown('START!');
+                }
+            };
+
+            animationFrameId = requestAnimationFrame(animate);
+            return () => cancelAnimationFrame(animationFrameId);
+        } else {
+            setCountdown(null);
+        }
+    }, [phase, phaseEndAt, serverOffset]);
 
     const handlePress = (move: Move) => {
         if (phase !== 'playing' || !targetMove) return;
@@ -65,9 +95,10 @@ const RockPaperScissors: React.FC<RPSProps> = ({
                             key="waiting"
                             initial={{ scale: 0.5, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1, textShadow: "0 0 10px #3b82f6" }}
-                            className="text-4xl font-black text-blue-400 text-center"
+                            exit={{ scale: 2, opacity: 0 }}
+                            className="text-6xl font-black text-blue-400 text-center font-mono"
                         >
-                            {t('rps.ready')}
+                            {countdown || t('rps.ready')}
                         </motion.div>
                     )}
 

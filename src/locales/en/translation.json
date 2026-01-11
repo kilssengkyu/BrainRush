@@ -5,7 +5,9 @@
     },
     "common": {
         "cancel": "Cancel",
-        "confirm": "Confirm"
+        "confirm": "Confirm",
+        "close": "Close",
+        "retry": "Retry"
     },
     "menu": {
         "normal": {
@@ -39,9 +41,10 @@
         "logoutConfirm": "Are you sure you want to logout?"
     },
     "profile": {
-        "nicknamePlaceholder": "Nickname",
+        "nicknamePlaceholder": "Enter nickname",
         "edit": "Edit",
         "record": "Record",
+        "disconnects": "Disconnects",
         "updateSuccess": "Profile updated successfully!",
         "updateFail": "Failed to update profile",
         "deleteSuccess": "Account deleted successfully.",
@@ -51,14 +54,18 @@
         "waiting": "Waiting for game...",
         "victory": "VICTORY",
         "defeat": "DEFEAT",
-        "returnMenu": "Return to Menu"
+        "returnMenu": "Return to Menu",
+        "reconnecting": "Waiting for Opponent...",
+        "reconnectingDesc": "Opponent disconnected. Winning by default in:"
     },
     "matchmaking": {
         "searching": "Searching...",
         "description": "Looking for a worthy opponent",
         "cancel": "Cancel",
         "found": "Match Found!",
-        "entering": "Entering game arena..."
+        "entering": "Entering game arena...",
+        "timeout": "Match Not Found",
+        "timeoutDesc": "We couldn't find an opponent in time."
     },
     "rps": {
         "ready": "READY...",
