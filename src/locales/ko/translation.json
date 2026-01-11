@@ -56,7 +56,8 @@
     "defeat": "패배",
     "returnMenu": "메뉴로 돌아가기",
     "reconnecting": "상대 연결 대기 중...",
-    "reconnectingDesc": "상대방 연결이 끊겼습니다. 기권승까지 남은 시간:"
+    "reconnectingDesc": "상대방 연결이 끊겼습니다. 기권승까지 남은 시간:",
+    "myTime": "나의 기록"
   },
   "matchmaking": {
     "searching": "상대 찾는 중...",

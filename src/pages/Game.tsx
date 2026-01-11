@@ -7,6 +7,7 @@ import { motion, animate, AnimatePresence } from 'framer-motion';
 import NumberOrder from '../components/minigames/NumberOrder';
 import { useGameState } from '../hooks/useGameState';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabaseClient';
 
 const Game = () => {
     const location = useLocation();
@@ -27,6 +28,42 @@ const Game = () => {
     // Use Game Hook
     const { gameState, submitMove, isReconnecting, reconnectTimer, serverOffset } = useGameState(roomId, myId, opponentId);
 
+    // Profile State
+    const [opponentProfile, setOpponentProfile] = useState<any>(null);
+
+    // Fetch Opponent Profile
+    useEffect(() => {
+        if (!opponentId) return;
+
+        const fetchOpponent = async () => {
+            // Guest Check
+            if (opponentId.startsWith('guest_')) {
+                setOpponentProfile({
+                    nickname: 'Guest ' + opponentId.slice(-4),
+                    isGuest: true
+                });
+                return;
+            }
+
+            // Real User Fetch
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', opponentId)
+                .single();
+
+            if (data && !error) {
+                setOpponentProfile(data);
+            } else {
+                // Fallback if profile missing
+                setOpponentProfile({ nickname: 'Unknown Player', isGuest: true });
+            }
+        };
+
+        fetchOpponent();
+    }, [opponentId]);
+
+
     // Animation State for MMR
     const [displayMMR, setDisplayMMR] = useState(profile?.mmr || 1000);
 
@@ -41,11 +78,34 @@ const Game = () => {
                 onUpdate: (latest) => setDisplayMMR(Math.floor(latest))
             });
         }
-    }, [gameState?.mmrChange]);
+    }, [gameState?.mmrChange, profile?.mmr]);
 
-    // Mock Names
-    const PLAYER_ME = { name: 'You', score: gameState.scores.me, avatar: undefined };
-    const PLAYER_OPPONENT = { name: 'Opponent', score: gameState.scores.opponent, avatar: undefined };
+    // Construct Player Objects
+    const PLAYER_ME = {
+        name: profile?.nickname || 'You',
+        score: gameState.scores.me,
+        avatar: profile?.avatar_url,
+        mmr: profile?.mmr,
+        wins: profile?.wins,
+        losses: profile?.losses,
+        isGuest: false // Assuming 'me' is logged in if we have profile. If guest, profile is null?
+    };
+
+    // If I am guest? (AuthContext profile might be null)
+    if (!profile) {
+        PLAYER_ME.name = 'Guest (You)';
+        PLAYER_ME.isGuest = true;
+    }
+
+    const PLAYER_OPPONENT = {
+        name: opponentProfile?.nickname || 'Opponent',
+        score: gameState.scores.opponent,
+        avatar: opponentProfile?.avatar_url,
+        mmr: opponentProfile?.mmr,
+        wins: opponentProfile?.wins,
+        losses: opponentProfile?.losses,
+        isGuest: opponentProfile?.isGuest || false
+    };
 
     return (
         <GameLayout
