@@ -8,6 +8,8 @@ interface NumberOrderProps {
     onGameComplete: (duration?: number) => void;
     phase: 'countdown' | 'playing' | 'result';
     resultMessage: string | null;
+    phaseEndAt: string | null;
+    serverOffset: number;
 }
 
 const NumberOrder: React.FC<NumberOrderProps> = ({
@@ -15,7 +17,9 @@ const NumberOrder: React.FC<NumberOrderProps> = ({
     seed,
     onGameComplete,
     phase,
-    resultMessage
+    resultMessage,
+    phaseEndAt,
+    serverOffset
 }) => {
     const { t } = useTranslation();
     const [numbers, setNumbers] = useState<number[]>([]);
@@ -24,6 +28,32 @@ const NumberOrder: React.FC<NumberOrderProps> = ({
     const [shakeId, setShakeId] = useState<number | null>(null);
     const [clearedNumbers, setClearedNumbers] = useState<number[]>([]);
     const startTimeRef = React.useRef<number>(0);
+    const [countdown, setCountdown] = useState<string | null>(null);
+
+    // Precise Countdown Logic
+    React.useEffect(() => {
+        if (phase === 'countdown' && phaseEndAt) {
+            let animationFrameId: number;
+
+            const animate = () => {
+                const now = Date.now() + serverOffset;
+                const target = new Date(phaseEndAt).getTime();
+                const diff = (target - now) / 1000;
+
+                if (diff > 0) {
+                    setCountdown(diff.toFixed(1)); // Show 1 decimal place
+                    animationFrameId = requestAnimationFrame(animate);
+                } else {
+                    setCountdown('START!');
+                }
+            };
+
+            animationFrameId = requestAnimationFrame(animate);
+            return () => cancelAnimationFrame(animationFrameId);
+        } else {
+            setCountdown(null);
+        }
+    }, [phase, phaseEndAt, serverOffset]);
 
     // Initialize/Reset Panel
     useEffect(() => {
@@ -133,8 +163,8 @@ const NumberOrder: React.FC<NumberOrderProps> = ({
                             <h3 className="text-2xl font-bold text-white mb-4 text-center px-4">
                                 {gameType === 'NUMBER_ASC' ? t('number.asc') : t('number.desc')}
                             </h3>
-                            <div className="text-6xl font-black text-blue-500 animate-pulse">
-                                {t('number.ready')}
+                            <div className="text-6xl font-black text-blue-500 animate-pulse font-mono">
+                                {countdown || t('number.ready')}
                             </div>
                         </motion.div>
                     )}

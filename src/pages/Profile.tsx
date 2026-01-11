@@ -196,6 +196,11 @@ const Profile = () => {
                         <div className="flex gap-4 items-end">
                             <span className="text-lg font-bold text-blue-400">{wins}W</span>
                             <span className="text-lg font-bold text-red-400">{losses}L</span>
+                            {profile?.disconnects && profile.disconnects > 0 && (
+                                <span className="text-lg font-bold text-gray-500 flex items-center gap-1" title={t('profile.disconnects')}>
+                                    <LogOut className="w-4 h-4" /> {profile.disconnects}
+                                </span>
+                            )}
                         </div>
                     </div>
                 </div>

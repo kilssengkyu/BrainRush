@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Settings, User, Trophy, Zap, Users, Loader2, Lock } from 'lucide-react';
+import { Settings, User, Trophy, Zap, Users, Loader2, Lock, AlertTriangle } from 'lucide-react';
 import { useMatchmaking } from '../hooks/useMatchmaking';
 import { useSound } from '../contexts/SoundContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -28,7 +28,7 @@ const Home = () => {
     const currentMode = useRef('rank');
 
     // Matchmaking Hook
-    const { status, startSearch, cancelSearch, searchRange, playerId } = useMatchmaking((roomId, opponentId) => {
+    const { status, startSearch, cancelSearch, searchRange, elapsedTime, playerId } = useMatchmaking((roomId, opponentId) => {
         playSound('match_found');
         navigate('/game', { state: { roomId, myId: playerId, opponentId, mode: currentMode.current } });
     });
@@ -105,7 +105,7 @@ const Home = () => {
 
             {/* Matchmaking Overlay */}
             <AnimatePresence>
-                {(status === 'searching' || status === 'matched') && (
+                {(status === 'searching' || status === 'matched' || status === 'timeout') && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -122,6 +122,9 @@ const Home = () => {
                                     <Loader2 className="w-16 h-16 text-blue-500 animate-spin mb-6" />
                                     <h2 className="text-3xl font-bold mb-2">{t('matchmaking.searching')}</h2>
                                     <p className="text-gray-400 mb-2">{t('matchmaking.description')}</p>
+                                    <p className="text-2xl font-mono text-white mb-2">
+                                        {Math.floor(elapsedTime / 60)}:{(elapsedTime % 60).toString().padStart(2, '0')}
+                                    </p>
                                     <p className="text-sm text-blue-400 mb-8 font-mono">Range: ±{searchRange}</p>
                                     <button
                                         onClick={() => { playSound('click'); cancelSearch(); }}
@@ -129,6 +132,26 @@ const Home = () => {
                                     >
                                         {t('common.cancel')}
                                     </button>
+                                </>
+                            ) : status === 'timeout' ? (
+                                <>
+                                    <AlertTriangle className="w-16 h-16 text-red-500 mb-6" />
+                                    <h2 className="text-2xl font-bold mb-2 text-white">{t('matchmaking.timeout')}</h2>
+                                    <p className="text-gray-400 mb-8">{t('matchmaking.timeoutDesc')}</p>
+                                    <div className="flex gap-4">
+                                        <button
+                                            onClick={() => { playSound('click'); cancelSearch(); }}
+                                            className="px-6 py-3 rounded-xl bg-gray-700 hover:bg-gray-600 font-bold transition-colors"
+                                        >
+                                            {t('common.close')}
+                                        </button>
+                                        <button
+                                            onClick={() => { playSound('click'); cancelSearch(); handleModeSelect(currentMode.current); }}
+                                            className="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold transition-colors"
+                                        >
+                                            {t('common.retry')}
+                                        </button>
+                                    </div>
                                 </>
                             ) : (
                                 <>
