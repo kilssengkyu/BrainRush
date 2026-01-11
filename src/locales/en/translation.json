@@ -56,7 +56,8 @@
         "defeat": "DEFEAT",
         "returnMenu": "Return to Menu",
         "reconnecting": "Waiting for Opponent...",
-        "reconnectingDesc": "Opponent disconnected. Winning by default in:"
+        "reconnectingDesc": "Opponent disconnected. Winning by default in:",
+        "myTime": "My Time"
     },
     "matchmaking": {
         "searching": "Searching...",

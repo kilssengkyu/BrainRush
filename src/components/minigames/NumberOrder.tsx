@@ -29,6 +29,8 @@ const NumberOrder: React.FC<NumberOrderProps> = ({
     const [clearedNumbers, setClearedNumbers] = useState<number[]>([]);
     const startTimeRef = React.useRef<number>(0);
     const [countdown, setCountdown] = useState<string | null>(null);
+    const [elapsedTime, setElapsedTime] = useState<number>(0);
+
 
     // Precise Countdown Logic
     React.useEffect(() => {
@@ -55,6 +57,27 @@ const NumberOrder: React.FC<NumberOrderProps> = ({
         }
     }, [phase, phaseEndAt, serverOffset]);
 
+    // Timer Logic
+    useEffect(() => {
+        let animationFrameId: number = 0;
+
+        const updateTimer = () => {
+            if (phase === 'playing' && startTimeRef.current > 0) {
+                const now = Date.now();
+                setElapsedTime(now - startTimeRef.current);
+                animationFrameId = requestAnimationFrame(updateTimer);
+            }
+        };
+
+        if (phase === 'playing') {
+            updateTimer();
+        } else if (phase === 'result') {
+            cancelAnimationFrame(animationFrameId);
+        }
+
+        return () => cancelAnimationFrame(animationFrameId);
+    }, [phase]);
+
     // Initialize/Reset Panel
     useEffect(() => {
         if (phase === 'playing') {
@@ -63,6 +86,7 @@ const NumberOrder: React.FC<NumberOrderProps> = ({
             setCurrentStep(0);
             setClearedNumbers([]);
             startTimeRef.current = Date.now(); // Start Timer
+            setElapsedTime(0);
         }
     }, [phase, seed]);
 
@@ -116,6 +140,7 @@ const NumberOrder: React.FC<NumberOrderProps> = ({
                     // Game Complete: Send elapsed time
                     const endTime = Date.now();
                     const duration = endTime - startTimeRef.current;
+                    setElapsedTime(duration); // Fix the display time
                     onGameComplete(duration);
                 }
             }
@@ -204,8 +229,19 @@ const NumberOrder: React.FC<NumberOrderProps> = ({
                         </div>
                     )}
                 </AnimatePresence>
-            </div>
-        </div>
+            </div >
+
+            {/* Timer Display */}
+            < div className={`text-2xl font-mono font-bold transition-all duration-300 ${phase === 'playing' ? 'text-gray-400' :
+                (phase === 'result' || clearedNumbers.length === 9 * panelCount) ? 'text-yellow-400 scale-110' : 'opacity-0'
+                }`}>
+                {phase === 'playing' ? (
+                    <span>{(elapsedTime / 1000).toFixed(2)}s</span>
+                ) : (clearedNumbers.length === 9 * panelCount) ? (
+                    <span>{t('game.myTime')}: {(elapsedTime / 1000).toFixed(2)}s</span>
+                ) : null}
+            </div >
+        </div >
     );
 };
 

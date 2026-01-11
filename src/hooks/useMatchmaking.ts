@@ -56,19 +56,11 @@ export const useMatchmaking = (
                 return;
             }
 
-            // 1. Passive Check: Check if someone else already matched me
-            // Look back 1 hour to allow reconnection to active games
-            const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-            const { data: passiveMatch } = await supabase.from('game_sessions')
-                .select('*')
-                .or(`player1_id.eq.${playerId},player2_id.eq.${playerId}`)
-                .neq('status', 'finished')
-                .lt('player1_score', 3)
-                .lt('player2_score', 3)
-                .gt('created_at', oneHourAgo)
-                .order('created_at', { ascending: false })
-                .limit(1)
-                .maybeSingle();
+
+            // Use RPC to bypass RLS for Guest users
+            const { data: passiveMatch } = await supabase.rpc('check_active_session', {
+                p_player_id: playerId
+            }).maybeSingle() as { data: { room_id: string, opponent_id: string, status: string, created_at: string } | null };
 
             if (passiveMatch) {
                 // Smart Filter:
@@ -78,16 +70,15 @@ export const useMatchmaking = (
                     (Date.now() - new Date(passiveMatch.created_at).getTime() > 5 * 60 * 1000);
 
                 if (isStaleWaitingRoom) {
-                    console.log('Ignoring stale waiting session:', passiveMatch.id);
+                    console.log('Ignoring stale waiting session:', passiveMatch.room_id);
                 } else {
-                    console.log('Passive Match Detected! Reconnecting/Matching:', passiveMatch.id);
+                    console.log('Passive Match Detected! Reconnecting/Matching:', passiveMatch.room_id);
                     if (searchInterval.current) clearInterval(searchInterval.current);
                     setStatus('matched');
 
                     // Add delay to show "Matched!" modal
                     setTimeout(() => {
-                        const opponentId = passiveMatch.player1_id === playerId ? passiveMatch.player2_id : passiveMatch.player1_id;
-                        onMatchFound(passiveMatch.id, opponentId);
+                        onMatchFound(passiveMatch.room_id, passiveMatch.opponent_id);
                     }, 1500);
                     return;
                 }

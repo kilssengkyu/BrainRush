@@ -28,6 +28,36 @@ const RockPaperScissors: React.FC<RPSProps> = ({
     const { t } = useTranslation();
     const [shake, setShake] = useState<Move | null>(null);
     const [countdown, setCountdown] = useState<string | null>(null);
+    const [elapsedTime, setElapsedTime] = useState<number>(0);
+    const [selectedMove, setSelectedMove] = useState<Move | null>(null);
+    const startTimeRef = React.useRef<number>(0);
+
+    // Timer Logic
+    React.useEffect(() => {
+        let animationFrameId: number = 0;
+
+        const updateTimer = () => {
+            if (phase === 'playing' && startTimeRef.current > 0 && !selectedMove) {
+                const now = Date.now();
+                setElapsedTime(now - startTimeRef.current);
+                animationFrameId = requestAnimationFrame(updateTimer);
+            }
+        };
+
+        if (phase === 'playing') {
+            startTimeRef.current = Date.now();
+            setSelectedItem(null); // Reset selection
+            setElapsedTime(0);
+            updateTimer();
+        } else if (phase === 'result') {
+            cancelAnimationFrame(animationFrameId);
+        }
+
+        return () => cancelAnimationFrame(animationFrameId);
+    }, [phase]);
+
+    // Internal helper to set selection
+    const setSelectedItem = (val: Move | null) => setSelectedMove(val);
 
     // Precise Countdown Logic
     React.useEffect(() => {
@@ -55,7 +85,7 @@ const RockPaperScissors: React.FC<RPSProps> = ({
     }, [phase, phaseEndAt, serverOffset]);
 
     const handlePress = (move: Move) => {
-        if (phase !== 'playing' || !targetMove) return;
+        if (phase !== 'playing' || !targetMove || selectedMove) return;
 
         // Determine correct move
         let correctMove: Move;
@@ -64,6 +94,9 @@ const RockPaperScissors: React.FC<RPSProps> = ({
         else correctMove = 'rock';
 
         if (move === correctMove) {
+            const endTime = Date.now();
+            setElapsedTime(endTime - startTimeRef.current);
+            setSelectedMove(move);
             onMoveSelected(move);
         } else {
             // Wrong move feedback
@@ -151,6 +184,17 @@ const RockPaperScissors: React.FC<RPSProps> = ({
                         {move === 'scissors' && '✌️'}
                     </motion.button>
                 ))}
+            </div>
+
+            {/* Timer Display */}
+            <div className={`absolute bottom-8 text-2xl font-mono font-bold transition-all duration-300 ${phase === 'playing' ? 'text-gray-400' :
+                (selectedMove) ? 'text-yellow-400 scale-110' : 'opacity-0'
+                }`}>
+                {phase === 'playing' ? (
+                    <span>{(elapsedTime / 1000).toFixed(2)}s</span>
+                ) : (selectedMove) ? (
+                    <span>{t('game.myTime')}: {(elapsedTime / 1000).toFixed(2)}s</span>
+                ) : null}
             </div>
 
         </div>
