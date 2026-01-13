@@ -36,7 +36,11 @@ BEGIN
     FROM game_sessions gs
     WHERE (gs.player1_id = p_player_id OR gs.player2_id = p_player_id)
       AND gs.status != 'finished'
-      AND gs.created_at > (now() - interval '1 hour')
+      AND (
+          (gs.status = 'waiting' AND gs.created_at > (now() - interval '60 seconds'))
+          OR
+          (gs.status != 'waiting' AND gs.created_at > (now() - interval '1 hour'))
+      )
     ORDER BY gs.created_at DESC
     LIMIT 1;
 END;

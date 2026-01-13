@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabaseClient';
 
 export interface GameState {
     status: 'waiting' | 'countdown' | 'playing' | 'round_end' | 'finished';
-    gameType: 'RPS' | 'NUMBER_ASC' | 'NUMBER_DESC' | null;
+    gameType: 'RPS' | 'RPS_LOSE' | 'NUMBER_ASC' | 'NUMBER_DESC' | null;
     round: number;
     scores: { me: number; opponent: number };
     gameData: any;
@@ -11,6 +11,7 @@ export interface GameState {
     resultMessage: string | null;
     timeLeft: number;
     phaseEndAt: string | null;
+    mode: 'rank' | 'normal';
     mmrChange: number | null;
 }
 
@@ -25,10 +26,29 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
         resultMessage: null,
         timeLeft: 0,
         phaseEndAt: null,
+        mode: 'rank',
         mmrChange: null
     });
 
     const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
+    const [serverOffset, setServerOffset] = useState<number>(0);
+
+    // Sync Clock on Mount
+    useEffect(() => {
+        const syncTime = async () => {
+            const start = Date.now();
+            const { data, error } = await supabase.rpc('get_server_time');
+            const end = Date.now();
+            if (data && !error) {
+                const latency = (end - start) / 2;
+                const serverTime = new Date(data).getTime();
+                const offset = serverTime - (end - latency);
+                console.log('[TimeSync] Offset:', offset, 'ms (Latency:', latency, 'ms)');
+                setServerOffset(Math.round(offset));
+            }
+        };
+        syncTime();
+    }, []);
 
     // Dynamic Host Logic
     const isHostUser = (() => {
@@ -44,6 +64,7 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
     // Using Ref to track round changes for UI effects
     const lastRoundRef = useRef<number>(0);
     const isCountingDownRef = useRef<boolean>(false);
+    const phaseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Unified State Handler
     const handleGameUpdate = useCallback((record: any) => {
@@ -92,6 +113,7 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
                 resultMessage: result,
                 timeLeft: remaining,
                 phaseEndAt: record.phase_end_at,
+                mode: record.mode || 'rank',
                 mmrChange: myMmrChange
             };
         });
@@ -105,14 +127,7 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
                 console.log('Both players ready! Starting game...');
                 supabase.rpc('start_next_round', { p_room_id: roomId }).then();
             }
-            // COUNTDOWN -> PLAYING
-            if (record.status === 'countdown' && remaining <= 0) {
-                supabase.rpc('trigger_game_start', { p_room_id: roomId }).then();
-            }
-            // PLAYING -> ROUND END
-            if (record.status === 'playing' && remaining <= 0) {
-                supabase.rpc('resolve_round', { p_room_id: roomId }).then();
-            }
+            // Countdown/playing transitions are handled by precise timers below.
         }
     }, [myId, isHostUser, roomId]);
 
@@ -152,7 +167,7 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
         const timer = setInterval(() => {
             supabase.from('game_sessions').select('*').eq('id', roomId).single()
                 .then(({ data }) => { if (data) handleGameUpdate(data); });
-        }, 1000);
+        }, 250);
         return () => clearInterval(timer);
     }, [roomId, handleGameUpdate]);
 
@@ -185,10 +200,35 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
         if (gameState.status === 'round_end') {
             const t = setTimeout(() => {
                 startRoundRpc();
-            }, 3000);
+            }, 1000);
             return () => clearTimeout(t);
         }
     }, [gameState.status, isHostUser, startRoundRpc]);
+
+    // 3.5 Precise Phase-End Timer (Host-only)
+    useEffect(() => {
+        if (!isHostUser) return;
+        if (!gameState.phaseEndAt) return;
+        if (gameState.status !== 'countdown' && gameState.status !== 'playing') return;
+
+        if (phaseTimerRef.current) clearTimeout(phaseTimerRef.current);
+
+        const target = new Date(gameState.phaseEndAt).getTime();
+        const now = Date.now() + serverOffset;
+        const delay = Math.max(0, target - now);
+
+        phaseTimerRef.current = setTimeout(() => {
+            if (gameState.status === 'countdown') {
+                supabase.rpc('trigger_game_start', { p_room_id: roomId }).then();
+            } else if (gameState.status === 'playing') {
+                supabase.rpc('resolve_round', { p_room_id: roomId }).then();
+            }
+        }, delay);
+
+        return () => {
+            if (phaseTimerRef.current) clearTimeout(phaseTimerRef.current);
+        };
+    }, [gameState.phaseEndAt, gameState.status, isHostUser, roomId, serverOffset]);
 
     const [isReconnecting, setIsReconnecting] = useState(false);
     const [reconnectTimer, setReconnectTimer] = useState(30);
@@ -239,30 +279,27 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
                     }
                     return prev - 1;
                 });
+
             }, 1000);
         }
         return () => clearInterval(interval);
     }, [isReconnecting, roomId, opponentId]);
 
-    const [serverOffset, setServerOffset] = useState<number>(0);
+    const [isWaitingTimeout, setIsWaitingTimeout] = useState(false);
 
-    // Sync Clock on Mount
+    // 6. Waiting Timeout (Avoid getting stuck in empty rooms)
     useEffect(() => {
-        const syncTime = async () => {
-            const start = Date.now();
-            const { data, error } = await supabase.rpc('get_server_time');
-            const end = Date.now();
-            if (data && !error) {
-                const latency = (end - start) / 2;
-                const serverTime = new Date(data).getTime();
-                const offset = serverTime - (end - latency);
-                console.log('[TimeSync] Offset:', offset, 'ms (Latency:', latency, 'ms)');
-                setServerOffset(Math.round(offset));
-            }
-        };
-        syncTime();
-    }, []);
+        let timer: ReturnType<typeof setTimeout>;
+        if (gameState.status === 'waiting') {
+            timer = setTimeout(() => {
+                console.log('Waiting Timeout! No game start for 30s.');
+                setIsWaitingTimeout(true);
+            }, 30000); // 30 seconds
+        } else {
+            setIsWaitingTimeout(false);
+        }
+        return () => clearTimeout(timer);
+    }, [gameState.status]);
 
-    // ... (rest of the file)
-    return { gameState, submitMove, isReconnecting, reconnectTimer, serverOffset };
+    return { gameState, submitMove, isReconnecting, reconnectTimer, serverOffset, isWaitingTimeout };
 };

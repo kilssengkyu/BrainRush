@@ -67,7 +67,7 @@ export const useMatchmaking = (
                 // 1. If status is 'waiting' and it's old (> 5 mins), it's a ghost room. Ignore it.
                 // 2. If status is 'playing' (or others), it's an active game. Reconnect even if > 1 min.
                 const isStaleWaitingRoom = passiveMatch.status === 'waiting' &&
-                    (Date.now() - new Date(passiveMatch.created_at).getTime() > 5 * 60 * 1000);
+                    (Date.now() - new Date(passiveMatch.created_at).getTime() > 60 * 1000);
 
                 if (isStaleWaitingRoom) {
                     console.log('Ignoring stale waiting session:', passiveMatch.room_id);

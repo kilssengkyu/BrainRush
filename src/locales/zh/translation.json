@@ -2,14 +2,27 @@
     "title": "BrainRush",
     "common": {
         "cancel": "取消",
-        "confirm": "确认"
+        "confirm": "确认",
+        "close": "关闭",
+        "retry": "重试"
     },
     "menu": {
-        "play": "开始游戏",
-        "rank": "排名赛",
-        "friendly": "好友对战",
+        "normal": {
+            "title": "普通模式",
+            "subtitle": "基础脑力训练"
+        },
+        "rank": {
+            "title": "排位模式",
+            "subtitle": "全球玩家竞技"
+        },
+        "friendly": {
+            "title": "好友对战",
+            "subtitle": "与好友1v1"
+        },
         "settings": "设置",
-        "logout": "登出"
+        "login": "登录",
+        "logout": "登出",
+        "profile": "个人资料"
     },
     "settings": {
         "title": "设置",
@@ -26,19 +39,48 @@
         "waiting": "等待游戏...",
         "victory": "胜利",
         "defeat": "失败",
-        "returnMenu": "返回菜单"
+        "returnMenu": "返回菜单",
+        "reconnecting": "等待对手...",
+        "reconnectingDesc": "对手断开连接。自动获胜倒计时:",
+        "myTime": "我的记录",
+        "rank": "排位",
+        "normal": "普通",
+        "unknownPlayer": "未知玩家",
+        "guest": "游客",
+        "you": "你",
+        "opponent": "对手"
+    },
+    "user": {
+        "level": "等级",
+        "rank": "排名"
+    },
+    "profile": {
+        "nicknamePlaceholder": "输入昵称",
+        "edit": "编辑",
+        "record": "战绩",
+        "disconnects": "掉线",
+        "updateSuccess": "更新成功",
+        "updateFail": "更新失败",
+        "deleteSuccess": "账户已删除",
+        "deleteFail": "删除失败"
     },
     "matchmaking": {
         "searching": "搜索中...",
         "description": "正在寻找合适的对手",
         "cancel": "取消",
         "found": "匹配成功!",
-        "entering": "正在进入游戏..."
+        "entering": "正在进入游戏...",
+        "timeout": "匹配超时",
+        "timeoutDesc": "未找到对手"
     },
     "rps": {
         "ready": "准备...",
         "beatIt": "赢他!",
-        "round": "回合"
+        "lose": "输给他!",
+        "reverse": "反向",
+        "round": "回合",
+        "titleWin": "胜者猜拳",
+        "titleLose": "败者猜拳"
     },
     "number": {
         "asc": "从小到大按数字!",
