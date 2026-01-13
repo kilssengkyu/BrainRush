@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useGameState } from '../hooks/useGameState';
 import { supabase } from '../lib/supabaseClient';
 import RockPaperScissors from '../components/minigames/RockPaperScissors';
@@ -14,7 +14,7 @@ const Game: React.FC = () => {
     const navigate = useNavigate();
 
     // Route state check
-    const { roomId: stateRoomId, myId, opponentId, isGuest } = location.state || {};
+    const { roomId: stateRoomId, myId, opponentId } = location.state || {};
     const roomId = routeRoomId || stateRoomId;
 
     // Profiles

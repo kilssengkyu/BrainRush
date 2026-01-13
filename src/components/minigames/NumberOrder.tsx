@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useTranslation } from 'react-i18next';
 import { SeededRandom } from '../../utils/seededRandom';
 
 interface NumberOrderProps {
@@ -9,7 +8,6 @@ interface NumberOrderProps {
 }
 
 const NumberOrder: React.FC<NumberOrderProps> = ({ seed, onScore }) => {
-    const { t } = useTranslation();
 
     const [panelIndex, setPanelIndex] = useState(0);
     const [clearedNumbers, setClearedNumbers] = useState<number[]>([]);
