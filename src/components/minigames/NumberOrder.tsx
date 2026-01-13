@@ -1,250 +1,121 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { SeededRandom } from '../../utils/seededRandom';
 
 interface NumberOrderProps {
-    gameType: 'NUMBER_ASC' | 'NUMBER_DESC';
-    seed: number;
-    onGameComplete: (duration?: number) => void;
-    phase: 'countdown' | 'playing' | 'result';
-    resultMessage: string | null;
-    phaseEndAt: string | null;
-    serverOffset: number;
+    seed: string | null;
+    onScore: (amount: number) => void;
 }
 
-const NumberOrder: React.FC<NumberOrderProps> = ({
-    gameType,
-    seed,
-    onGameComplete,
-    phase,
-    resultMessage,
-    phaseEndAt,
-    serverOffset
-}) => {
+const NumberOrder: React.FC<NumberOrderProps> = ({ seed, onScore }) => {
     const { t } = useTranslation();
-    const [numbers, setNumbers] = useState<number[]>([]);
-    const [currentStep, setCurrentStep] = useState<number>(0); // 0 to 8
-    const [panelCount, setPanelCount] = useState<number>(1);   // 1 or 2
-    const [shakeId, setShakeId] = useState<number | null>(null);
+
+    const [panelIndex, setPanelIndex] = useState(0);
     const [clearedNumbers, setClearedNumbers] = useState<number[]>([]);
-    const startTimeRef = React.useRef<number>(0);
-    const [countdown, setCountdown] = useState<string | null>(null);
-    const [elapsedTime, setElapsedTime] = useState<number>(0);
+    const [shakeId, setShakeId] = useState<number | null>(null);
+    const [animationKey, setAnimationKey] = useState(0);
 
+    // Generate Current Panel Data
+    const { numbers, type } = useMemo(() => {
+        if (!seed) return { numbers: [], type: 'ASC' };
 
-    const [isLocalFinished, setIsLocalFinished] = useState(false);
+        const rng = new SeededRandom(`${seed}_num_${panelIndex}`);
 
-    // Precise Countdown Logic
-    React.useEffect(() => {
-        if (phase === 'countdown' && phaseEndAt) {
-            let animationFrameId: number;
-            const animate = () => {
-                const now = Date.now() + serverOffset;
-                const target = new Date(phaseEndAt).getTime();
-                const diff = (target - now) / 1000;
-                if (diff > 0) {
-                    setCountdown(diff.toFixed(2));
-                    animationFrameId = requestAnimationFrame(animate);
-                } else {
-                    setCountdown('START!');
-                }
-            };
-            animationFrameId = requestAnimationFrame(animate);
-            return () => cancelAnimationFrame(animationFrameId);
-        } else {
-            setCountdown(null);
-        }
-    }, [phase, phaseEndAt, serverOffset]);
-
-    // Timer Logic
-    useEffect(() => {
-        let animationFrameId: number = 0;
-        const updateTimer = () => {
-            if (phase === 'playing' && !isLocalFinished) {
-                if (startTimeRef.current > 0) {
-                    const now = Date.now();
-                    setElapsedTime(now - startTimeRef.current);
-                }
-                animationFrameId = requestAnimationFrame(updateTimer);
-            }
-        };
-
-        if (phase === 'playing') {
-            updateTimer();
-        } else if (phase === 'result') {
-            cancelAnimationFrame(animationFrameId);
-        }
-        return () => cancelAnimationFrame(animationFrameId);
-    }, [phase, isLocalFinished]);
-
-    // Initialize/Reset Panel
-    useEffect(() => {
-        if (phase === 'playing') {
-            setPanelCount(1);
-            generateGrid(1);
-            setCurrentStep(0);
-            setClearedNumbers([]);
-            startTimeRef.current = Date.now();
-            setElapsedTime(0);
-            setIsLocalFinished(false);
-        }
-    }, [phase, seed]);
-
-    const generateGrid = (targetPanel: number = panelCount) => {
-        let currentSeed = seed + targetPanel * 1357;
-        const rng = () => {
-            const x = Math.sin(currentSeed++) * 10000;
-            return x - Math.floor(x);
-        };
+        // 1. Generate 1-9
         const nums = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-        // Fisher-Yates shuffle
-        for (let i = nums.length - 1; i > 0; i--) {
-            const j = Math.floor(rng() * (i + 1));
-            [nums[i], nums[j]] = [nums[j], nums[i]];
-        }
-        setNumbers(nums);
-    };
+        // 2. Shuffle
+        const shuffled = rng.shuffle(nums);
+        // 3. Determine Type (ASC or DESC) - 50/50
+        const isAsc = rng.next() > 0.5; // True = ASC, False = DESC
+
+        return { numbers: shuffled, type: isAsc ? 'ASC' : 'DESC' };
+    }, [seed, panelIndex]);
 
     const handleNumberClick = (num: number) => {
-        if (phase !== 'playing' || isLocalFinished) return;
         if (clearedNumbers.includes(num)) return;
 
-        const isAsc = gameType === 'NUMBER_ASC';
-        const expected = isAsc ? (currentStep + 1) : (9 - currentStep);
+        const currentStep = clearedNumbers.length; // 0 to 8
+        // Expected number depends on Type
+        // If ASC: 1, 2, 3... -> Expected = currentStep + 1
+        // If DESC: 9, 8, 7... -> Expected = 9 - currentStep
+        const expected = type === 'ASC' ? (currentStep + 1) : (9 - currentStep);
 
         if (num === expected) {
-            setClearedNumbers(prev => [...prev, num]);
-            const nextStep = currentStep + 1;
-            setCurrentStep(nextStep);
+            // Correct
+            onScore(20); // 20 Points per digit
+            const newCleared = [...clearedNumbers, num];
+            setClearedNumbers(newCleared);
 
-            if (nextStep === 9) {
-                if (panelCount === 1) {
-                    setTimeout(() => {
-                        setPanelCount(2);
-                        setClearedNumbers([]);
-                        setCurrentStep(0);
-                        generateGrid(2);
-                    }, 500);
-                } else {
-                    const endTime = Date.now();
-                    const duration = endTime - startTimeRef.current;
-                    setElapsedTime(duration);
-                    setIsLocalFinished(true); // Mark as locally finished
-                    onGameComplete(duration);
-                }
+            // Check if Panel Cleared
+            if (newCleared.length === 9) {
+                // Bonus for clearing panel?
+                onScore(100);
+                // Delay slightly for visual satisfaction then next panel
+                setTimeout(() => {
+                    setPanelIndex(prev => prev + 1);
+                    setClearedNumbers([]);
+                    setAnimationKey(prev => prev + 1);
+                }, 250);
             }
         } else {
+            // Wrong
             setShakeId(num);
-            setTimeout(() => setShakeId(null), 500);
+            setTimeout(() => setShakeId(null), 400);
         }
     };
 
-    const getResultText = (msg: string | null) => {
-        if (!msg) return '';
-        if (msg === 'WIN') return t('game.victory');
-        if (msg === 'LOSE') return t('game.defeat');
-        if (msg === 'DRAW') return t('game.draw');
-        return msg;
-    };
+    if (!seed) return <div className="text-white">Loading...</div>;
 
     return (
-        <div className="flex flex-col items-center justify-center w-full h-full gap-8 relative">
-
+        <div className="flex flex-col items-center justify-center w-full h-full gap-6 relative">
             {/* Header / Instructions */}
-            <div className={`flex flex-col items-center transition-opacity duration-300 ${isLocalFinished || phase === 'result' ? 'opacity-0' : 'opacity-100'}`}>
-                <h2 className="text-xl font-bold text-gray-400">
-                    {gameType === 'NUMBER_ASC' ? t('number.asc') : t('number.desc')}
+            <div className="flex flex-col items-center gap-2">
+                <h2 className={`text-2xl font-bold ${type === 'ASC' ? 'text-blue-400' : 'text-orange-400'}`}>
+                    {type === 'ASC' ? "1 → 9" : "9 → 1"}
                 </h2>
-                <div className="flex gap-2 mt-2">
-                    <span className={`px-3 py-1 rounded-full text-sm font-bold transition-colors ${panelCount === 1 ? 'bg-blue-500 text-white' : 'bg-gray-700 text-gray-500'}`}>{t('number.panel')} 1</span>
-                    <span className={`px-3 py-1 rounded-full text-sm font-bold transition-colors ${panelCount === 2 ? 'bg-blue-500 text-white' : 'bg-gray-700 text-gray-500'}`}>{t('number.panel')} 2</span>
+                <div className="text-gray-500 font-mono text-sm">
+                    Panel: {panelIndex + 1}
                 </div>
             </div>
 
             {/* Grid Area */}
-            <div className="relative w-80 h-80">
-                <AnimatePresence mode="wait">
-                    {/* Countdown Overlay */}
-                    {phase === 'countdown' && (
-                        <motion.div
-                            key="countdown"
-                            initial={{ scale: 0.5, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 1.5, opacity: 0 }}
-                            className="absolute inset-0 flex flex-col items-center justify-center z-20"
-                        >
-                            <h3 className="text-2xl font-bold text-white mb-4 text-center px-4">
-                                {gameType === 'NUMBER_ASC' ? t('number.asc') : t('number.desc')}
-                            </h3>
-                            <div className="text-6xl font-black text-blue-500 animate-pulse font-mono">
-                                {countdown || t('number.ready')}
-                            </div>
-                        </motion.div>
-                    )}
-
-                    {/* Result / Finish Overlay */}
-                    {(isLocalFinished || phase === 'result') && (
-                        <motion.div
-                            key="finished"
-                            initial={{ scale: 0.8, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            className="absolute inset-0 flex flex-col items-center justify-center z-40 bg-black/60 backdrop-blur-sm rounded-3xl gap-4"
-                        >
-                            <span className="text-xl font-bold text-blue-200">
-                                {t('game.myTime')}
-                            </span>
-                            <div className="text-6xl font-black text-white font-mono drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]">
-                                {(elapsedTime / 1000).toFixed(2)}s
-                            </div>
-
-                            {/* Server Result Badge */}
-                            {resultMessage && (
-                                <motion.div
-                                    initial={{ y: 20, opacity: 0 }}
-                                    animate={{ y: 0, opacity: 1 }}
-                                    className={`px-6 py-2 rounded-xl text-3xl font-black shadow-lg ${resultMessage === 'WIN' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-                                        }`}
-                                >
-                                    {getResultText(resultMessage)}
-                                </motion.div>
-                            )}
-                        </motion.div>
-                    )}
-
-                    {/* Number Grid */}
-                    {phase === 'playing' && !isLocalFinished && (
-                        <div className="grid grid-cols-3 gap-3 w-full h-full">
-                            {numbers.map((num) => (
-                                <motion.button
-                                    key={`${panelCount}-${num}`}
-                                    initial={{ scale: 0.8, opacity: 0 }}
-                                    animate={
-                                        shakeId === num
-                                            ? { x: [-5, 5, -5, 5, 0], backgroundColor: '#ef4444', scale: 1, opacity: 1 }
-                                            : clearedNumbers.includes(num)
-                                                ? { scale: 0.9, opacity: 0, backgroundColor: '#22c55e' }
-                                                : { scale: 1, opacity: 1, backgroundColor: '#1f2937' }
-                                    }
-                                    transition={{ duration: 0.2 }}
-                                    onClick={() => handleNumberClick(num)}
-                                    disabled={clearedNumbers.includes(num)}
-                                    className="rounded-xl flex items-center justify-center text-4xl font-bold text-white border-2 border-gray-700 hover:border-blue-500 shadow-lg active:scale-95"
-                                >
-                                    {num}
-                                </motion.button>
-                            ))}
-                        </div>
-                    )}
+            <div className="w-80 h-80 relative">
+                <AnimatePresence mode="popLayout">
+                    <motion.div
+                        key={animationKey}
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 1.1, opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="grid grid-cols-3 gap-3 w-full h-full"
+                    >
+                        {numbers.map((num) => (
+                            <motion.button
+                                key={`${panelIndex}-${num}`}
+                                onMouseDown={() => handleNumberClick(num)}
+                                animate={
+                                    shakeId === num
+                                        ? { x: [-5, 5, -5, 5, 0], backgroundColor: '#ef4444' }
+                                        : clearedNumbers.includes(num)
+                                            ? { scale: 0.9, opacity: 0, backgroundColor: '#22c55e' } // Green when cleared (or hide?)
+                                            // Actually hiding them makes it easier. Let's Fade them out.
+                                            : { scale: 1, opacity: 1 }
+                                }
+                                // If cleared, we can also just visibility: hidden or opacity 0
+                                style={{
+                                    opacity: clearedNumbers.includes(num) ? 0.2 : 1,
+                                    pointerEvents: clearedNumbers.includes(num) ? 'none' : 'auto'
+                                }}
+                                className="rounded-xl flex items-center justify-center text-4xl font-bold text-white border-2 border-gray-600 bg-gray-800 hover:border-white shadow-lg active:scale-95 transition-colors"
+                            >
+                                {num}
+                            </motion.button>
+                        ))}
+                    </motion.div>
                 </AnimatePresence>
-            </div >
-
-            {/* Bottom Timer (Visible during play) */}
-            <div className={`transition-all duration-300 ${isLocalFinished || phase === 'result' ? 'opacity-0' : 'opacity-100'}`}>
-                <div className="text-3xl font-mono font-bold text-gray-400 tabular-nums">
-                    {(elapsedTime / 1000).toFixed(2)}s
-                </div>
             </div>
-        </div >
+        </div>
     );
 };
 
