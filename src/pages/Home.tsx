@@ -30,7 +30,7 @@ const Home = () => {
     // Matchmaking Hook
     const { status, startSearch, cancelSearch, searchRange, elapsedTime, playerId } = useMatchmaking((roomId, opponentId) => {
         playSound('match_found');
-        navigate('/game', { state: { roomId, myId: playerId, opponentId, mode: currentMode.current } });
+        navigate(`/game/${roomId}`, { state: { roomId, myId: playerId, opponentId, mode: currentMode.current } });
     });
 
     // Animation variants

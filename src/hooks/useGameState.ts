@@ -2,38 +2,35 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
 export interface GameState {
-    status: 'waiting' | 'countdown' | 'playing' | 'round_end' | 'finished';
-    gameType: 'RPS' | 'RPS_LOSE' | 'NUMBER_ASC' | 'NUMBER_DESC' | null;
-    round: number;
-    scores: { me: number; opponent: number };
-    gameData: any;
-    targetMove: string | null;
-    resultMessage: string | null;
-    timeLeft: number;
-    phaseEndAt: string | null;
-    mode: 'rank' | 'normal';
-    mmrChange: number | null;
+    status: 'waiting' | 'playing' | 'finished';
+    gameType: 'RPS' | 'NUMBER' | null;
+    seed: string | null;
+    endAt: string | null;
+    myScore: number;
+    opScore: number;
+    winnerId: string | null;
+    remainingTime: number;
 }
 
 export const useGameState = (roomId: string, myId: string, opponentId: string) => {
     const [gameState, setGameState] = useState<GameState>({
         status: 'waiting',
         gameType: null,
-        round: 0,
-        scores: { me: 0, opponent: 0 },
-        gameData: null,
-        targetMove: null,
-        resultMessage: null,
-        timeLeft: 0,
-        phaseEndAt: null,
-        mode: 'rank',
-        mmrChange: null
+        seed: null,
+        endAt: null,
+        myScore: 0,
+        opScore: 0,
+        winnerId: null,
+        remainingTime: 30
     });
 
-    const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
     const [serverOffset, setServerOffset] = useState<number>(0);
+    const scoreRef = useRef(0);
+    const lastSyncedScore = useRef(0);
+    const [isWaitingTimeout, setIsWaitingTimeout] = useState(false);
+    const isFinishing = useRef(false);
 
-    // Sync Clock on Mount
+    // --- Time Sync ---
     useEffect(() => {
         const syncTime = async () => {
             const start = Date.now();
@@ -43,263 +40,211 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
                 const latency = (end - start) / 2;
                 const serverTime = new Date(data).getTime();
                 const offset = serverTime - (end - latency);
-                console.log('[TimeSync] Offset:', offset, 'ms (Latency:', latency, 'ms)');
                 setServerOffset(Math.round(offset));
             }
         };
         syncTime();
     }, []);
 
-    // Dynamic Host Logic
+    // --- Host Logic ---
+    const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
     const isHostUser = (() => {
-        if (onlineUsers.length === 0) return myId < opponentId;
-        if (onlineUsers.length === 1 && onlineUsers.includes(myId)) return true;
-        // If opponent is missing from onlineUsers but we are not alone? (e.g. a spectator?)
-        // Ideally ensure we filter for valid players. For now assume room is p1/p2.
-        if (onlineUsers.includes(opponentId)) return myId < opponentId;
-        return myId < opponentId;
+        if (onlineUsers.length > 0) return myId < opponentId;
+        return myId < opponentId; // Fallback
     })();
 
-
-    // Using Ref to track round changes for UI effects
-    const lastRoundRef = useRef<number>(0);
-    const isCountingDownRef = useRef<boolean>(false);
-    const phaseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-    // Unified State Handler
-    const handleGameUpdate = useCallback((record: any) => {
+    // --- Game Loop Update ---
+    const handleUpdate = useCallback((record: any) => {
         if (!record) return;
 
-        const isPlayer1 = myId === record.player1_id;
-        const myScore = isPlayer1 ? record.player1_score : record.player2_score;
-        const opScore = isPlayer1 ? record.player2_score : record.player1_score;
-        const myMmrChange = isPlayer1 ? record.player1_mmr_change : record.player2_mmr_change;
+        const isP1 = myId === record.player1_id;
+        const sP1 = record.player1_score;
+        const sP2 = record.player2_score;
 
-        // Detect New Round
-        if (record.current_round > lastRoundRef.current) {
-            console.log(`[Game] New Round Detected: ${lastRoundRef.current} -> ${record.current_round}`);
-            lastRoundRef.current = record.current_round;
-            isCountingDownRef.current = true;
+        const myServerScore = isP1 ? sP1 : sP2;
+        const opServerScore = isP1 ? sP2 : sP1;
+
+        if (record.status === 'finished') {
+            console.log('Game FINISHED! Winner:', record.winner_id);
         }
 
-        // Calculate Time Left
-        const now = Date.now();
-        const endTime = record.phase_end_at ? new Date(record.phase_end_at).getTime() : now;
-        const remaining = Math.max(0, Math.ceil((endTime - now) / 1000));
-
         setGameState(prev => {
-            // Determine Result Message
-            let result = prev.resultMessage;
-
-            // Only calculate new result if we just entered round_end state
-            if (record.status === 'round_end') {
-                // Check if scores actually changed compared to our LOCAL previous state
-                // This implies a win/loss just happened.
-                if (myScore > prev.scores.me) result = 'WIN';
-                else if (opScore > prev.scores.opponent) result = 'LOSE';
-                else if (prev.status !== 'round_end') result = 'DRAW'; // No score change but ended? Timeout Draw.
-                // If already in round_end, keep the result (don't overwrite with DRAW potentially)
-            } else if (record.status === 'countdown' || record.status === 'playing') {
-                result = null; // Reset result for new round
+            // Recalculate remaining time whenever we get an update, just in case
+            let remaining = prev.remainingTime;
+            if (record.end_at) {
+                const now = Date.now() + serverOffset;
+                const end = new Date(record.end_at).getTime();
+                remaining = Math.max(0, (end - now) / 1000);
             }
 
             return {
                 status: record.status,
                 gameType: record.game_type,
-                round: record.current_round,
-                scores: { me: myScore, opponent: opScore },
-                gameData: record.game_data,
-                targetMove: record.target_move,
-                resultMessage: result,
-                timeLeft: remaining,
-                phaseEndAt: record.phase_end_at,
-                mode: record.mode || 'rank',
-                mmrChange: myMmrChange
+                seed: record.seed,
+                endAt: record.end_at,
+                myScore: Math.max(scoreRef.current, myServerScore),
+                opScore: opServerScore,
+                winnerId: record.winner_id,
+                remainingTime: remaining
             };
         });
+    }, [myId, serverOffset]);
 
-        // Host Logic: Trigger Transitions (Server Authoritative via RPC)
-        // Use the calculated isHostUser value (caught in closure or passed?)
-        // Since handleGameUpdate is recreated when IS_HOST changes (dep array), it uses fresh value.
-        if (isHostUser) {
-            // WAITING -> COUNTDOWN (Only when BOTH are ready)
-            if (record.status === 'waiting' && record.player1_ready && record.player2_ready) {
-                console.log('Both players ready! Starting game...');
-                supabase.rpc('start_next_round', { p_room_id: roomId }).then();
-            }
-            // Countdown/playing transitions are handled by precise timers below.
-        }
-    }, [myId, isHostUser, roomId]);
-
-    // --- Actions ---
-    const startRoundRpc = useCallback(async () => {
-        const { error } = await supabase.rpc('start_next_round', { p_room_id: roomId });
-        if (error) console.error('[Game] start_next_round Failed:', error);
-    }, [roomId]);
-
-    const submitMove = useCallback(async (move: string) => {
-        const { error } = await supabase.rpc('submit_move', { p_room_id: roomId, p_player_id: myId, p_move: move });
-        if (error) console.error('[Game] submitMove Failed:', error);
-    }, [roomId, myId]);
+    const startGame = useCallback(async () => {
+        if (!roomId) return;
+        // RPC Call
+        await supabase.rpc('start_game', { p_room_id: roomId });
+        // Fallback Fetch
+        const { data } = await supabase.from('game_sessions').select('*').eq('id', roomId).maybeSingle();
+        if (data) handleUpdate(data);
+    }, [roomId, handleUpdate]);
 
 
-    // --- Effects ---
-
-    // 0. SIGNAL READY ON MOUNT
+    // --- Realtime Subscription ---
     useEffect(() => {
-        if (!roomId || !myId) return;
-        console.log('Signaling READY...');
-        supabase.rpc('set_player_ready', { p_room_id: roomId, p_player_id: myId }).then(({ error }) => {
-            if (error) console.error('Failed to set ready:', error);
-        });
-    }, [roomId, myId]);
-
-    // 1. UI Countdown Timer & Initial Fetch
-    useEffect(() => {
-        // Initial Fetch
-        supabase.from('game_sessions').select('*').eq('id', roomId).single()
-            .then(({ data }) => {
-                if (data) {
-                    handleGameUpdate(data);
-                }
-            });
-
-        const timer = setInterval(() => {
-            supabase.from('game_sessions').select('*').eq('id', roomId).single()
-                .then(({ data }) => { if (data) handleGameUpdate(data); });
-        }, 250);
-        return () => clearInterval(timer);
-    }, [roomId, handleGameUpdate]);
-
-    // 2. Realtime Subscription & Presence
-    useEffect(() => {
-        const channel = supabase.channel(`game_${roomId}`)
+        if (!roomId) return;
+        const channel = supabase.channel(`game_ta_${roomId}`)
             .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'game_sessions', filter: `id=eq.${roomId}` },
-                (payload) => handleGameUpdate(payload.new)
+                payload => handleUpdate(payload.new)
             )
             .on('presence', { event: 'sync' }, () => {
                 const state = channel.presenceState();
-                const userIds = Object.values(state).flat().map((p: any) => p.user_id);
-                // Unique user IDs just in case
-                const uniqueIds = Array.from(new Set(userIds)) as string[];
-                console.log('[Presence] Online Users:', uniqueIds);
-                setOnlineUsers(uniqueIds);
+                const ids = Object.values(state).flat().map((p: any) => p.user_id);
+                setOnlineUsers(Array.from(new Set(ids)) as string[]);
             })
-            .subscribe(async (status) => {
+            .subscribe(status => {
                 if (status === 'SUBSCRIBED') {
-                    await channel.track({ user_id: myId, online_at: new Date().toISOString() });
+                    channel.track({ user_id: myId });
                 }
             });
 
+        // Initial Fetch
+        supabase.from('game_sessions').select('*').eq('id', roomId).maybeSingle().then(({ data }) => {
+            if (data) handleUpdate(data);
+        });
+
         return () => { supabase.removeChannel(channel); };
-    }, [roomId, myId, handleGameUpdate]); // Re-subscribe if handleGameUpdate changes (which happens if isHost changes)
+    }, [roomId, myId, handleUpdate]);
 
-    // 3. Host Auto-Next-Round (3s after Result)
+
+    // --- Host Auto Start Logic (Initial) ---
     useEffect(() => {
         if (!isHostUser) return;
-        if (gameState.status === 'round_end') {
-            const t = setTimeout(() => {
-                startRoundRpc();
-            }, 1000);
-            return () => clearTimeout(t);
-        }
-    }, [gameState.status, isHostUser, startRoundRpc]);
-
-    // 3.5 Precise Phase-End Timer (Host-only)
-    useEffect(() => {
-        if (!isHostUser) return;
-        if (!gameState.phaseEndAt) return;
-        if (gameState.status !== 'countdown' && gameState.status !== 'playing') return;
-
-        if (phaseTimerRef.current) clearTimeout(phaseTimerRef.current);
-
-        const target = new Date(gameState.phaseEndAt).getTime();
-        const now = Date.now() + serverOffset;
-        const delay = Math.max(0, target - now);
-
-        phaseTimerRef.current = setTimeout(() => {
-            if (gameState.status === 'countdown') {
-                supabase.rpc('trigger_game_start', { p_room_id: roomId }).then();
-            } else if (gameState.status === 'playing') {
-                supabase.rpc('resolve_round', { p_room_id: roomId }).then();
-            }
-        }, delay);
-
-        return () => {
-            if (phaseTimerRef.current) clearTimeout(phaseTimerRef.current);
-        };
-    }, [gameState.phaseEndAt, gameState.status, isHostUser, roomId, serverOffset]);
-
-    const [isReconnecting, setIsReconnecting] = useState(false);
-    const [reconnectTimer, setReconnectTimer] = useState(30);
-
-    // 4. Reconnection Monitor
-    // 4. Reconnection Monitor (with Debounce Buffer)
-    useEffect(() => {
-        // Condition: Game is active (playing/countdown/round_end) AND opponent is offline
-        const isGameActive = ['playing', 'countdown', 'round_end'].includes(gameState.status);
-        const isOpponentOffline = onlineUsers.length > 0 && !onlineUsers.includes(opponentId);
-
-        let bufferTimer: ReturnType<typeof setTimeout>;
-
-        if (isGameActive && isOpponentOffline) {
-            // Buffer: Wait 2 seconds before declaring disconnection
-            bufferTimer = setTimeout(() => {
-                setIsReconnecting(true);
-            }, 2000);
-        } else {
-            setIsReconnecting(false);
-            // setReconnectTimer(30); // REMOVED: Keep remaining time (Cumulative Budget)
-        }
-
-        return () => clearTimeout(bufferTimer);
-    }, [gameState.status, onlineUsers, opponentId]);
-
-    // 5. Reconnection Countdown & Forfeit Trigger
-    useEffect(() => {
-        let interval: ReturnType<typeof setInterval>;
-        if (isReconnecting) {
-            interval = setInterval(async () => {
-                setReconnectTimer((prev) => {
-                    if (prev <= 1) {
-                        // Timeout! Trigger Forfeit
-                        clearInterval(interval);
-                        console.log('Opponent Timed Out! Triggering Forfeit...');
-
-                        // Only the remaining player (Host or not) should trigger this to avoid race conditions?
-                        // Actually, anyone online can trigger it.
-                        supabase.rpc('handle_disconnection', {
-                            p_room_id: roomId,
-                            p_leaver_id: opponentId
-                        }).then(({ error }) => {
-                            if (error) console.error('Failed to handle disconnection:', error);
-                        });
-
-                        return 0;
-                    }
-                    return prev - 1;
-                });
-
-            }, 1000);
-        }
-        return () => clearInterval(interval);
-    }, [isReconnecting, roomId, opponentId]);
-
-    const [isWaitingTimeout, setIsWaitingTimeout] = useState(false);
-
-    // 6. Waiting Timeout (Avoid getting stuck in empty rooms)
-    useEffect(() => {
-        let timer: ReturnType<typeof setTimeout>;
         if (gameState.status === 'waiting') {
-            timer = setTimeout(() => {
-                console.log('Waiting Timeout! No game start for 30s.');
-                setIsWaitingTimeout(true);
-            }, 30000); // 30 seconds
+            const opponentHere = onlineUsers.includes(opponentId);
+            if (opponentHere) {
+                startGame();
+            } else {
+                const timer = setTimeout(() => startGame(), 5000); // Force start fallback
+                return () => clearTimeout(timer);
+            }
+        }
+    }, [isHostUser, gameState.status, onlineUsers, opponentId, roomId, startGame]);
+
+
+    // --- Game Ticker & Host Enforcer ---
+    useEffect(() => {
+        if (gameState.status !== 'playing' || !gameState.endAt) return;
+
+        const ticker = setInterval(async () => {
+            const now = Date.now() + serverOffset;
+            const end = new Date(gameState.endAt!).getTime();
+            const diff = (end - now) / 1000;
+            const remaining = Math.max(0, diff);
+
+            setGameState(prev => ({ ...prev, remainingTime: remaining }));
+
+            // Host Logic: Finish Game
+            if (isHostUser && diff <= -1) {
+                if (!isFinishing.current) {
+                    isFinishing.current = true;
+                    console.log('Ticker: Time is up! FORCE SYNCING FINAL SCORE...');
+
+                    // 1. Force Push Final Score
+                    const { error: syncError } = await supabase.rpc('update_score', {
+                        p_room_id: roomId,
+                        p_player_id: myId,
+                        p_score: scoreRef.current
+                    });
+
+                    if (syncError) console.error('FINAL SCORE SYNC ERROR:', syncError);
+                    else console.log('FINAL SCORE SYNC SUCCESS');
+
+                    // 2. Finish Game
+                    console.log('Ticker: Calling FINISH_GAME...');
+                    const { error: finishError } = await supabase.rpc('finish_game', { p_room_id: roomId });
+
+                    if (finishError) {
+                        console.error('FINISH_GAME ERROR:', finishError);
+                        isFinishing.current = false; // Allow retry
+                    } else {
+                        console.log('FINISH_GAME SUCCESS');
+                    }
+                }
+            }
+        }, 500);
+
+        return () => clearInterval(ticker);
+    }, [gameState.status, gameState.endAt, serverOffset, isHostUser, roomId, myId]); // Added myId dep
+
+
+    // --- Universal Poller (Safety Net) ---
+    useEffect(() => {
+        if (gameState.status === 'finished') return;
+        const intervalMs = gameState.status === 'waiting' ? 1000 : 2000;
+
+        const poller = setInterval(async () => {
+            if (!roomId) return;
+            const { data, error } = await supabase
+                .from('game_sessions')
+                .select('*')
+                .eq('id', roomId)
+                .maybeSingle();
+
+            if (data && !error) {
+                handleUpdate(data);
+            }
+        }, intervalMs);
+
+        return () => clearInterval(poller);
+    }, [gameState.status, roomId, handleUpdate]);
+
+
+    // --- Waiting Timeout UI ---
+    useEffect(() => {
+        if (gameState.status === 'waiting') {
+            const timer = setTimeout(() => setIsWaitingTimeout(true), 60000);
+            return () => clearTimeout(timer);
         } else {
             setIsWaitingTimeout(false);
         }
-        return () => clearTimeout(timer);
     }, [gameState.status]);
 
-    return { gameState, submitMove, isReconnecting, reconnectTimer, serverOffset, isWaitingTimeout };
+
+    // --- Score Sync (High Frequency) ---
+    useEffect(() => {
+        if (gameState.status !== 'playing') return;
+        const interval = setInterval(() => {
+            if (scoreRef.current !== lastSyncedScore.current) {
+                lastSyncedScore.current = scoreRef.current;
+                supabase.rpc('update_score', {
+                    p_room_id: roomId,
+                    p_player_id: myId,
+                    p_score: scoreRef.current
+                }).then(({ error }) => {
+                    if (error) console.error('SCORE SYNC ERROR:', error);
+                });
+            }
+        }, 300);
+        return () => clearInterval(interval);
+    }, [gameState.status, roomId, myId]);
+
+
+    // --- Actions ---
+    const incrementScore = (amount: number = 100) => {
+        scoreRef.current += amount;
+        setGameState(prev => ({ ...prev, myScore: scoreRef.current }));
+    };
+
+    return { gameState, incrementScore, serverOffset, isWaitingTimeout };
 };
