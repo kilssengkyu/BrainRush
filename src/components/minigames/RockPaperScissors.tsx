@@ -12,6 +12,7 @@ interface RPSProps {
     round: number;
     phaseEndAt: string | null;
     serverOffset: number;
+    isReverse?: boolean;
 }
 
 const MOVES: Move[] = ['rock', 'paper', 'scissors'];
@@ -23,7 +24,8 @@ const RockPaperScissors: React.FC<RPSProps> = ({
     resultMessage,
     round,
     phaseEndAt,
-    serverOffset
+    serverOffset,
+    isReverse = false
 }) => {
     const { t } = useTranslation();
     const [shake, setShake] = useState<Move | null>(null);
@@ -73,7 +75,7 @@ const RockPaperScissors: React.FC<RPSProps> = ({
                     setCountdown(diff.toFixed(1)); // Show 1 decimal place
                     animationFrameId = requestAnimationFrame(animate);
                 } else {
-                    setCountdown('START!');
+                    setCountdown(isReverse ? 'LOSE!' : 'START!');
                 }
             };
 
@@ -82,16 +84,24 @@ const RockPaperScissors: React.FC<RPSProps> = ({
         } else {
             setCountdown(null);
         }
-    }, [phase, phaseEndAt, serverOffset]);
+    }, [phase, phaseEndAt, serverOffset, isReverse]);
 
     const handlePress = (move: Move) => {
         if (phase !== 'playing' || !targetMove || selectedMove) return;
 
         // Determine correct move
         let correctMove: Move;
-        if (targetMove === 'rock') correctMove = 'paper';
-        else if (targetMove === 'paper') correctMove = 'scissors';
-        else correctMove = 'rock';
+        if (!isReverse) {
+            // Normal: Win
+            if (targetMove === 'rock') correctMove = 'paper';
+            else if (targetMove === 'paper') correctMove = 'scissors';
+            else correctMove = 'rock';
+        } else {
+            // Reverse: Lose
+            if (targetMove === 'rock') correctMove = 'scissors';
+            else if (targetMove === 'paper') correctMove = 'rock';
+            else correctMove = 'paper';
+        }
 
         if (move === correctMove) {
             const endTime = Date.now();
@@ -118,21 +128,42 @@ const RockPaperScissors: React.FC<RPSProps> = ({
         <div className="flex flex-col items-center justify-center w-full h-full gap-12">
 
             {/* Round Info */}
-            <h2 className="absolute top-4 text-2xl font-bold text-gray-500">{t('rps.round')} {round}</h2>
+            <h2 className="absolute top-4 text-2xl font-bold text-gray-500">
+                {t('rps.round')} {round}
+                {isReverse && <span className="ml-2 text-red-500 font-black">({t('rps.reverse')})</span>}
+            </h2>
 
             {/* Central Area: Info based on Phase */}
             <div className="relative flex items-center justify-center w-64 h-64">
                 <AnimatePresence mode="wait">
                     {phase === 'countdown' && (
-                        <motion.div
-                            key="waiting"
-                            initial={{ scale: 0.5, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1, textShadow: "0 0 10px #3b82f6" }}
-                            exit={{ scale: 2, opacity: 0 }}
-                            className="text-6xl font-black text-blue-400 text-center font-mono"
-                        >
-                            {countdown || t('rps.ready')}
-                        </motion.div>
+                        <div className="flex flex-col items-center gap-4">
+                            {/* Game Title */}
+                            <motion.div
+                                initial={{ y: -20, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                exit={{ y: 20, opacity: 0 }}
+                                className={`text-3xl font-bold whitespace-nowrap ${isReverse ? 'text-red-500' : 'text-blue-500'}`}
+                            >
+                                {isReverse ? t('rps.titleLose') : t('rps.titleWin')}
+                            </motion.div>
+
+                            {/* Countdown / Start */}
+                            <motion.div
+                                key="waiting"
+                                initial={{ scale: 0.5, opacity: 0 }}
+                                animate={{
+                                    scale: 1,
+                                    opacity: 1,
+                                    textShadow: isReverse ? "0 0 10px #ef4444" : "0 0 10px #3b82f6",
+                                    color: isReverse ? "#ef4444" : "#60a5fa"
+                                }}
+                                exit={{ scale: 2, opacity: 0 }}
+                                className="text-6xl font-black text-center font-mono"
+                            >
+                                {countdown || t('rps.ready')}
+                            </motion.div>
+                        </div>
                     )}
 
                     {phase === 'playing' && targetMove && (
@@ -147,7 +178,9 @@ const RockPaperScissors: React.FC<RPSProps> = ({
                                 {targetMove === 'paper' && '✋'}
                                 {targetMove === 'scissors' && '✌️'}
                             </div>
-                            <p className="mt-4 text-xl font-bold text-red-500 animate-pulse">{t('rps.beatIt')}</p>
+                            <p className={`mt-4 text-xl font-bold animate-pulse ${isReverse ? 'text-red-500 text-3xl' : 'text-blue-400'}`}>
+                                {isReverse ? t('rps.lose') : t('rps.beatIt')}
+                            </p>
                         </motion.div>
                     )}
 

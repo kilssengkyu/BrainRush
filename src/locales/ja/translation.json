@@ -2,14 +2,27 @@
     "title": "BrainRush",
     "common": {
         "cancel": "キャンセル",
-        "confirm": "確認"
+        "confirm": "確認",
+        "close": "閉じる",
+        "retry": "再試行"
     },
     "menu": {
-        "play": "ゲーム開始",
-        "rank": "ランク戦",
-        "friendly": "フレンド対戦",
+        "normal": {
+            "title": "ノーマルモード",
+            "subtitle": "基礎頭脳トレーニング"
+        },
+        "rank": {
+            "title": "ランク戦",
+            "subtitle": "世界中のプレイヤーと競争"
+        },
+        "friendly": {
+            "title": "フレンド対戦",
+            "subtitle": "友達と1対1"
+        },
         "settings": "設定",
-        "logout": "ログアウト"
+        "login": "ログイン",
+        "logout": "ログアウト",
+        "profile": "プロフィール"
     },
     "settings": {
         "title": "設定",
@@ -26,19 +39,48 @@
         "waiting": "ゲーム待機中...",
         "victory": "勝利",
         "defeat": "敗北",
-        "returnMenu": "メニューに戻る"
+        "returnMenu": "メニューに戻る",
+        "reconnecting": "相手の接続待ち...",
+        "reconnectingDesc": "相手の接続が切れました。不戦勝まで:",
+        "myTime": "タイム",
+        "rank": "ランク",
+        "normal": "ノーマル",
+        "unknownPlayer": "不明なプレイヤー",
+        "guest": "ゲスト",
+        "you": "あなた",
+        "opponent": "相手"
+    },
+    "user": {
+        "level": "レベル",
+        "rank": "ランク"
+    },
+    "profile": {
+        "nicknamePlaceholder": "ニックネーム入力",
+        "edit": "編集",
+        "record": "戦績",
+        "disconnects": "切断",
+        "updateSuccess": "更新成功",
+        "updateFail": "更新失敗",
+        "deleteSuccess": "削除成功",
+        "deleteFail": "削除失敗"
     },
     "matchmaking": {
         "searching": "検索中...",
         "description": "対戦相手を探しています",
         "cancel": "キャンセル",
         "found": "マッチ成立!",
-        "entering": "アリーナへ移動中..."
+        "entering": "アリーナへ移動中...",
+        "timeout": "マッチ不成立",
+        "timeoutDesc": "対戦相手が見つかりませんでした"
     },
     "rps": {
         "ready": "準備...",
         "beatIt": "勝て！",
-        "round": "ラウンド"
+        "lose": "負けて！",
+        "reverse": "逆",
+        "round": "ラウンド",
+        "titleWin": "勝つじゃんけん",
+        "titleLose": "負けるじゃんけん"
     },
     "number": {
         "asc": "小さい数から押してください！",

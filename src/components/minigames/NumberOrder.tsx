@@ -32,24 +32,23 @@ const NumberOrder: React.FC<NumberOrderProps> = ({
     const [elapsedTime, setElapsedTime] = useState<number>(0);
 
 
+    const [isLocalFinished, setIsLocalFinished] = useState(false);
+
     // Precise Countdown Logic
     React.useEffect(() => {
         if (phase === 'countdown' && phaseEndAt) {
             let animationFrameId: number;
-
             const animate = () => {
                 const now = Date.now() + serverOffset;
                 const target = new Date(phaseEndAt).getTime();
                 const diff = (target - now) / 1000;
-
                 if (diff > 0) {
-                    setCountdown(diff.toFixed(1)); // Show 1 decimal place
+                    setCountdown(diff.toFixed(2));
                     animationFrameId = requestAnimationFrame(animate);
                 } else {
                     setCountdown('START!');
                 }
             };
-
             animationFrameId = requestAnimationFrame(animate);
             return () => cancelAnimationFrame(animationFrameId);
         } else {
@@ -60,11 +59,12 @@ const NumberOrder: React.FC<NumberOrderProps> = ({
     // Timer Logic
     useEffect(() => {
         let animationFrameId: number = 0;
-
         const updateTimer = () => {
-            if (phase === 'playing' && startTimeRef.current > 0) {
-                const now = Date.now();
-                setElapsedTime(now - startTimeRef.current);
+            if (phase === 'playing' && !isLocalFinished) {
+                if (startTimeRef.current > 0) {
+                    const now = Date.now();
+                    setElapsedTime(now - startTimeRef.current);
+                }
                 animationFrameId = requestAnimationFrame(updateTimer);
             }
         };
@@ -74,31 +74,28 @@ const NumberOrder: React.FC<NumberOrderProps> = ({
         } else if (phase === 'result') {
             cancelAnimationFrame(animationFrameId);
         }
-
         return () => cancelAnimationFrame(animationFrameId);
-    }, [phase]);
+    }, [phase, isLocalFinished]);
 
     // Initialize/Reset Panel
     useEffect(() => {
         if (phase === 'playing') {
             setPanelCount(1);
-            generateGrid(1); // Explicitly start with Panel 1
+            generateGrid(1);
             setCurrentStep(0);
             setClearedNumbers([]);
-            startTimeRef.current = Date.now(); // Start Timer
+            startTimeRef.current = Date.now();
             setElapsedTime(0);
+            setIsLocalFinished(false);
         }
     }, [phase, seed]);
 
     const generateGrid = (targetPanel: number = panelCount) => {
-        // Simple deterministic shuffle using seed + panelCount
-        // A simple pseudo-random generator
         let currentSeed = seed + targetPanel * 1357;
         const rng = () => {
             const x = Math.sin(currentSeed++) * 10000;
             return x - Math.floor(x);
         };
-
         const nums = [1, 2, 3, 4, 5, 6, 7, 8, 9];
         // Fisher-Yates shuffle
         for (let i = nums.length - 1; i > 0; i--) {
@@ -109,49 +106,39 @@ const NumberOrder: React.FC<NumberOrderProps> = ({
     };
 
     const handleNumberClick = (num: number) => {
-        if (phase !== 'playing') return;
-        if (clearedNumbers.includes(num)) return; // Already cleared
+        if (phase !== 'playing' || isLocalFinished) return;
+        if (clearedNumbers.includes(num)) return;
 
         const isAsc = gameType === 'NUMBER_ASC';
-        // Expected number logic
-        // ASC: 1 -> 2 -> ... -> 9
-        // DESC: 9 -> 8 -> ... -> 1
-
         const expected = isAsc ? (currentStep + 1) : (9 - currentStep);
 
         if (num === expected) {
-            // Correct
             setClearedNumbers(prev => [...prev, num]);
             const nextStep = currentStep + 1;
             setCurrentStep(nextStep);
 
-            // Check if panel complete
             if (nextStep === 9) {
-                // Panel Complete
                 if (panelCount === 1) {
-                    // Go to panel 2
                     setTimeout(() => {
                         setPanelCount(2);
                         setClearedNumbers([]);
                         setCurrentStep(0);
-                        generateGrid(2); // Explicitly generate for Panel 2
-                    }, 500); // Brief pause before next panel
+                        generateGrid(2);
+                    }, 500);
                 } else {
-                    // Game Complete: Send elapsed time
                     const endTime = Date.now();
                     const duration = endTime - startTimeRef.current;
-                    setElapsedTime(duration); // Fix the display time
+                    setElapsedTime(duration);
+                    setIsLocalFinished(true); // Mark as locally finished
                     onGameComplete(duration);
                 }
             }
         } else {
-            // Incorrect
             setShakeId(num);
             setTimeout(() => setShakeId(null), 500);
         }
     };
 
-    // Helper to format result message
     const getResultText = (msg: string | null) => {
         if (!msg) return '';
         if (msg === 'WIN') return t('game.victory');
@@ -161,10 +148,10 @@ const NumberOrder: React.FC<NumberOrderProps> = ({
     };
 
     return (
-        <div className="flex flex-col items-center justify-center w-full h-full gap-8">
+        <div className="flex flex-col items-center justify-center w-full h-full gap-8 relative">
 
             {/* Header / Instructions */}
-            <div className="absolute top-4 flex flex-col items-center">
+            <div className={`flex flex-col items-center transition-opacity duration-300 ${isLocalFinished || phase === 'result' ? 'opacity-0' : 'opacity-100'}`}>
                 <h2 className="text-xl font-bold text-gray-400">
                     {gameType === 'NUMBER_ASC' ? t('number.asc') : t('number.desc')}
                 </h2>
@@ -177,6 +164,7 @@ const NumberOrder: React.FC<NumberOrderProps> = ({
             {/* Grid Area */}
             <div className="relative w-80 h-80">
                 <AnimatePresence mode="wait">
+                    {/* Countdown Overlay */}
                     {phase === 'countdown' && (
                         <motion.div
                             key="countdown"
@@ -194,18 +182,37 @@ const NumberOrder: React.FC<NumberOrderProps> = ({
                         </motion.div>
                     )}
 
-                    {phase === 'result' && (
+                    {/* Result / Finish Overlay */}
+                    {(isLocalFinished || phase === 'result') && (
                         <motion.div
-                            key="result"
-                            initial={{ scale: 0.5, opacity: 0 }}
+                            key="finished"
+                            initial={{ scale: 0.8, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
-                            className={`absolute inset-0 flex items-center justify-center text-6xl font-black z-10 ${resultMessage === 'WIN' ? 'text-green-500' : 'text-red-500'}`}
+                            className="absolute inset-0 flex flex-col items-center justify-center z-40 bg-black/60 backdrop-blur-sm rounded-3xl gap-4"
                         >
-                            {getResultText(resultMessage)}
+                            <span className="text-xl font-bold text-blue-200">
+                                {t('game.myTime')}
+                            </span>
+                            <div className="text-6xl font-black text-white font-mono drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]">
+                                {(elapsedTime / 1000).toFixed(2)}s
+                            </div>
+
+                            {/* Server Result Badge */}
+                            {resultMessage && (
+                                <motion.div
+                                    initial={{ y: 20, opacity: 0 }}
+                                    animate={{ y: 0, opacity: 1 }}
+                                    className={`px-6 py-2 rounded-xl text-3xl font-black shadow-lg ${resultMessage === 'WIN' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+                                        }`}
+                                >
+                                    {getResultText(resultMessage)}
+                                </motion.div>
+                            )}
                         </motion.div>
                     )}
 
-                    {phase === 'playing' && (
+                    {/* Number Grid */}
+                    {phase === 'playing' && !isLocalFinished && (
                         <div className="grid grid-cols-3 gap-3 w-full h-full">
                             {numbers.map((num) => (
                                 <motion.button
@@ -216,7 +223,7 @@ const NumberOrder: React.FC<NumberOrderProps> = ({
                                             ? { x: [-5, 5, -5, 5, 0], backgroundColor: '#ef4444', scale: 1, opacity: 1 }
                                             : clearedNumbers.includes(num)
                                                 ? { scale: 0.9, opacity: 0, backgroundColor: '#22c55e' }
-                                                : { scale: 1, opacity: 1, backgroundColor: '#1f2937' } // gray-800
+                                                : { scale: 1, opacity: 1, backgroundColor: '#1f2937' }
                                     }
                                     transition={{ duration: 0.2 }}
                                     onClick={() => handleNumberClick(num)}
@@ -231,16 +238,12 @@ const NumberOrder: React.FC<NumberOrderProps> = ({
                 </AnimatePresence>
             </div >
 
-            {/* Timer Display */}
-            < div className={`text-2xl font-mono font-bold transition-all duration-300 ${phase === 'playing' ? 'text-gray-400' :
-                (phase === 'result' || clearedNumbers.length === 9 * panelCount) ? 'text-yellow-400 scale-110' : 'opacity-0'
-                }`}>
-                {phase === 'playing' ? (
-                    <span>{(elapsedTime / 1000).toFixed(2)}s</span>
-                ) : (clearedNumbers.length === 9 * panelCount) ? (
-                    <span>{t('game.myTime')}: {(elapsedTime / 1000).toFixed(2)}s</span>
-                ) : null}
-            </div >
+            {/* Bottom Timer (Visible during play) */}
+            <div className={`transition-all duration-300 ${isLocalFinished || phase === 'result' ? 'opacity-0' : 'opacity-100'}`}>
+                <div className="text-3xl font-mono font-bold text-gray-400 tabular-nums">
+                    {(elapsedTime / 1000).toFixed(2)}s
+                </div>
+            </div>
         </div >
     );
 };

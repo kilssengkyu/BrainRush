@@ -57,7 +57,13 @@
         "returnMenu": "Return to Menu",
         "reconnecting": "Waiting for Opponent...",
         "reconnectingDesc": "Opponent disconnected. Winning by default in:",
-        "myTime": "My Time"
+        "myTime": "My Time",
+        "rank": "RANK",
+        "normal": "NORMAL",
+        "unknownPlayer": "Unknown Player",
+        "guest": "Guest",
+        "you": "You",
+        "opponent": "Opponent"
     },
     "matchmaking": {
         "searching": "Searching...",
@@ -71,7 +77,11 @@
     "rps": {
         "ready": "READY...",
         "beatIt": "BEAT IT!",
-        "round": "Round"
+        "lose": "LOSE IT!",
+        "reverse": "REVERSE",
+        "round": "Round",
+        "titleWin": "Winning RPS",
+        "titleLose": "Losing RPS"
     },
     "number": {
         "asc": "Press numbers Low to High!",

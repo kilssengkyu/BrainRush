@@ -57,7 +57,13 @@
     "returnMenu": "메뉴로 돌아가기",
     "reconnecting": "상대 연결 대기 중...",
     "reconnectingDesc": "상대방 연결이 끊겼습니다. 기권승까지 남은 시간:",
-    "myTime": "나의 기록"
+    "myTime": "나의 기록",
+    "rank": "랭크",
+    "normal": "일반",
+    "unknownPlayer": "알 수 없는 플레이어",
+    "guest": "게스트",
+    "you": "나",
+    "opponent": "상대"
   },
   "matchmaking": {
     "searching": "상대 찾는 중...",
@@ -71,7 +77,11 @@
   "rps": {
     "ready": "준비...",
     "beatIt": "이기세요!",
-    "round": "라운드"
+    "lose": "지세요!",
+    "reverse": "거꾸로",
+    "round": "라운드",
+    "titleWin": "이기는 가위바위보",
+    "titleLose": "지는 가위바위보"
   },
   "number": {
     "asc": "작은 수에서 큰 수를 누르세요!",

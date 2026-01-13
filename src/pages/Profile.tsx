@@ -105,6 +105,9 @@ const Profile = () => {
     const wins = profile?.wins || 0;
     const losses = profile?.losses || 0;
 
+    const casualWins = profile?.casual_wins || 0;
+    const casualLosses = profile?.casual_losses || 0;
+
     return (
         <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center p-4 relative overflow-hidden">
             {/* Background Effects */}
@@ -191,8 +194,10 @@ const Profile = () => {
                         <span className="text-sm text-gray-400">{t('user.rank')}</span>
                         <span className="text-xl font-bold">{rank}</span>
                     </div>
+
+                    {/* Rank Record */}
                     <div className="bg-gray-700/30 p-4 rounded-2xl flex flex-col items-center col-span-2">
-                        <span className="text-sm text-gray-400 mb-1">{t('profile.record')}</span>
+                        <span className="text-xs text-blue-300 mb-1 font-bold uppercase tracking-wider">{t('game.rank')} {t('profile.record')}</span>
                         <div className="flex gap-4 items-end">
                             <span className="text-lg font-bold text-blue-400">{wins}W</span>
                             <span className="text-lg font-bold text-red-400">{losses}L</span>
@@ -201,6 +206,15 @@ const Profile = () => {
                                     <LogOut className="w-4 h-4" /> {profile.disconnects}
                                 </span>
                             )}
+                        </div>
+                    </div>
+
+                    {/* Casual Record */}
+                    <div className="bg-gray-700/30 p-4 rounded-2xl flex flex-col items-center col-span-2 border border-white/5">
+                        <span className="text-xs text-green-300 mb-1 font-bold uppercase tracking-wider">{t('game.normal')} {t('profile.record')}</span>
+                        <div className="flex gap-4 items-end">
+                            <span className="text-lg font-bold text-blue-300">{casualWins}W</span>
+                            <span className="text-lg font-bold text-red-300">{casualLosses}L</span>
                         </div>
                     </div>
                 </div>

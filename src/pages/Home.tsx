@@ -21,7 +21,7 @@ const Home = () => {
     // Calculate Level from MMR (Temporary: MMR / 100)
     const level = profile?.mmr ? Math.floor(profile.mmr / 100) : 1;
     const rank = profile?.mmr || 1000;
-    const nickname = profile?.nickname || user?.email?.split('@')[0] || 'Unknown';
+    const nickname = profile?.nickname || user?.email?.split('@')[0] || t('game.unknownPlayer');
     const avatarUrl = profile?.avatar_url;
 
     // Track selected mode for navigation callback

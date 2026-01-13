@@ -26,10 +26,28 @@ const Game = () => {
     }, [roomId, myId, opponentId, navigate]);
 
     // Use Game Hook
-    const { gameState, submitMove, isReconnecting, reconnectTimer, serverOffset } = useGameState(roomId, myId, opponentId);
+    const { gameState, submitMove, isReconnecting, reconnectTimer, serverOffset, isWaitingTimeout } = useGameState(roomId, myId, opponentId);
 
     // Profile State
     const [opponentProfile, setOpponentProfile] = useState<any>(null);
+
+    // ... (existing code)
+
+    // Handle Waiting Timeout
+    if (isWaitingTimeout) {
+        return (
+            <div className="flex flex-col items-center justify-center h-screen bg-gray-900 text-white gap-8 font-sans">
+                <div className="text-4xl font-bold text-red-500">{t('matchmaking.timeout')}</div>
+                <p className="text-xl text-gray-400">{t('matchmaking.timeoutDesc')}</p>
+                <button
+                    onClick={() => navigate('/')}
+                    className="px-8 py-4 bg-gray-700 hover:bg-gray-600 rounded-xl font-bold transition-colors"
+                >
+                    {t('game.returnMenu')}
+                </button>
+            </div>
+        );
+    }
 
     // Fetch Opponent Profile
     useEffect(() => {
@@ -39,7 +57,7 @@ const Game = () => {
             // Guest Check
             if (opponentId.startsWith('guest_')) {
                 setOpponentProfile({
-                    nickname: 'Guest ' + opponentId.slice(-4),
+                    nickname: t('game.guest') + ' ' + opponentId.slice(-4),
                     isGuest: true
                 });
                 return;
@@ -56,7 +74,7 @@ const Game = () => {
                 setOpponentProfile(data);
             } else {
                 // Fallback if profile missing
-                setOpponentProfile({ nickname: 'Unknown Player', isGuest: true });
+                setOpponentProfile({ nickname: t('game.unknownPlayer'), isGuest: true });
             }
         };
 
@@ -82,7 +100,7 @@ const Game = () => {
 
     // Construct Player Objects
     const PLAYER_ME = {
-        name: profile?.nickname || 'You',
+        name: profile?.nickname || t('game.you'),
         score: gameState.scores.me,
         avatar: profile?.avatar_url,
         mmr: profile?.mmr,
@@ -93,12 +111,12 @@ const Game = () => {
 
     // If I am guest? (AuthContext profile might be null)
     if (!profile) {
-        PLAYER_ME.name = 'Guest (You)';
+        PLAYER_ME.name = `${t('game.guest')} (${t('game.you')})`;
         PLAYER_ME.isGuest = true;
     }
 
     const PLAYER_OPPONENT = {
-        name: opponentProfile?.nickname || 'Opponent',
+        name: opponentProfile?.nickname || t('game.opponent'),
         score: gameState.scores.opponent,
         avatar: opponentProfile?.avatar_url,
         mmr: opponentProfile?.mmr,
@@ -149,7 +167,7 @@ const Game = () => {
 
 
             ) : gameState.scores.me < 3 && gameState.scores.opponent < 3 ? (
-                gameState.gameType === 'RPS' ? (
+                (gameState.gameType === 'RPS' || gameState.gameType === 'RPS_LOSE') ? (
                     <RockPaperScissors
                         round={gameState.round}
                         targetMove={gameState.targetMove as any}
@@ -162,6 +180,7 @@ const Game = () => {
                         onMoveSelected={(move) => submitMove(move)}
                         phaseEndAt={gameState.phaseEndAt}
                         serverOffset={serverOffset}
+                        isReverse={gameState.gameType === 'RPS_LOSE'}
                     />
                 ) : (
                     <NumberOrder
@@ -188,8 +207,8 @@ const Game = () => {
                         {gameState.scores.me >= 3 ? t('game.victory') : t('game.defeat')}
                     </h2>
 
-                    {/* Display MMR Change with Animation */}
-                    {gameState.mmrChange !== null && gameState.mmrChange !== undefined && (
+                    {/* Display MMR Change with Animation (Rank Only) */}
+                    {gameState.mode === 'rank' && gameState.mmrChange !== null && gameState.mmrChange !== undefined && (
                         <div className="flex flex-col items-center gap-2 mb-8">
                             <motion.div
                                 initial={{ scale: 0.5, opacity: 0 }}
