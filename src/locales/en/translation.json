@@ -63,7 +63,8 @@
         "unknownPlayer": "Unknown Player",
         "guest": "Guest",
         "you": "You",
-        "opponent": "Opponent"
+        "opponent": "Opponent",
+        "opponentWaiting": "Opponent is waiting..."
     },
     "matchmaking": {
         "searching": "Searching...",
@@ -81,12 +82,32 @@
         "reverse": "REVERSE",
         "round": "Round",
         "titleWin": "Winning RPS",
-        "titleLose": "Losing RPS"
+        "titleLose": "Losing RPS",
+        "title": "ROCK PAPER SCISSORS",
+        "instruction": "Win, Lose, or Draw!"
     },
     "number": {
+        "title": "NUMBER ORDER",
+        "instruction": "Ascending Order (Low → High)",
         "asc": "Press numbers Low to High!",
         "desc": "Press numbers High to Low!",
         "ready": "READY",
         "panel": "Panel"
+    },
+    "math": {
+        "title": "MATH CHALLENGE",
+        "instruction": "Solve the equation"
+    },
+    "ten": {
+        "title": "MAKE 10",
+        "instruction": "Select numbers to sum to 10"
+    },
+    "color": {
+        "title": "COLOR MATCH",
+        "instruction": "Select buttons where Color matches Text",
+        "red": "RED",
+        "blue": "BLUE",
+        "green": "GREEN",
+        "yellow": "YELLOW"
     }
 }

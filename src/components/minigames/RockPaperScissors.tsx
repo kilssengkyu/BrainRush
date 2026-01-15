@@ -115,7 +115,7 @@ const RockPaperScissors: React.FC<RPSProps> = ({ seed, onScore }) => {
             </div>
 
             <div className="text-gray-500 text-sm mt-4 font-mono">
-                Combo: {index}
+                {t('rps.round')}: {index}
             </div>
         </div>
     );

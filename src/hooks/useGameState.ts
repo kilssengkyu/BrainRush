@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabaseClient';
 
 export interface GameState {
     status: 'waiting' | 'playing' | 'finished';
-    gameType: 'RPS' | 'NUMBER' | null;
+    gameType: 'RPS' | 'NUMBER' | 'MATH' | 'TEN' | 'COLOR' | null;
     seed: string | null;
     endAt: string | null;
     myScore: number;

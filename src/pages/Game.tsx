@@ -6,6 +6,9 @@ import { useGameState } from '../hooks/useGameState';
 import { supabase } from '../lib/supabaseClient';
 import RockPaperScissors from '../components/minigames/RockPaperScissors';
 import NumberOrder from '../components/minigames/NumberOrder';
+import MathChallenge from '../components/minigames/MathChallenge';
+import MakeTen from '../components/minigames/MakeTen';
+import ColorMatch from '../components/minigames/ColorMatch';
 
 const Game: React.FC = () => {
     const { t } = useTranslation();
@@ -106,7 +109,7 @@ const Game: React.FC = () => {
                 {/* Waiting Screen */}
                 {isWaiting && (
                     <div className="flex flex-col items-center animate-pulse">
-                        <div className="text-2xl font-bold mb-4">{t('game.waitingOpponent')}</div>
+                        <div className="text-2xl font-bold mb-4">{t('game.opponentWaiting')}</div>
                         <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
                     </div>
                 )}
@@ -124,6 +127,15 @@ const Game: React.FC = () => {
                         )}
                         {gameState.gameType === 'NUMBER' && (
                             <NumberOrder seed={gameState.seed} onScore={incrementScore} />
+                        )}
+                        {gameState.gameType === 'MATH' && (
+                            <MathChallenge seed={gameState.seed} onScore={incrementScore} />
+                        )}
+                        {gameState.gameType === 'TEN' && (
+                            <MakeTen seed={gameState.seed} onScore={incrementScore} />
+                        )}
+                        {gameState.gameType === 'COLOR' && (
+                            <ColorMatch seed={gameState.seed} onScore={incrementScore} />
                         )}
                     </motion.div>
                 )}
