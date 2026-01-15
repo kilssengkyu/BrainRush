@@ -9,6 +9,7 @@ import NumberOrder from '../components/minigames/NumberOrder';
 import MathChallenge from '../components/minigames/MathChallenge';
 import MakeTen from '../components/minigames/MakeTen';
 import ColorMatch from '../components/minigames/ColorMatch';
+import ScoreProgressBar from '../components/ui/ScoreProgressBar';
 
 const Game: React.FC = () => {
     const { t } = useTranslation();
@@ -70,9 +71,17 @@ const Game: React.FC = () => {
         <div className="relative w-full h-screen bg-gray-900 text-white overflow-hidden flex flex-col font-sans select-none">
 
             {/* Top Info Bar (Timer & Scores) */}
-            <header className="h-24 w-full bg-gray-800/80 backdrop-blur-md flex items-center justify-between px-6 shadow-lg z-50">
+            <header className="h-24 w-full bg-gray-800/80 backdrop-blur-md flex items-center justify-between px-6 shadow-lg z-50 relative">
+
+                {/* Score Progress Bar - Bottom, 100% Width */}
+                <div className="absolute bottom-0 left-0 w-full px-0">
+                    <div className="w-full h-1.5 bg-gray-900/50 overflow-hidden backdrop-blur-sm">
+                        <ScoreProgressBar myScore={gameState.myScore} opScore={gameState.opScore} />
+                    </div>
+                </div>
+
                 {/* My Profile */}
-                <div className="flex items-center gap-4 w-1/3">
+                <div className="flex items-center gap-4 w-1/3 pt-2">
                     <img src={myProfile?.avatar_url || '/default-avatar.png'} className="w-12 h-12 rounded-full border-2 border-blue-500" />
                     <div>
                         <div className="font-bold text-lg">{myProfile?.nickname}</div>
@@ -83,7 +92,7 @@ const Game: React.FC = () => {
                 </div>
 
                 {/* Center Timer */}
-                <div className="flex flex-col items-center w-1/3">
+                <div className="flex flex-col items-center w-1/3 pt-2">
                     <div className={`text-5xl font-black font-mono tracking-widest ${gameState.remainingTime <= 10 ? 'text-red-500 animate-pulse' : 'text-yellow-400'}`}>
                         {Math.floor(gameState.remainingTime)}
                     </div>
@@ -91,7 +100,7 @@ const Game: React.FC = () => {
                 </div>
 
                 {/* Opponent Profile */}
-                <div className="flex items-center justify-end gap-4 w-1/3 text-right">
+                <div className="flex items-center justify-end gap-4 w-1/3 text-right pt-2">
                     <div>
                         <div className="font-bold text-lg">{opponentProfile?.nickname}</div>
                         <div className="text-3xl font-black text-red-400 font-mono transition-all">
