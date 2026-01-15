@@ -114,7 +114,7 @@ const ColorMatch: React.FC<ColorMatchProps> = ({ seed, onScore }) => {
 
     }, [selectedIndices, currentPanel, isSolved, onScore]);
 
-    if (!currentPanel) return <div className="text-white">Loading...</div>;
+    if (!currentPanel) return <div className="text-white">{t('common.loading')}</div>;
 
     return (
         <div className="flex flex-col items-center justify-center w-full h-full gap-8 relative">

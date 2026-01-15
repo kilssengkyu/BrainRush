@@ -5,6 +5,7 @@ export interface GameState {
     status: 'waiting' | 'playing' | 'finished';
     gameType: 'RPS' | 'NUMBER' | 'MATH' | 'TEN' | 'COLOR' | null;
     seed: string | null;
+    startAt: string | null;
     endAt: string | null;
     myScore: number;
     opScore: number;
@@ -17,6 +18,7 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
         status: 'waiting',
         gameType: null,
         seed: null,
+        startAt: null,
         endAt: null,
         myScore: 0,
         opScore: 0,
@@ -69,18 +71,26 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
         }
 
         setGameState(prev => {
-            // Recalculate remaining time whenever we get an update, just in case
+            // Ticker Logic Update
             let remaining = prev.remainingTime;
             if (record.end_at) {
                 const now = Date.now() + serverOffset;
+                const start = record.start_at ? new Date(record.start_at).getTime() : 0;
                 const end = new Date(record.end_at).getTime();
-                remaining = Math.max(0, (end - now) / 1000);
+
+                // If Warm-up phase (Now < Start): Keep remaining at 30 (or duration)
+                if (now < start) {
+                    remaining = 30; // Fixed duration
+                } else {
+                    remaining = Math.max(0, (end - now) / 1000);
+                }
             }
 
             return {
                 status: record.status,
                 gameType: record.game_type,
                 seed: record.seed,
+                startAt: record.start_at,
                 endAt: record.end_at,
                 myScore: Math.max(scoreRef.current, myServerScore),
                 opScore: opServerScore,
@@ -148,7 +158,16 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
 
         const ticker = setInterval(async () => {
             const now = Date.now() + serverOffset;
+            const start = gameState.startAt ? new Date(gameState.startAt).getTime() : 0;
             const end = new Date(gameState.endAt!).getTime();
+
+            // Warm-up check
+            if (now < start) {
+                // In warm-up, we don't tick down the MAIN game timer yet
+                setGameState(prev => ({ ...prev, remainingTime: 30 }));
+                return;
+            }
+
             const diff = (end - now) / 1000;
             const remaining = Math.max(0, diff);
 
@@ -185,7 +204,7 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
         }, 500);
 
         return () => clearInterval(ticker);
-    }, [gameState.status, gameState.endAt, serverOffset, isHostUser, roomId, myId]); // Added myId dep
+    }, [gameState.status, gameState.endAt, gameState.startAt, serverOffset, isHostUser, roomId, myId]);
 
 
     // --- Universal Poller (Safety Net) ---

@@ -149,7 +149,7 @@ const MathChallenge: React.FC<MathChallengeProps> = ({ seed, onScore }) => {
         }
     };
 
-    if (!currentProblem) return <div className="text-white">Loading...</div>;
+    if (!currentProblem) return <div className="text-white">{t('common.loading')}</div>;
 
     return (
         <div className="flex flex-col items-center justify-center w-full h-full gap-8 relative">
