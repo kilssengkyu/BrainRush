@@ -63,7 +63,8 @@
     "unknownPlayer": "알 수 없는 플레이어",
     "guest": "게스트",
     "you": "나",
-    "opponent": "상대"
+    "opponent": "상대",
+    "opponentWaiting": "상대가 기다리고 있습니다..."
   },
   "matchmaking": {
     "searching": "상대 찾는 중...",
@@ -81,12 +82,32 @@
     "reverse": "거꾸로",
     "round": "라운드",
     "titleWin": "이기는 가위바위보",
-    "titleLose": "지는 가위바위보"
+    "titleLose": "지는 가위바위보",
+    "title": "가위 바위 보",
+    "instruction": "지시에 따라 이기거나, 지거나, 비기세요!"
   },
   "number": {
+    "title": "숫자 정렬",
+    "instruction": "작은 수부터 순서대로 누르세요 (Low → High)",
     "asc": "작은 수에서 큰 수를 누르세요!",
     "desc": "큰 수에서 작은 수를 누르세요!",
     "ready": "준비",
     "panel": "패널"
+  },
+  "math": {
+    "title": "암산 챌린지",
+    "instruction": "수식을 계산하세요"
+  },
+  "ten": {
+    "title": "10 만들기",
+    "instruction": "합이 10이 되는 숫자를 선택하세요"
+  },
+  "color": {
+    "title": "색깔 맞추기",
+    "instruction": "글자와 테두리 색이 일치하는 버튼을 누르세요",
+    "red": "빨강",
+    "blue": "파랑",
+    "green": "초록",
+    "yellow": "노랑"
   }
 }
