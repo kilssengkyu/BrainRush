@@ -91,7 +91,7 @@ const NumberOrder: React.FC<NumberOrderProps> = ({ seed, onScore }) => {
         }
     };
 
-    if (!seed) return <div className="text-white">Loading...</div>;
+    if (!seed) return <div className="text-white">{t('common.loading')}</div>;
 
     return (
         <div className="flex flex-col items-center justify-center w-full h-full gap-6 relative">

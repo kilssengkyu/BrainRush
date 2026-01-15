@@ -49,19 +49,19 @@ const RockPaperScissors: React.FC<RPSProps> = ({ seed, onScore }) => {
         if (move === correctMove) {
             // Correct!
             // Play Sound?
-            onScore(100); // 100 Points per correct answer
+            onScore(20); // 20 Points per correct answer
             setIndex(prev => prev + 1);
             setAnimationKey(prev => prev + 1); // Force re-render animation
         } else {
             // Wrong!
+            onScore(-20); // Penalty
             // Shake effect
             setShake(move);
             setTimeout(() => setShake(null), 400);
-            // Optional: Penalty? For now just delay/shake.
         }
     };
 
-    if (!currentProblem) return <div className="text-white">Loading...</div>;
+    if (!currentProblem) return <div className="text-white">{t('common.loading')}</div>;
 
     const { target, isReverse } = currentProblem;
 

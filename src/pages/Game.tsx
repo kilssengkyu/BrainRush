@@ -25,7 +25,7 @@ const Game: React.FC = () => {
     const [opponentProfile, setOpponentProfile] = useState<any>(null);
 
     // Game Hook
-    const { gameState, incrementScore, isWaitingTimeout } = useGameState(roomId!, myId, opponentId);
+    const { gameState, incrementScore, serverOffset, isWaitingTimeout } = useGameState(roomId!, myId, opponentId);
 
     useEffect(() => {
         if (!roomId) {
@@ -120,23 +120,66 @@ const Game: React.FC = () => {
                         key="gameContainer"
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="w-full h-full p-4"
+                        className="w-full h-full p-4 relative"
                     >
-                        {gameState.gameType === 'RPS' && (
-                            <RockPaperScissors seed={gameState.seed} onScore={incrementScore} />
-                        )}
-                        {gameState.gameType === 'NUMBER' && (
-                            <NumberOrder seed={gameState.seed} onScore={incrementScore} />
-                        )}
-                        {gameState.gameType === 'MATH' && (
-                            <MathChallenge seed={gameState.seed} onScore={incrementScore} />
-                        )}
-                        {gameState.gameType === 'TEN' && (
-                            <MakeTen seed={gameState.seed} onScore={incrementScore} />
-                        )}
-                        {gameState.gameType === 'COLOR' && (
-                            <ColorMatch seed={gameState.seed} onScore={incrementScore} />
-                        )}
+                        {/* WARM UP OVERLAY */}
+                        {(() => {
+                            const now = Date.now() + serverOffset;
+                            const start = gameState.startAt ? new Date(gameState.startAt).getTime() : 0;
+                            const diff = (start - now) / 1000;
+
+                            if (diff > 0) {
+                                return (
+                                    <div className="absolute inset-0 bg-black/90 z-50 flex flex-col items-center justify-center p-8 text-center backdrop-blur-sm">
+                                        <motion.div
+                                            initial={{ scale: 0.5, opacity: 0 }}
+                                            animate={{ scale: 1, opacity: 1 }}
+                                            exit={{ scale: 2, opacity: 0 }}
+                                            className="flex flex-col items-center"
+                                        >
+                                            <h2 className="text-6xl font-black text-yellow-400 mb-6 drop-shadow-lg">
+                                                {gameState.gameType === 'RPS' && t('rps.title')}
+                                                {gameState.gameType === 'NUMBER' && t('number.title')}
+                                                {gameState.gameType === 'MATH' && t('math.title')}
+                                                {gameState.gameType === 'TEN' && t('ten.title')}
+                                                {gameState.gameType === 'COLOR' && t('color.title')}
+                                            </h2>
+                                            <p className="text-2xl text-white mb-12 font-bold max-w-2xl">
+                                                {gameState.gameType === 'RPS' && t('rps.instruction')}
+                                                {gameState.gameType === 'NUMBER' && t('number.instruction')}
+                                                {gameState.gameType === 'MATH' && t('math.instruction')}
+                                                {gameState.gameType === 'TEN' && t('ten.instruction')}
+                                                {gameState.gameType === 'COLOR' && t('color.instruction')}
+                                            </p>
+
+                                            <div className="text-9xl font-black font-mono text-white animate-pulse">
+                                                {Math.ceil(diff)}
+                                            </div>
+                                            <div className="text-sm text-gray-400 mt-2 font-bold tracking-widest uppercase">Starting in</div>
+                                        </motion.div>
+                                    </div>
+                                );
+                            }
+                            return null;
+                        })()}
+
+                        <div className={`w-full h-full ${(gameState.startAt && new Date(gameState.startAt).getTime() > (Date.now() + serverOffset)) ? 'blur-sm pointer-events-none' : ''}`}>
+                            {gameState.gameType === 'RPS' && (
+                                <RockPaperScissors seed={gameState.seed} onScore={incrementScore} />
+                            )}
+                            {gameState.gameType === 'NUMBER' && (
+                                <NumberOrder seed={gameState.seed} onScore={incrementScore} />
+                            )}
+                            {gameState.gameType === 'MATH' && (
+                                <MathChallenge seed={gameState.seed} onScore={incrementScore} />
+                            )}
+                            {gameState.gameType === 'TEN' && (
+                                <MakeTen seed={gameState.seed} onScore={incrementScore} />
+                            )}
+                            {gameState.gameType === 'COLOR' && (
+                                <ColorMatch seed={gameState.seed} onScore={incrementScore} />
+                            )}
+                        </div>
                     </motion.div>
                 )}
 

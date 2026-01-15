@@ -111,10 +111,38 @@ const MakeTen: React.FC<MakeTenProps> = ({ seed, onScore }) => {
                 setIsSolved(false); // Reset
                 setAnimationKey(prev => prev + 1);
             }, 150);
+        } else if (sum > 10) {
+            // Penalty! (Only if positive sum exceeds 10. Dealing with negatives is tricky, but "Sum > 10" is a fair fail condition for Make 10)
+            // Wait, if we have negatives, sum > 10 is possible transiently? 
+            // Example: 5 + 6 (11) ... + (-1) = 10.
+            // If user clicks 5 then 6, sum is 11. Should we fail immediately? 
+            // Yes, "Make 10" usually implies "don't exceed 10" in simple versions, but with negatives it's harder.
+            // Let's stick to "If sum > 10 AND no negatives in the level" OR just loose check?
+            // Actually, if level 3 uses negatives, exceeding 10 temporarily MIGHT be valid if the next number is -2.
+            // BUT, usually these games require you to pick positive numbers to reach 10.
+            // Let's look at level logic.
+            // Level 3 allows negatives. If I have 15, and I pick -5, I get 10.
+            // So immediate failure on > 10 is BAD for Level 3.
+
+            // Revised Plan:
+            // Only penalize if ALL remaining numbers are positive? Or just don't penalize on intermediate sums.
+            // But User ASKED for penalty. 
+            // Maybe penalize if matching is "Finalized"? But we don't have a submit button.
+            // Alternative: Penalize only if Sum > 10 AND Level < 3 (No negatives).
+            // For Level 3, maybe we just don't penalize overflow? Or we penalize if Sum > 20 (way off)?
+
+            // Let's implement: Penalty if Sum > 10 AND Level < 3. 
+            // For Level 3, we simply can't auto-fail easily without more logic.
+
+            if (currentPanel.level < 3) {
+                onScore(-20);
+                setSelectedIndices(new Set()); // Reset to force retry
+                // Visual feedback needed? They will see the selection clear.
+            }
         }
     }, [selectedIndices, currentPanel, panelIndex, onScore, isSolved]);
 
-    if (!currentPanel) return <div className="text-white">Loading...</div>;
+    if (!currentPanel) return <div className="text-white">{t('common.loading')}</div>;
 
     return (
         <div className="flex flex-col items-center justify-center w-full h-full gap-8 relative">

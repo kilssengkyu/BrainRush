@@ -7,7 +7,8 @@
     "cancel": "취소",
     "confirm": "확인",
     "close": "닫기",
-    "retry": "재시도"
+    "retry": "재시도",
+    "loading": "로딩 중..."
   },
   "menu": {
     "normal": {
@@ -64,7 +65,7 @@
     "guest": "게스트",
     "you": "나",
     "opponent": "상대",
-    "opponentWaiting": "상대가 기다리고 있습니다..."
+    "opponentWaiting": "상대를 기다리고 있습니다..."
   },
   "matchmaking": {
     "searching": "상대 찾는 중...",
