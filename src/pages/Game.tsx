@@ -9,6 +9,8 @@ import NumberOrder from '../components/minigames/NumberOrder';
 import MathChallenge from '../components/minigames/MathChallenge';
 import MakeTen from '../components/minigames/MakeTen';
 import ColorMatch from '../components/minigames/ColorMatch';
+import MemoryMatch from '../components/minigames/MemoryMatch';
+import ReverseSequence from '../components/minigames/ReverseSequence';
 import ScoreProgressBar from '../components/ui/ScoreProgressBar';
 
 const Game: React.FC = () => {
@@ -152,6 +154,9 @@ const Game: React.FC = () => {
                                                 {gameState.gameType === 'MATH' && t('math.title')}
                                                 {gameState.gameType === 'TEN' && t('ten.title')}
                                                 {gameState.gameType === 'COLOR' && t('color.title')}
+                                                {gameState.gameType === 'COLOR' && t('color.title')}
+                                                {gameState.gameType === 'MEMORY' && t('memory.title')}
+                                                {gameState.gameType === 'SEQUENCE' && t('sequence.title')}
                                             </h2>
                                             <p className="text-2xl text-white mb-12 font-bold max-w-2xl">
                                                 {gameState.gameType === 'RPS' && t('rps.instruction')}
@@ -159,6 +164,9 @@ const Game: React.FC = () => {
                                                 {gameState.gameType === 'MATH' && t('math.instruction')}
                                                 {gameState.gameType === 'TEN' && t('ten.instruction')}
                                                 {gameState.gameType === 'COLOR' && t('color.instruction')}
+                                                {gameState.gameType === 'COLOR' && t('color.instruction')}
+                                                {gameState.gameType === 'MEMORY' && t('memory.instruction')}
+                                                {gameState.gameType === 'SEQUENCE' && t('sequence.instruction')}
                                             </p>
 
                                             <div className="text-9xl font-black font-mono text-white animate-pulse">
@@ -187,6 +195,12 @@ const Game: React.FC = () => {
                             )}
                             {gameState.gameType === 'COLOR' && (
                                 <ColorMatch seed={gameState.seed} onScore={incrementScore} />
+                            )}
+                            {gameState.gameType === 'MEMORY' && (
+                                <MemoryMatch seed={gameState.seed || ''} onScore={incrementScore} />
+                            )}
+                            {gameState.gameType === 'SEQUENCE' && (
+                                <ReverseSequence seed={gameState.seed || ''} onScore={incrementScore} />
                             )}
                         </div>
                     </motion.div>

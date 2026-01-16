@@ -110,5 +110,16 @@
     "blue": "파랑",
     "green": "초록",
     "yellow": "노랑"
+  },
+  "memory": {
+    "title": "기억력 매칭",
+    "instruction": "카드의 위치를 기억하고 짝을 맞추세요",
+    "btn_memorized": "기억함!",
+    "memorize_hint": "카드를 기억하세요!",
+    "find_pairs": "짝을 찾으세요!"
+  },
+  "sequence": {
+    "title": "거꾸로 순서",
+    "instruction": "나타난 순서의 반대로 누르세요"
   }
 }
