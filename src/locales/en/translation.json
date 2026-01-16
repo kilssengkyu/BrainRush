@@ -110,5 +110,16 @@
         "blue": "BLUE",
         "green": "GREEN",
         "yellow": "YELLOW"
+    },
+    "memory": {
+        "title": "MEMORY MATCH",
+        "instruction": "Memorize and match the pairs",
+        "btn_memorized": "Memorized!",
+        "memorize_hint": "Memorize the cards!",
+        "find_pairs": "Find the pairs!"
+    },
+    "sequence": {
+        "title": "REVERSE PATH",
+        "instruction": "Tap the sequence in REVERSE order"
     }
 }

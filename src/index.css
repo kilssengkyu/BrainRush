@@ -1,1 +1,14 @@
 @import "tailwindcss";
+
+/* 모바일 스크롤 바운스 및 당겨서 새로고침 방지 */
+html, body {
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: manipulation; /* 핀치 줌 허용 여부는 meta 태그와 함께 고려 */
+  height: 100%;
+}
+
+#root {
+  height: 100%;
+  overflow: hidden; /* 내부 스크롤이 필요한 경우 자식 요소에서 처리 */
+}
