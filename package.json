@@ -13,6 +13,7 @@
     "@supabase/supabase-js": "^2.90.1",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/howler": "^2.2.12",
+    "flag-icons": "^7.5.0",
     "framer-motion": "^12.25.0",
     "howler": "^2.2.4",
     "i18next": "^25.7.4",

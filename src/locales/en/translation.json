@@ -43,6 +43,7 @@
     },
     "profile": {
         "nicknamePlaceholder": "Enter nickname",
+        "selectCountry": "Select Country",
         "edit": "Edit",
         "record": "Record",
         "disconnects": "Disconnects",
@@ -65,7 +66,21 @@
         "guest": "Guest",
         "you": "You",
         "opponent": "Opponent",
-        "opponentWaiting": "Opponent is waiting..."
+        "opponentWaiting": "Opponent is waiting...",
+        "draw": "DRAW",
+        "roundResult": "Round {{round}} Result",
+        "matchResult": "MATCH RESULT",
+        "startingIn": "Starting in",
+        "total": "TOTAL",
+        "table": {
+            "round": "Round",
+            "myScore": "My Score",
+            "opScore": "Op Score",
+            "result": "Result",
+            "win": "WIN",
+            "lose": "LOSE",
+            "draw": "DRAW"
+        }
     },
     "matchmaking": {
         "searching": "Searching...",
