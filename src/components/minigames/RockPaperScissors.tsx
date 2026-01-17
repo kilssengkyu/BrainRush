@@ -69,9 +69,10 @@ const RockPaperScissors: React.FC<RPSProps> = ({ seed, onScore }) => {
         <div className="flex flex-col items-center justify-center w-full h-full gap-8">
 
             {/* Instruction / Title overlay */}
-            <div className={`text-3xl font-bold ${isReverse ? 'text-red-500' : 'text-blue-500'}`}>
+            <h2 className="text-3xl font-black text-white mb-2">{t('rps.title')}</h2>
+            <p className={`text-xl font-bold mb-8 ${isReverse ? 'text-red-500' : 'text-blue-500'}`}>
                 {isReverse ? t('rps.titleLose') : t('rps.titleWin')}
-            </div>
+            </p>
 
             {/* Target Display Area */}
             <div className="relative flex items-center justify-center w-64 h-64">
@@ -114,9 +115,7 @@ const RockPaperScissors: React.FC<RPSProps> = ({ seed, onScore }) => {
                 ))}
             </div>
 
-            <div className="text-gray-500 text-sm mt-4 font-mono">
-                {t('rps.round')}: {index}
-            </div>
+
         </div>
     );
 };

@@ -17,6 +17,7 @@ export interface GameState {
     gameTypes: string[];
     roundScores: any[];
     isPlayer1: boolean;
+    mode?: 'normal' | 'rank'; // Added mode
 }
 
 export const useGameState = (roomId: string, myId: string, opponentId: string) => {
@@ -117,7 +118,8 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
                 totalRounds: 3,
                 gameTypes: record.game_types || [],
                 roundScores: record.round_scores || [],
-                isPlayer1: isP1
+                isPlayer1: isP1,
+                mode: record.mode || 'normal'
             };
         });
     }, [myId, serverOffset]);
@@ -283,7 +285,7 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
 
     // --- Actions ---
     const incrementScore = (amount: number = 100) => {
-        scoreRef.current += amount;
+        scoreRef.current = Math.max(0, scoreRef.current + amount);
         setGameState(prev => ({ ...prev, myScore: scoreRef.current }));
     };
 
