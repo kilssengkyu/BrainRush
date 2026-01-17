@@ -6,6 +6,7 @@ import { SeededRandom } from '../../utils/seededRandom';
 interface ReverseSequenceProps {
     seed: string | null;
     onScore: (amount: number) => void;
+    isPlaying: boolean;
 }
 
 const COLORS = [
@@ -17,7 +18,7 @@ const COLORS = [
     '#60A5FA', // Blue
 ];
 
-const ReverseSequence: React.FC<ReverseSequenceProps> = ({ seed, onScore }) => {
+const ReverseSequence: React.FC<ReverseSequenceProps> = ({ seed, onScore, isPlaying }) => {
     const { t } = useTranslation();
     const [stage, setStage] = useState(1);
     const [sequence, setSequence] = useState<number[]>([]);
@@ -52,7 +53,7 @@ const ReverseSequence: React.FC<ReverseSequenceProps> = ({ seed, onScore }) => {
         setSequence(newSequence);
         setTargetColors(newColors);
         setUserInput([]);
-        setPhase('SHOWING');
+        setPhase('IDLE'); // Start as IDLE, wait for effect to switch to SHOWING
         setSeqStep(0); // Reset visible count
 
     }, [seed, stage, itemCount]);
@@ -60,6 +61,13 @@ const ReverseSequence: React.FC<ReverseSequenceProps> = ({ seed, onScore }) => {
     useEffect(() => {
         startRound();
     }, [stage, startRound]);
+
+    // Start Showing when isPlaying becomes true and phase is IDLE
+    useEffect(() => {
+        if (isPlaying && phase === 'IDLE') {
+            setPhase('SHOWING');
+        }
+    }, [isPlaying, phase]);
 
     // Sequence Animation
     useEffect(() => {

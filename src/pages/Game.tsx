@@ -66,6 +66,56 @@ const Game: React.FC = () => {
     const isFinished = gameState.status === 'finished';
     const isWaiting = gameState.status === 'waiting';
 
+    const [isButtonEnabled, setIsButtonEnabled] = useState(false);
+
+    useEffect(() => {
+        if (isFinished) {
+            const timer = setTimeout(() => setIsButtonEnabled(true), 2000);
+            return () => clearTimeout(timer);
+        } else {
+            setIsButtonEnabled(false);
+        }
+    }, [isFinished]);
+
+    // MMR Animation Logic
+    const [displayMMR, setDisplayMMR] = useState<number | null>(null);
+    const [mmrDelta, setMmrDelta] = useState<number | null>(null);
+
+    useEffect(() => {
+        if (isFinished && gameState.mode === 'rank' && myProfile?.id) {
+            // Fetch latest MMR
+            supabase.from('profiles').select('mmr').eq('id', myProfile.id).single()
+                .then(({ data }) => {
+                    if (data && myProfile.mmr) {
+                        const start = myProfile.mmr;
+                        const end = data.mmr;
+                        // setFinalMMR(end); // Removed
+                        setMmrDelta(end - start);
+                        setDisplayMMR(start);
+
+                        // Animate
+                        const duration = 2000;
+                        const steps = 60;
+                        const intervalTime = duration / steps;
+                        const stepValue = (end - start) / steps;
+                        let output = start;
+                        let count = 0;
+
+                        const timer = setInterval(() => {
+                            count++;
+                            output += stepValue;
+                            if (count >= steps) {
+                                setDisplayMMR(end);
+                                clearInterval(timer);
+                            } else {
+                                setDisplayMMR(Math.round(output));
+                            }
+                        }, intervalTime);
+                    }
+                });
+        }
+    }, [isFinished, gameState.mode, myProfile]);
+
     const getWinnerMessage = () => {
         if (!gameState.winnerId) return t('game.draw');
         return gameState.winnerId === myId ? t('game.victory') : t('game.defeat');
@@ -214,7 +264,6 @@ const Game: React.FC = () => {
                                                 {gameState.gameType === 'MATH' && t('math.title')}
                                                 {gameState.gameType === 'TEN' && t('ten.title')}
                                                 {gameState.gameType === 'COLOR' && t('color.title')}
-                                                {gameState.gameType === 'COLOR' && t('color.title')}
                                                 {gameState.gameType === 'MEMORY' && t('memory.title')}
                                                 {gameState.gameType === 'SEQUENCE' && t('sequence.title')}
                                             </h2>
@@ -223,7 +272,6 @@ const Game: React.FC = () => {
                                                 {gameState.gameType === 'NUMBER' && t('number.instruction')}
                                                 {gameState.gameType === 'MATH' && t('math.instruction')}
                                                 {gameState.gameType === 'TEN' && t('ten.instruction')}
-                                                {gameState.gameType === 'COLOR' && t('color.instruction')}
                                                 {gameState.gameType === 'COLOR' && t('color.instruction')}
                                                 {gameState.gameType === 'MEMORY' && t('memory.instruction')}
                                                 {gameState.gameType === 'SEQUENCE' && t('sequence.instruction')}
@@ -260,7 +308,7 @@ const Game: React.FC = () => {
                                 <MemoryMatch seed={gameState.seed || ''} onScore={incrementScore} />
                             )}
                             {gameState.gameType === 'SEQUENCE' && (
-                                <ReverseSequence seed={gameState.seed || ''} onScore={incrementScore} />
+                                <ReverseSequence seed={gameState.seed || ''} onScore={incrementScore} isPlaying={isPlaying} />
                             )}
                         </div>
                     </motion.div>
@@ -332,11 +380,35 @@ const Game: React.FC = () => {
                                 </div>
                             </div>
 
+                            {/* Rank Result Animation */}
+                            {gameState.mode === 'rank' && displayMMR !== null && (
+                                <div className="mb-8 p-4 bg-white/10 rounded-xl border border-white/20">
+                                    <div className="text-gray-400 text-sm font-bold uppercase tracking-widest mb-2">{t('game.rankScore')}</div>
+                                    <div className="flex items-center justify-center gap-4 text-4xl font-black">
+                                        <div className="text-white">{displayMMR}</div>
+                                        {mmrDelta !== null && mmrDelta !== 0 && (
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: 0.5 }}
+                                                className={`text-2xl ${mmrDelta > 0 ? 'text-green-400' : 'text-red-400'}`}
+                                            >
+                                                {mmrDelta > 0 ? `+${mmrDelta}` : mmrDelta}
+                                            </motion.div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
                             <button
                                 onClick={() => navigate('/')}
-                                className="w-full py-4 bg-white text-black font-bold text-xl rounded-xl hover:bg-gray-200 transition-colors"
+                                disabled={!isButtonEnabled}
+                                className={`w-full py-4 font-bold text-xl rounded-xl transition-all ${isButtonEnabled
+                                    ? 'bg-white text-black hover:bg-gray-200'
+                                    : 'bg-gray-700 text-gray-500 cursor-not-allowed opacity-50'
+                                    }`}
                             >
-                                {t('game.returnMenu')}
+                                {isButtonEnabled ? t('game.returnMenu') : t('common.loading')}
                             </button>
                         </motion.div>
                     </div>
