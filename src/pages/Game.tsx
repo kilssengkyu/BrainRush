@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
+import { Trophy } from 'lucide-react';
 import { useGameState } from '../hooks/useGameState';
 import { supabase } from '../lib/supabaseClient';
 import RockPaperScissors from '../components/minigames/RockPaperScissors';
@@ -12,6 +13,7 @@ import ColorMatch from '../components/minigames/ColorMatch';
 import MemoryMatch from '../components/minigames/MemoryMatch';
 import ReverseSequence from '../components/minigames/ReverseSequence';
 import ScoreProgressBar from '../components/ui/ScoreProgressBar';
+import Flag from '../components/ui/Flag';
 
 const Game: React.FC = () => {
     const { t } = useTranslation();
@@ -86,7 +88,10 @@ const Game: React.FC = () => {
                 <div className="flex items-center gap-4 w-1/3 pt-2">
                     <img src={myProfile?.avatar_url || '/default-avatar.png'} className="w-12 h-12 rounded-full border-2 border-blue-500" />
                     <div>
-                        <div className="font-bold text-lg">{myProfile?.nickname}</div>
+                        <div className="font-bold text-lg flex items-center gap-2">
+                            <Flag code={myProfile?.country} />
+                            {myProfile?.nickname}
+                        </div>
                         <div className="text-3xl font-black text-blue-400 font-mono transition-all">
                             {gameState.myScore.toLocaleString()}
                         </div>
@@ -95,6 +100,9 @@ const Game: React.FC = () => {
 
                 {/* Center Timer */}
                 <div className="flex flex-col items-center w-1/3 pt-2">
+                    <div className="text-sm font-bold text-blue-300 tracking-widest uppercase mb-1">
+                        Round {gameState.currentRound}/{gameState.totalRounds}
+                    </div>
                     <div className={`text-5xl font-black font-mono tracking-widest ${gameState.remainingTime <= 10 ? 'text-red-500 animate-pulse' : 'text-yellow-400'}`}>
                         {Math.floor(gameState.remainingTime)}
                     </div>
@@ -104,7 +112,10 @@ const Game: React.FC = () => {
                 {/* Opponent Profile */}
                 <div className="flex items-center justify-end gap-4 w-1/3 text-right pt-2">
                     <div>
-                        <div className="font-bold text-lg">{opponentProfile?.nickname}</div>
+                        <div className="font-bold text-lg flex items-center justify-end gap-2">
+                            {opponentProfile?.nickname}
+                            <Flag code={opponentProfile?.country} />
+                        </div>
                         <div className="text-3xl font-black text-red-400 font-mono transition-all">
                             {gameState.opScore.toLocaleString()}
                         </div>
@@ -139,6 +150,54 @@ const Game: React.FC = () => {
                             const start = gameState.startAt ? new Date(gameState.startAt).getTime() : 0;
                             const diff = (start - now) / 1000;
 
+                            // 1. Intermediate Result Phase (First 3 seconds of warmup for Rounds 2 & 3)
+                            // Show result of the PREVIOUS round.
+                            // Round 2 Starts -> Show Round 1 Result.
+                            if (diff > 3 && gameState.currentRound > 1) {
+                                const prevRoundIndex = gameState.currentRound - 2; // currentRound is 1-based, array is 0-based. Prev round is index-2.
+                                const prevRound = gameState.roundScores[prevRoundIndex];
+
+                                if (prevRound) {
+                                    const p1Score = prevRound.p1_score || 0;
+                                    const p2Score = prevRound.p2_score || 0;
+
+                                    const myRoundScore = gameState.isPlayer1 ? p1Score : p2Score;
+                                    const opRoundScore = gameState.isPlayer1 ? p2Score : p1Score;
+
+                                    const isWin = myRoundScore > opRoundScore;
+                                    const isDraw = myRoundScore === opRoundScore;
+
+                                    return (
+                                        <div className="absolute inset-0 bg-black/90 z-50 flex flex-col items-center justify-center p-8 text-center backdrop-blur-sm">
+                                            <motion.div
+                                                initial={{ scale: 0.8, opacity: 0 }}
+                                                animate={{ scale: 1, opacity: 1 }}
+                                                className="flex flex-col items-center"
+                                            >
+                                                <h2 className="text-4xl text-gray-300 mb-2 font-bold uppercase tracking-widest">{t('game.roundResult', { round: gameState.currentRound - 1 })}</h2>
+                                                <div className={`text-6xl font-black mb-8 ${isWin ? 'text-blue-400' : isDraw ? 'text-gray-400' : 'text-red-400'}`}>
+                                                    {isWin ? t('game.victory') : isDraw ? t('game.draw') : t('game.defeat')}
+                                                </div>
+
+                                                <div className="flex gap-12 text-4xl font-mono font-bold">
+                                                    <div className="flex flex-col items-center">
+                                                        <span className="text-sm text-gray-500 mb-1">{t('game.you')}</span>
+                                                        <span className="text-blue-400">{myRoundScore}</span>
+                                                    </div>
+                                                    <div className="flex flex-col items-center justify-center">
+                                                        <span className="text-2xl text-gray-600">VS</span>
+                                                    </div>
+                                                    <div className="flex flex-col items-center">
+                                                        <span className="text-sm text-gray-500 mb-1">{t('game.opponent')}</span>
+                                                        <span className="text-red-400">{opRoundScore}</span>
+                                                    </div>
+                                                </div>
+                                            </motion.div>
+                                        </div>
+                                    );
+                                }
+                            }
+
                             if (diff > 0) {
                                 return (
                                     <div className="absolute inset-0 bg-black/90 z-50 flex flex-col items-center justify-center p-8 text-center backdrop-blur-sm">
@@ -148,7 +207,8 @@ const Game: React.FC = () => {
                                             exit={{ scale: 2, opacity: 0 }}
                                             className="flex flex-col items-center"
                                         >
-                                            <h2 className="text-6xl font-black text-yellow-400 mb-6 drop-shadow-lg">
+                                            <h2 className="text-6xl font-black text-yellow-400 mb-6 drop-shadow-lg flex flex-col items-center">
+                                                <span className="text-3xl text-white mb-2">Round {gameState.currentRound}</span>
                                                 {gameState.gameType === 'RPS' && t('rps.title')}
                                                 {gameState.gameType === 'NUMBER' && t('number.title')}
                                                 {gameState.gameType === 'MATH' && t('math.title')}
@@ -172,7 +232,7 @@ const Game: React.FC = () => {
                                             <div className="text-9xl font-black font-mono text-white animate-pulse">
                                                 {Math.ceil(diff)}
                                             </div>
-                                            <div className="text-sm text-gray-400 mt-2 font-bold tracking-widest uppercase">Starting in</div>
+                                            <div className="text-sm text-gray-400 mt-2 font-bold tracking-widest uppercase">{t('game.startingIn')}</div>
                                         </motion.div>
                                     </div>
                                 );
@@ -212,24 +272,69 @@ const Game: React.FC = () => {
                         <motion.div
                             initial={{ scale: 0.5, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
-                            className="bg-gray-800 p-12 rounded-3xl border-4 border-white/10 shadow-2xl text-center"
+                            className="bg-gray-800 p-8 rounded-3xl border-4 border-white/10 shadow-2xl text-center max-w-2xl w-full"
                         >
-                            <h2 className="text-6xl font-black mb-6">
-                                {getWinnerMessage()}
-                            </h2>
+                            <h2 className="text-5xl font-black mb-8 text-yellow-400 tracking-wider">{t('game.matchResult')}</h2>
+                            <h3 className="text-3xl font-bold text-white mb-8">{getWinnerMessage()}</h3>
 
-                            <div className="flex gap-12 text-3xl font-mono mb-8">
-                                <div className="text-blue-400">
-                                    Me: <span className="font-bold text-white">{gameState.myScore}</span>
+                            {/* Scoreboard Table */}
+                            <div className="w-full bg-gray-900/50 rounded-xl overflow-hidden mb-8 border border-white/5">
+                                <div className="grid grid-cols-4 bg-gray-800 p-3 text-xs font-bold text-gray-400 uppercase tracking-widest">
+                                    <div className="text-left pl-4">{t('game.table.round')}</div>
+                                    <div>{t('game.table.myScore')}</div>
+                                    <div>{t('game.table.opScore')}</div>
+                                    <div>{t('game.table.result')}</div>
                                 </div>
-                                <div className="text-red-400">
-                                    Op: <span className="font-bold text-white">{gameState.opScore}</span>
+                                {gameState.roundScores.map((round, idx) => {
+                                    const myS = gameState.isPlayer1 ? round.p1_score : round.p2_score;
+                                    const opS = gameState.isPlayer1 ? round.p2_score : round.p1_score;
+                                    const win = myS > opS;
+
+                                    // Calculate Ratio for Background
+                                    const totalS = myS + opS;
+                                    const myRatio = totalS > 0 ? (myS / totalS) * 100 : 50;
+
+                                    return (
+                                        <div key={idx} className="grid grid-cols-4 p-4 border-t border-white/5 items-center font-mono relative">
+                                            {/* Background Bar */}
+                                            <div className="absolute inset-0 z-0 opacity-10 flex">
+                                                <div style={{ width: `${myRatio}%` }} className="h-full bg-blue-500" />
+                                                <div style={{ width: `${100 - myRatio}%` }} className="h-full bg-red-500" />
+                                            </div>
+
+                                            <div className="text-left pl-4 text-white font-bold relative z-10">#{round.round}</div>
+                                            <div className="text-blue-400 font-bold text-lg relative z-10">{myS}</div>
+                                            <div className="text-red-400 font-bold text-lg relative z-10">{opS}</div>
+                                            <div className="relative z-10">
+                                                {win ? (
+                                                    <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">{t('game.table.win')}</span>
+                                                ) : myS === opS ? (
+                                                    <span className="text-xs bg-gray-500/20 text-gray-400 px-2 py-1 rounded">{t('game.table.draw')}</span>
+                                                ) : (
+                                                    <span className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded">{t('game.table.lose')}</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                                {/* TOTAL */}
+                                <div className="grid grid-cols-4 p-4 bg-white/5 border-t-2 border-white/10 items-center font-mono">
+                                    <div className="text-left pl-4 text-yellow-400 font-black">{t('game.total')}</div>
+                                    <div className="text-blue-400 font-black text-2xl">{gameState.myScore}</div>
+                                    <div className="text-red-400 font-black text-2xl">{gameState.opScore}</div>
+                                    <div>
+                                        {gameState.myScore > gameState.opScore ? (
+                                            <Trophy className="w-6 h-6 text-yellow-400 mx-auto" />
+                                        ) : (
+                                            <span className="text-gray-500">-</span>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
 
                             <button
                                 onClick={() => navigate('/')}
-                                className="px-8 py-4 bg-white text-black font-bold text-xl rounded-xl hover:scale-105 transition-transform"
+                                className="w-full py-4 bg-white text-black font-bold text-xl rounded-xl hover:bg-gray-200 transition-colors"
                             >
                                 {t('game.returnMenu')}
                             </button>

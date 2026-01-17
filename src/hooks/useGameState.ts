@@ -11,6 +11,12 @@ export interface GameState {
     opScore: number;
     winnerId: string | null;
     remainingTime: number;
+    // New Fields for 3-Game Set
+    currentRound: number; // 1, 2, 3
+    totalRounds: number;  // 3
+    gameTypes: string[];
+    roundScores: any[];
+    isPlayer1: boolean;
 }
 
 export const useGameState = (roomId: string, myId: string, opponentId: string) => {
@@ -23,7 +29,12 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
         myScore: 0,
         opScore: 0,
         winnerId: null,
-        remainingTime: 30
+        remainingTime: 30,
+        currentRound: 1,
+        totalRounds: 3,
+        gameTypes: [],
+        roundScores: [],
+        isPlayer1: true
     });
 
     const [serverOffset, setServerOffset] = useState<number>(0);
@@ -70,6 +81,12 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
             console.log('Game FINISHED! Winner:', record.winner_id);
         }
 
+        // Fix: Sync local score ref if server is ahead (e.g. reload or round transition)
+        // This ensures that if we reload page in Round 2, we pick up the accumulated score
+        if (myServerScore > scoreRef.current) {
+            scoreRef.current = myServerScore;
+        }
+
         setGameState(prev => {
             // Ticker Logic Update
             let remaining = prev.remainingTime;
@@ -95,7 +112,12 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
                 myScore: Math.max(scoreRef.current, myServerScore),
                 opScore: opServerScore,
                 winnerId: record.winner_id,
-                remainingTime: remaining
+                remainingTime: remaining,
+                currentRound: (record.current_round_index || 0) + 1,
+                totalRounds: 3,
+                gameTypes: record.game_types || [],
+                roundScores: record.round_scores || [],
+                isPlayer1: isP1
             };
         });
     }, [myId, serverOffset]);
@@ -189,15 +211,15 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
                     if (syncError) console.error('FINAL SCORE SYNC ERROR:', syncError);
                     else console.log('FINAL SCORE SYNC SUCCESS');
 
-                    // 2. Finish Game
-                    console.log('Ticker: Calling FINISH_GAME...');
-                    const { error: finishError } = await supabase.rpc('finish_game', { p_room_id: roomId });
+                    // 2. Next Round or Finish
+                    console.log('Ticker: Calling NEXT_ROUND...');
+                    const { error: finishError } = await supabase.rpc('next_round', { p_room_id: roomId });
 
                     if (finishError) {
-                        console.error('FINISH_GAME ERROR:', finishError);
+                        console.error('NEXT_ROUND ERROR:', finishError);
                         isFinishing.current = false; // Allow retry
                     } else {
-                        console.log('FINISH_GAME SUCCESS');
+                        console.log('NEXT_ROUND SUCCESS');
                     }
                 }
             }
@@ -264,6 +286,14 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
         scoreRef.current += amount;
         setGameState(prev => ({ ...prev, myScore: scoreRef.current }));
     };
+
+    // Fix: Reset finishing flag AND ScoreRef when round changes
+    // 라운드가 변경(또는 게임 타입 변경)되면 isFinishing 플래그를 초기화하여 다음 라운드 종료 시 트리거가 동작하도록 함
+    useEffect(() => {
+        isFinishing.current = false;
+        scoreRef.current = 0; // Reset local score for new round
+        console.log('Resetting isFinishing flag and scoreRef for new round/game type');
+    }, [gameState.currentRound, gameState.gameType, gameState.status]);
 
     return { gameState, incrementScore, serverOffset, isWaitingTimeout };
 };

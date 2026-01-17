@@ -6,6 +6,8 @@ import { Settings, User, Trophy, Zap, Users, Loader2, Lock, AlertTriangle } from
 import { useMatchmaking } from '../hooks/useMatchmaking';
 import { useSound } from '../contexts/SoundContext';
 import { useAuth } from '../contexts/AuthContext';
+// COUNTRIES import removed as it's no longer needed for direct emoji lookup if we use Flag component
+import Flag from '../components/ui/Flag';
 
 const Home = () => {
     const navigate = useNavigate();
@@ -23,6 +25,7 @@ const Home = () => {
     const rank = profile?.mmr || 1000;
     const nickname = profile?.nickname || user?.email?.split('@')[0] || t('game.unknownPlayer');
     const avatarUrl = profile?.avatar_url;
+    const countryCode = profile?.country;
 
     // Track selected mode for navigation callback
     const currentMode = useRef('rank');
@@ -93,7 +96,10 @@ const Home = () => {
                             </div>
                         </div>
                         <div>
-                            <div className="font-bold text-white leading-none">{nickname}</div>
+                            <div className="font-bold text-white leading-none flex items-center gap-2">
+                                <Flag code={countryCode} />
+                                {nickname}
+                            </div>
                             <div className="text-xs text-gray-400 mt-1 flex gap-3">
                                 <span className="text-blue-400">{t('user.level')} {level}</span>
                                 <span className="text-purple-400">{t('user.rank')} {rank}</span>

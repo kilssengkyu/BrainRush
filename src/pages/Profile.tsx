@@ -7,6 +7,8 @@ import { useSound } from '../contexts/SoundContext';
 import { useUI } from '../contexts/UIContext';
 import { supabase } from '../lib/supabaseClient';
 import { useTranslation } from 'react-i18next';
+import { COUNTRIES } from '../constants/countries';
+import Flag from '../components/ui/Flag';
 
 const Profile = () => {
     const { user, profile, signOut, refreshProfile } = useAuth();
@@ -16,12 +18,16 @@ const Profile = () => {
     const { t } = useTranslation();
 
     const [nickname, setNickname] = useState('');
+    const [country, setCountry] = useState<string | null>(null);
     const [isEditing, setIsEditing] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
         if (profile?.nickname) {
             setNickname(profile.nickname);
+        }
+        if (profile?.country) {
+            setCountry(profile.country);
         }
     }, [profile]);
 
@@ -53,7 +59,10 @@ const Profile = () => {
         try {
             const { data, error } = await supabase
                 .from('profiles')
-                .update({ nickname: nickname.trim() })
+                .update({
+                    nickname: nickname.trim(),
+                    country: country
+                })
                 .eq('id', user.id)
                 .select(); // Return data to verify update
 
@@ -147,10 +156,10 @@ const Profile = () => {
                         </div>
                     </div>
 
-                    {/* Nickname Edit */}
-                    <div className="flex items-center gap-2 w-full justify-center">
+                    {/* Nickname & Country Edit */}
+                    <div className="flex flex-col items-center gap-4 w-full justify-center">
                         {isEditing ? (
-                            <div className="flex gap-2 w-full max-w-[200px]">
+                            <div className="flex flex-col gap-2 w-full max-w-[240px]">
                                 <input
                                     type="text"
                                     value={nickname}
@@ -159,23 +168,45 @@ const Profile = () => {
                                     placeholder={t('profile.nicknamePlaceholder')}
                                     maxLength={12}
                                 />
+
+                                <select
+                                    value={country || ''}
+                                    onChange={(e) => setCountry(e.target.value || null)}
+                                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500 appearance-none text-center"
+                                >
+                                    <option value="">{t('profile.selectCountry')}</option>
+                                    {COUNTRIES.map((c) => (
+                                        <option key={c.code} value={c.code}>
+                                            {c.name}
+                                        </option>
+                                    ))}
+                                </select>
+
                                 <button
                                     onClick={handleSave}
                                     disabled={isLoading}
-                                    className="p-2 bg-blue-600 rounded-lg hover:bg-blue-500 disabled:opacity-50"
+                                    className="p-2 bg-blue-600 rounded-lg hover:bg-blue-500 disabled:opacity-50 w-full flex justify-center mt-2"
                                 >
                                     <Save className="w-5 h-5" />
                                 </button>
                             </div>
                         ) : (
-                            <div className="flex items-center gap-2">
-                                <h2 className="text-2xl font-bold">{nickname}</h2>
-                                <button
-                                    onClick={() => { playSound('click'); setIsEditing(true); }}
-                                    className="text-gray-500 hover:text-white text-xs bg-gray-800 px-2 py-1 rounded border border-gray-700"
-                                >
-                                    {t('profile.edit')}
-                                </button>
+                            <div className="flex flex-col items-center gap-1">
+                                <div className="flex items-center gap-2">
+                                    <Flag code={country} size="lg" className="mr-1" />
+                                    <h2 className="text-2xl font-bold">{nickname}</h2>
+                                    <button
+                                        onClick={() => { playSound('click'); setIsEditing(true); }}
+                                        className="text-gray-500 hover:text-white text-xs bg-gray-800 px-2 py-1 rounded border border-gray-700 ml-2"
+                                    >
+                                        {t('profile.edit')}
+                                    </button>
+                                </div>
+                                {country && (
+                                    <span className="text-gray-500 text-xs">
+                                        {COUNTRIES.find(c => c.code === country)?.name}
+                                    </span>
+                                )}
                             </div>
                         )}
                     </div>
