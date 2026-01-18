@@ -151,11 +151,7 @@ const ReverseSequence: React.FC<ReverseSequenceProps> = ({ seed, onScore, isPlay
 
     return (
         <div className="w-full h-full flex flex-col items-center justify-center relative">
-            <div className="absolute top-4 text-gray-500 font-mono text-sm">
-                Stage {stage}
-            </div>
-
-            <h2 className="text-3xl font-black text-white mb-8 drop-shadow-md">
+            <h2 className="text-4xl font-black text-white mb-8 drop-shadow-md">
                 {t('sequence.title')}
             </h2>
 

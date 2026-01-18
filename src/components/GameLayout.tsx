@@ -47,7 +47,7 @@ const PlayerSection = ({ player }: { player: PlayerProfile }) => {
                     <span className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">
                         {player.isOpponent ? 'Opponent' : 'You'}
                     </span>
-                    <h3 className="text-xl font-bold text-white leading-none mb-2">{player.name}</h3>
+                    <h3 className="text-xl font-bold text-white leading-none mb-2 hidden sm:block">{player.name}</h3>
 
                     {/* Stats Display */}
                     {!player.isGuest && (

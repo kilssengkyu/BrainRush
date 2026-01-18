@@ -146,16 +146,18 @@ const MemoryMatch: React.FC<MemoryMatchProps> = ({ seed, onScore }) => {
                 MEMORY MATCH (Lv. {stage})
             </h2>
 
-            {gameState === 'MEMORIZING' && (
-                <div className="mb-4 text-yellow-300 font-bold text-xl animate-bounce">
-                    {t('memory.memorize_hint')}
-                </div>
-            )}
-            {gameState === 'PLAYING' && (
-                <div className="mb-4 text-gray-400 font-bold text-lg">
-                    {t('memory.find_pairs')}
-                </div>
-            )}
+            <div className="mb-4 min-h-[28px]">
+                {gameState === 'MEMORIZING' && (
+                    <div className="text-yellow-300 font-bold text-xl animate-bounce">
+                        {t('memory.memorize_hint')}
+                    </div>
+                )}
+                {gameState === 'PLAYING' && (
+                    <div className="text-gray-400 font-bold text-lg">
+                        {t('memory.find_pairs')}
+                    </div>
+                )}
+            </div>
 
             <div
                 className="grid gap-4 w-full max-w-2xl mx-auto transition-all duration-500"
@@ -219,14 +221,18 @@ const MemoryMatch: React.FC<MemoryMatchProps> = ({ seed, onScore }) => {
                 </AnimatePresence>
             </div>
 
-            {gameState === 'MEMORIZING' && (
+            <div className="mt-8 min-h-[64px]">
                 <button
                     onClick={handleMemorizeDone}
-                    className="mt-8 px-8 py-4 bg-green-500 hover:bg-green-600 text-white font-black text-2xl rounded-2xl shadow-[0_4px_0_rgb(21,128,61)] hover:shadow-[0_2px_0_rgb(21,128,61)] hover:translate-y-[2px] transition-all"
+                    disabled={gameState !== 'MEMORIZING'}
+                    className={`px-8 py-4 bg-green-500 text-white font-black text-2xl rounded-2xl shadow-[0_4px_0_rgb(21,128,61)] transition-all ${gameState === 'MEMORIZING'
+                        ? 'hover:bg-green-600 hover:shadow-[0_2px_0_rgb(21,128,61)] hover:translate-y-[2px]'
+                        : 'opacity-0 pointer-events-none'
+                        }`}
                 >
                     {t('memory.btn_memorized')}
                 </button>
-            )}
+            </div>
         </div>
     );
 };
