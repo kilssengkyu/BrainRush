@@ -104,7 +104,7 @@
     },
     "number": {
         "title": "NUMBER ORDER",
-        "instruction": "Ascending Order (Low → High)",
+        "instruction": "Ascending Order",
         "asc": "Press numbers Low to High!",
         "desc": "Press numbers High to Low!",
         "ready": "READY",

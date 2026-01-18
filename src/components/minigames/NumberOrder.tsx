@@ -28,11 +28,11 @@ const NumberOrder: React.FC<NumberOrderProps> = ({ seed, onScore }) => {
     };
 
     // Generate Current Panel Data
-    const { gridItems, sortedAnswer, currentLevel } = useMemo(() => {
-        if (!seed) return { gridItems: [], sortedAnswer: [], currentLevel: 1 };
+    const { gridItems, sortedAnswer } = useMemo(() => {
+        if (!seed) return { gridItems: [], sortedAnswer: [] };
 
         const rng = new SeededRandom(`${seed}_num_${panelIndex}`);
-        const { count, max, level } = getDifficulty(panelIndex);
+        const { count, max } = getDifficulty(panelIndex);
 
         // Generate 'count' unique random numbers
         const nums = new Set<number>();
@@ -55,7 +55,7 @@ const NumberOrder: React.FC<NumberOrderProps> = ({ seed, onScore }) => {
         // Shuffle positions
         const shuffledGrid = rng.shuffle(slots);
 
-        return { gridItems: shuffledGrid, sortedAnswer: sorted, currentLevel: level };
+        return { gridItems: shuffledGrid, sortedAnswer: sorted };
     }, [seed, panelIndex]);
 
     const handleNumberClick = (num: number) => {
@@ -96,15 +96,10 @@ const NumberOrder: React.FC<NumberOrderProps> = ({ seed, onScore }) => {
     return (
         <div className="flex flex-col items-center justify-center w-full h-full gap-6 relative">
             {/* Header / Instructions */}
-            <div className="flex flex-col items-center gap-2">
-                <h2 className="text-2xl font-bold text-blue-400">
-                    {t('number.title')}
-                </h2>
-                <div className="text-gray-400 text-sm">{t('number.instruction')}</div>
-                <div className="text-gray-500 font-mono text-sm">
-                    Level: {currentLevel} | Panel: {panelIndex + 1}
-                </div>
-            </div>
+            <h2 className="text-4xl font-black text-white drop-shadow-md mb-2">
+                {t('number.title')}
+            </h2>
+            <div className="text-gray-400 text-sm mb-4">{t('number.instruction')}</div>
 
             {/* Grid Area */}
             <div className="w-80 h-80 relative flex items-center justify-center">

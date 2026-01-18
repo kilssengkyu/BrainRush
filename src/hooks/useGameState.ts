@@ -41,6 +41,7 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
     const [serverOffset, setServerOffset] = useState<number>(0);
     const scoreRef = useRef(0);
     const lastSyncedScore = useRef(0);
+    const hasLocalScoreChanges = useRef(false);
     const [isWaitingTimeout, setIsWaitingTimeout] = useState(false);
     const isFinishing = useRef(false);
 
@@ -84,8 +85,11 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
 
         // Fix: Sync local score ref if server is ahead (e.g. reload or round transition)
         // This ensures that if we reload page in Round 2, we pick up the accumulated score
-        if (myServerScore > scoreRef.current) {
+        if (!hasLocalScoreChanges.current && myServerScore > scoreRef.current) {
             scoreRef.current = myServerScore;
+        }
+        if (myServerScore === scoreRef.current) {
+            hasLocalScoreChanges.current = false;
         }
 
         setGameState(prev => {
@@ -110,7 +114,7 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
                 seed: record.seed,
                 startAt: record.start_at,
                 endAt: record.end_at,
-                myScore: Math.max(scoreRef.current, myServerScore),
+                myScore: record.status === 'playing' ? scoreRef.current : myServerScore,
                 opScore: opServerScore,
                 winnerId: record.winner_id,
                 remainingTime: remaining,
@@ -286,6 +290,7 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
     // --- Actions ---
     const incrementScore = (amount: number = 100) => {
         scoreRef.current = Math.max(0, scoreRef.current + amount);
+        hasLocalScoreChanges.current = true;
         setGameState(prev => ({ ...prev, myScore: scoreRef.current }));
     };
 
@@ -294,6 +299,7 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
     useEffect(() => {
         isFinishing.current = false;
         scoreRef.current = 0; // Reset local score for new round
+        hasLocalScoreChanges.current = false;
         console.log('Resetting isFinishing flag and scoreRef for new round/game type');
     }, [gameState.currentRound, gameState.gameType, gameState.status]);
 

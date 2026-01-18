@@ -84,6 +84,8 @@
         "titleLose": "败者猜拳"
     },
     "number": {
+        "title": "数字排序",
+        "instruction": "按从小到大的顺序点击数字！",
         "asc": "从小到大按数字!",
         "desc": "从大到小按数字!",
         "ready": "准备",

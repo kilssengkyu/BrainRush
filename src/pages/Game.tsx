@@ -65,12 +65,16 @@ const Game: React.FC = () => {
     const isPlaying = gameState.status === 'playing';
     const isFinished = gameState.status === 'finished';
     const isWaiting = gameState.status === 'waiting';
+    const isCountdownActive = Boolean(
+        gameState.startAt && new Date(gameState.startAt).getTime() > (Date.now() + serverOffset)
+    );
 
     const [isButtonEnabled, setIsButtonEnabled] = useState(false);
 
     useEffect(() => {
         if (isFinished) {
-            const timer = setTimeout(() => setIsButtonEnabled(true), 2000);
+            // Wait for animations to finish (approx 4.5s)
+            const timer = setTimeout(() => setIsButtonEnabled(true), 4500);
             return () => clearTimeout(timer);
         } else {
             setIsButtonEnabled(false);
@@ -83,36 +87,40 @@ const Game: React.FC = () => {
 
     useEffect(() => {
         if (isFinished && gameState.mode === 'rank' && myProfile?.id) {
-            // Fetch latest MMR
-            supabase.from('profiles').select('mmr').eq('id', myProfile.id).single()
-                .then(({ data }) => {
-                    if (data && myProfile.mmr) {
-                        const start = myProfile.mmr;
-                        const end = data.mmr;
-                        // setFinalMMR(end); // Removed
-                        setMmrDelta(end - start);
-                        setDisplayMMR(start);
+            // Delay MMR animation to start AFTER the main result animations (approx 3.5s)
+            const startDelay = setTimeout(() => {
+                // Fetch latest MMR
+                supabase.from('profiles').select('mmr').eq('id', myProfile.id).single()
+                    .then(({ data }) => {
+                        if (data && myProfile.mmr) {
+                            const start = myProfile.mmr;
+                            const end = data.mmr;
+                            setMmrDelta(end - start);
+                            setDisplayMMR(start);
 
-                        // Animate
-                        const duration = 2000;
-                        const steps = 60;
-                        const intervalTime = duration / steps;
-                        const stepValue = (end - start) / steps;
-                        let output = start;
-                        let count = 0;
+                            // Animate
+                            const duration = 2000;
+                            const steps = 60;
+                            const intervalTime = duration / steps;
+                            const stepValue = (end - start) / steps;
+                            let output = start;
+                            let count = 0;
 
-                        const timer = setInterval(() => {
-                            count++;
-                            output += stepValue;
-                            if (count >= steps) {
-                                setDisplayMMR(end);
-                                clearInterval(timer);
-                            } else {
-                                setDisplayMMR(Math.round(output));
-                            }
-                        }, intervalTime);
-                    }
-                });
+                            const timer = setInterval(() => {
+                                count++;
+                                output += stepValue;
+                                if (count >= steps) {
+                                    setDisplayMMR(end);
+                                    clearInterval(timer);
+                                } else {
+                                    setDisplayMMR(Math.round(output));
+                                }
+                            }, intervalTime);
+                        }
+                    });
+            }, 3500);
+
+            return () => clearTimeout(startDelay);
         }
     }, [isFinished, gameState.mode, myProfile]);
 
@@ -122,7 +130,7 @@ const Game: React.FC = () => {
     };
 
     return (
-        <div className="relative w-full h-screen bg-gray-900 text-white overflow-hidden flex flex-col font-sans select-none">
+        <div className="relative w-full h-[100dvh] bg-gray-900 text-white overflow-hidden flex flex-col font-sans select-none">
 
             {/* Top Info Bar (Timer & Scores) */}
             <header className="h-24 w-full bg-gray-800/80 backdrop-blur-md flex items-center justify-between px-6 shadow-lg z-50 relative">
@@ -140,7 +148,7 @@ const Game: React.FC = () => {
                     <div>
                         <div className="font-bold text-lg flex items-center gap-2">
                             <Flag code={myProfile?.country} />
-                            {myProfile?.nickname}
+                            <span className="hidden sm:inline">{myProfile?.nickname}</span>
                         </div>
                         <div className="text-3xl font-black text-blue-400 font-mono transition-all">
                             {gameState.myScore.toLocaleString()}
@@ -163,7 +171,7 @@ const Game: React.FC = () => {
                 <div className="flex items-center justify-end gap-4 w-1/3 text-right pt-2">
                     <div>
                         <div className="font-bold text-lg flex items-center justify-end gap-2">
-                            {opponentProfile?.nickname}
+                            <span className="hidden sm:inline">{opponentProfile?.nickname}</span>
                             <Flag code={opponentProfile?.country} />
                         </div>
                         <div className="text-3xl font-black text-red-400 font-mono transition-all">
@@ -288,7 +296,7 @@ const Game: React.FC = () => {
                             return null;
                         })()}
 
-                        <div className={`w-full h-full ${(gameState.startAt && new Date(gameState.startAt).getTime() > (Date.now() + serverOffset)) ? 'blur-sm pointer-events-none' : ''}`}>
+                        <div className={`w-full h-full ${isCountdownActive ? 'blur-sm pointer-events-none' : ''}`}>
                             {gameState.gameType === 'RPS' && (
                                 <RockPaperScissors seed={gameState.seed} onScore={incrementScore} />
                             )}
@@ -308,7 +316,11 @@ const Game: React.FC = () => {
                                 <MemoryMatch seed={gameState.seed || ''} onScore={incrementScore} />
                             )}
                             {gameState.gameType === 'SEQUENCE' && (
-                                <ReverseSequence seed={gameState.seed || ''} onScore={incrementScore} isPlaying={isPlaying} />
+                                <ReverseSequence
+                                    seed={gameState.seed || ''}
+                                    onScore={incrementScore}
+                                    isPlaying={isPlaying && !isCountdownActive}
+                                />
                             )}
                         </div>
                     </motion.div>
@@ -318,12 +330,37 @@ const Game: React.FC = () => {
                 {isFinished && (
                     <div className="absolute inset-0 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center z-50">
                         <motion.div
-                            initial={{ scale: 0.5, opacity: 0 }}
+                            initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             className="bg-gray-800 p-8 rounded-3xl border-4 border-white/10 shadow-2xl text-center max-w-2xl w-full"
                         >
-                            <h2 className="text-5xl font-black mb-8 text-yellow-400 tracking-wider">{t('game.matchResult')}</h2>
-                            <h3 className="text-3xl font-bold text-white mb-8">{getWinnerMessage()}</h3>
+                            <h2 className="text-5xl font-black mb-8 text-yellow-400 tracking-wider flex justify-center gap-4">
+                                {t('game.matchResult').split('').map((char, i) => (
+                                    <motion.span
+                                        key={i}
+                                        initial={{ opacity: 0, y: -20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: i * 0.1 }}
+                                    >
+                                        {char}
+                                    </motion.span>
+                                ))}
+                            </h2>
+
+                            {/* VICTORY / DEFEAT TEXT - SLAM ANIMATION (After Rounds) */}
+                            <motion.div
+                                initial={{ scale: 5, opacity: 0, rotate: -10 }}
+                                animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                                transition={{
+                                    delay: 0.5 + (gameState.roundScores.length + 1) * 0.6,
+                                    type: "spring", stiffness: 200, damping: 15
+                                }}
+                                className="mb-8"
+                            >
+                                <h3 className={`text-6xl font-black drop-shadow-2xl ${getWinnerMessage() === t('game.victory') ? 'text-blue-500' : 'text-red-500'}`}>
+                                    {getWinnerMessage()}
+                                </h3>
+                            </motion.div>
 
                             {/* Scoreboard Table */}
                             <div className="w-full bg-gray-900/50 rounded-xl overflow-hidden mb-8 border border-white/5">
@@ -337,52 +374,84 @@ const Game: React.FC = () => {
                                     const myS = gameState.isPlayer1 ? round.p1_score : round.p2_score;
                                     const opS = gameState.isPlayer1 ? round.p2_score : round.p1_score;
                                     const win = myS > opS;
-
-                                    // Calculate Ratio for Background
                                     const totalS = myS + opS;
                                     const myRatio = totalS > 0 ? (myS / totalS) * 100 : 50;
 
                                     return (
-                                        <div key={idx} className="grid grid-cols-4 p-4 border-t border-white/5 items-center font-mono relative">
+                                        <motion.div
+                                            key={idx}
+                                            initial={{ opacity: 0, x: -50 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            transition={{ delay: 0.5 + idx * 0.6 }}
+                                            className="grid grid-cols-4 p-4 border-t border-white/5 items-center font-mono relative overflow-hidden"
+                                        >
                                             {/* Background Bar */}
-                                            <div className="absolute inset-0 z-0 opacity-10 flex">
-                                                <div style={{ width: `${myRatio}%` }} className="h-full bg-blue-500" />
-                                                <div style={{ width: `${100 - myRatio}%` }} className="h-full bg-red-500" />
+                                            <div className="absolute inset-0 z-0 opacity-10">
+                                                {/* Left (Blue) - Anchored Left */}
+                                                <motion.div
+                                                    initial={{ width: 0 }}
+                                                    animate={{ width: `${myRatio}%` }}
+                                                    transition={{ delay: 0.5 + idx * 0.6, duration: 1, ease: "easeOut" }}
+                                                    className="absolute left-0 top-0 h-full bg-blue-500"
+                                                />
+                                                {/* Right (Red) - Anchored Right */}
+                                                <motion.div
+                                                    initial={{ width: 0 }}
+                                                    animate={{ width: `${100 - myRatio}%` }}
+                                                    transition={{ delay: 0.5 + idx * 0.6, duration: 1, ease: "easeOut" }}
+                                                    className="absolute right-0 top-0 h-full bg-red-500"
+                                                />
                                             </div>
 
                                             <div className="text-left pl-4 text-white font-bold relative z-10">#{round.round}</div>
                                             <div className="text-blue-400 font-bold text-lg relative z-10">{myS}</div>
                                             <div className="text-red-400 font-bold text-lg relative z-10">{opS}</div>
                                             <div className="relative z-10">
-                                                {win ? (
-                                                    <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">{t('game.table.win')}</span>
-                                                ) : myS === opS ? (
-                                                    <span className="text-xs bg-gray-500/20 text-gray-400 px-2 py-1 rounded">{t('game.table.draw')}</span>
-                                                ) : (
-                                                    <span className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded">{t('game.table.lose')}</span>
-                                                )}
+                                                <motion.div
+                                                    initial={{ scale: 0 }}
+                                                    animate={{ scale: 1 }}
+                                                    transition={{ delay: 0.8 + idx * 0.6, type: "spring" }}
+                                                >
+                                                    {win ? (
+                                                        <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">{t('game.table.win')}</span>
+                                                    ) : myS === opS ? (
+                                                        <span className="text-xs bg-gray-500/20 text-gray-400 px-2 py-1 rounded">{t('game.table.draw')}</span>
+                                                    ) : (
+                                                        <span className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded">{t('game.table.lose')}</span>
+                                                    )}
+                                                </motion.div>
                                             </div>
-                                        </div>
+                                        </motion.div>
                                     );
                                 })}
                                 {/* TOTAL */}
-                                <div className="grid grid-cols-4 p-4 bg-white/5 border-t-2 border-white/10 items-center font-mono">
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.5 + gameState.roundScores.length * 0.6 }}
+                                    className="grid grid-cols-4 p-4 bg-white/5 border-t-2 border-white/10 items-center font-mono"
+                                >
                                     <div className="text-left pl-4 text-yellow-400 font-black">{t('game.total')}</div>
                                     <div className="text-blue-400 font-black text-2xl">{gameState.myScore}</div>
                                     <div className="text-red-400 font-black text-2xl">{gameState.opScore}</div>
                                     <div>
                                         {gameState.myScore > gameState.opScore ? (
-                                            <Trophy className="w-6 h-6 text-yellow-400 mx-auto" />
+                                            <Trophy className="w-6 h-6 text-yellow-400 mx-auto animate-bounce" />
                                         ) : (
                                             <span className="text-gray-500">-</span>
                                         )}
                                     </div>
-                                </div>
+                                </motion.div>
                             </div>
 
                             {/* Rank Result Animation */}
                             {gameState.mode === 'rank' && displayMMR !== null && (
-                                <div className="mb-8 p-4 bg-white/10 rounded-xl border border-white/20">
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ delay: 1.2 + (gameState.roundScores.length + 1) * 0.6 }}
+                                    className="mb-8 p-4 bg-white/10 rounded-xl border border-white/20"
+                                >
                                     <div className="text-gray-400 text-sm font-bold uppercase tracking-widest mb-2">{t('game.rankScore')}</div>
                                     <div className="flex items-center justify-center gap-4 text-4xl font-black">
                                         <div className="text-white">{displayMMR}</div>
@@ -390,17 +459,20 @@ const Game: React.FC = () => {
                                             <motion.div
                                                 initial={{ opacity: 0, y: 10 }}
                                                 animate={{ opacity: 1, y: 0 }}
-                                                transition={{ delay: 0.5 }}
+                                                transition={{ delay: 0.5 }} // local delay
                                                 className={`text-2xl ${mmrDelta > 0 ? 'text-green-400' : 'text-red-400'}`}
                                             >
                                                 {mmrDelta > 0 ? `+${mmrDelta}` : mmrDelta}
                                             </motion.div>
                                         )}
                                     </div>
-                                </div>
+                                </motion.div>
                             )}
 
-                            <button
+                            <motion.button
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 2.0 + (gameState.roundScores.length + 1) * 0.6 }}
                                 onClick={() => navigate('/')}
                                 disabled={!isButtonEnabled}
                                 className={`w-full py-4 font-bold text-xl rounded-xl transition-all ${isButtonEnabled
@@ -409,7 +481,7 @@ const Game: React.FC = () => {
                                     }`}
                             >
                                 {isButtonEnabled ? t('game.returnMenu') : t('common.loading')}
-                            </button>
+                            </motion.button>
                         </motion.div>
                     </div>
                 )}
