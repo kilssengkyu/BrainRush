@@ -70,6 +70,7 @@ const ColorMatch: React.FC<ColorMatchProps> = ({ seed, onScore }) => {
 
     const handleItemClick = (index: number) => {
         if (!currentPanel || isSolved) return;
+        if (selectedIndices.has(index)) return;
 
         const item = currentPanel.items[index];
 
@@ -139,10 +140,11 @@ const ColorMatch: React.FC<ColorMatchProps> = ({ seed, onScore }) => {
                                     ? { x: [-5, 5, -5, 5, 0], backgroundColor: '#ef4444' }
                                     : {
                                         scale: selectedIndices.has(idx) ? 0.95 : 1,
-                                        opacity: selectedIndices.has(idx) ? 0.5 : 1, // Dim if selected
-                                        borderColor: COLORS[item.visual].hex // Visual Border
+                                        opacity: selectedIndices.has(idx) ? 0 : 1,
+                                        borderColor: COLORS[item.visual].hex
                                     }
                             }
+                            transition={{ duration: 0.25 }}
                             exit={{ scale: 0, opacity: 0 }}
                             onClick={() => handleItemClick(idx)}
                             className={`w-36 h-36 rounded-2xl flex items-center justify-center text-4xl font-bold bg-gray-900 border-8 transition-all shadow-lg ${COLORS[item.visual].tailwind}`}

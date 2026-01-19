@@ -136,5 +136,9 @@
     "sequence": {
         "title": "REVERSE PATH",
         "instruction": "Tap the sequence in REVERSE order"
+    },
+    "largest": {
+        "title": "BIGGEST RESULT",
+        "instruction": "Tap the expression with the largest value"
     }
 }

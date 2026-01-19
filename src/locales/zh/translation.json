@@ -90,5 +90,9 @@
         "desc": "从大到小按数字!",
         "ready": "准备",
         "panel": "面板"
+    },
+    "largest": {
+        "title": "寻找最大值",
+        "instruction": "点击结果最大的算式"
     }
 }
