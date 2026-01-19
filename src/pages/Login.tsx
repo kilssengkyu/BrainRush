@@ -108,6 +108,9 @@ const Login = () => {
                         <User className="w-5 h-5" />
                         Guest Mode
                     </button>
+                    <p className="text-xs text-gray-500 text-center">
+                        게스트는 저장된 기록을 잃어버릴 수 있습니다.
+                    </p>
 
                     <p className="text-center text-xs text-gray-500 mt-4">
                         By continuing, you agree to our Terms of Service.

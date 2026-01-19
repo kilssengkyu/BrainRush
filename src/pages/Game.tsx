@@ -12,6 +12,7 @@ import MakeTen from '../components/minigames/MakeTen';
 import ColorMatch from '../components/minigames/ColorMatch';
 import MemoryMatch from '../components/minigames/MemoryMatch';
 import ReverseSequence from '../components/minigames/ReverseSequence';
+import FindLargest from '../components/minigames/FindLargest';
 import ScoreProgressBar from '../components/ui/ScoreProgressBar';
 import Flag from '../components/ui/Flag';
 
@@ -274,6 +275,7 @@ const Game: React.FC = () => {
                                                 {gameState.gameType === 'COLOR' && t('color.title')}
                                                 {gameState.gameType === 'MEMORY' && t('memory.title')}
                                                 {gameState.gameType === 'SEQUENCE' && t('sequence.title')}
+                                                {gameState.gameType === 'LARGEST' && t('largest.title')}
                                             </h2>
                                             <p className="text-2xl text-white mb-12 font-bold max-w-2xl">
                                                 {gameState.gameType === 'RPS' && t('rps.instruction')}
@@ -283,6 +285,7 @@ const Game: React.FC = () => {
                                                 {gameState.gameType === 'COLOR' && t('color.instruction')}
                                                 {gameState.gameType === 'MEMORY' && t('memory.instruction')}
                                                 {gameState.gameType === 'SEQUENCE' && t('sequence.instruction')}
+                                                {gameState.gameType === 'LARGEST' && t('largest.instruction')}
                                             </p>
 
                                             <div className="text-9xl font-black font-mono text-white animate-pulse">
@@ -321,6 +324,9 @@ const Game: React.FC = () => {
                                     onScore={incrementScore}
                                     isPlaying={isPlaying && !isCountdownActive}
                                 />
+                            )}
+                            {gameState.gameType === 'LARGEST' && (
+                                <FindLargest seed={gameState.seed} onScore={incrementScore} />
                             )}
                         </div>
                     </motion.div>

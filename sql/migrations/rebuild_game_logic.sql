@@ -18,12 +18,19 @@ DECLARE
     v_selected_types text[];
     v_first_type text;
 BEGIN
-    -- Select 3 unique random games using a more robust method
+    -- Select 2 unique random games, then force LARGEST to appear once
     SELECT ARRAY(
-        SELECT x 
-        FROM unnest(v_all_types) AS x 
-        ORDER BY random() 
-        LIMIT 3
+        SELECT x
+        FROM unnest(v_all_types) AS x
+        ORDER BY random()
+        LIMIT 2
+    ) || ARRAY['LARGEST'] INTO v_selected_types;
+
+    -- Shuffle so LARGEST isn't always last
+    SELECT ARRAY(
+        SELECT x
+        FROM unnest(v_selected_types) AS x
+        ORDER BY random()
     ) INTO v_selected_types;
 
     v_first_type := v_selected_types[1];

@@ -136,5 +136,9 @@
   "sequence": {
     "title": "거꾸로 순서",
     "instruction": "나타난 순서의 반대로 누르세요"
+  },
+  "largest": {
+    "title": "가장 큰 값 찾기",
+    "instruction": "결과가 가장 큰 수식을 눌러주세요"
   }
 }

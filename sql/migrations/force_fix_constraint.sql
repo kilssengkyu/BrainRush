@@ -21,4 +21,4 @@ END $$;
 -- Add the new inclusive constraint
 ALTER TABLE game_sessions
 ADD CONSTRAINT game_sessions_game_type_check 
-CHECK (game_type IN ('RPS', 'NUMBER', 'MATH'));
+CHECK (game_type IN ('RPS', 'NUMBER', 'MATH', 'TEN', 'COLOR', 'MEMORY', 'SEQUENCE', 'LARGEST'));
