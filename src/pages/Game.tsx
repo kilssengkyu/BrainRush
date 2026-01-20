@@ -164,7 +164,10 @@ const Game: React.FC = () => {
                     <div className="text-sm font-bold text-blue-300 tracking-widest uppercase mb-1">
                         Round {gameState.currentRound}/{gameState.totalRounds}
                     </div>
-                    <div className={`text-5xl font-black font-mono tracking-widest ${gameState.remainingTime <= 10 ? 'text-red-500 animate-pulse' : 'text-yellow-400'}`}>
+                    <div
+                        key={gameState.remainingTime <= 10 ? 'urgent' : 'normal'}
+                        className={`text-5xl font-black font-mono tracking-widest ${gameState.remainingTime <= 10 ? 'text-red-500 animate-pulse' : 'text-yellow-400'}`}
+                    >
                         {Math.floor(gameState.remainingTime)}
                     </div>
                     <div className="text-xs text-gray-500 font-bold uppercase tracking-wider">Time Left</div>
