@@ -71,6 +71,7 @@
     "roundResult": "Round {{round}} 결과",
     "matchResult": "매치 결과",
     "startingIn": "시작까지",
+    "roundFinished": "라운드 종료",
     "total": "총점",
     "table": {
       "round": "라운드",

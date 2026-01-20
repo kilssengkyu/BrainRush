@@ -33,7 +33,7 @@ const Game: React.FC = () => {
     const [opponentProfile, setOpponentProfile] = useState<any>(null);
 
     // Game Hook
-    const { gameState, incrementScore, serverOffset, isWaitingTimeout } = useGameState(roomId!, myId, opponentId);
+    const { gameState, incrementScore, serverOffset, isWaitingTimeout, isTimeUp } = useGameState(roomId!, myId, opponentId);
 
     useEffect(() => {
         if (!roomId) {
@@ -309,7 +309,20 @@ const Game: React.FC = () => {
                             return null;
                         })()}
 
-                        <div className={`w-full h-full ${isCountdownActive ? 'blur-sm pointer-events-none' : ''}`}>
+                        {/* Round Finished Overlay (Grace Period) */}
+                        {isTimeUp && (
+                            <div className="absolute inset-0 bg-black/40 z-40 flex flex-col items-center justify-center p-8 text-center backdrop-blur-sm">
+                                <motion.div
+                                    initial={{ scale: 0.8, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    className="text-5xl font-black text-white drop-shadow-lg uppercase tracking-widest border-4 border-white p-6 rounded-2xl bg-white/10"
+                                >
+                                    {t('game.roundFinished')}
+                                </motion.div>
+                            </div>
+                        )}
+
+                        <div className={`w-full h-full ${isCountdownActive || isTimeUp ? 'blur-sm pointer-events-none' : ''}`}>
                             {gameState.gameType === 'RPS' && (
                                 <RockPaperScissors seed={gameState.seed} onScore={incrementScore} />
                             )}

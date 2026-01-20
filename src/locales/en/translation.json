@@ -71,6 +71,7 @@
         "roundResult": "Round {{round}} Result",
         "matchResult": "MATCH RESULT",
         "startingIn": "Starting in",
+        "roundFinished": "ROUND FINISHED",
         "total": "TOTAL",
         "table": {
             "round": "Round",
