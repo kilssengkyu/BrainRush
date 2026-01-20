@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabaseClient';
 
 export interface GameState {
     status: 'waiting' | 'playing' | 'finished';
-    gameType: 'RPS' | 'NUMBER' | 'MATH' | 'TEN' | 'COLOR' | 'MEMORY' | 'SEQUENCE' | 'LARGEST' | null;
+    gameType: 'RPS' | 'NUMBER' | 'MATH' | 'TEN' | 'COLOR' | 'MEMORY' | 'SEQUENCE' | 'LARGEST' | 'PAIR' | 'UPDOWN' | 'SEQUENCE_NORMAL' | 'NUMBER_DESC' | null;
     seed: string | null;
     startAt: string | null;
     endAt: string | null;
@@ -43,6 +43,7 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
     const lastSyncedScore = useRef(0);
     const hasLocalScoreChanges = useRef(false);
     const [isWaitingTimeout, setIsWaitingTimeout] = useState(false);
+    const [isTimeUp, setIsTimeUp] = useState(false); // Grace period flag
     const isFinishing = useRef(false);
 
     // --- Time Sync ---
@@ -201,11 +202,18 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
 
             setGameState(prev => ({ ...prev, remainingTime: remaining }));
 
-            // Host Logic: Finish Game
-            if (isHostUser && diff <= -1) {
+            // Grace Period Logic:
+            // 0s: Set isTimeUp = true (Disable Inputs locally)
+            // -1.5s: Host calls next_round/finish (Allow last packets to land)
+            if (remaining === 0 && !isTimeUp) {
+                setIsTimeUp(true);
+            }
+
+            // Host Logic: Finish Game w/ Grace Period
+            if (isHostUser && diff <= -1.5) {
                 if (!isFinishing.current) {
                     isFinishing.current = true;
-                    console.log('Ticker: Time is up! FORCE SYNCING FINAL SCORE...');
+                    console.log('Ticker: Grace period over! FORCE SYNCING AND NEXT ROUND...');
 
                     // 1. Force Push Final Score
                     const { error: syncError } = await supabase.rpc('update_score', {
@@ -298,10 +306,11 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
     // 라운드가 변경(또는 게임 타입 변경)되면 isFinishing 플래그를 초기화하여 다음 라운드 종료 시 트리거가 동작하도록 함
     useEffect(() => {
         isFinishing.current = false;
+        setIsTimeUp(false); // Reset TimeUp flag
         scoreRef.current = 0; // Reset local score for new round
         hasLocalScoreChanges.current = false;
         console.log('Resetting isFinishing flag and scoreRef for new round/game type');
     }, [gameState.currentRound, gameState.gameType, gameState.status]);
 
-    return { gameState, incrementScore, serverOffset, isWaitingTimeout };
+    return { gameState, incrementScore, serverOffset, isWaitingTimeout, isTimeUp };
 };

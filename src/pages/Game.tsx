@@ -6,13 +6,15 @@ import { Trophy } from 'lucide-react';
 import { useGameState } from '../hooks/useGameState';
 import { supabase } from '../lib/supabaseClient';
 import RockPaperScissors from '../components/minigames/RockPaperScissors';
-import NumberOrder from '../components/minigames/NumberOrder';
+import NumberSortGame from '../components/minigames/NumberSortGame';
 import MathChallenge from '../components/minigames/MathChallenge';
 import MakeTen from '../components/minigames/MakeTen';
 import ColorMatch from '../components/minigames/ColorMatch';
 import MemoryMatch from '../components/minigames/MemoryMatch';
-import ReverseSequence from '../components/minigames/ReverseSequence';
+import SequenceGame from '../components/minigames/SequenceGame';
 import FindLargest from '../components/minigames/FindLargest';
+import FindPair from '../components/minigames/FindPair';
+import NumberUpDown from '../components/minigames/NumberUpDown';
 import ScoreProgressBar from '../components/ui/ScoreProgressBar';
 import Flag from '../components/ui/Flag';
 
@@ -31,7 +33,7 @@ const Game: React.FC = () => {
     const [opponentProfile, setOpponentProfile] = useState<any>(null);
 
     // Game Hook
-    const { gameState, incrementScore, serverOffset, isWaitingTimeout } = useGameState(roomId!, myId, opponentId);
+    const { gameState, incrementScore, serverOffset, isWaitingTimeout, isTimeUp } = useGameState(roomId!, myId, opponentId);
 
     useEffect(() => {
         if (!roomId) {
@@ -270,22 +272,30 @@ const Game: React.FC = () => {
                                                 <span className="text-3xl text-white mb-2">Round {gameState.currentRound}</span>
                                                 {gameState.gameType === 'RPS' && t('rps.title')}
                                                 {gameState.gameType === 'NUMBER' && t('number.title')}
+                                                {gameState.gameType === 'NUMBER_DESC' && t('number.titleDesc')}
                                                 {gameState.gameType === 'MATH' && t('math.title')}
                                                 {gameState.gameType === 'TEN' && t('ten.title')}
                                                 {gameState.gameType === 'COLOR' && t('color.title')}
                                                 {gameState.gameType === 'MEMORY' && t('memory.title')}
                                                 {gameState.gameType === 'SEQUENCE' && t('sequence.title')}
+                                                {gameState.gameType === 'SEQUENCE_NORMAL' && t('sequence.titleNormal')}
                                                 {gameState.gameType === 'LARGEST' && t('largest.title')}
+                                                {gameState.gameType === 'PAIR' && t('pair.title')}
+                                                {gameState.gameType === 'UPDOWN' && t('updown.title')}
                                             </h2>
                                             <p className="text-2xl text-white mb-12 font-bold max-w-2xl">
                                                 {gameState.gameType === 'RPS' && t('rps.instruction')}
                                                 {gameState.gameType === 'NUMBER' && t('number.instruction')}
+                                                {gameState.gameType === 'NUMBER_DESC' && t('number.instructionDesc')}
                                                 {gameState.gameType === 'MATH' && t('math.instruction')}
                                                 {gameState.gameType === 'TEN' && t('ten.instruction')}
                                                 {gameState.gameType === 'COLOR' && t('color.instruction')}
                                                 {gameState.gameType === 'MEMORY' && t('memory.instruction')}
                                                 {gameState.gameType === 'SEQUENCE' && t('sequence.instruction')}
+                                                {gameState.gameType === 'SEQUENCE_NORMAL' && t('sequence.instructionNormal')}
                                                 {gameState.gameType === 'LARGEST' && t('largest.instruction')}
+                                                {gameState.gameType === 'PAIR' && t('pair.instruction')}
+                                                {gameState.gameType === 'UPDOWN' && t('updown.instruction')}
                                             </p>
 
                                             <div className="text-9xl font-black font-mono text-white animate-pulse">
@@ -299,12 +309,28 @@ const Game: React.FC = () => {
                             return null;
                         })()}
 
-                        <div className={`w-full h-full ${isCountdownActive ? 'blur-sm pointer-events-none' : ''}`}>
+                        {/* Round Finished Overlay (Grace Period) */}
+                        {isTimeUp && (
+                            <div className="absolute inset-0 bg-black/40 z-40 flex flex-col items-center justify-center p-8 text-center backdrop-blur-sm">
+                                <motion.div
+                                    initial={{ scale: 0.8, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    className="text-5xl font-black text-white drop-shadow-lg uppercase tracking-widest border-4 border-white p-6 rounded-2xl bg-white/10"
+                                >
+                                    {t('game.roundFinished')}
+                                </motion.div>
+                            </div>
+                        )}
+
+                        <div className={`w-full h-full ${isCountdownActive || isTimeUp ? 'blur-sm pointer-events-none' : ''}`}>
                             {gameState.gameType === 'RPS' && (
                                 <RockPaperScissors seed={gameState.seed} onScore={incrementScore} />
                             )}
                             {gameState.gameType === 'NUMBER' && (
-                                <NumberOrder seed={gameState.seed} onScore={incrementScore} />
+                                <NumberSortGame mode="asc" seed={gameState.seed} onScore={incrementScore} />
+                            )}
+                            {gameState.gameType === 'NUMBER_DESC' && (
+                                <NumberSortGame mode="desc" seed={gameState.seed} onScore={incrementScore} />
                             )}
                             {gameState.gameType === 'MATH' && (
                                 <MathChallenge seed={gameState.seed} onScore={incrementScore} />
@@ -319,14 +345,29 @@ const Game: React.FC = () => {
                                 <MemoryMatch seed={gameState.seed || ''} onScore={incrementScore} />
                             )}
                             {gameState.gameType === 'SEQUENCE' && (
-                                <ReverseSequence
-                                    seed={gameState.seed || ''}
+                                <SequenceGame
+                                    mode="reverse"
+                                    seed={gameState.seed}
+                                    onScore={incrementScore}
+                                    isPlaying={isPlaying && !isCountdownActive}
+                                />
+                            )}
+                            {gameState.gameType === 'SEQUENCE_NORMAL' && (
+                                <SequenceGame
+                                    mode="forward"
+                                    seed={gameState.seed}
                                     onScore={incrementScore}
                                     isPlaying={isPlaying && !isCountdownActive}
                                 />
                             )}
                             {gameState.gameType === 'LARGEST' && (
                                 <FindLargest seed={gameState.seed} onScore={incrementScore} />
+                            )}
+                            {gameState.gameType === 'PAIR' && (
+                                <FindPair seed={gameState.seed} onScore={incrementScore} />
+                            )}
+                            {gameState.gameType === 'UPDOWN' && (
+                                <NumberUpDown seed={gameState.seed} onScore={incrementScore} />
                             )}
                         </div>
                     </motion.div>

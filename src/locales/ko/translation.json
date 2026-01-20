@@ -71,6 +71,7 @@
     "roundResult": "Round {{round}} 결과",
     "matchResult": "매치 결과",
     "startingIn": "시작까지",
+    "roundFinished": "라운드 종료",
     "total": "총점",
     "table": {
       "round": "라운드",
@@ -108,7 +109,9 @@
     "asc": "작은 수에서 큰 수를 누르세요!",
     "desc": "큰 수에서 작은 수를 누르세요!",
     "ready": "준비",
-    "panel": "패널"
+    "panel": "패널",
+    "titleDesc": "숫자 역정렬",
+    "instructionDesc": "큰 수부터 작은 수로 누르세요"
   },
   "math": {
     "title": "암산 챌린지",
@@ -135,10 +138,22 @@
   },
   "sequence": {
     "title": "거꾸로 순서",
-    "instruction": "나타난 순서의 반대로 누르세요"
+    "instruction": "나타난 순서의 반대로 누르세요",
+    "titleNormal": "순서 기억",
+    "instructionNormal": "나타난 순서대로 누르세요"
   },
   "largest": {
     "title": "가장 큰 값 찾기",
     "instruction": "결과가 가장 큰 수식을 눌러주세요"
+  },
+  "pair": {
+    "title": "짝 찾기",
+    "instruction": "똑같은 그림 두 개를 찾아보세요!"
+  },
+  "updown": {
+    "title": "숫자 업 다운",
+    "instruction": "숫자가 크면 위로, 작으면 아래로!",
+    "prev": "이전 숫자",
+    "start": "시작"
   }
 }
