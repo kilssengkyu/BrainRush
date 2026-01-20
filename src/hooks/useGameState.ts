@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabaseClient';
 
 export interface GameState {
     status: 'waiting' | 'playing' | 'finished';
-    gameType: 'RPS' | 'NUMBER' | 'MATH' | 'TEN' | 'COLOR' | 'MEMORY' | 'SEQUENCE' | 'LARGEST' | null;
+    gameType: 'RPS' | 'NUMBER' | 'MATH' | 'TEN' | 'COLOR' | 'MEMORY' | 'SEQUENCE' | 'LARGEST' | 'PAIR' | 'UPDOWN' | 'SEQUENCE_NORMAL' | 'NUMBER_DESC' | null;
     seed: string | null;
     startAt: string | null;
     endAt: string | null;

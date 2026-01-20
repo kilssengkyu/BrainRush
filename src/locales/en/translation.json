@@ -108,7 +108,9 @@
         "asc": "Press numbers Low to High!",
         "desc": "Press numbers High to Low!",
         "ready": "READY",
-        "panel": "Panel"
+        "panel": "PANEL",
+        "titleDesc": "REVERSE SORT",
+        "instructionDesc": "Tap from High to Low!"
     },
     "math": {
         "title": "MATH CHALLENGE",
@@ -134,11 +136,23 @@
         "find_pairs": "Find the pairs!"
     },
     "sequence": {
-        "title": "REVERSE PATH",
-        "instruction": "Tap the sequence in REVERSE order"
+        "title": "REVERSE ORDER",
+        "instruction": "Tap in REVERSE order!",
+        "titleNormal": "SEQUENCE",
+        "instructionNormal": "Tap in ORDER!"
     },
     "largest": {
         "title": "BIGGEST RESULT",
         "instruction": "Tap the expression with the largest value"
+    },
+    "pair": {
+        "title": "FIND PAIR",
+        "instruction": "Find the single matching pair!"
+    },
+    "updown": {
+        "title": "UP DOWN",
+        "instruction": "Swipe UP if bigger, DOWN if smaller!",
+        "prev": "PREVIOUS",
+        "start": "START"
     }
 }
