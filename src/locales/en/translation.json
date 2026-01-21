@@ -155,5 +155,16 @@
         "instruction": "Swipe UP if bigger, DOWN if smaller!",
         "prev": "PREVIOUS",
         "start": "START"
+    },
+    "slider": {
+        "title": "Number Slider",
+        "instruction": "Slide to sum adjacent numbers to the target!",
+        "target": "Target Sum"
+    },
+    "arrow": {
+        "title": "Arrow Slider",
+        "blue": "Blue = Same",
+        "red": "Red = Opposite",
+        "instruction": "Swipe Blue direction, or Opposite for Red!"
     }
 }
