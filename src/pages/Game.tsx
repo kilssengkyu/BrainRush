@@ -15,6 +15,8 @@ import SequenceGame from '../components/minigames/SequenceGame';
 import FindLargest from '../components/minigames/FindLargest';
 import FindPair from '../components/minigames/FindPair';
 import NumberUpDown from '../components/minigames/NumberUpDown';
+import NumberSlider from '../components/minigames/NumberSlider';
+import ArrowSlider from '../components/minigames/ArrowSlider';
 import ScoreProgressBar from '../components/ui/ScoreProgressBar';
 import Flag from '../components/ui/Flag';
 
@@ -90,9 +92,9 @@ const Game: React.FC = () => {
 
     useEffect(() => {
         if (isFinished && gameState.mode === 'rank' && myProfile?.id) {
-            // Delay MMR animation to start AFTER the main result animations (approx 3.5s)
+            // Delay start to sync with "Total Score" appearance
+            // Rounds=3 -> 0.3*3 + 0.3 = 1.2s (Total) -> Rank starts at 1.5s
             const startDelay = setTimeout(() => {
-                // Fetch latest MMR
                 supabase.from('profiles').select('mmr').eq('id', myProfile.id).single()
                     .then(({ data }) => {
                         if (data && myProfile.mmr) {
@@ -101,8 +103,8 @@ const Game: React.FC = () => {
                             setMmrDelta(end - start);
                             setDisplayMMR(start);
 
-                            // Animate
-                            const duration = 2000;
+                            // Faster counting: 1.5s duration
+                            const duration = 1500;
                             const steps = 60;
                             const intervalTime = duration / steps;
                             const stepValue = (end - start) / steps;
@@ -121,7 +123,7 @@ const Game: React.FC = () => {
                             }, intervalTime);
                         }
                     });
-            }, 3500);
+            }, 1000); // Reduced initial wait
 
             return () => clearTimeout(startDelay);
         }
@@ -285,6 +287,8 @@ const Game: React.FC = () => {
                                                 {gameState.gameType === 'LARGEST' && t('largest.title')}
                                                 {gameState.gameType === 'PAIR' && t('pair.title')}
                                                 {gameState.gameType === 'UPDOWN' && t('updown.title')}
+                                                {gameState.gameType === 'SLIDER' && t('slider.title')}
+                                                {gameState.gameType === 'ARROW' && t('arrow.title')}
                                             </h2>
                                             <p className="text-2xl text-white mb-12 font-bold max-w-2xl">
                                                 {gameState.gameType === 'RPS' && t('rps.instruction')}
@@ -299,6 +303,8 @@ const Game: React.FC = () => {
                                                 {gameState.gameType === 'LARGEST' && t('largest.instruction')}
                                                 {gameState.gameType === 'PAIR' && t('pair.instruction')}
                                                 {gameState.gameType === 'UPDOWN' && t('updown.instruction')}
+                                                {gameState.gameType === 'SLIDER' && t('slider.instruction')}
+                                                {gameState.gameType === 'ARROW' && t('arrow.instruction')}
                                             </p>
 
                                             <div className="text-9xl font-black font-mono text-white animate-pulse">
@@ -372,6 +378,12 @@ const Game: React.FC = () => {
                             {gameState.gameType === 'UPDOWN' && (
                                 <NumberUpDown seed={gameState.seed} onScore={incrementScore} />
                             )}
+                            {gameState.gameType === 'SLIDER' && (
+                                <NumberSlider seed={gameState.seed} onScore={incrementScore} />
+                            )}
+                            {gameState.gameType === 'ARROW' && (
+                                <ArrowSlider seed={gameState.seed} onScore={incrementScore} />
+                            )}
                         </div>
                     </motion.div>
                 )}
@@ -402,7 +414,7 @@ const Game: React.FC = () => {
                                 initial={{ scale: 5, opacity: 0, rotate: -10 }}
                                 animate={{ scale: 1, opacity: 1, rotate: 0 }}
                                 transition={{
-                                    delay: 0.5 + (gameState.roundScores.length + 1) * 0.6,
+                                    delay: 0.2 + (gameState.roundScores.length + 1) * 0.4,
                                     type: "spring", stiffness: 200, damping: 15
                                 }}
                                 className="mb-8"
@@ -432,7 +444,7 @@ const Game: React.FC = () => {
                                             key={idx}
                                             initial={{ opacity: 0, x: -50 }}
                                             animate={{ opacity: 1, x: 0 }}
-                                            transition={{ delay: 0.5 + idx * 0.6 }}
+                                            transition={{ delay: 0.5 + idx * 0.4 }}
                                             className="grid grid-cols-4 p-4 border-t border-white/5 items-center font-mono relative overflow-hidden"
                                         >
                                             {/* Background Bar */}
@@ -441,14 +453,14 @@ const Game: React.FC = () => {
                                                 <motion.div
                                                     initial={{ width: 0 }}
                                                     animate={{ width: `${myRatio}%` }}
-                                                    transition={{ delay: 0.5 + idx * 0.6, duration: 1, ease: "easeOut" }}
+                                                    transition={{ delay: 0.5 + idx * 0.4, duration: 0.8, ease: "easeOut" }}
                                                     className="absolute left-0 top-0 h-full bg-blue-500"
                                                 />
                                                 {/* Right (Red) - Anchored Right */}
                                                 <motion.div
                                                     initial={{ width: 0 }}
                                                     animate={{ width: `${100 - myRatio}%` }}
-                                                    transition={{ delay: 0.5 + idx * 0.6, duration: 1, ease: "easeOut" }}
+                                                    transition={{ delay: 0.5 + idx * 0.4, duration: 0.8, ease: "easeOut" }}
                                                     className="absolute right-0 top-0 h-full bg-red-500"
                                                 />
                                             </div>
@@ -460,7 +472,7 @@ const Game: React.FC = () => {
                                                 <motion.div
                                                     initial={{ scale: 0 }}
                                                     animate={{ scale: 1 }}
-                                                    transition={{ delay: 0.8 + idx * 0.6, type: "spring" }}
+                                                    transition={{ delay: 0.8 + idx * 0.4, type: "spring" }}
                                                 >
                                                     {win ? (
                                                         <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">{t('game.table.win')}</span>
@@ -478,7 +490,7 @@ const Game: React.FC = () => {
                                 <motion.div
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.5 + gameState.roundScores.length * 0.6 }}
+                                    transition={{ delay: 0.5 + gameState.roundScores.length * 0.4 }}
                                     className="grid grid-cols-4 p-4 bg-white/5 border-t-2 border-white/10 items-center font-mono"
                                 >
                                     <div className="text-left pl-4 text-yellow-400 font-black">{t('game.total')}</div>
@@ -497,10 +509,10 @@ const Game: React.FC = () => {
                             {/* Rank Result Animation */}
                             {gameState.mode === 'rank' && displayMMR !== null && (
                                 <motion.div
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ delay: 1.2 + (gameState.roundScores.length + 1) * 0.6 }}
-                                    className="mb-8 p-4 bg-white/10 rounded-xl border border-white/20"
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    transition={{ delay: 0.8 + gameState.roundScores.length * 0.4 }}
+                                    className="mb-8 p-4 bg-white/10 rounded-xl border border-white/20 overflow-hidden"
                                 >
                                     <div className="text-gray-400 text-sm font-bold uppercase tracking-widest mb-2">{t('game.rankScore')}</div>
                                     <div className="flex items-center justify-center gap-4 text-4xl font-black">
@@ -522,7 +534,7 @@ const Game: React.FC = () => {
                             <motion.button
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 2.0 + (gameState.roundScores.length + 1) * 0.6 }}
+                                transition={{ delay: 1.5 + (gameState.roundScores.length + 1) * 0.4 }}
                                 onClick={() => navigate('/')}
                                 disabled={!isButtonEnabled}
                                 className={`w-full py-4 font-bold text-xl rounded-xl transition-all ${isButtonEnabled
