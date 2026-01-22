@@ -11,6 +11,7 @@ interface AuthContextType {
     signInAnonymously: () => Promise<void>;
     signOut: () => Promise<void>;
     refreshProfile: () => Promise<void>;
+    onlineUsers: Set<string>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -22,6 +23,7 @@ const AuthContext = createContext<AuthContextType>({
     signInAnonymously: async () => { },
     signOut: async () => { },
     refreshProfile: async () => { },
+    onlineUsers: new Set(),
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -150,8 +152,44 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
     };
 
+    // Global Presence Tracking
+    const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
+
+    useEffect(() => {
+        if (user) {
+            const channel = supabase.channel('online_users', {
+                config: {
+                    presence: {
+                        key: user.id,
+                    },
+                },
+            });
+
+            channel
+                .on('presence', { event: 'sync' }, () => {
+                    const newState = channel.presenceState();
+                    const onlineIds = new Set(Object.keys(newState));
+                    setOnlineUsers(onlineIds);
+                })
+                .subscribe(async (status) => {
+                    if (status === 'SUBSCRIBED') {
+                        await channel.track({
+                            user_id: user.id,
+                            online_at: new Date().toISOString(),
+                        });
+                    }
+                });
+
+            return () => {
+                supabase.removeChannel(channel);
+            };
+        } else {
+            setOnlineUsers(new Set());
+        }
+    }, [user]);
+
     return (
-        <AuthContext.Provider value={{ user, session, profile, loading, signInWithGoogle, signInAnonymously, signOut, refreshProfile }}>
+        <AuthContext.Provider value={{ user, session, profile, loading, signInWithGoogle, signInAnonymously, signOut, refreshProfile, onlineUsers }}>
             {children}
         </AuthContext.Provider>
     );

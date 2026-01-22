@@ -8,7 +8,39 @@
         "confirm": "Confirm",
         "close": "Close",
         "retry": "Retry",
-        "loading": "Loading..."
+        "loading": "Loading...",
+        "add": "Add"
+    },
+    "social": {
+        "friends": "Friends",
+        "friendList": "Friend List",
+        "friendRequests": "Friend Requests",
+        "addFriend": "Add Friend",
+        "searchNickname": "Search Nickname",
+        "searchError": "Error occurred while searching.",
+        "userNotFound": "User not found.",
+        "cannotAddSelf": "You cannot add yourself.",
+        "alreadyFriends": "You are already friends.",
+        "requestPending": "Request already sent or pending.",
+        "blocked": "User is blocked or has blocked you.",
+        "requestSent": "Friend request sent!",
+        "requestFail": "Failed to send friend request.",
+        "loadingFriends": "Loading friends list...",
+        "noFriends": "No friends found.",
+        "deleteFriend": "Delete Friend",
+        "deleteFriendConfirm": "Are you sure you want to remove '{{nickname}}'?",
+        "deleteFriendFail": "Failed to remove friend",
+        "online": "Online",
+        "offline": "Offline",
+        "challengeTitle": "Challenge Friend",
+        "challengeConfirm": "Do you want to challenge this friend?",
+        "challengeFail": "Failed to challenge: ",
+        "typeMessage": "Type a message...",
+        "sendFail": "Failed to send message",
+        "chat": "Chat",
+        "challenge": "Challenge",
+        "accept": "Accept",
+        "reject": "Reject"
     },
     "menu": {
         "normal": {
@@ -22,6 +54,10 @@
         "friendly": {
             "title": "Friendly Mode",
             "subtitle": "1vs1 with Friends"
+        },
+        "practice": {
+            "title": "Practice Mode",
+            "subtitle": "Practice minigames freely"
         },
         "settings": "Settings",
         "login": "Login",

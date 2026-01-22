@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Settings, User, Trophy, Zap, Users, Loader2, Lock, AlertTriangle } from 'lucide-react';
+import { Settings, User, Trophy, Zap, Loader2, Lock, AlertTriangle, Dumbbell } from 'lucide-react';
 import { useMatchmaking } from '../hooks/useMatchmaking';
 import { useSound } from '../contexts/SoundContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -227,26 +227,20 @@ const Home = () => {
                         )}
                     </button>
 
-                    {/* Friendly Mode */}
+                    {/* Practice Mode */}
                     <button
                         onMouseEnter={() => playSound('hover')}
-                        onClick={() => handleModeSelect('friendly')}
-                        className={`group relative w-full p-6 bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-300 ${user ? 'hover:border-green-500 hover:shadow-[0_0_20px_rgba(34,197,94,0.5)] active:scale-95 cursor-pointer' : 'opacity-50 grayscale cursor-not-allowed'} flex items-center gap-4 text-left`}
+                        onClick={() => { playSound('click'); navigate('/practice'); }}
+                        className={`group relative w-full p-6 bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-300 hover:border-green-500 hover:shadow-[0_0_20px_rgba(34,197,94,0.5)] active:scale-95 cursor-pointer flex items-center gap-4 text-left`}
                     >
                         <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                         <div className="p-3 rounded-full bg-green-500/20 group-hover:bg-green-500/30 transition-colors">
-                            <Users className="w-8 h-8 text-green-400" />
+                            <Dumbbell className="w-8 h-8 text-green-400" />
                         </div>
                         <div>
-                            <h3 className="text-2xl font-bold group-hover:text-green-400 transition-colors">{t('menu.friendly.title')}</h3>
-                            <p className="text-gray-500 text-sm mt-1">{t('menu.friendly.subtitle')}</p>
+                            <h3 className="text-2xl font-bold group-hover:text-green-400 transition-colors">{t('menu.practice.title')}</h3>
+                            <p className="text-gray-500 text-sm mt-1">{t('menu.practice.subtitle')}</p>
                         </div>
-
-                        {!user && (
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/60 z-10">
-                                <Lock className="w-8 h-8 text-white/80" />
-                            </div>
-                        )}
                     </button>
                 </motion.div>
 

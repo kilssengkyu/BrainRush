@@ -51,8 +51,18 @@ const Game: React.FC = () => {
                 setMyProfile(data || { nickname: 'Me', avatar_url: null });
             }
             if (opponentId) {
-                const { data } = await supabase.from('profiles').select('*').eq('id', opponentId).single();
-                setOpponentProfile(data || { nickname: 'Opponent', avatar_url: null });
+                if (opponentId === 'practice_solo') {
+                    setOpponentProfile(null); // No opponent
+                } else if (opponentId === 'practice_bot') {
+                    setOpponentProfile({
+                        nickname: 'AI Bot',
+                        avatar_url: 'https://api.dicebear.com/9.x/bottts-neutral/svg?seed=BrainRushBot',
+                        country: 'KR' // Or generic
+                    });
+                } else {
+                    const { data } = await supabase.from('profiles').select('*').eq('id', opponentId).single();
+                    setOpponentProfile(data || { nickname: 'Opponent', avatar_url: null });
+                }
             }
         };
         fetchProfiles();
@@ -140,12 +150,14 @@ const Game: React.FC = () => {
             {/* Top Info Bar (Timer & Scores) */}
             <header className="h-24 w-full bg-gray-800/80 backdrop-blur-md flex items-center justify-between px-6 shadow-lg z-50 relative">
 
-                {/* Score Progress Bar - Bottom, 100% Width */}
-                <div className="absolute bottom-0 left-0 w-full px-0">
-                    <div className="w-full h-1.5 bg-gray-900/50 overflow-hidden backdrop-blur-sm">
-                        <ScoreProgressBar myScore={gameState.myScore} opScore={gameState.opScore} />
+                {/* Score Progress Bar - Hide in Practice */}
+                {gameState.mode !== 'practice' && (
+                    <div className="absolute bottom-0 left-0 w-full px-0">
+                        <div className="w-full h-1.5 bg-gray-900/50 overflow-hidden backdrop-blur-sm">
+                            <ScoreProgressBar myScore={gameState.myScore} opScore={gameState.opScore} />
+                        </div>
                     </div>
-                </div>
+                )}
 
                 {/* My Profile */}
                 <div className="flex items-center gap-4 w-1/3 pt-2">
@@ -155,17 +167,21 @@ const Game: React.FC = () => {
                             <Flag code={myProfile?.country} />
                             <span className="hidden sm:inline">{myProfile?.nickname}</span>
                         </div>
-                        <div className="text-3xl font-black text-blue-400 font-mono transition-all">
-                            {gameState.myScore.toLocaleString()}
-                        </div>
+                        {gameState.mode !== 'practice' && (
+                            <div className="text-3xl font-black text-blue-400 font-mono transition-all">
+                                {gameState.myScore.toLocaleString()}
+                            </div>
+                        )}
                     </div>
                 </div>
 
                 {/* Center Timer */}
                 <div className="flex flex-col items-center w-1/3 pt-2">
-                    <div className="text-sm font-bold text-blue-300 tracking-widest uppercase mb-1">
-                        Round {gameState.currentRound}/{gameState.totalRounds}
-                    </div>
+                    {gameState.mode !== 'practice' && (
+                        <div className="text-sm font-bold text-blue-300 tracking-widest uppercase mb-1">
+                            Round {gameState.currentRound}/{gameState.totalRounds}
+                        </div>
+                    )}
                     <div
                         key={gameState.remainingTime <= 10 ? 'urgent' : 'normal'}
                         className={`text-5xl font-black font-mono tracking-widest ${gameState.remainingTime <= 10 ? 'text-red-500 animate-pulse' : 'text-yellow-400'}`}
@@ -175,18 +191,27 @@ const Game: React.FC = () => {
                     <div className="text-xs text-gray-500 font-bold uppercase tracking-wider">Time Left</div>
                 </div>
 
-                {/* Opponent Profile */}
+                {/* Opponent Profile - Hide in Solo Practice */}
                 <div className="flex items-center justify-end gap-4 w-1/3 text-right pt-2">
-                    <div>
-                        <div className="font-bold text-lg flex items-center justify-end gap-2">
-                            <span className="hidden sm:inline">{opponentProfile?.nickname}</span>
-                            <Flag code={opponentProfile?.country} />
+                    {opponentProfile && (
+                        <>
+                            <div>
+                                <div className="font-bold text-lg flex items-center justify-end gap-2">
+                                    <span className="hidden sm:inline">{opponentProfile?.nickname}</span>
+                                    <Flag code={opponentProfile?.country} />
+                                </div>
+                                <div className="text-3xl font-black text-red-400 font-mono transition-all">
+                                    {gameState.opScore.toLocaleString()}
+                                </div>
+                            </div>
+                            <img src={opponentProfile?.avatar_url || '/default-avatar.png'} className="w-12 h-12 rounded-full border-2 border-red-500" />
+                        </>
+                    )}
+                    {!opponentProfile && gameState.mode === 'practice' && (
+                        <div className="text-gray-500 font-bold uppercase tracking-widest text-sm">
+                            Practice Mode
                         </div>
-                        <div className="text-3xl font-black text-red-400 font-mono transition-all">
-                            {gameState.opScore.toLocaleString()}
-                        </div>
-                    </div>
-                    <img src={opponentProfile?.avatar_url || '/default-avatar.png'} className="w-12 h-12 rounded-full border-2 border-red-500" />
+                    )}
                 </div>
             </header>
 
@@ -396,154 +421,179 @@ const Game: React.FC = () => {
                             animate={{ scale: 1, opacity: 1 }}
                             className="bg-gray-800 p-8 rounded-3xl border-4 border-white/10 shadow-2xl text-center max-w-2xl w-full"
                         >
-                            <h2 className="text-5xl font-black mb-8 text-yellow-400 tracking-wider flex justify-center gap-4">
-                                {t('game.matchResult').split('').map((char, i) => (
-                                    <motion.span
-                                        key={i}
-                                        initial={{ opacity: 0, y: -20 }}
+                            {/* PRACTICE MODE RESULT */}
+                            {gameState.mode === 'practice' ? (
+                                <div className="text-center">
+                                    <h2 className="text-5xl font-black mb-4 text-green-400 tracking-wider">
+                                        {t('game.practiceComplete', '연습 완료!')}
+                                    </h2>
+                                    <div className="text-2xl text-white mb-8">
+                                        {/* Show Score or Time based on game type if tracked, currently just completion */}
+                                        <p>{t('game.greatJob', '수고하셨습니다!')}</p>
+                                    </div>
+                                    <motion.button
+                                        initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: i * 0.1 }}
+                                        transition={{ delay: 0.5 }}
+                                        onClick={() => navigate('/')}
+                                        className="px-8 py-4 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold text-xl transition-all shadow-lg hover:shadow-green-500/50"
                                     >
-                                        {char}
-                                    </motion.span>
-                                ))}
-                            </h2>
-
-                            {/* VICTORY / DEFEAT TEXT - SLAM ANIMATION (After Rounds) */}
-                            <motion.div
-                                initial={{ scale: 5, opacity: 0, rotate: -10 }}
-                                animate={{ scale: 1, opacity: 1, rotate: 0 }}
-                                transition={{
-                                    delay: 0.2 + (gameState.roundScores.length + 1) * 0.4,
-                                    type: "spring", stiffness: 200, damping: 15
-                                }}
-                                className="mb-8"
-                            >
-                                <h3 className={`text-6xl font-black drop-shadow-2xl ${getWinnerMessage() === t('game.victory') ? 'text-blue-500' : 'text-red-500'}`}>
-                                    {getWinnerMessage()}
-                                </h3>
-                            </motion.div>
-
-                            {/* Scoreboard Table */}
-                            <div className="w-full bg-gray-900/50 rounded-xl overflow-hidden mb-8 border border-white/5">
-                                <div className="grid grid-cols-4 bg-gray-800 p-3 text-xs font-bold text-gray-400 uppercase tracking-widest">
-                                    <div className="text-left pl-4">{t('game.table.round')}</div>
-                                    <div>{t('game.table.myScore')}</div>
-                                    <div>{t('game.table.opScore')}</div>
-                                    <div>{t('game.table.result')}</div>
+                                        {t('game.returnMenu')}
+                                    </motion.button>
                                 </div>
-                                {gameState.roundScores.map((round, idx) => {
-                                    const myS = gameState.isPlayer1 ? round.p1_score : round.p2_score;
-                                    const opS = gameState.isPlayer1 ? round.p2_score : round.p1_score;
-                                    const win = myS > opS;
-                                    const totalS = myS + opS;
-                                    const myRatio = totalS > 0 ? (myS / totalS) * 100 : 50;
+                            ) : (
+                                /* NORMAL / RANK MODE RESULT */
+                                <>
+                                    <h2 className="text-5xl font-black mb-8 text-yellow-400 tracking-wider flex justify-center gap-4">
+                                        {t('game.matchResult').split('').map((char, i) => (
+                                            <motion.span
+                                                key={i}
+                                                initial={{ opacity: 0, y: -20 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: i * 0.1 }}
+                                            >
+                                                {char}
+                                            </motion.span>
+                                        ))}
+                                    </h2>
 
-                                    return (
-                                        <motion.div
-                                            key={idx}
-                                            initial={{ opacity: 0, x: -50 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            transition={{ delay: 0.5 + idx * 0.4 }}
-                                            className="grid grid-cols-4 p-4 border-t border-white/5 items-center font-mono relative overflow-hidden"
-                                        >
-                                            {/* Background Bar */}
-                                            <div className="absolute inset-0 z-0 opacity-10">
-                                                {/* Left (Blue) - Anchored Left */}
-                                                <motion.div
-                                                    initial={{ width: 0 }}
-                                                    animate={{ width: `${myRatio}%` }}
-                                                    transition={{ delay: 0.5 + idx * 0.4, duration: 0.8, ease: "easeOut" }}
-                                                    className="absolute left-0 top-0 h-full bg-blue-500"
-                                                />
-                                                {/* Right (Red) - Anchored Right */}
-                                                <motion.div
-                                                    initial={{ width: 0 }}
-                                                    animate={{ width: `${100 - myRatio}%` }}
-                                                    transition={{ delay: 0.5 + idx * 0.4, duration: 0.8, ease: "easeOut" }}
-                                                    className="absolute right-0 top-0 h-full bg-red-500"
-                                                />
-                                            </div>
+                                    {/* VICTORY / DEFEAT TEXT - SLAM ANIMATION (After Rounds) */}
+                                    <motion.div
+                                        initial={{ scale: 5, opacity: 0, rotate: -10 }}
+                                        animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                                        transition={{
+                                            delay: 0.2 + (gameState.roundScores.length + 1) * 0.4,
+                                            type: "spring", stiffness: 200, damping: 15
+                                        }}
+                                        className="mb-8"
+                                    >
+                                        <h3 className={`text-6xl font-black drop-shadow-2xl ${getWinnerMessage() === t('game.victory') ? 'text-blue-500' : 'text-red-500'}`}>
+                                            {getWinnerMessage()}
+                                        </h3>
+                                    </motion.div>
 
-                                            <div className="text-left pl-4 text-white font-bold relative z-10">#{round.round}</div>
-                                            <div className="text-blue-400 font-bold text-lg relative z-10">{myS}</div>
-                                            <div className="text-red-400 font-bold text-lg relative z-10">{opS}</div>
-                                            <div className="relative z-10">
+                                    {/* Scoreboard Table */}
+                                    <div className="w-full bg-gray-900/50 rounded-xl overflow-hidden mb-8 border border-white/5">
+                                        <div className="grid grid-cols-4 bg-gray-800 p-3 text-xs font-bold text-gray-400 uppercase tracking-widest">
+                                            <div className="text-left pl-4">{t('game.table.round')}</div>
+                                            <div>{t('game.table.myScore')}</div>
+                                            <div>{t('game.table.opScore')}</div>
+                                            <div>{t('game.table.result')}</div>
+                                        </div>
+                                        {gameState.roundScores.map((round, idx) => {
+                                            const myS = gameState.isPlayer1 ? round.p1_score : round.p2_score;
+                                            const opS = gameState.isPlayer1 ? round.p2_score : round.p1_score;
+                                            const win = myS > opS;
+                                            const totalS = myS + opS;
+                                            const myRatio = totalS > 0 ? (myS / totalS) * 100 : 50;
+
+                                            return (
                                                 <motion.div
-                                                    initial={{ scale: 0 }}
-                                                    animate={{ scale: 1 }}
-                                                    transition={{ delay: 0.8 + idx * 0.4, type: "spring" }}
+                                                    key={idx}
+                                                    initial={{ opacity: 0, x: -50 }}
+                                                    animate={{ opacity: 1, x: 0 }}
+                                                    transition={{ delay: 0.5 + idx * 0.4 }}
+                                                    className="grid grid-cols-4 p-4 border-t border-white/5 items-center font-mono relative overflow-hidden"
                                                 >
-                                                    {win ? (
-                                                        <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">{t('game.table.win')}</span>
-                                                    ) : myS === opS ? (
-                                                        <span className="text-xs bg-gray-500/20 text-gray-400 px-2 py-1 rounded">{t('game.table.draw')}</span>
-                                                    ) : (
-                                                        <span className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded">{t('game.table.lose')}</span>
-                                                    )}
+                                                    {/* Background Bar */}
+                                                    <div className="absolute inset-0 z-0 opacity-10">
+                                                        {/* Left (Blue) - Anchored Left */}
+                                                        <motion.div
+                                                            initial={{ width: 0 }}
+                                                            animate={{ width: `${myRatio}%` }}
+                                                            transition={{ delay: 0.5 + idx * 0.4, duration: 0.8, ease: "easeOut" }}
+                                                            className="absolute left-0 top-0 h-full bg-blue-500"
+                                                        />
+                                                        {/* Right (Red) - Anchored Right */}
+                                                        <motion.div
+                                                            initial={{ width: 0 }}
+                                                            animate={{ width: `${100 - myRatio}%` }}
+                                                            transition={{ delay: 0.5 + idx * 0.4, duration: 0.8, ease: "easeOut" }}
+                                                            className="absolute right-0 top-0 h-full bg-red-500"
+                                                        />
+                                                    </div>
+
+                                                    <div className="text-left pl-4 text-white font-bold relative z-10">#{round.round}</div>
+                                                    <div className="text-blue-400 font-bold text-lg relative z-10">{myS}</div>
+                                                    <div className="text-red-400 font-bold text-lg relative z-10">{opS}</div>
+                                                    <div className="relative z-10">
+                                                        <motion.div
+                                                            initial={{ scale: 0 }}
+                                                            animate={{ scale: 1 }}
+                                                            transition={{ delay: 0.8 + idx * 0.4, type: "spring" }}
+                                                        >
+                                                            {win ? (
+                                                                <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">{t('game.table.win')}</span>
+                                                            ) : myS === opS ? (
+                                                                <span className="text-xs bg-gray-500/20 text-gray-400 px-2 py-1 rounded">{t('game.table.draw')}</span>
+                                                            ) : (
+                                                                <span className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded">{t('game.table.lose')}</span>
+                                                            )}
+                                                        </motion.div>
+                                                    </div>
                                                 </motion.div>
+                                            );
+                                        })}
+                                        {/* TOTAL */}
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: 0.5 + gameState.roundScores.length * 0.4 }}
+                                            className="grid grid-cols-4 p-4 bg-white/5 border-t-2 border-white/10 items-center font-mono"
+                                        >
+                                            <div className="text-left pl-4 text-yellow-400 font-black">{t('game.total')}</div>
+                                            <div className="text-blue-400 font-black text-2xl">{gameState.myScore}</div>
+                                            <div className="text-red-400 font-black text-2xl">{gameState.opScore}</div>
+                                            <div>
+                                                {gameState.myScore > gameState.opScore ? (
+                                                    <Trophy className="w-6 h-6 text-yellow-400 mx-auto animate-bounce" />
+                                                ) : (
+                                                    <span className="text-gray-500">-</span>
+                                                )}
                                             </div>
                                         </motion.div>
-                                    );
-                                })}
-                                {/* TOTAL */}
-                                <motion.div
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.5 + gameState.roundScores.length * 0.4 }}
-                                    className="grid grid-cols-4 p-4 bg-white/5 border-t-2 border-white/10 items-center font-mono"
-                                >
-                                    <div className="text-left pl-4 text-yellow-400 font-black">{t('game.total')}</div>
-                                    <div className="text-blue-400 font-black text-2xl">{gameState.myScore}</div>
-                                    <div className="text-red-400 font-black text-2xl">{gameState.opScore}</div>
-                                    <div>
-                                        {gameState.myScore > gameState.opScore ? (
-                                            <Trophy className="w-6 h-6 text-yellow-400 mx-auto animate-bounce" />
-                                        ) : (
-                                            <span className="text-gray-500">-</span>
-                                        )}
                                     </div>
-                                </motion.div>
-                            </div>
 
-                            {/* Rank Result Animation */}
-                            {gameState.mode === 'rank' && displayMMR !== null && (
-                                <motion.div
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: 'auto' }}
-                                    transition={{ delay: 0.8 + gameState.roundScores.length * 0.4 }}
-                                    className="mb-8 p-4 bg-white/10 rounded-xl border border-white/20 overflow-hidden"
-                                >
-                                    <div className="text-gray-400 text-sm font-bold uppercase tracking-widest mb-2">{t('game.rankScore')}</div>
-                                    <div className="flex items-center justify-center gap-4 text-4xl font-black">
-                                        <div className="text-white">{displayMMR}</div>
-                                        {mmrDelta !== null && mmrDelta !== 0 && (
-                                            <motion.div
-                                                initial={{ opacity: 0, y: 10 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                transition={{ delay: 0.5 }} // local delay
-                                                className={`text-2xl ${mmrDelta > 0 ? 'text-green-400' : 'text-red-400'}`}
-                                            >
-                                                {mmrDelta > 0 ? `+${mmrDelta}` : mmrDelta}
-                                            </motion.div>
-                                        )}
-                                    </div>
-                                </motion.div>
+                                    {/* Rank Result Animation */}
+                                    {gameState.mode === 'rank' && displayMMR !== null && (
+                                        <motion.div
+                                            initial={{ opacity: 0, height: 0 }}
+                                            animate={{ opacity: 1, height: 'auto' }}
+                                            transition={{ delay: 0.8 + gameState.roundScores.length * 0.4 }}
+                                            className="mb-8 p-4 bg-white/10 rounded-xl border border-white/20 overflow-hidden"
+                                        >
+                                            <div className="text-gray-400 text-sm font-bold uppercase tracking-widest mb-2">{t('game.rankScore')}</div>
+                                            <div className="flex items-center justify-center gap-4 text-4xl font-black">
+                                                <div className="text-white">{displayMMR}</div>
+                                                {mmrDelta !== null && mmrDelta !== 0 && (
+                                                    <motion.div
+                                                        initial={{ opacity: 0, y: 10 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        transition={{ delay: 0.5 }} // local delay
+                                                        className={`text-2xl ${mmrDelta > 0 ? 'text-green-400' : 'text-red-400'}`}
+                                                    >
+                                                        {mmrDelta > 0 ? `+${mmrDelta}` : mmrDelta}
+                                                    </motion.div>
+                                                )}
+                                            </div>
+                                        </motion.div>
+                                    )}
+
+                                    <motion.button
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 1.5 + (gameState.roundScores.length + 1) * 0.4 }}
+                                        onClick={() => navigate('/')}
+                                        disabled={!isButtonEnabled}
+                                        className={`w-full py-4 font-bold text-xl rounded-xl transition-all ${isButtonEnabled
+                                            ? 'bg-white text-black hover:bg-gray-200'
+                                            : 'bg-gray-700 text-gray-500 cursor-not-allowed opacity-50'
+                                            }`}
+                                    >
+                                        {isButtonEnabled ? t('game.returnMenu') : t('common.loading')}
+                                    </motion.button>
+                                </>
                             )}
-
-                            <motion.button
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 1.5 + (gameState.roundScores.length + 1) * 0.4 }}
-                                onClick={() => navigate('/')}
-                                disabled={!isButtonEnabled}
-                                className={`w-full py-4 font-bold text-xl rounded-xl transition-all ${isButtonEnabled
-                                    ? 'bg-white text-black hover:bg-gray-200'
-                                    : 'bg-gray-700 text-gray-500 cursor-not-allowed opacity-50'
-                                    }`}
-                            >
-                                {isButtonEnabled ? t('game.returnMenu') : t('common.loading')}
-                            </motion.button>
                         </motion.div>
                     </div>
                 )}
