@@ -8,7 +8,39 @@
     "confirm": "확인",
     "close": "닫기",
     "retry": "재시도",
-    "loading": "로딩 중..."
+    "loading": "로딩 중...",
+    "add": "추가"
+  },
+  "social": {
+    "friends": "친구",
+    "friendList": "친구 목록",
+    "friendRequests": "친구 요청",
+    "addFriend": "친구 추가",
+    "searchNickname": "닉네임 검색",
+    "searchError": "검색 중 오류가 발생했습니다.",
+    "userNotFound": "사용자를 찾을 수 없습니다.",
+    "cannotAddSelf": "자기 자신은 친구로 추가할 수 없습니다.",
+    "alreadyFriends": "이미 친구 관계입니다.",
+    "requestPending": "이미 친구 요청을 보냈거나 받았습니다.",
+    "blocked": "차단된 사용자이거나 차단했습니다.",
+    "requestSent": "친구 요청을 보냈습니다!",
+    "requestFail": "친구 요청 전송 실패.",
+    "loadingFriends": "친구 목록 불러오는 중...",
+    "noFriends": "등록된 친구가 없습니다.",
+    "deleteFriend": "친구 삭제",
+    "deleteFriendConfirm": "'{{nickname}}'님을 친구 목록에서 삭제하시겠습니까?",
+    "deleteFriendFail": "친구 삭제 실패",
+    "online": "온라인",
+    "offline": "오프라인",
+    "challengeTitle": "친선전 신청",
+    "challengeConfirm": "친구에게 대결을 신청하시겠습니까?",
+    "challengeFail": "대결 신청 실패: ",
+    "typeMessage": "메시지 입력...",
+    "sendFail": "메시지 전송 실패",
+    "chat": "채팅",
+    "challenge": "대결 신청",
+    "accept": "수락",
+    "reject": "거절"
   },
   "menu": {
     "normal": {
@@ -22,6 +54,10 @@
     "friendly": {
       "title": "친선 모드",
       "subtitle": "친구와 함께하는 1:1 대결"
+    },
+    "practice": {
+      "title": "연습 모드",
+      "subtitle": "미니게임을 자유롭게 연습하세요"
     },
     "settings": "설정",
     "login": "로그인",

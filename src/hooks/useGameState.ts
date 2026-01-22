@@ -17,7 +17,7 @@ export interface GameState {
     gameTypes: string[];
     roundScores: any[];
     isPlayer1: boolean;
-    mode?: 'normal' | 'rank'; // Added mode
+    mode?: 'normal' | 'rank' | 'practice'; // Added mode
 }
 
 export const useGameState = (roomId: string, myId: string, opponentId: string) => {
@@ -171,14 +171,17 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
         if (!isHostUser) return;
         if (gameState.status === 'waiting') {
             const opponentHere = onlineUsers.includes(opponentId);
-            if (opponentHere) {
+            // PRACTICE SOLO Fix: Start immediately without waiting for 'opponent'
+            if (opponentId === 'practice_solo' || opponentId === 'practice_bot' || gameState.mode === 'practice') {
+                startGame();
+            } else if (opponentHere) {
                 startGame();
             } else {
                 const timer = setTimeout(() => startGame(), 5000); // Force start fallback
                 return () => clearTimeout(timer);
             }
         }
-    }, [isHostUser, gameState.status, onlineUsers, opponentId, roomId, startGame]);
+    }, [isHostUser, gameState.status, onlineUsers, opponentId, roomId, startGame, gameState.mode]);
 
 
     // --- Game Ticker & Host Enforcer ---
