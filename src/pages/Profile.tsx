@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, LogOut, User as UserIcon, Trophy, Zap } from 'lucide-react';
+import { ArrowLeft, Save, LogOut, User as UserIcon, Trophy } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useSound } from '../contexts/SoundContext';
 import { useUI } from '../contexts/UIContext';
@@ -14,6 +14,7 @@ import AddFriend from '../components/social/AddFriend';
 import FriendRequests from '../components/social/FriendRequests';
 import ChatWindow from '../components/social/ChatWindow';
 import MatchHistoryModal from '../components/ui/MatchHistoryModal';
+import { getTierFromMMR, getTierColor, getTierIcon } from '../utils/rankUtils';
 
 const Profile = () => {
     const { user, profile, signOut, refreshProfile } = useAuth();
@@ -163,8 +164,10 @@ const Profile = () => {
     };
 
     // Calculate stats
-    const level = profile?.mmr ? Math.floor(profile.mmr / 100) : 1;
     const rank = profile?.mmr || 1000;
+    const tier = getTierFromMMR(rank);
+    const tierColor = getTierColor(tier);
+    const TierIcon = getTierIcon(tier);
     const wins = profile?.wins || 0;
     const losses = profile?.losses || 0;
     const casualWins = profile?.casual_wins || 0;
@@ -286,15 +289,19 @@ const Profile = () => {
 
                         {/* Stats Grid */}
                         <div className="grid grid-cols-2 gap-4">
-                            <div className="bg-gray-700/30 p-4 rounded-2xl flex flex-col items-center">
-                                <Zap className="w-6 h-6 text-yellow-400 mb-2" />
-                                <span className="text-sm text-gray-400">{t('user.level')}</span>
-                                <span className="text-xl font-bold">{level}</span>
+                            <div className={`bg-gradient-to-br ${tierColor} p-[2px] rounded-2xl shadow-lg transform hover:scale-105 transition-transform`}>
+                                <div className="bg-gray-800 w-full h-full rounded-2xl p-4 flex flex-col items-center justify-center">
+                                    <TierIcon className="w-8 h-8 text-white mb-2 filter drop-shadow-md" />
+                                    <span className="text-xs text-gray-400 font-bold uppercase tracking-widest mb-1">{t('game.tier', 'TIER')}</span>
+                                    <span className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300">
+                                        {tier}
+                                    </span>
+                                </div>
                             </div>
-                            <div className="bg-gray-700/30 p-4 rounded-2xl flex flex-col items-center">
-                                <Trophy className="w-6 h-6 text-purple-400 mb-2" />
-                                <span className="text-sm text-gray-400">{t('user.rank')}</span>
-                                <span className="text-xl font-bold">{rank}</span>
+                            <div className="bg-gray-700/30 p-4 rounded-2xl flex flex-col items-center justify-center border border-white/5">
+                                <Trophy className="w-8 h-8 text-purple-400 mb-2" />
+                                <span className="text-xs text-gray-400 font-bold uppercase tracking-widest mb-1">{t('user.rank')}</span>
+                                <span className="text-xl font-bold text-white">{rank}</span>
                             </div>
 
                             {/* Rank Record */}

@@ -4,7 +4,25 @@
         "cancel": "取消",
         "confirm": "确认",
         "close": "关闭",
-        "retry": "重试"
+        "retry": "重试",
+        "loading": "加载中...",
+        "add": "添加",
+        "error": "发生错误。",
+        "google": "Google",
+        "or": "或",
+        "timeAgo": {
+            "justNow": "刚刚",
+            "minute": "{{count}}分钟前",
+            "hour": "{{count}}小时前",
+            "day": "{{count}}天前",
+            "longAgo": "很久以前"
+        }
+    },
+    "auth": {
+        "loginRequired": "需要登录。",
+        "guestMode": "游客模式",
+        "guestWarning": "游客模式可能会丢失保存的记录。",
+        "terms": "继续即表示您同意我们的服务条款。"
     },
     "menu": {
         "normal": {
@@ -18,6 +36,10 @@
         "friendly": {
             "title": "好友对战",
             "subtitle": "与好友1v1"
+        },
+        "practice": {
+            "title": "练习模式",
+            "subtitle": "自由练习迷你游戏"
         },
         "settings": "设置",
         "login": "登录",
@@ -49,7 +71,25 @@
         "unknownPlayer": "未知玩家",
         "guest": "游客",
         "you": "你",
-        "opponent": "对手"
+        "opponent": "对手",
+        "opponentWaiting": "对手正在等待...",
+        "draw": "平局",
+        "roundResult": "第 {{round}} 回合结果",
+        "matchResult": "比赛结果",
+        "startingIn": "开始倒计时",
+        "roundFinished": "回合结束",
+        "total": "总分",
+        "great": "太棒了!",
+        "tier": "段位",
+        "table": {
+            "round": "回合",
+            "myScore": "我的分数",
+            "opScore": "对手分数",
+            "result": "结果",
+            "win": "胜",
+            "lose": "负",
+            "draw": "平"
+        }
     },
     "user": {
         "level": "等级",
@@ -72,7 +112,8 @@
         "found": "匹配成功!",
         "entering": "正在进入游戏...",
         "timeout": "匹配超时",
-        "timeoutDesc": "未找到对手"
+        "timeoutDesc": "未找到对手",
+        "range": "范围"
     },
     "rps": {
         "ready": "准备...",
@@ -81,7 +122,9 @@
         "reverse": "反向",
         "round": "回合",
         "titleWin": "胜者猜拳",
-        "titleLose": "败者猜拳"
+        "titleLose": "败者猜拳",
+        "title": "剪刀石头布",
+        "instruction": "根据指示赢、输或平局！"
     },
     "number": {
         "title": "数字排序",
@@ -89,10 +132,79 @@
         "asc": "从小到大按数字!",
         "desc": "从大到小按数字!",
         "ready": "准备",
-        "panel": "面板"
+        "panel": "面板",
+        "titleDesc": "数字逆序",
+        "instructionDesc": "从大到小按数字!"
+    },
+    "math": {
+        "title": "心算挑战",
+        "instruction": "计算公式"
+    },
+    "ten": {
+        "title": "凑十",
+        "instruction": "选择总和为10的数字"
+    },
+    "color": {
+        "title": "颜色匹配",
+        "instruction": "选择文字和边框颜色匹配的按钮",
+        "red": "红色",
+        "blue": "蓝色",
+        "green": "绿色",
+        "yellow": "黄色"
+    },
+    "memory": {
+        "title": "记忆匹配",
+        "instruction": "记住卡片位置并找出配对",
+        "btn_memorized": "记住了!",
+        "memorize_hint": "记住卡片!",
+        "find_pairs": "找出配对!"
+    },
+    "sequence": {
+        "title": "逆序",
+        "instruction": "按出现的相反顺序点击",
+        "titleNormal": "顺序记忆",
+        "instructionNormal": "按出现的顺序点击"
     },
     "largest": {
         "title": "寻找最大值",
         "instruction": "点击结果最大的算式"
+    },
+    "pair": {
+        "title": "寻找配对",
+        "instruction": "找出唯一的一对配对!"
+    },
+    "updown": {
+        "title": "上下",
+        "instruction": "数字更大向上滑，更小向下滑!",
+        "prev": "上一个数字",
+        "start": "开始"
+    },
+    "slider": {
+        "title": "数字滑块",
+        "instruction": "滑动使相邻数字之和达到目标值!",
+        "target": "目标总和"
+    },
+    "arrow": {
+        "title": "箭头滑块",
+        "blue": "蓝 = 同向",
+        "red": "红 = 反向",
+        "instruction": "蓝色按箭头方向滑，红色按反方向滑!"
+    },
+    "fillBlanks": {
+        "title": "填空",
+        "instruction": "找出空缺的数字"
+    },
+    "findOperator": {
+        "title": "寻找符号",
+        "instruction": "选择正确的运算符号"
+    },
+    "ladder": {
+        "title": "爬梯子",
+        "instruction": "沿着路线找到正确的终点!"
+    },
+    "tapTheColor": {
+        "title": "点击颜色",
+        "memorize": "记住颜色的位置!",
+        "remembered": "记住了!"
     }
 }

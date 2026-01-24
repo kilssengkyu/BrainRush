@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Howl } from 'howler';
+import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 
 // Define available sound keys
 export type SoundType = 'click' | 'hover' | 'win' | 'lose' | 'countdown' | 'match_found' | 'tick' | 'bgm_main' | 'error' | 'level_complete' | 'correct';
@@ -10,6 +11,8 @@ interface SoundContextType {
     toggleMute: () => void;
     volume: number;
     setVolume: (vol: number) => void;
+    isVibrationEnabled: boolean;
+    toggleVibration: () => void;
 }
 
 const SoundContext = createContext<SoundContextType | undefined>(undefined);
@@ -23,7 +26,6 @@ export const useSound = () => {
 };
 
 // Map sound keys to file paths (Assumes files are in /public/sounds/)
-// You will need to add these files later!
 const SOUND_FILES: Record<SoundType, string> = {
     click: '/sounds/click_002.ogg',
     hover: '/sounds/select_001.ogg',
@@ -47,6 +49,11 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const [volume, setVolumeState] = useState<number>(() => {
         const saved = localStorage.getItem('sound_volume');
         return saved ? parseFloat(saved) : 0.5;
+    });
+
+    const [isVibrationEnabled, setIsVibrationEnabled] = useState<boolean>(() => {
+        const saved = localStorage.getItem('vibration_enabled');
+        return saved !== 'false'; // Default to true
     });
 
     const [sounds, setSounds] = useState<Record<SoundType, Howl | null>>({
@@ -78,15 +85,11 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         };
     }, []);
 
-    // Effect for Volume/Mute changes
+    // Effect for Volume/Mute/Vibration changes
     useEffect(() => {
         localStorage.setItem('sound_muted', String(isMuted));
         localStorage.setItem('sound_volume', String(volume));
-
-        // Update Howler global volume safely
-        // Note: Howler.volume() sets global volume. 
-        // If we want individual control, we'd update each instance.
-        // For simplicity, we keep it global or update instances.
+        localStorage.setItem('vibration_enabled', String(isVibrationEnabled));
 
         Object.values(sounds).forEach(sound => {
             if (sound) {
@@ -95,22 +98,58 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             }
         });
 
-    }, [isMuted, volume, sounds]);
+    }, [isMuted, volume, isVibrationEnabled, sounds]);
+
+    const triggerHaptic = async (type: SoundType) => {
+        if (!isVibrationEnabled) return;
+
+        try {
+            switch (type) {
+                case 'click':
+                case 'hover':
+                case 'tick':
+                    await Haptics.impact({ style: ImpactStyle.Light });
+                    break;
+                case 'match_found':
+                case 'correct':
+                case 'level_complete':
+                    await Haptics.notification({ type: NotificationType.Success });
+                    break;
+                case 'error':
+                case 'lose':
+                    await Haptics.notification({ type: NotificationType.Error });
+                    break;
+                case 'win':
+                    await Haptics.vibrate({ duration: 200 });
+                    break;
+                default:
+                    break;
+            }
+        } catch (error) {
+            // Haptics might fail on web or unsupported devices, ignore safely
+            console.debug('Haptic feedback failed or unsupported:', error);
+        }
+    };
 
     const playSound = useCallback((type: SoundType) => {
+        // Trigger Haptics regardless of mute status (unless we want them linked)
+        // Usually vibration is separate setting.
+        triggerHaptic(type);
+
         if (isMuted) return;
         const sound = sounds[type];
         if (sound) {
-            sound.seek(0); // Restart if already playing (for rapid clicks)
+            sound.seek(0); 
             sound.play();
         }
-    }, [isMuted, sounds]);
+    }, [isMuted, sounds, isVibrationEnabled]);
 
     const toggleMute = () => setIsMuted(prev => !prev);
     const setVolume = (vol: number) => setVolumeState(Math.max(0, Math.min(1, vol)));
+    const toggleVibration = () => setIsVibrationEnabled(prev => !prev);
 
     return (
-        <SoundContext.Provider value={{ playSound, isMuted, toggleMute, volume, setVolume }}>
+        <SoundContext.Provider value={{ playSound, isMuted, toggleMute, volume, setVolume, isVibrationEnabled, toggleVibration }}>
             {children}
         </SoundContext.Provider>
     );

@@ -10,6 +10,9 @@
         "retry": "Retry",
         "loading": "Loading...",
         "add": "Add",
+        "error": "An error occurred.",
+        "google": "Google",
+        "or": "Or",
         "timeAgo": {
             "justNow": "Just now",
             "minute": "{{count}}m ago",
@@ -17,6 +20,12 @@
             "day": "{{count}}d ago",
             "longAgo": "Long ago"
         }
+    },
+    "auth": {
+        "loginRequired": "Login required.",
+        "guestMode": "Guest Mode",
+        "guestWarning": "Guests may lose saved progress.",
+        "terms": "By continuing, you agree to our Terms of Service."
     },
     "social": {
         "friends": "Friends",
@@ -118,6 +127,8 @@
         "startingIn": "Starting in",
         "roundFinished": "ROUND FINISHED",
         "total": "TOTAL",
+        "great": "Great!",
+        "tier": "Tier",
         "table": {
             "round": "Round",
             "myScore": "My Score",
@@ -135,7 +146,8 @@
         "found": "Match Found!",
         "entering": "Entering game arena...",
         "timeout": "Match Not Found",
-        "timeoutDesc": "We couldn't find an opponent in time."
+        "timeoutDesc": "We couldn't find an opponent in time.",
+        "range": "Range"
     },
     "rps": {
         "ready": "READY...",

@@ -45,7 +45,7 @@ const PracticeMode = () => {
 
     const handleGameSelect = async (gameId: string) => {
         if (!user) {
-            showToast(t('auth.loginRequired', '로그인이 필요합니다.'), 'error');
+            showToast(t('auth.loginRequired'), 'error');
             return;
         }
 
@@ -73,7 +73,7 @@ const PracticeMode = () => {
 
         } catch (error: any) {
             console.error('Error starting practice:', error);
-            showToast(t('common.error', '오류가 발생했습니다.'), 'error');
+            showToast(t('common.error'), 'error');
         } finally {
             setLoading(false);
         }

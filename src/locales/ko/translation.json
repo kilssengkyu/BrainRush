@@ -10,6 +10,9 @@
     "retry": "재시도",
     "loading": "로딩 중...",
     "add": "추가",
+    "error": "오류가 발생했습니다.",
+    "google": "Google",
+    "or": "또는",
     "timeAgo": {
       "justNow": "방금 전",
       "minute": "{{count}}분 전",
@@ -17,6 +20,12 @@
       "day": "{{count}}일 전",
       "longAgo": "오래 전"
     }
+  },
+  "auth": {
+    "loginRequired": "로그인이 필요합니다.",
+    "guestMode": "게스트 모드",
+    "guestWarning": "게스트는 저장된 기록을 잃어버릴 수 있습니다.",
+    "terms": "계속 진행하면 서비스 약관에 동의하는 것으로 간주합니다."
   },
   "social": {
     "friends": "친구",
@@ -116,6 +125,8 @@
     "startingIn": "시작까지",
     "roundFinished": "라운드 종료",
     "total": "총점",
+    "great": "좋아요!",
+    "tier": "티어",
     "table": {
       "round": "라운드",
       "myScore": "내 점수",
@@ -133,7 +144,8 @@
     "found": "매치 성사!",
     "entering": "게임장으로 이동합니다...",
     "timeout": "상대를 찾지 못함",
-    "timeoutDesc": "매칭 시간이 초과되었습니다."
+    "timeoutDesc": "매칭 시간이 초과되었습니다.",
+    "range": "범위"
   },
   "rps": {
     "ready": "준비...",

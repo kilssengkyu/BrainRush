@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import type { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
+import { App } from '@capacitor/app';
 
 interface AuthContextType {
     user: User | null;
@@ -173,12 +174,110 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
     };
 
+    // Global Presence & Deep Link Handling
+    const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
+
+    useEffect(() => {
+        // Deep Link Listener
+        let appListener: any;
+        let customDeepLinkHandler: ((event: CustomEvent) => void) | null = null;
+
+        const handleDeepLink = async (urlString: string) => {
+            console.log('Processing Deep Link:', urlString);
+            try {
+                const url = new URL(urlString);
+                const hashParams = new URLSearchParams(url.hash.substring(1));
+                const searchParams = new URLSearchParams(url.search);
+
+                const accessToken = hashParams.get('access_token') || searchParams.get('access_token');
+                const refreshToken = hashParams.get('refresh_token') || searchParams.get('refresh_token');
+
+                if (accessToken && refreshToken) {
+                    const { error } = await supabase.auth.setSession({
+                        access_token: accessToken,
+                        refresh_token: refreshToken,
+                    });
+                    if (error) {
+                        console.error('Session Error:', error.message);
+                        throw error;
+                    }
+                    console.log('Login Success! Session Restored.');
+                }
+            } catch (err) {
+                console.error('Deep link logic error:', err);
+            }
+        };
+
+        const setupListener = async () => {
+            // 1. Standard Capacitor Listener
+            appListener = await App.addListener('appUrlOpen', async (event) => {
+                handleDeepLink(event.url);
+            });
+
+            // 2. Custom Native-to-JS Event Listener (Fallback)
+            customDeepLinkHandler = ((event: CustomEvent) => {
+                console.log('Custom Deep Link Event:', event.detail);
+                handleDeepLink(event.detail);
+            }) as (event: CustomEvent) => void;
+            window.addEventListener('customDeepLink', customDeepLinkHandler as EventListener);
+        };
+
+        setupListener();
+
+        // Presence Logic
+        let channel: any;
+        if (user) {
+            channel = supabase.channel('online_users', {
+                config: { presence: { key: user.id } },
+            });
+
+            channel
+                .on('presence', { event: 'sync' }, () => {
+                    const newState = channel.presenceState();
+                    const onlineIds = new Set(Object.keys(newState));
+                    setOnlineUsers(onlineIds);
+                })
+                .subscribe(async (status: string) => {
+                    if (status === 'SUBSCRIBED') {
+                        await channel.track({
+                            user_id: user.id,
+                            online_at: new Date().toISOString(),
+                        });
+                        await supabase
+                            .from('profiles')
+                            .update({ last_seen: new Date().toISOString() })
+                            .eq('id', user.id);
+                    }
+                });
+        } else {
+            setOnlineUsers(new Set());
+        }
+
+        return () => {
+            if (appListener) appListener.remove();
+            if (customDeepLinkHandler) window.removeEventListener('customDeepLink', customDeepLinkHandler as EventListener);
+            if (channel) supabase.removeChannel(channel);
+        };
+    }, [user]);
+
     const signInWithGoogle = async () => {
         try {
+            // Determine Redirect URL
+            // Web: window.location.origin
+            // Native: com.kilssengkyu.brainrush://login-callback
+            let redirectUrl = window.location.origin;
+
+            // Basic check for Capacitor (window.Capacitor exists)
+            // or import check. 
+            if ((window as any).Capacitor?.isNativePlatform()) {
+                redirectUrl = 'com.kilssengkyu.brainrush://login-callback';
+            }
+
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: window.location.origin,
+                    redirectTo: redirectUrl,
+                    skipBrowserRedirect: false // Important for native flow
                 }
             });
             if (error) throw error;
@@ -222,49 +321,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             await fetchProfile(user.id);
         }
     };
-
-    // Global Presence Tracking
-    const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
-
-    useEffect(() => {
-        if (user) {
-            const channel = supabase.channel('online_users', {
-                config: {
-                    presence: {
-                        key: user.id,
-                    },
-                },
-            });
-
-            channel
-                .on('presence', { event: 'sync' }, () => {
-                    const newState = channel.presenceState();
-                    const onlineIds = new Set(Object.keys(newState));
-                    setOnlineUsers(onlineIds);
-                })
-                .subscribe(async (status) => {
-                    if (status === 'SUBSCRIBED') {
-                        // Track presence
-                        await channel.track({
-                            user_id: user.id,
-                            online_at: new Date().toISOString(),
-                        });
-
-                        // Update last_seen in database
-                        await supabase
-                            .from('profiles')
-                            .update({ last_seen: new Date().toISOString() })
-                            .eq('id', user.id);
-                    }
-                });
-
-            return () => {
-                supabase.removeChannel(channel);
-            };
-        } else {
-            setOnlineUsers(new Set());
-        }
-    }, [user]);
 
     return (
         <AuthContext.Provider value={{ user, session, profile, loading, signInWithGoogle, signInAnonymously, signOut, refreshProfile, onlineUsers }}>
