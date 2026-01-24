@@ -13,6 +13,7 @@ import FriendList from '../components/social/FriendList';
 import AddFriend from '../components/social/AddFriend';
 import FriendRequests from '../components/social/FriendRequests';
 import ChatWindow from '../components/social/ChatWindow';
+import MatchHistoryModal from '../components/ui/MatchHistoryModal';
 
 const Profile = () => {
     const { user, profile, signOut, refreshProfile } = useAuth();
@@ -26,6 +27,10 @@ const Profile = () => {
     const [country, setCountry] = useState<string | null>(null);
     const [isEditing, setIsEditing] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+
+    // Match History Modal State
+    const [showHistoryModal, setShowHistoryModal] = useState(false);
+    const [historyMode, setHistoryMode] = useState<'all' | 'rank' | 'normal'>('all');
 
     // Chat State
     const [chatFriend, setChatFriend] = useState<{ id: string; nickname: string } | null>(null);
@@ -151,6 +156,12 @@ const Profile = () => {
         }
     };
 
+    const handleOpenHistory = (mode: 'rank' | 'normal' | 'all') => {
+        playSound('click');
+        setHistoryMode(mode);
+        setShowHistoryModal(true);
+    };
+
     // Calculate stats
     const level = profile?.mmr ? Math.floor(profile.mmr / 100) : 1;
     const rank = profile?.mmr || 1000;
@@ -160,7 +171,7 @@ const Profile = () => {
     const casualLosses = profile?.casual_losses || 0;
 
     return (
-        <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center p-4 relative overflow-hidden">
+        <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center p-4 relative overflow-y-auto">
             {/* Background Effects */}
             <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-800 via-gray-900 to-black pointer-events-none" />
 
@@ -287,7 +298,10 @@ const Profile = () => {
                             </div>
 
                             {/* Rank Record */}
-                            <div className="bg-gray-700/30 p-4 rounded-2xl flex flex-col items-center col-span-2">
+                            <button
+                                onClick={() => handleOpenHistory('rank')}
+                                className="bg-gray-700/30 p-4 rounded-2xl flex flex-col items-center col-span-2 hover:bg-gray-700/50 transition-colors cursor-pointer"
+                            >
                                 <span className="text-xs text-blue-300 mb-1 font-bold uppercase tracking-wider">{t('game.rank')} {t('profile.record')}</span>
                                 <div className="flex gap-4 items-end">
                                     <span className="text-lg font-bold text-blue-400">{wins}W</span>
@@ -298,16 +312,19 @@ const Profile = () => {
                                         </span>
                                     )}
                                 </div>
-                            </div>
+                            </button>
 
                             {/* Casual Record */}
-                            <div className="bg-gray-700/30 p-4 rounded-2xl flex flex-col items-center col-span-2 border border-white/5">
+                            <button
+                                onClick={() => handleOpenHistory('normal')}
+                                className="bg-gray-700/30 p-4 rounded-2xl flex flex-col items-center col-span-2 border border-white/5 hover:bg-gray-700/50 transition-colors cursor-pointer"
+                            >
                                 <span className="text-xs text-green-300 mb-1 font-bold uppercase tracking-wider">{t('game.normal')} {t('profile.record')}</span>
                                 <div className="flex gap-4 items-end">
                                     <span className="text-lg font-bold text-blue-300">{casualWins}W</span>
                                     <span className="text-lg font-bold text-red-300">{casualLosses}L</span>
                                 </div>
-                            </div>
+                            </button>
                         </div>
                     </motion.div>
                 ) : (
@@ -327,6 +344,14 @@ const Profile = () => {
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            {/* Match History Modal */}
+            <MatchHistoryModal
+                isOpen={showHistoryModal}
+                onClose={() => setShowHistoryModal(false)}
+                userId={user?.id}
+                initialMode={historyMode}
+            />
 
             {/* Chat Overlay */}
             {chatFriend && (

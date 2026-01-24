@@ -2,13 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { useUI } from '../../contexts/UIContext';
-import { User, MessageCircle, Swords, UserMinus } from 'lucide-react';
+import { User, MessageCircle, Swords, UserMinus, Trophy } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import Flag from '../ui/Flag';
 
 interface Friend {
     id: string;
     nickname: string;
     avatar_url: string;
+    country: string | null;
+    mmr: number;
+    last_seen: string | null;
     status?: 'online' | 'offline' | 'ingame';
 }
 
@@ -82,12 +86,15 @@ const FriendList: React.FC<FriendListProps> = ({ onChatClick, onChallengeClick }
             // Fetch profiles
             const { data: profiles, error: profileError } = await supabase
                 .from('profiles')
-                .select('id, nickname, avatar_url')
+                .select('id, nickname, avatar_url, country, mmr, last_seen')
                 .in('id', friendIds);
 
             if (profileError) throw profileError;
 
-            setFriends((profiles as Friend[]) || []);
+            // Sort by MMR (High to Low)
+            const sortedFriends = (profiles as Friend[]).sort((a, b) => b.mmr - a.mmr);
+
+            setFriends(sortedFriends || []);
 
         } catch (err) {
             console.error("Error fetching friends:", err);
@@ -124,6 +131,28 @@ const FriendList: React.FC<FriendListProps> = ({ onChatClick, onChallengeClick }
         }
     };
 
+    // Helper for formatting last seen
+    const formatLastSeen = (dateString: string | null) => {
+        if (!dateString) return t('common.timeAgo.longAgo');
+
+        const now = new Date();
+        const lastSeen = new Date(dateString);
+        const diffInSeconds = Math.floor((now.getTime() - lastSeen.getTime()) / 1000);
+
+        if (diffInSeconds < 60) return t('common.timeAgo.justNow');
+
+        const diffInMinutes = Math.floor(diffInSeconds / 60);
+        if (diffInMinutes < 60) return t('common.timeAgo.minute', { count: diffInMinutes });
+
+        const diffInHours = Math.floor(diffInMinutes / 60);
+        if (diffInHours < 24) return t('common.timeAgo.hour', { count: diffInHours });
+
+        const diffInDays = Math.floor(diffInHours / 24);
+        if (diffInDays <= 7) return t('common.timeAgo.day', { count: diffInDays });
+
+        return t('common.timeAgo.longAgo');
+    };
+
     if (loading) {
         return <div className="p-4 text-center text-gray-400">{t('social.loadingFriends')}</div>;
     }
@@ -144,7 +173,7 @@ const FriendList: React.FC<FriendListProps> = ({ onChatClick, onChallengeClick }
                     {friends.map(friend => (
                         <div key={friend.id} className="flex items-center justify-between bg-slate-700/50 p-3 rounded-lg hover:bg-slate-700 transition">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-slate-600 overflow-hidden border border-slate-500">
+                                <div className="w-10 h-10 rounded-full bg-slate-600 overflow-hidden border border-slate-500 relative">
                                     {friend.avatar_url ? (
                                         <img src={friend.avatar_url} alt={friend.nickname} className="w-full h-full object-cover" />
                                     ) : (
@@ -153,11 +182,23 @@ const FriendList: React.FC<FriendListProps> = ({ onChatClick, onChallengeClick }
                                         </div>
                                     )}
                                 </div>
-                                <div>
-                                    <div className="font-semibold text-white">{friend.nickname}</div>
-                                    <div className="text-xs text-gray-400 flex items-center gap-1">
-                                        <div className={`w-2 h-2 rounded-full ${onlineUsers.has(friend.id) ? 'bg-green-500' : 'bg-gray-500'}`}></div>
-                                        {onlineUsers.has(friend.id) ? t('social.online') : t('social.offline')}
+                                <div className="flex flex-col">
+                                    <div className="flex items-center gap-1.5">
+                                        <Flag code={friend.country} size="sm" />
+                                        <span className="font-semibold text-white">{friend.nickname}</span>
+                                    </div>
+
+                                    <div className="flex items-center gap-3 text-xs">
+                                        <div className="flex items-center gap-1 text-purple-400 font-medium">
+                                            <Trophy size={10} />
+                                            <span>{friend.mmr || 1000}</span>
+                                        </div>
+                                        <div className="flex items-center gap-1 text-gray-400">
+                                            <div className={`w-1.5 h-1.5 rounded-full ${onlineUsers.has(friend.id) ? 'bg-green-500' : 'bg-gray-500'}`}></div>
+                                            {onlineUsers.has(friend.id)
+                                                ? <span className="text-green-400">{t('social.online')}</span>
+                                                : <span>{formatLastSeen(friend.last_seen)}</span>}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -192,5 +233,4 @@ const FriendList: React.FC<FriendListProps> = ({ onChatClick, onChallengeClick }
         </div>
     );
 };
-
 export default FriendList;

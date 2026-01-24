@@ -9,7 +9,14 @@
     "close": "닫기",
     "retry": "재시도",
     "loading": "로딩 중...",
-    "add": "추가"
+    "add": "추가",
+    "timeAgo": {
+      "justNow": "방금 전",
+      "minute": "{{count}}분 전",
+      "hour": "{{count}}시간 전",
+      "day": "{{count}}일 전",
+      "longAgo": "오래 전"
+    }
   },
   "social": {
     "friends": "친구",
@@ -202,5 +209,13 @@
     "blue": "파랑 = 그대로",
     "red": "빨강 = 반대로",
     "instruction": "파란색은 방향대로, 빨간색은 반대로 미세요!"
+  },
+  "fillBlanks": {
+    "title": "빈칸 채우기",
+    "instruction": "빈칸에 들어갈 숫자를 찾으세요"
+  },
+  "findOperator": {
+    "title": "기호 채우기",
+    "instruction": "알맞은 연산 기호를 고르세요"
   }
 }

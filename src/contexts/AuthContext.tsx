@@ -173,10 +173,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 })
                 .subscribe(async (status) => {
                     if (status === 'SUBSCRIBED') {
+                        // Track presence
                         await channel.track({
                             user_id: user.id,
                             online_at: new Date().toISOString(),
                         });
+
+                        // Update last_seen in database
+                        await supabase
+                            .from('profiles')
+                            .update({ last_seen: new Date().toISOString() })
+                            .eq('id', user.id);
                     }
                 });
 
