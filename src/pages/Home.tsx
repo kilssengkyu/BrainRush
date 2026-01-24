@@ -9,7 +9,9 @@ import { useAuth } from '../contexts/AuthContext';
 // COUNTRIES import removed as it's no longer needed for direct emoji lookup if we use Flag component
 import Flag from '../components/ui/Flag';
 import AdModal from '../components/ui/AdModal';
+import LeaderboardModal from '../components/ui/LeaderboardModal';
 import { supabase } from '../lib/supabaseClient';
+import { getTierFromMMR, getTierColor, getTierIcon } from '../utils/rankUtils';
 
 // Simple Timer Component
 const RechargeTimer = ({ lastRecharge }: { lastRecharge: string }) => {
@@ -45,7 +47,7 @@ const RechargeTimer = ({ lastRecharge }: { lastRecharge: string }) => {
     }, [lastRecharge]);
 
     return (
-        <span className="ml-2 text-[10px] text-gray-500 font-mono bg-gray-900/50 px-1 rounded">
+        <span className="ml-0 text-[10px] text-gray-400 font-mono">
             +{timeLeft}
         </span>
     );
@@ -63,8 +65,15 @@ const Home = () => {
     }, []);
 
     // Calculate Level from MMR (Temporary: MMR / 100)
-    const level = profile?.mmr ? Math.floor(profile.mmr / 100) : 1;
+    // const level = profile?.mmr ? Math.floor(profile.mmr / 100) : 1; 
+    // Wait, let's just remove it if really unused. But wait, did I remove the usage in the UI? 
+    // Yes, in the last refactor I swapped the Profile UI and might have removed the level display.
+    // Let's check the view first to be safe, but user says it is unused.
+    // Actually, I should remove the line.
     const rank = profile?.mmr || 1000;
+    const tier = getTierFromMMR(rank);
+    const tierColor = getTierColor(tier);
+    const TierIcon = getTierIcon(tier);
     const nickname = profile?.nickname || user?.email?.split('@')[0] || t('game.unknownPlayer');
     const avatarUrl = profile?.avatar_url;
     const countryCode = profile?.country;
@@ -96,6 +105,7 @@ const Home = () => {
     };
 
     const [showAdModal, setShowAdModal] = useState(false);
+    const [showLeaderboard, setShowLeaderboard] = useState(false);
 
     const handleAdReward = async () => {
         if (!user) return;
@@ -168,54 +178,35 @@ const Home = () => {
             {/* Background Effects */}
             <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-800 via-gray-900 to-black pointer-events-none" />
 
-            {/* Authenticated User Header */}
+            {/* Authenticated User Header (Top Left - Profile) */}
             {user && (
                 <motion.div
                     initial={{ opacity: 0, y: -50 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="absolute top-0 left-0 w-full p-4 flex justify-between items-center z-50 pointer-events-none"
+                    className="absolute top-4 left-4 z-50 flex items-center"
                 >
-                    <div className="flex items-center gap-4 bg-gray-800/80 backdrop-blur-md p-2 pr-6 rounded-full border border-gray-700 shadow-lg pointer-events-auto">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 p-[2px]">
+                    <div className="flex items-center gap-4 bg-gray-800/80 backdrop-blur-md p-2 pr-6 rounded-full border border-gray-700 shadow-lg cursor-pointer hover:bg-gray-800 transition-colors" onClick={() => navigate('/profile')}>
+                        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 p-[2px]">
                             <div className="w-full h-full rounded-full bg-gray-900 flex items-center justify-center overflow-hidden">
                                 {avatarUrl ? (
                                     <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
                                 ) : (
-                                    <User className="w-6 h-6 text-gray-400" />
+                                    <User className="w-7 h-7 text-gray-400" />
                                 )}
                             </div>
                         </div>
                         <div>
-                            <div className="font-bold text-white leading-none flex items-center gap-2">
-                                <div>
-                                    <div className="font-bold text-white leading-none flex items-center gap-2">
-                                        <Flag code={countryCode} />
-                                        {nickname}
-                                    </div>
-                                    <div className="text-xs text-gray-400 mt-1 flex gap-3">
-                                        <span className="text-blue-400">{t('user.level')} {level}</span>
-                                        <span className="text-purple-400">{t('user.rank')} {rank}</span>
-                                    </div>
-                                    {/* Pencil Display */}
-                                    <button
-                                        onClick={() => setShowAdModal(true)}
-                                        className="text-xs text-gray-300 mt-1 flex items-center gap-1 hover:bg-white/10 px-2 py-1 rounded transition-colors"
-                                    >
-                                        <span>✏️</span>
-                                        <span className={profile?.pencils < 1 ? "text-red-400 font-bold" : "text-yellow-400 font-bold"}>
-                                            {profile?.pencils ?? 5}
-                                        </span>
-                                        <span className="text-gray-500">/ 5</span>
-
-                                        {profile?.pencils < 5 && (
-                                            <RechargeTimer lastRecharge={profile?.last_recharge_at} />
-                                        )}
-                                        {profile?.pencils < 5 && (
-                                            <div className="ml-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center text-[10px] text-white animate-pulse">
-                                                +
-                                            </div>
-                                        )}
-                                    </button>
+                            <div className="font-bold text-white text-lg leading-none flex items-center gap-2">
+                                <Flag code={countryCode} />
+                                {nickname}
+                            </div>
+                            <div className="mt-1.5 flex gap-3 items-center">
+                                {/* Tier Badge - Larger Size */}
+                                <div className={`px-2.5 py-1 rounded-lg text-sm font-black bg-gradient-to-r ${tierColor} text-black flex items-center gap-1.5 shadow-md transform hover:scale-105 transition-transform`}>
+                                    <TierIcon className="w-4 h-4" />
+                                    <span>{tier}</span>
+                                    <span className="opacity-60">|</span>
+                                    <span className="font-mono">{rank}</span>
                                 </div>
                             </div>
                         </div>
@@ -223,11 +214,42 @@ const Home = () => {
                 </motion.div>
             )}
 
-            {/* Ad Modal */}
+            {/* Pencil Display (Top Right) */}
+            {user && (
+                <div className="absolute top-4 right-4 z-50">
+                    <button
+                        onClick={() => setShowAdModal(true)}
+                        className="bg-gray-800/80 backdrop-blur-md border border-gray-700 rounded-full py-2 px-5 flex items-center gap-3 hover:bg-gray-700 transition-all shadow-lg active:scale-95"
+                    >
+                        <div className="flex flex-col items-end leading-none">
+                            <div className="flex items-center gap-1.5">
+                                <span className={`text-xl font-black ${profile?.pencils < 1 ? "text-red-400" : "text-yellow-400"}`}>
+                                    {profile?.pencils ?? 5}
+                                </span>
+                                <span className="text-gray-500 text-sm font-bold">/ 5</span>
+                            </div>
+                            {profile?.pencils < 5 && (
+                                <div className="text-xs text-gray-400 font-mono flex items-center gap-1.5 mt-0.5">
+                                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                                    <RechargeTimer lastRecharge={profile?.last_recharge_at} />
+                                </div>
+                            )}
+                        </div>
+                        <span className="text-2xl">✏️</span>
+                    </button>
+                </div>
+            )}
+
+            {/* Modals */}
             <AdModal
                 isOpen={showAdModal}
                 onClose={() => setShowAdModal(false)}
                 onReward={handleAdReward}
+            />
+
+            <LeaderboardModal
+                isOpen={showLeaderboard}
+                onClose={() => setShowLeaderboard(false)}
             />
 
             {/* Matchmaking Overlay */}
@@ -369,6 +391,14 @@ const Home = () => {
                 <motion.div variants={itemVariants} className="flex gap-4 w-full justify-between mt-4">
                     <button
                         onMouseEnter={() => playSound('hover')}
+                        onClick={() => { playSound('click'); setShowLeaderboard(true); }}
+                        className="flex-1 p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 group cursor-pointer"
+                    >
+                        <Trophy className="w-5 h-5 text-yellow-500 group-hover:text-yellow-400 transition-colors" />
+                        <span className="text-gray-300 group-hover:text-white transition-colors">{t('leaderboard.button', 'Ranking')}</span>
+                    </button>
+                    <button
+                        onMouseEnter={() => playSound('hover')}
                         onClick={() => { playSound('click'); navigate('/settings'); }}
                         className="flex-1 p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 group cursor-pointer"
                     >
@@ -397,7 +427,7 @@ const Home = () => {
                 </motion.div>
 
             </motion.div>
-        </div>
+        </div >
     );
 };
 
