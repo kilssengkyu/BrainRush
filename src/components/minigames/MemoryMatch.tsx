@@ -101,6 +101,7 @@ const MemoryMatch: React.FC<MemoryMatchProps> = ({ seed, onScore }) => {
                 setFlippedIndices([]);
                 checkClear(updatedCards);
                 setIsResolving(false);
+                playSound('correct');
             }, 0);
         } else {
             // No Match

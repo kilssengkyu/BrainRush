@@ -108,6 +108,7 @@ const ColorMatch: React.FC<ColorMatchProps> = ({ seed, onScore }) => {
                 // Level Complete
                 setIsSolved(true);
                 onScore(100);
+                playSound('correct');
 
                 setTimeout(() => {
                     setPanelIndex(prev => prev + 1);

@@ -94,6 +94,7 @@ const LadderGame: React.FC<LadderGameProps> = ({ seed, onScore }) => {
             setIsAnimating(true);
             generateTracePath();
             onScore(scoreBase);
+            playSound('correct');
             setTimeout(() => {
                 setIsAnimating(false);
                 setSelectedEnd(null);

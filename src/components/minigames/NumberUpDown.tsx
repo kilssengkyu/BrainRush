@@ -99,6 +99,7 @@ const NumberUpDown: React.FC<NumberUpDownProps> = ({ seed, onScore }) => {
             // Correct
             setFeedback('correct');
             onScore(50); // Score points
+            playSound('correct');
 
             // Animate card flying away
             const targetY = direction === 'up' ? -1000 : 1000;

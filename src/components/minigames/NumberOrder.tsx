@@ -72,6 +72,7 @@ const NumberOrder: React.FC<NumberOrderProps> = ({ seed, onScore }) => {
         if (num === expected) {
             // Correct
             onScore(scoreAmount);
+            playSound('correct');
             const newCleared = [...clearedNumbers, num];
             setClearedNumbers(newCleared);
 

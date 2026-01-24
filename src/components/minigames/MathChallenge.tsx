@@ -139,6 +139,7 @@ const MathChallenge: React.FC<MathChallengeProps> = ({ seed, onScore }) => {
         if (selected === currentProblem.answer) {
             // Correct
             onScore(scoreBase);
+            playSound('correct');
             setTimeout(() => {
                 setPanelIndex(prev => prev + 1);
                 setAnimationKey(prev => prev + 1);

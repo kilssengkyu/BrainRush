@@ -110,6 +110,7 @@ const ReverseSequence: React.FC<ReverseSequenceProps> = ({ seed, onScore, isPlay
             const newInput = [...userInput, index];
             setUserInput(newInput);
             onScore(20);
+            playSound('correct');
 
             if (newInput.length === sequence.length) {
                 // Complete

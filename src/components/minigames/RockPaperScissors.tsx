@@ -50,10 +50,10 @@ const RockPaperScissors: React.FC<RPSProps> = ({ seed, onScore }) => {
 
         if (move === correctMove) {
             // Correct!
-            // Play Sound?
-            onScore(20); // 20 Points per correct answer
+            onScore(20);
+            playSound('correct');
             setIndex(prev => prev + 1);
-            setAnimationKey(prev => prev + 1); // Force re-render animation
+            setAnimationKey(prev => prev + 1);
         } else {
             // Wrong!
             onScore(-20); // Penalty

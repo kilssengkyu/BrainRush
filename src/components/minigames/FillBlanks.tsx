@@ -136,6 +136,7 @@ const FillBlanks: React.FC<FillBlanksProps> = ({ seed, onScore }) => {
         if (selected === currentProblem.answer) {
             // Correct
             onScore(scoreBase);
+            playSound('correct');
             setTimeout(() => {
                 setPanelIndex(prev => prev + 1);
                 setAnimationKey(prev => prev + 1);

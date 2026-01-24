@@ -110,6 +110,7 @@ const FindOperator: React.FC<FindOperatorProps> = ({ seed, onScore }) => {
         if (selected === currentProblem.operator) {
             // Correct
             onScore(scoreBase);
+            playSound('correct');
             setTimeout(() => {
                 setPanelIndex(prev => prev + 1);
                 setAnimationKey(prev => prev + 1);

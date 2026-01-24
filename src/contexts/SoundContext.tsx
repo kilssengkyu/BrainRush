@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { Howl } from 'howler';
 
 // Define available sound keys
-export type SoundType = 'click' | 'hover' | 'win' | 'lose' | 'countdown' | 'match_found' | 'tick' | 'bgm_main' | 'error' | 'level_complete';
+export type SoundType = 'click' | 'hover' | 'win' | 'lose' | 'countdown' | 'match_found' | 'tick' | 'bgm_main' | 'error' | 'level_complete' | 'correct';
 
 interface SoundContextType {
     playSound: (type: SoundType) => void;
@@ -35,6 +35,7 @@ const SOUND_FILES: Record<SoundType, string> = {
     bgm_main: '/sounds/back_001.ogg',
     error: '/sounds/error_006.ogg',
     level_complete: '/sounds/confirmation_001.ogg',
+    correct: '/sounds/confirmation_002.ogg',
 };
 
 export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -50,7 +51,7 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const [sounds, setSounds] = useState<Record<SoundType, Howl | null>>({
         click: null, hover: null, win: null, lose: null,
-        countdown: null, match_found: null, tick: null, bgm_main: null, error: null, level_complete: null
+        countdown: null, match_found: null, tick: null, bgm_main: null, error: null, level_complete: null, correct: null
     });
 
     // Initialize Sounds

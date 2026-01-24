@@ -105,6 +105,7 @@ const MakeTen: React.FC<MakeTenProps> = ({ seed, onScore }) => {
             // Correct!
             setIsSolved(true);
             onScore(100); // Fixed 100 points
+            playSound('correct');
 
             // Transition
             setTimeout(() => {

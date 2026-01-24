@@ -75,6 +75,7 @@ const NumberSortGame: React.FC<NumberSortGameProps> = ({ seed, onScore, mode }) 
         if (num === expected) {
             // Correct
             onScore(scoreAmount);
+            playSound('correct');
             const newCleared = [...clearedNumbers, num];
             setClearedNumbers(newCleared);
 

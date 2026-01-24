@@ -99,6 +99,7 @@ const ArrowSlider: React.FC<ArrowSliderProps> = ({ seed, onScore }) => {
             setFeedback('correct');
             onScore(50 + Math.min(scoreCount * 5, 50)); // Bonus for streak/progress
             setScoreCount(prev => prev + 1);
+            playSound('correct');
 
             // Animate out in the swipe direction
             const xMove = swipeDir === 'left' ? -200 : swipeDir === 'right' ? 200 : 0;

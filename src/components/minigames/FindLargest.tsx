@@ -179,11 +179,11 @@ const FindLargest: React.FC<FindLargestProps> = ({ seed, onScore }) => {
         const scoreBase = 20 + panelIndex * 5;
 
         if (option.value === currentProblem.maxValue) {
-            onScore(scoreBase);
-            setTimeout(() => {
-                setPanelIndex(prev => prev + 1);
-                setAnimationKey(prev => prev + 1);
-            }, 150);
+            // Correct
+            onScore(10);
+            playSound('correct');
+            setPanelIndex(prev => prev + 1);
+            setAnimationKey(prev => prev + 1);
         } else {
             onScore(-scoreBase);
             playSound('error');
