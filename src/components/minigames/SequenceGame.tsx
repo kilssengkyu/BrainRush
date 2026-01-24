@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { SeededRandom } from '../../utils/seededRandom';
+import { useSound } from '../../contexts/SoundContext';
 
 interface SequenceGameProps {
     seed: string | null;
@@ -30,6 +31,7 @@ const FORWARD_COLORS = [
 
 const SequenceGame: React.FC<SequenceGameProps> = ({ seed, onScore, isPlaying, mode }) => {
     const { t } = useTranslation();
+    const { playSound } = useSound();
     const [stage, setStage] = useState(1);
     const [sequence, setSequence] = useState<number[]>([]);
     const [phase, setPhase] = useState<'IDLE' | 'SHOWING' | 'INPUT' | 'SUCCESS' | 'FAILURE'>('IDLE');
@@ -124,6 +126,7 @@ const SequenceGame: React.FC<SequenceGameProps> = ({ seed, onScore, isPlaying, m
             const newInput = [...userInput, index];
             setUserInput(newInput);
             onScore(20);
+            playSound('correct'); // Added correct sound here
 
             if (newInput.length === sequence.length) {
                 // Complete
@@ -135,6 +138,7 @@ const SequenceGame: React.FC<SequenceGameProps> = ({ seed, onScore, isPlaying, m
         } else {
             // Wrong
             onScore(-20);
+            playSound('error');
             // Visual feedback
             const btn = document.getElementById(`pad-${index}`);
             if (btn) {

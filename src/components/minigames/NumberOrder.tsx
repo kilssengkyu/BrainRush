@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { SeededRandom } from '../../utils/seededRandom';
+import { useSound } from '../../contexts/SoundContext';
 
 interface NumberOrderProps {
     seed: string | null;
@@ -10,6 +11,7 @@ interface NumberOrderProps {
 
 const NumberOrder: React.FC<NumberOrderProps> = ({ seed, onScore }) => {
     const { t } = useTranslation();
+    const { playSound } = useSound();
     const [panelIndex, setPanelIndex] = useState(0);
     const [clearedNumbers, setClearedNumbers] = useState<number[]>([]);
     const [shakeId, setShakeId] = useState<number | null>(null);
@@ -70,6 +72,7 @@ const NumberOrder: React.FC<NumberOrderProps> = ({ seed, onScore }) => {
         if (num === expected) {
             // Correct
             onScore(scoreAmount);
+            playSound('correct');
             const newCleared = [...clearedNumbers, num];
             setClearedNumbers(newCleared);
 
@@ -86,6 +89,7 @@ const NumberOrder: React.FC<NumberOrderProps> = ({ seed, onScore }) => {
         } else {
             // Wrong
             onScore(-scoreAmount); // Penalty Logic
+            playSound('error');
             setShakeId(num);
             setTimeout(() => setShakeId(null), 400);
         }

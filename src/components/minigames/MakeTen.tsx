@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { SeededRandom } from '../../utils/seededRandom';
+import { useSound } from '../../contexts/SoundContext';
 
 interface MakeTenProps {
     seed: string | null;
@@ -10,6 +11,7 @@ interface MakeTenProps {
 
 const MakeTen: React.FC<MakeTenProps> = ({ seed, onScore }) => {
     const { t } = useTranslation();
+    const { playSound } = useSound();
     const [panelIndex, setPanelIndex] = useState(0);
     const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
     const [animationKey, setAnimationKey] = useState(0);
@@ -28,7 +30,7 @@ const MakeTen: React.FC<MakeTenProps> = ({ seed, onScore }) => {
     const currentPanel = useMemo(() => {
         if (!seed) return null;
 
-        const rng = new SeededRandom(`${seed}_ten_${panelIndex}`);
+        const rng = new SeededRandom(`${seed}_ten_${panelIndex} `);
         const level = getLevel(panelIndex);
 
         // 1. Determine Count (3 or 4)
@@ -103,6 +105,7 @@ const MakeTen: React.FC<MakeTenProps> = ({ seed, onScore }) => {
             // Correct!
             setIsSolved(true);
             onScore(100); // Fixed 100 points
+            playSound('correct');
 
             // Transition
             setTimeout(() => {
@@ -136,6 +139,7 @@ const MakeTen: React.FC<MakeTenProps> = ({ seed, onScore }) => {
 
             if (currentPanel.level < 3) {
                 onScore(-20);
+                playSound('error');
                 setSelectedIndices(new Set()); // Reset to force retry
                 // Visual feedback needed? They will see the selection clear.
             }

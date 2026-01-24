@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { SeededRandom } from '../../utils/seededRandom';
+import { useSound } from '../../contexts/SoundContext';
 
 interface ReverseSequenceProps {
     seed: string | null;
@@ -20,6 +21,7 @@ const COLORS = [
 
 const ReverseSequence: React.FC<ReverseSequenceProps> = ({ seed, onScore, isPlaying }) => {
     const { t } = useTranslation();
+    const { playSound } = useSound();
     const [stage, setStage] = useState(1);
     const [sequence, setSequence] = useState<number[]>([]);
     const [phase, setPhase] = useState<'IDLE' | 'SHOWING' | 'INPUT' | 'SUCCESS' | 'FAILURE'>('IDLE');
@@ -108,6 +110,7 @@ const ReverseSequence: React.FC<ReverseSequenceProps> = ({ seed, onScore, isPlay
             const newInput = [...userInput, index];
             setUserInput(newInput);
             onScore(20);
+            playSound('correct');
 
             if (newInput.length === sequence.length) {
                 // Complete
@@ -119,6 +122,7 @@ const ReverseSequence: React.FC<ReverseSequenceProps> = ({ seed, onScore, isPlay
         } else {
             // Wrong
             onScore(-20);
+            playSound('error');
             // Shake effect or feedback?
             // Maybe reset user input to try again? Or just penalty?
             // "틀리면 감점 맞출때마다 20점으로" -> User didn't specify game over.

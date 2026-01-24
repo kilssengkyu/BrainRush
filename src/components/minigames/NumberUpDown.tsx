@@ -4,6 +4,7 @@ import type { PanInfo } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { SeededRandom } from '../../utils/seededRandom';
 import { ChevronUp, ChevronDown } from 'lucide-react';
+import { useSound } from '../../contexts/SoundContext';
 
 interface NumberUpDownProps {
     seed: string | null;
@@ -12,6 +13,7 @@ interface NumberUpDownProps {
 
 const NumberUpDown: React.FC<NumberUpDownProps> = ({ seed, onScore }) => {
     const { t } = useTranslation();
+    const { playSound } = useSound();
 
     const [prevNumber, setPrevNumber] = useState(0);
     const [currentNumber, setCurrentNumber] = useState<number>(0);
@@ -97,6 +99,7 @@ const NumberUpDown: React.FC<NumberUpDownProps> = ({ seed, onScore }) => {
             // Correct
             setFeedback('correct');
             onScore(50); // Score points
+            playSound('correct');
 
             // Animate card flying away
             const targetY = direction === 'up' ? -1000 : 1000;
@@ -112,6 +115,7 @@ const NumberUpDown: React.FC<NumberUpDownProps> = ({ seed, onScore }) => {
             // Wrong
             setFeedback('wrong');
             onScore(-30); // Penalty
+            playSound('error');
 
             // Shake animation
             await controls.start({

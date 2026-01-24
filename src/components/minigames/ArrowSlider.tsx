@@ -3,6 +3,7 @@ import { motion, useAnimation, type PanInfo } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { SeededRandom } from '../../utils/seededRandom';
 import { ArrowLeft, ArrowRight, ArrowUp, ArrowDown } from 'lucide-react';
+import { useSound } from '../../contexts/SoundContext';
 
 interface ArrowSliderProps {
     seed: string | null;
@@ -14,6 +15,7 @@ type Color = 'blue' | 'red';
 
 const ArrowSlider: React.FC<ArrowSliderProps> = ({ seed, onScore }) => {
     const { t } = useTranslation();
+    const { playSound } = useSound();
     const [rng, setRng] = useState<SeededRandom | null>(null);
     const [currentDirection, setCurrentDirection] = useState<Direction>('right');
     const [currentColor, setCurrentColor] = useState<Color>('blue');
@@ -97,6 +99,7 @@ const ArrowSlider: React.FC<ArrowSliderProps> = ({ seed, onScore }) => {
             setFeedback('correct');
             onScore(50 + Math.min(scoreCount * 5, 50)); // Bonus for streak/progress
             setScoreCount(prev => prev + 1);
+            playSound('correct');
 
             // Animate out in the swipe direction
             const xMove = swipeDir === 'left' ? -200 : swipeDir === 'right' ? 200 : 0;
@@ -116,6 +119,7 @@ const ArrowSlider: React.FC<ArrowSliderProps> = ({ seed, onScore }) => {
             // Wrong
             setFeedback('wrong');
             onScore(-30);
+            playSound('error');
 
             // Shake animation
             await controls.start({

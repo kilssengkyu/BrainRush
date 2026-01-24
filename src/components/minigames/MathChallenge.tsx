@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { SeededRandom } from '../../utils/seededRandom';
+import { useSound } from '../../contexts/SoundContext';
 
 interface MathChallengeProps {
     seed: string | null;
@@ -10,6 +11,7 @@ interface MathChallengeProps {
 
 const MathChallenge: React.FC<MathChallengeProps> = ({ seed, onScore }) => {
     const { t } = useTranslation();
+    const { playSound } = useSound();
     const [panelIndex, setPanelIndex] = useState(0);
     const [shakeId, setShakeId] = useState<number | null>(null);
     const [animationKey, setAnimationKey] = useState(0);
@@ -137,6 +139,7 @@ const MathChallenge: React.FC<MathChallengeProps> = ({ seed, onScore }) => {
         if (selected === currentProblem.answer) {
             // Correct
             onScore(scoreBase);
+            playSound('correct');
             setTimeout(() => {
                 setPanelIndex(prev => prev + 1);
                 setAnimationKey(prev => prev + 1);
@@ -144,6 +147,7 @@ const MathChallenge: React.FC<MathChallengeProps> = ({ seed, onScore }) => {
         } else {
             // Wrong
             onScore(-scoreBase); // Penalty
+            playSound('error');
             setShakeId(selected);
             setTimeout(() => setShakeId(null), 400);
         }

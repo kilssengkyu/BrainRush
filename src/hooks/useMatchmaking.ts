@@ -74,6 +74,19 @@ export const useMatchmaking = (
                 } else {
                     console.log('Passive Match Detected! Reconnecting/Matching:', passiveMatch.room_id);
                     if (searchInterval.current) clearInterval(searchInterval.current);
+
+                    try {
+                        // Only Authenticated users consume pencils
+                        if (user) {
+                            const { data: consumed } = await supabase.rpc('consume_pencil', { user_id: user.id });
+                            if (!consumed) {
+                                console.error('Failed to consume pencil (Passive)!');
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Pencil consumption error (Passive):', e);
+                    }
+
                     setStatus('matched');
 
                     // Add delay to show "Matched!" modal
@@ -114,6 +127,33 @@ export const useMatchmaking = (
             if (roomId) {
                 console.log('Match Found! Room:', roomId);
                 if (searchInterval.current) clearInterval(searchInterval.current);
+
+                // Match Found -> Consume Pencil
+                // Logic: Only consume if I am the one searching (which I am)?
+                // Wait, both players are searching. Both should consume.
+                // It's safer to consume when entering the room?
+                // Or consume HERE.
+                // If consume fails (0 pencils), what happens?
+                // Ideally we checked BEFORE searching. But race conditions could occur.
+                // Let's force consume.
+
+                try {
+                    // Only Authenticated users consume pencils
+                    if (user) {
+                        const { data: consumed } = await supabase.rpc('consume_pencil', { user_id: user.id });
+                        if (!consumed) {
+                            console.error('Failed to consume pencil! Maybe ran out during search?');
+                            // Should we abort?
+                            // It's rare. Let's let them play but maybe show warning?
+                            // Or abort match? strict: cancelSearch(true); return;
+                            // But match is already made in DB.
+                            // Let's just log for now.
+                        }
+                    }
+                } catch (e) {
+                    console.error('Pencil consumption error:', e);
+                }
+
                 setStatus('matched');
 
                 // Fetch session to determine opponent

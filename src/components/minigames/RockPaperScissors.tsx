@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { SeededRandom } from '../../utils/seededRandom';
+import { useSound } from '../../contexts/SoundContext';
 
 type Move = 'rock' | 'paper' | 'scissors';
 const MOVES: Move[] = ['rock', 'paper', 'scissors'];
@@ -14,6 +15,7 @@ interface RPSProps {
 
 const RockPaperScissors: React.FC<RPSProps> = ({ seed, onScore }) => {
     const { t } = useTranslation();
+    const { playSound } = useSound();
     const [index, setIndex] = useState(0);
     const [shake, setShake] = useState<Move | null>(null);
     const [animationKey, setAnimationKey] = useState(0);
@@ -48,13 +50,14 @@ const RockPaperScissors: React.FC<RPSProps> = ({ seed, onScore }) => {
 
         if (move === correctMove) {
             // Correct!
-            // Play Sound?
-            onScore(20); // 20 Points per correct answer
+            onScore(20);
+            playSound('correct');
             setIndex(prev => prev + 1);
-            setAnimationKey(prev => prev + 1); // Force re-render animation
+            setAnimationKey(prev => prev + 1);
         } else {
             // Wrong!
             onScore(-20); // Penalty
+            playSound('error');
             // Shake effect
             setShake(move);
             setTimeout(() => setShake(null), 400);

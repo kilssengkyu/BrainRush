@@ -59,16 +59,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const fetchProfile = async (userId: string) => {
         try {
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', userId)
-                .single();
+            // Use RPC to get profile AND trigger potential auto-recharge
+            const { error } = await supabase
+                .rpc('get_profile_with_pencils', { user_id: userId });
 
             if (error) {
-                // If profile doesn't exist (e.g. table dropped), create it
-                if (error.code === 'PGRST116') {
-                    console.log('Profile missing, creating new profile for:', userId);
+                // If profile misses, fallback to create
+                // Note: get_profile_with_pencils might fail if row missing entirely? 
+                // Actually the RPC tries to select. If empty, it returns empty?
+                // Let's check error code. If just 'PGRST116' (no rows) or similar.
+
+                console.log('Profile RPC returned error or no data, checking plain fetch...', error);
+
+                // Fallback: Check if profile exists manually to differentiate corruption vs missing
+                const { error: plainError } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', userId)
+                    .single();
+
+                if (plainError && plainError.code === 'PGRST116') {
+                    // Create new profile
+                    console.log('Creating new profile for:', userId);
                     const { data: userData } = await supabase.auth.getUser();
                     if (userData.user) {
                         const newProfile = {
@@ -76,7 +88,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                             email: userData.user.email,
                             nickname: 'Player_' + Math.floor(Math.random() * 9000 + 1000),
                             avatar_url: userData.user.user_metadata?.avatar_url,
-                            created_at: new Date().toISOString()
+                            created_at: new Date().toISOString(),
+                            pencils: 5,
+                            last_recharge_at: new Date().toISOString()
                         };
 
                         const { error: insertError } = await supabase
@@ -86,15 +100,72 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                         if (!insertError) {
                             setProfile(newProfile);
                             return;
-                        } else {
-                            console.error('Failed to create profile:', insertError);
                         }
                     }
                 }
-                console.error('Error fetching profile:', error);
             } else {
-                setProfile(data);
+                // The RPC returns a table of inputs. 
+                // Wait, get_profile_with_pencils returns TABLE(pencils, last_recharge). 
+                // It does NOT return the FULL profile.
+                // We need to merge this with full profile usage.
+
+                // Better approach: Call RPC to sync, THEN select full profile?
+                // OR Update RPC to return full profile.
+                // Modifying RPC is cleaner but 'select *' inside RPC usually returns specific columns unless SETOF profiles.
+
+                // Let's do:
+                // 1. Call RPC to Ensure Sync.
+                // 2. Select * from profiles.
+
+                // Reuse existing logic actually.
             }
+
+            // Revised Logic:
+            // 1. Just select * first.
+            // 2. If present, setProfile.
+            // 3. Then trigger background, non-blocking recharge check?
+            // "get_profile_with_pencils" does READ and WRITE.
+
+            // Let's try:
+            const { error: rpcError } = await supabase.rpc('get_profile_with_pencils', { user_id: userId });
+
+            if (rpcError) {
+                console.error('RPC Error:', rpcError);
+                // Fallback to normal fetch/create logic below
+            }
+
+            // Now fetch full profile (which should have updated values)
+            const { data: fullProfile, error: fetchError } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', userId)
+                .single();
+
+            if (fetchError) {
+                if (fetchError.code === 'PGRST116') {
+                    // Create logic
+                    const { data: userData } = await supabase.auth.getUser();
+                    if (userData.user) {
+                        const newProfile = {
+                            id: userId,
+                            email: userData.user.email,
+                            nickname: 'Player_' + Math.floor(Math.random() * 9000 + 1000),
+                            avatar_url: userData.user.user_metadata?.avatar_url,
+                            created_at: new Date().toISOString(),
+                            pencils: 5,
+                            last_recharge_at: new Date().toISOString()
+                        };
+                        const { error: insertError } = await supabase.from('profiles').insert([newProfile]);
+                        if (!insertError) {
+                            setProfile(newProfile);
+                            return;
+                        }
+                    }
+                }
+            } else {
+                setProfile(fullProfile);
+            }
+
         } catch (error) {
             console.error('Error in fetchProfile:', error);
         } finally {

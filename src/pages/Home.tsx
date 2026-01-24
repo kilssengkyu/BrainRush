@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -8,6 +8,48 @@ import { useSound } from '../contexts/SoundContext';
 import { useAuth } from '../contexts/AuthContext';
 // COUNTRIES import removed as it's no longer needed for direct emoji lookup if we use Flag component
 import Flag from '../components/ui/Flag';
+import AdModal from '../components/ui/AdModal';
+import { supabase } from '../lib/supabaseClient';
+
+// Simple Timer Component
+const RechargeTimer = ({ lastRecharge }: { lastRecharge: string }) => {
+    const [timeLeft, setTimeLeft] = useState<string>('');
+
+    useEffect(() => {
+        const calculateTime = () => {
+            if (!lastRecharge) return;
+            const last = new Date(lastRecharge).getTime();
+            const now = new Date().getTime();
+            const diff = now - last;
+            const tenMinutes = 10 * 60 * 1000;
+
+            // Time passed since last recharge
+            // If we have < 5 pencils, the next one comes at (last_recharge + 10min)
+            // Wait, if multiple intervals passed but not synced? 
+            // The DB syncs on load. We assume 'lastRecharge' is the start of the CURRENT 10m cycle.
+
+            const remaining = tenMinutes - diff;
+
+            if (remaining <= 0) {
+                setTimeLeft('00:00'); // Ready to sync?
+            } else {
+                const m = Math.floor(remaining / 60000);
+                const s = Math.floor((remaining % 60000) / 1000);
+                setTimeLeft(`${m}:${s.toString().padStart(2, '0')}`);
+            }
+        };
+
+        calculateTime();
+        const interval = setInterval(calculateTime, 1000);
+        return () => clearInterval(interval);
+    }, [lastRecharge]);
+
+    return (
+        <span className="ml-2 text-[10px] text-gray-500 font-mono bg-gray-900/50 px-1 rounded">
+            +{timeLeft}
+        </span>
+    );
+};
 
 const Home = () => {
     const navigate = useNavigate();
@@ -53,9 +95,57 @@ const Home = () => {
         visible: { y: 0, opacity: 1 }
     };
 
+    const [showAdModal, setShowAdModal] = useState(false);
+
+    const handleAdReward = async () => {
+        if (!user) return;
+        try {
+            const { error } = await supabase.rpc('reward_ad_pencils', { user_id: user.id });
+            if (!error) {
+                // Success
+                await refreshProfile();
+                // Don't close modal yet, let AdModal show success state
+                playSound('level_complete');
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
     const handleModeSelect = async (mode: string) => {
         playSound('click');
         currentMode.current = mode;
+
+        // Pencil Check Logic
+        // Only for Rank/Online modes? Or all modes?
+        // User requested: "Need a pencil to play game".
+        // Let's enforce for 'rank' and 'normal' (standard online).
+        // Practice might be free? User said "5 pencils given, use 1 per game". Usually implies main loops.
+        // Let's apply to Rank/Normal. Free/Practice is debatable, usually practice is free or costs less.
+        // Let's make Practice FREE for now as it's separate.
+
+        if (mode === 'rank' || mode === 'normal') {
+            if (!user) {
+                if (mode === 'rank') {
+                    navigate('/login');
+                    return;
+                }
+                // Guest playing Normal? Logic for Guest Pencils?
+                // For now, guest has no persistent pencils. Infinite or 0?
+                // Let's assume Guests have infinite or we skip check.
+                // Assuming Authentication is main.
+            } else {
+                // Authenticated: Check Pencils
+                const pencils = profile?.pencils ?? 0;
+                if (pencils < 1) {
+                    // Not enough
+                    playSound('error');
+                    // Show Ad Modal prompting for recharge
+                    setShowAdModal(true);
+                    return;
+                }
+            }
+        }
 
         if (mode === 'rank') {
             if (!user) {
@@ -97,17 +187,48 @@ const Home = () => {
                         </div>
                         <div>
                             <div className="font-bold text-white leading-none flex items-center gap-2">
-                                <Flag code={countryCode} />
-                                {nickname}
-                            </div>
-                            <div className="text-xs text-gray-400 mt-1 flex gap-3">
-                                <span className="text-blue-400">{t('user.level')} {level}</span>
-                                <span className="text-purple-400">{t('user.rank')} {rank}</span>
+                                <div>
+                                    <div className="font-bold text-white leading-none flex items-center gap-2">
+                                        <Flag code={countryCode} />
+                                        {nickname}
+                                    </div>
+                                    <div className="text-xs text-gray-400 mt-1 flex gap-3">
+                                        <span className="text-blue-400">{t('user.level')} {level}</span>
+                                        <span className="text-purple-400">{t('user.rank')} {rank}</span>
+                                    </div>
+                                    {/* Pencil Display */}
+                                    <button
+                                        onClick={() => setShowAdModal(true)}
+                                        className="text-xs text-gray-300 mt-1 flex items-center gap-1 hover:bg-white/10 px-2 py-1 rounded transition-colors"
+                                    >
+                                        <span>✏️</span>
+                                        <span className={profile?.pencils < 1 ? "text-red-400 font-bold" : "text-yellow-400 font-bold"}>
+                                            {profile?.pencils ?? 5}
+                                        </span>
+                                        <span className="text-gray-500">/ 5</span>
+
+                                        {profile?.pencils < 5 && (
+                                            <RechargeTimer lastRecharge={profile?.last_recharge_at} />
+                                        )}
+                                        {profile?.pencils < 5 && (
+                                            <div className="ml-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center text-[10px] text-white animate-pulse">
+                                                +
+                                            </div>
+                                        )}
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </motion.div>
             )}
+
+            {/* Ad Modal */}
+            <AdModal
+                isOpen={showAdModal}
+                onClose={() => setShowAdModal(false)}
+                onReward={handleAdReward}
+            />
 
             {/* Matchmaking Overlay */}
             <AnimatePresence>
