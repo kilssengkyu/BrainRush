@@ -24,6 +24,8 @@ const MINIGAMES = [
     { id: 'UPDOWN', title: 'updown.title', icon: null, defaultIcon: <Hash className="w-8 h-8 text-lime-400" />, type: 'brain' },
     { id: 'SLIDER', title: 'slider.title', icon: null, defaultIcon: <Hash className="w-8 h-8 text-amber-400" />, type: 'brain' },
     { id: 'ARROW', title: 'arrow.title', icon: null, defaultIcon: <MousePointer2 className="w-8 h-8 text-sky-400" />, type: 'speed' },
+    { id: 'BLANK', title: 'fillBlanks.title', icon: null, defaultIcon: <Brain className="w-8 h-8 text-teal-300" />, type: 'brain' },
+    { id: 'OPERATOR', title: 'findOperator.title', icon: null, defaultIcon: <Brain className="w-8 h-8 text-indigo-300" />, type: 'brain' },
 ];
 
 const PracticeMode = () => {

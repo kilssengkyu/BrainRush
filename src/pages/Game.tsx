@@ -17,6 +17,8 @@ import FindPair from '../components/minigames/FindPair';
 import NumberUpDown from '../components/minigames/NumberUpDown';
 import NumberSlider from '../components/minigames/NumberSlider';
 import ArrowSlider from '../components/minigames/ArrowSlider';
+import FillBlanks from '../components/minigames/FillBlanks';
+import FindOperator from '../components/minigames/FindOperator';
 import ScoreProgressBar from '../components/ui/ScoreProgressBar';
 import Flag from '../components/ui/Flag';
 
@@ -35,7 +37,9 @@ const Game: React.FC = () => {
     const [opponentProfile, setOpponentProfile] = useState<any>(null);
 
     // Game Hook
-    const { gameState, incrementScore, serverOffset, isWaitingTimeout, isTimeUp } = useGameState(roomId!, myId, opponentId);
+    const { gameState, incrementScore, serverOffset, isWaitingTimeout, isTimeUp, onlineUsers } = useGameState(roomId!, myId, opponentId);
+
+    const isOpponentOnline = !opponentId || opponentId.startsWith('practice') || onlineUsers.includes(opponentId);
 
     useEffect(() => {
         if (!roomId) {
@@ -192,7 +196,7 @@ const Game: React.FC = () => {
                 </div>
 
                 {/* Opponent Profile - Hide in Solo Practice */}
-                <div className="flex items-center justify-end gap-4 w-1/3 text-right pt-2">
+                <div className="flex items-center justify-end gap-4 w-1/3 text-right pt-2 relative">
                     {opponentProfile && (
                         <>
                             <div>
@@ -204,7 +208,14 @@ const Game: React.FC = () => {
                                     {gameState.opScore.toLocaleString()}
                                 </div>
                             </div>
-                            <img src={opponentProfile?.avatar_url || '/default-avatar.png'} className="w-12 h-12 rounded-full border-2 border-red-500" />
+                            <div className="relative">
+                                <img src={opponentProfile?.avatar_url || '/default-avatar.png'} className={`w-12 h-12 rounded-full border-2 ${!isOpponentOnline ? 'border-gray-500 grayscale opacity-50' : 'border-red-500'}`} />
+                                {!isOpponentOnline && gameState.status !== 'finished' && (
+                                    <div className="absolute -bottom-2 -right-2 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded animate-pulse border border-red-400 whitespace-nowrap z-50">
+                                        DISCONNECT
+                                    </div>
+                                )}
+                            </div>
                         </>
                     )}
                     {!opponentProfile && gameState.mode === 'practice' && (
@@ -314,6 +325,8 @@ const Game: React.FC = () => {
                                                 {gameState.gameType === 'UPDOWN' && t('updown.title')}
                                                 {gameState.gameType === 'SLIDER' && t('slider.title')}
                                                 {gameState.gameType === 'ARROW' && t('arrow.title')}
+                                                {gameState.gameType === 'BLANK' && t('fillBlanks.title')}
+                                                {gameState.gameType === 'OPERATOR' && t('findOperator.title')}
                                             </h2>
                                             <p className="text-2xl text-white mb-12 font-bold max-w-2xl">
                                                 {gameState.gameType === 'RPS' && t('rps.instruction')}
@@ -330,6 +343,8 @@ const Game: React.FC = () => {
                                                 {gameState.gameType === 'UPDOWN' && t('updown.instruction')}
                                                 {gameState.gameType === 'SLIDER' && t('slider.instruction')}
                                                 {gameState.gameType === 'ARROW' && t('arrow.instruction')}
+                                                {gameState.gameType === 'BLANK' && t('fillBlanks.instruction')}
+                                                {gameState.gameType === 'OPERATOR' && t('findOperator.instruction')}
                                             </p>
 
                                             <div className="text-9xl font-black font-mono text-white animate-pulse">
@@ -408,6 +423,12 @@ const Game: React.FC = () => {
                             )}
                             {gameState.gameType === 'ARROW' && (
                                 <ArrowSlider seed={gameState.seed} onScore={incrementScore} />
+                            )}
+                            {gameState.gameType === 'BLANK' && (
+                                <FillBlanks seed={gameState.seed} onScore={incrementScore} />
+                            )}
+                            {gameState.gameType === 'OPERATOR' && (
+                                <FindOperator seed={gameState.seed} onScore={incrementScore} />
                             )}
                         </div>
                     </motion.div>

@@ -9,7 +9,14 @@
         "close": "Close",
         "retry": "Retry",
         "loading": "Loading...",
-        "add": "Add"
+        "add": "Add",
+        "timeAgo": {
+            "justNow": "Just now",
+            "minute": "{{count}}m ago",
+            "hour": "{{count}}h ago",
+            "day": "{{count}}d ago",
+            "longAgo": "Long ago"
+        }
     },
     "social": {
         "friends": "Friends",
@@ -51,6 +58,7 @@
             "title": "Rank Mode",
             "subtitle": "Compete globally"
         },
+        "all": "All",
         "friendly": {
             "title": "Friendly Mode",
             "subtitle": "1vs1 with Friends"
@@ -82,6 +90,7 @@
         "selectCountry": "Select Country",
         "edit": "Edit",
         "record": "Record",
+        "noRecord": "No match history.",
         "disconnects": "Disconnects",
         "updateSuccess": "Profile updated successfully!",
         "updateFail": "Failed to update profile",
@@ -202,5 +211,13 @@
         "blue": "Blue = Same",
         "red": "Red = Opposite",
         "instruction": "Swipe Blue direction, or Opposite for Red!"
+    },
+    "fillBlanks": {
+        "title": "FILL BLANKS",
+        "instruction": "Find the missing number"
+    },
+    "findOperator": {
+        "title": "FIND OPERATOR",
+        "instruction": "Choose the correct sign"
     }
 }

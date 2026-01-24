@@ -1,14 +1,50 @@
 @import "tailwindcss";
 
 /* 모바일 스크롤 바운스 및 당겨서 새로고침 방지 */
-html, body {
+html,
+body {
   overflow: hidden;
   overscroll-behavior: none;
-  touch-action: manipulation; /* 핀치 줌 허용 여부는 meta 태그와 함께 고려 */
+  touch-action: manipulation;
+  /* 핀치 줌 허용 여부는 meta 태그와 함께 고려 */
   height: 100%;
 }
 
 #root {
   height: 100%;
-  overflow: hidden; /* 내부 스크롤이 필요한 경우 자식 요소에서 처리 */
+  overflow: hidden;
+  /* 내부 스크롤이 필요한 경우 자식 요소에서 처리 */
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
 }

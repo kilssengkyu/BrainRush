@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
 export interface GameState {
     status: 'waiting' | 'playing' | 'finished';
-    gameType: 'RPS' | 'NUMBER' | 'MATH' | 'TEN' | 'COLOR' | 'MEMORY' | 'SEQUENCE' | 'LARGEST' | 'PAIR' | 'UPDOWN' | 'SEQUENCE_NORMAL' | 'NUMBER_DESC' | 'SLIDER' | 'ARROW' | null;
+    gameType: 'RPS' | 'NUMBER' | 'MATH' | 'TEN' | 'COLOR' | 'MEMORY' | 'SEQUENCE' | 'LARGEST' | 'PAIR' | 'UPDOWN' | 'SEQUENCE_NORMAL' | 'NUMBER_DESC' | 'SLIDER' | 'ARROW' | 'BLANK' | 'OPERATOR' | null;
     seed: string | null;
     startAt: string | null;
     endAt: string | null;
@@ -63,11 +63,30 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
     }, []);
 
     // --- Host Logic ---
+    // --- Host Logic (Dynamic Failover) ---
     const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
-    const isHostUser = (() => {
-        if (onlineUsers.length > 0) return myId < opponentId;
-        return myId < opponentId; // Fallback
-    })();
+
+    const sortedParticipants = useMemo(() => {
+        // Filter only current participants and sort
+        return onlineUsers.filter(id => id === myId || id === opponentId).sort();
+    }, [onlineUsers, myId, opponentId]);
+
+    const isHostUser = useMemo(() => {
+        // 1. Practice/Bot modes: Always Host
+        if (opponentId === 'practice_solo' || opponentId === 'practice_bot') return true;
+
+        // 2. Initial state safety (if presence not synced yet): Fallback to ID comparison
+        if (onlineUsers.length === 0) return myId < opponentId;
+
+        // 3. One player left: That player is Host (Opponent Disconnected)
+        if (sortedParticipants.length === 1 && sortedParticipants[0] === myId) return true;
+
+        // 4. Both online: First sorted ID is Host
+        if (sortedParticipants.length > 0) return sortedParticipants[0] === myId;
+
+        // Fallback
+        return myId < opponentId;
+    }, [onlineUsers, myId, opponentId, sortedParticipants]);
 
     // --- Game Loop Update ---
     const handleUpdate = useCallback((record: any) => {
@@ -315,5 +334,5 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
         console.log('Resetting isFinishing flag and scoreRef for new round/game type');
     }, [gameState.currentRound, gameState.gameType, gameState.status]);
 
-    return { gameState, incrementScore, serverOffset, isWaitingTimeout, isTimeUp };
+    return { gameState, incrementScore, serverOffset, isWaitingTimeout, isTimeUp, onlineUsers };
 };
