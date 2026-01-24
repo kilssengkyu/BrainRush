@@ -39,7 +39,7 @@ const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onClose }) 
         setLoading(true);
         try {
             const { data, error } = await supabase.rpc('get_leaderboard', {
-                p_user_id: user?.id || null
+                p_user_id: user?.id ?? null
             });
 
             if (error) throw error;
