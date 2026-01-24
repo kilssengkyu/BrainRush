@@ -19,6 +19,8 @@ import NumberSlider from '../components/minigames/NumberSlider';
 import ArrowSlider from '../components/minigames/ArrowSlider';
 import FillBlanks from '../components/minigames/FillBlanks';
 import FindOperator from '../components/minigames/FindOperator';
+import LadderGame from '../components/minigames/LadderGame';
+import TapTheColor from '../components/minigames/TapTheColor';
 import ScoreProgressBar from '../components/ui/ScoreProgressBar';
 import Flag from '../components/ui/Flag';
 
@@ -327,6 +329,7 @@ const Game: React.FC = () => {
                                                 {gameState.gameType === 'ARROW' && t('arrow.title')}
                                                 {gameState.gameType === 'BLANK' && t('fillBlanks.title')}
                                                 {gameState.gameType === 'OPERATOR' && t('findOperator.title')}
+                                                {gameState.gameType === 'LADDER' && t('ladder.title')}
                                             </h2>
                                             <p className="text-2xl text-white mb-12 font-bold max-w-2xl">
                                                 {gameState.gameType === 'RPS' && t('rps.instruction')}
@@ -345,6 +348,7 @@ const Game: React.FC = () => {
                                                 {gameState.gameType === 'ARROW' && t('arrow.instruction')}
                                                 {gameState.gameType === 'BLANK' && t('fillBlanks.instruction')}
                                                 {gameState.gameType === 'OPERATOR' && t('findOperator.instruction')}
+                                                {gameState.gameType === 'LADDER' && t('ladder.instruction')}
                                             </p>
 
                                             <div className="text-9xl font-black font-mono text-white animate-pulse">
@@ -429,6 +433,12 @@ const Game: React.FC = () => {
                             )}
                             {gameState.gameType === 'OPERATOR' && (
                                 <FindOperator seed={gameState.seed} onScore={incrementScore} />
+                            )}
+                            {gameState.gameType === 'LADDER' && (
+                                <LadderGame seed={gameState.seed} onScore={incrementScore} />
+                            )}
+                            {gameState.gameType === 'TAP_COLOR' && (
+                                <TapTheColor seed={gameState.seed} onScore={incrementScore} />
                             )}
                         </div>
                     </motion.div>

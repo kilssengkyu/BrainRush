@@ -8,6 +8,7 @@ import {
     Hexagon, Octagon, Box, Ghost, Crown
 } from 'lucide-react';
 import { SeededRandom } from '../../utils/seededRandom';
+import { useSound } from '../../contexts/SoundContext';
 
 interface FindPairProps {
     seed: string | null;
@@ -34,6 +35,7 @@ interface CardItem {
 
 const FindPair: React.FC<FindPairProps> = ({ seed, onScore }) => {
     const { t } = useTranslation();
+    const { playSound } = useSound();
     const [round, setRound] = useState(1);
     const [shakeIds, setShakeIds] = useState<string[]>([]);
     const [clearedIds, setClearedIds] = useState<string[]>([]);
@@ -142,6 +144,7 @@ const FindPair: React.FC<FindPairProps> = ({ seed, onScore }) => {
             } else {
                 // 오답
                 onScore(-20);
+                playSound('error');
                 setShakeIds(newSelected);
                 setTimeout(() => {
                     setShakeIds([]);

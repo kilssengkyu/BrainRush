@@ -26,6 +26,8 @@ const MINIGAMES = [
     { id: 'ARROW', title: 'arrow.title', icon: null, defaultIcon: <MousePointer2 className="w-8 h-8 text-sky-400" />, type: 'speed' },
     { id: 'BLANK', title: 'fillBlanks.title', icon: null, defaultIcon: <Brain className="w-8 h-8 text-teal-300" />, type: 'brain' },
     { id: 'OPERATOR', title: 'findOperator.title', icon: null, defaultIcon: <Brain className="w-8 h-8 text-indigo-300" />, type: 'brain' },
+    { id: 'LADDER', title: 'ladder.title', icon: null, defaultIcon: <Brain className="w-8 h-8 text-yellow-300" />, type: 'brain' },
+    { id: 'TAP_COLOR', title: 'tapTheColor.title', icon: null, defaultIcon: <Brain className="w-8 h-8 text-pink-300" />, type: 'brain' },
 ];
 
 const PracticeMode = () => {

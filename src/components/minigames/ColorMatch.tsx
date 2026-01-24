@@ -1,7 +1,8 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { SeededRandom } from '../../utils/seededRandom';
+import { useSound } from '../../contexts/SoundContext';
 
 interface ColorMatchProps {
     seed: string | null;
@@ -19,6 +20,7 @@ const COLORS: Record<ColorType, { tailwind: string; hex: string }> = {
 
 const ColorMatch: React.FC<ColorMatchProps> = ({ seed, onScore }) => {
     const { t } = useTranslation();
+    const { playSound } = useSound();
     const [panelIndex, setPanelIndex] = useState(0);
     const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
     const [shakeId, setShakeId] = useState<number | null>(null);
@@ -72,48 +74,62 @@ const ColorMatch: React.FC<ColorMatchProps> = ({ seed, onScore }) => {
         if (!currentPanel || isSolved) return;
         if (selectedIndices.has(index)) return;
 
+        // Toggle selection
+        const newSelected = new Set(selectedIndices);
+        if (newSelected.has(index)) {
+            newSelected.delete(index);
+        } else {
+            newSelected.add(index);
+        }
+        setSelectedIndices(newSelected);
+
         const item = currentPanel.items[index];
 
+        // Check Logic - Actually ColorMatch logic usually isn't "click one by one to verify".
+        // It's "Select all Red things".
+        // If I click a WRONG item, it should penalize immediately? or just toggle?
+        // Instruction says: "Select all [Red] items".
+        // Usually clicking a wrong item acts as penalty.
+
         if (item.isMatch) {
-            // Correct click
-            if (!selectedIndices.has(index)) {
-                const newSet = new Set(selectedIndices);
-                newSet.add(index);
-                setSelectedIndices(newSet);
+            // Correct item selected. Check if ALL are selected.
+            const correctIndices = currentPanel.items
+                .map((it, idx) => it.isMatch ? idx : -1)
+                .filter(idx => idx !== -1);
+
+            // We need to check if the CURRENT selection state (after update) is complete.
+            // But wait, React state update is async.
+            // Let's check based on `newSelected`.
+
+            const allCorrectSelected = correctIndices.every(idx => newSelected.has(idx));
+            const noWrongSelected = Array.from(newSelected).every(idx => currentPanel.items[idx].isMatch);
+
+            if (allCorrectSelected && noWrongSelected) {
+                // Level Complete
+                setIsSolved(true);
+                onScore(100);
+
+                setTimeout(() => {
+                    setPanelIndex(prev => prev + 1);
+                    setSelectedIndices(new Set());
+                    setIsSolved(false);
+                    setAnimationKey(prev => prev + 1);
+                }, 250);
             }
         } else {
-            // Wrong click -> Penalty & Shake
+            // Wrong item selected!
+            // Penalty
+            onScore(-20);
+            playSound('error');
             setShakeId(index);
-            onScore(-20); // Small penalty
             setTimeout(() => setShakeId(null), 400);
+
+            // Should we allow it to stay selected? Probably not if it's "Wrong".
+            // Deselect it
+            newSelected.delete(index);
+            setSelectedIndices(newSelected);
         }
     };
-
-    // Check Completion
-    useEffect(() => {
-        if (!currentPanel || isSolved) return;
-
-        const correctIndices = currentPanel.items
-            .map((item, idx) => item.isMatch ? idx : -1)
-            .filter(idx => idx !== -1);
-
-        const allCorrectSelected = correctIndices.every(idx => selectedIndices.has(idx));
-        const noWrongSelected = Array.from(selectedIndices).every(idx => currentPanel.items[idx].isMatch);
-
-        if (allCorrectSelected && noWrongSelected) {
-            // Level Complete
-            setIsSolved(true);
-            onScore(100);
-
-            setTimeout(() => {
-                setPanelIndex(prev => prev + 1);
-                setSelectedIndices(new Set());
-                setIsSolved(false);
-                setAnimationKey(prev => prev + 1);
-            }, 250);
-        }
-
-    }, [selectedIndices, currentPanel, isSolved, onScore]);
 
     if (!currentPanel) return <div className="text-white">{t('common.loading')}</div>;
 

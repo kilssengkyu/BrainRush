@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { SeededRandom } from '../../utils/seededRandom';
 
+import { useSound } from '../../contexts/SoundContext';
+
 interface FindOperatorProps {
     seed: string | null;
     onScore: (amount: number) => void;
@@ -10,6 +12,7 @@ interface FindOperatorProps {
 
 const FindOperator: React.FC<FindOperatorProps> = ({ seed, onScore }) => {
     const { t } = useTranslation();
+    const { playSound } = useSound();
     const [panelIndex, setPanelIndex] = useState(0);
     const [shakeId, setShakeId] = useState<string | null>(null);
     const [animationKey, setAnimationKey] = useState(0);
@@ -114,6 +117,7 @@ const FindOperator: React.FC<FindOperatorProps> = ({ seed, onScore }) => {
         } else {
             // Wrong
             onScore(-scoreBase); // Penalty
+            playSound('error');
             setShakeId(selected);
             setTimeout(() => setShakeId(null), 400);
         }

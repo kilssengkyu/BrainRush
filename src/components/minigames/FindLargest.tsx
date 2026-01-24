@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { SeededRandom } from '../../utils/seededRandom';
+import { useSound } from '../../contexts/SoundContext';
 
 type Operator = '+' | '-' | '*' | '/';
 
@@ -45,6 +46,7 @@ const formatExpression = (raw: string) => raw;
 
 const FindLargest: React.FC<FindLargestProps> = ({ seed, onScore }) => {
     const { t } = useTranslation();
+    const { playSound } = useSound();
     const [panelIndex, setPanelIndex] = useState(0);
     const [shakeId, setShakeId] = useState<string | null>(null);
     const [animationKey, setAnimationKey] = useState(0);
@@ -52,7 +54,7 @@ const FindLargest: React.FC<FindLargestProps> = ({ seed, onScore }) => {
     const currentProblem = useMemo(() => {
         if (!seed) return null;
 
-        const rng = new SeededRandom(`${seed}_largest_${panelIndex}`);
+        const rng = new SeededRandom(`${seed}_largest_${panelIndex} `);
         const level = getLevel(panelIndex);
         const config = LEVELS[level];
 
@@ -69,7 +71,7 @@ const FindLargest: React.FC<FindLargestProps> = ({ seed, onScore }) => {
             const b = rng.nextInt(range[0], range[1] + 1);
             const c = rng.nextInt(range[0], range[1] + 1);
 
-            const expression = `${a} ${op1} ${b} ${op2} ${c}`;
+            const expression = `${a} ${op1} ${b} ${op2} ${c} `;
 
             // Basic eval with precedence
             // Manual calc to avoid dangerous eval or complex parser
@@ -104,21 +106,21 @@ const FindLargest: React.FC<FindLargestProps> = ({ seed, onScore }) => {
             if (op === '+') {
                 const a = rng.nextInt(config.addRange[0], config.addRange[1] + 1);
                 const b = rng.nextInt(config.addRange[0], config.addRange[1] + 1);
-                return { expression: `${a} + ${b}`, value: a + b };
+                return { expression: `${a} + ${b} `, value: a + b };
             }
 
             if (op === '-') {
                 let a = rng.nextInt(config.addRange[0], config.addRange[1] + 1);
                 let b = rng.nextInt(config.addRange[0], config.addRange[1] + 1);
                 if (b > a) [a, b] = [b, a];
-                return { expression: `${a} - ${b}`, value: a - b };
+                return { expression: `${a} - ${b} `, value: a - b };
             }
 
             if (op === '*') {
                 const [minMul, maxMul] = config.mulRange || [2, 8];
                 const a = rng.nextInt(minMul, maxMul + 1);
                 const b = rng.nextInt(minMul, maxMul + 1);
-                return { expression: `${a} * ${b}`, value: a * b };
+                return { expression: `${a} * ${b} `, value: a * b };
             }
 
             const divRange = config.divRange || { quotient: [3, 12], divisor: [2, 9] };
@@ -184,6 +186,7 @@ const FindLargest: React.FC<FindLargestProps> = ({ seed, onScore }) => {
             }, 150);
         } else {
             onScore(-scoreBase);
+            playSound('error');
             setShakeId(option.id);
             setTimeout(() => setShakeId(null), 400);
         }

@@ -7,6 +7,7 @@ import {
     Umbrella, Anchor, Music, Camera, Gift
 } from 'lucide-react';
 import { SeededRandom } from '../../utils/seededRandom';
+import { useSound } from '../../contexts/SoundContext';
 
 interface MemoryMatchProps {
     seed: string; // Used to sync randomization if needed (though local random is often fine for logic if not strict PVP lockstep)
@@ -28,6 +29,7 @@ const ICONS = [
 
 const MemoryMatch: React.FC<MemoryMatchProps> = ({ seed, onScore }) => {
     const { t } = useTranslation();
+    const { playSound } = useSound();
     const [stage, setStage] = useState(1);
     const [cards, setCards] = useState<Card[]>([]);
     const [gameState, setGameState] = useState<'MEMORIZING' | 'PLAYING' | 'CLEARED'>('MEMORIZING');
@@ -103,6 +105,7 @@ const MemoryMatch: React.FC<MemoryMatchProps> = ({ seed, onScore }) => {
         } else {
             // No Match
             onScore(-20);
+            playSound('error');
 
             // Auto close fast
             setTimeout(() => {

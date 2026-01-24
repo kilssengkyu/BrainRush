@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { SeededRandom } from '../../utils/seededRandom';
+import { useSound } from '../../contexts/SoundContext';
 
 interface NumberSliderProps {
     seed: string | null;
@@ -17,6 +18,7 @@ interface Cell {
 
 const NumberSlider: React.FC<NumberSliderProps> = ({ seed, onScore }) => {
     const { t } = useTranslation();
+    const { playSound } = useSound();
     const [grid, setGrid] = useState<Cell[]>([]);
     const [target, setTarget] = useState<number>(0);
     const [selectedCells, setSelectedCells] = useState<Cell[]>([]);
@@ -115,6 +117,7 @@ const NumberSlider: React.FC<NumberSliderProps> = ({ seed, onScore }) => {
             setSelectedCells(newSelection);
             setCurrentSum(sum);
             triggerFeedback('wrong', newSelection);
+            playSound('error');
         } else {
             setSelectedCells(newSelection);
             setCurrentSum(sum);
@@ -158,6 +161,7 @@ const NumberSlider: React.FC<NumberSliderProps> = ({ seed, onScore }) => {
             }, 100);
         } else {
             onScore(-20); // Penalty
+            playSound('error');
             setTimeout(() => {
                 resetSelection();
             }, 500);

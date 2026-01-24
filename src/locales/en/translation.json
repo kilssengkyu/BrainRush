@@ -219,5 +219,14 @@
     "findOperator": {
         "title": "FIND OPERATOR",
         "instruction": "Choose the correct sign"
+    },
+    "ladder": {
+        "title": "Ladder Game",
+        "instruction": "Follow the path!"
+    },
+    "tapTheColor": {
+        "title": "Tap the Color",
+        "memorize": "Memorize the colors!",
+        "remembered": "Ready!"
     }
 }
