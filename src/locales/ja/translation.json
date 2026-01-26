@@ -215,5 +215,13 @@
     "mostColor": {
         "title": "最多色探し",
         "instruction": "一番多い色をタップ！"
+    },
+    "sorting": {
+        "title": "仕分けゲーム",
+        "instruction": "同じなら同じ方向、違うなら逆方向へ！",
+        "firstMoveHint": "最初はどちらでもOK！",
+        "prev": "前回",
+        "sameRule": "同じ！同じ方向へ！",
+        "diffRule": "違う！逆方向へ！"
     }
 }

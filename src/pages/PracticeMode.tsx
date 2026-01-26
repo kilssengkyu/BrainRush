@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Play, Zap, Brain, Hash, MousePointer2 } from 'lucide-react';
+import { ArrowLeft, Play, Zap, Brain, Hash, MousePointer2, Star } from 'lucide-react';
 import { useSound } from '../contexts/SoundContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useUI } from '../contexts/UIContext';
@@ -30,6 +30,7 @@ const MINIGAMES = [
     { id: 'TAP_COLOR', title: 'tapTheColor.title', icon: null, defaultIcon: <Brain className="w-8 h-8 text-pink-300" />, type: 'brain' },
     { id: 'AIM', title: 'aim.title', icon: null, defaultIcon: <MousePointer2 className="w-8 h-8 text-red-500" />, type: 'speed' },
     { id: 'MOST_COLOR', title: 'mostColor.title', icon: null, defaultIcon: <Zap className="w-8 h-8 text-yellow-500" />, type: 'speed' },
+    { id: 'SORTING', title: 'sorting.title', icon: null, defaultIcon: <Star className="w-8 h-8 text-purple-500" />, type: 'brain' },
 ];
 
 const PracticeMode = () => {

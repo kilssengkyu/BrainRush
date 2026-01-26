@@ -214,5 +214,13 @@
     "mostColor": {
         "title": "寻找最多颜色",
         "instruction": "点击出现最多的颜色！"
+    },
+    "sorting": {
+        "title": "分类游戏",
+        "instruction": "符号相同同向滑，不同反向滑！",
+        "firstMoveHint": "第一张随意滑！",
+        "prev": "上一个",
+        "sameRule": "相同！同向滑动！",
+        "diffRule": "不同！反向滑动！"
     }
 }

@@ -23,6 +23,7 @@ import LadderGame from '../components/minigames/LadderGame';
 import TapTheColor from '../components/minigames/TapTheColor';
 import AimingGame from '../components/minigames/AimingGame';
 import FindMostColor from '../components/minigames/FindMostColor';
+import SortingGame from '../components/minigames/SortingGame';
 import ScoreProgressBar from '../components/ui/ScoreProgressBar';
 import Flag from '../components/ui/Flag';
 
@@ -334,6 +335,7 @@ const Game: React.FC = () => {
                                                 {gameState.gameType === 'LADDER' && t('ladder.title')}
                                                 {gameState.gameType === 'AIM' && t('aim.title')}
                                                 {gameState.gameType === 'MOST_COLOR' && t('mostColor.title')}
+                                                {gameState.gameType === 'SORTING' && t('sorting.title')}
                                             </h2>
                                             <p className="text-2xl text-white mb-12 font-bold max-w-2xl">
                                                 {gameState.gameType === 'RPS' && t('rps.instruction')}
@@ -355,6 +357,7 @@ const Game: React.FC = () => {
                                                 {gameState.gameType === 'LADDER' && t('ladder.instruction')}
                                                 {gameState.gameType === 'AIM' && t('aim.instruction')}
                                                 {gameState.gameType === 'MOST_COLOR' && t('mostColor.instruction')}
+                                                {gameState.gameType === 'SORTING' && t('sorting.instruction')}
                                             </p>
 
                                             <div className="text-9xl font-black font-mono text-white animate-pulse">
@@ -451,6 +454,9 @@ const Game: React.FC = () => {
                             )}
                             {gameState.gameType === 'MOST_COLOR' && (
                                 <FindMostColor seed={gameState.seed} onScore={incrementScore} />
+                            )}
+                            {gameState.gameType === 'SORTING' && (
+                                <SortingGame seed={gameState.seed} onScore={incrementScore} />
                             )}
                         </div>
                     </motion.div>
