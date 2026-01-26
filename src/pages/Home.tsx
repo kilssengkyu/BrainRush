@@ -274,7 +274,7 @@ const Home = () => {
                                     <p className="text-2xl font-mono text-white mb-2">
                                         {Math.floor(elapsedTime / 60)}:{(elapsedTime % 60).toString().padStart(2, '0')}
                                     </p>
-                                    <p className="text-sm text-blue-400 mb-8 font-mono">Range: ±{searchRange}</p>
+                                    <p className="text-sm text-blue-400 mb-8 font-mono">{t('matchmaking.range')}: ±{searchRange}</p>
                                     <button
                                         onClick={() => { playSound('click'); cancelSearch(); }}
                                         className="px-6 py-3 rounded-xl bg-gray-700 hover:bg-gray-600 font-bold transition-colors"

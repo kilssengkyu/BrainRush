@@ -163,7 +163,7 @@ const ReverseSequence: React.FC<ReverseSequenceProps> = ({ seed, onScore, isPlay
             <div className="h-8 mb-8">
                 {phase === 'SHOWING' && <span className="text-yellow-400 font-bold animate-pulse">{t('sequence.instruction')}</span>}
                 {phase === 'INPUT' && <span className="text-green-400 font-bold">{t('sequence.instruction')}</span>}
-                {phase === 'SUCCESS' && <span className="text-blue-400 font-bold">Great!</span>}
+                {phase === 'SUCCESS' && <span className="text-blue-400 font-bold">{t('game.great')}</span>}
             </div>
 
             <div className="grid grid-cols-3 gap-4 w-72 h-72">

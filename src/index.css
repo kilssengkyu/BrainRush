@@ -1,5 +1,22 @@
 @import "tailwindcss";
 
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    /* Remove gray tap box */
+    touch-action: manipulation;
+    /* Improve touch response */
+  }
+
+  body {
+    overscroll-behavior-y: none;
+    /* Prevent pull-to-refresh effect */
+    user-select: none;
+    /* Prevent text selection */
+    -webkit-user-select: none;
+  }
+}
+
 /* 모바일 스크롤 바운스 및 당겨서 새로고침 방지 */
 html,
 body {

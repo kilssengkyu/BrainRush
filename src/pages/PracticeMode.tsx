@@ -28,6 +28,8 @@ const MINIGAMES = [
     { id: 'OPERATOR', title: 'findOperator.title', icon: null, defaultIcon: <Brain className="w-8 h-8 text-indigo-300" />, type: 'brain' },
     { id: 'LADDER', title: 'ladder.title', icon: null, defaultIcon: <Brain className="w-8 h-8 text-yellow-300" />, type: 'brain' },
     { id: 'TAP_COLOR', title: 'tapTheColor.title', icon: null, defaultIcon: <Brain className="w-8 h-8 text-pink-300" />, type: 'brain' },
+    { id: 'AIM', title: 'aim.title', icon: null, defaultIcon: <MousePointer2 className="w-8 h-8 text-red-500" />, type: 'speed' },
+    { id: 'MOST_COLOR', title: 'mostColor.title', icon: null, defaultIcon: <Zap className="w-8 h-8 text-yellow-500" />, type: 'speed' },
 ];
 
 const PracticeMode = () => {
@@ -45,7 +47,7 @@ const PracticeMode = () => {
 
     const handleGameSelect = async (gameId: string) => {
         if (!user) {
-            showToast(t('auth.loginRequired', '로그인이 필요합니다.'), 'error');
+            showToast(t('auth.loginRequired'), 'error');
             return;
         }
 
@@ -73,7 +75,7 @@ const PracticeMode = () => {
 
         } catch (error: any) {
             console.error('Error starting practice:', error);
-            showToast(t('common.error', '오류가 발생했습니다.'), 'error');
+            showToast(t('common.error'), 'error');
         } finally {
             setLoading(false);
         }
