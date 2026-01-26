@@ -207,5 +207,13 @@
         "title": "カラータップ",
         "memorize": "色の位置を覚えてください！",
         "remembered": "覚えた！"
+    },
+    "aim": {
+        "title": "エイムゲーム",
+        "instruction": "赤を撃て！青は避けて！"
+    },
+    "mostColor": {
+        "title": "最多色探し",
+        "instruction": "一番多い色をタップ！"
     }
 }

@@ -183,7 +183,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         let customDeepLinkHandler: ((event: CustomEvent) => void) | null = null;
 
         const handleDeepLink = async (urlString: string) => {
-            console.log('Processing Deep Link:', urlString);
+            console.log('Processing Deep Link:', urlString.substring(0, 50) + '...');
             try {
                 const url = new URL(urlString);
                 const hashParams = new URLSearchParams(url.hash.substring(1));

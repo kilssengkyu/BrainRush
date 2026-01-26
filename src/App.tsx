@@ -50,6 +50,8 @@ import PracticeMode from './pages/PracticeMode';
 import GameInviteListener from './components/social/GameInviteListener';
 
 
+import BGMManager from './components/audio/BGMManager';
+
 function App() {
   return (
     <SoundProvider>
@@ -57,6 +59,7 @@ function App() {
         <UIProvider>
           <BrowserRouter>
             <BackButtonHandler />
+            <BGMManager />
             <GameInviteListener />
             <Routes>
               <Route path="/" element={<Home />} />

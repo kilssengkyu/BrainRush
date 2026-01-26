@@ -238,5 +238,13 @@
     "title": "색깔 터치",
     "memorize": "색깔의 위치를 기억하세요!",
     "remembered": "기억 했음!"
+  },
+  "aim": {
+    "title": "조준 사격",
+    "instruction": "빨간색은 맞추고, 파란색은 피하세요!"
+  },
+  "mostColor": {
+    "title": "색깔 탐색",
+    "instruction": "가장 많이 보이는 색을 찾으세요!"
   }
 }

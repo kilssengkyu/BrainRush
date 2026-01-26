@@ -240,5 +240,13 @@
         "title": "Tap the Color",
         "memorize": "Memorize the colors!",
         "remembered": "Ready!"
+    },
+    "aim": {
+        "title": "Aiming Game",
+        "instruction": "Hit Red, Avoid Blue!"
+    },
+    "mostColor": {
+        "title": "Find Most Color",
+        "instruction": "Tap the most frequent color!"
     }
 }

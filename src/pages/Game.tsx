@@ -21,6 +21,8 @@ import FillBlanks from '../components/minigames/FillBlanks';
 import FindOperator from '../components/minigames/FindOperator';
 import LadderGame from '../components/minigames/LadderGame';
 import TapTheColor from '../components/minigames/TapTheColor';
+import AimingGame from '../components/minigames/AimingGame';
+import FindMostColor from '../components/minigames/FindMostColor';
 import ScoreProgressBar from '../components/ui/ScoreProgressBar';
 import Flag from '../components/ui/Flag';
 
@@ -330,6 +332,8 @@ const Game: React.FC = () => {
                                                 {gameState.gameType === 'BLANK' && t('fillBlanks.title')}
                                                 {gameState.gameType === 'OPERATOR' && t('findOperator.title')}
                                                 {gameState.gameType === 'LADDER' && t('ladder.title')}
+                                                {gameState.gameType === 'AIM' && t('aim.title')}
+                                                {gameState.gameType === 'MOST_COLOR' && t('mostColor.title')}
                                             </h2>
                                             <p className="text-2xl text-white mb-12 font-bold max-w-2xl">
                                                 {gameState.gameType === 'RPS' && t('rps.instruction')}
@@ -349,6 +353,8 @@ const Game: React.FC = () => {
                                                 {gameState.gameType === 'BLANK' && t('fillBlanks.instruction')}
                                                 {gameState.gameType === 'OPERATOR' && t('findOperator.instruction')}
                                                 {gameState.gameType === 'LADDER' && t('ladder.instruction')}
+                                                {gameState.gameType === 'AIM' && t('aim.instruction')}
+                                                {gameState.gameType === 'MOST_COLOR' && t('mostColor.instruction')}
                                             </p>
 
                                             <div className="text-9xl font-black font-mono text-white animate-pulse">
@@ -439,6 +445,12 @@ const Game: React.FC = () => {
                             )}
                             {gameState.gameType === 'TAP_COLOR' && (
                                 <TapTheColor seed={gameState.seed} onScore={incrementScore} />
+                            )}
+                            {gameState.gameType === 'AIM' && (
+                                <AimingGame seed={gameState.seed} onScore={incrementScore} />
+                            )}
+                            {gameState.gameType === 'MOST_COLOR' && (
+                                <FindMostColor seed={gameState.seed} onScore={incrementScore} />
                             )}
                         </div>
                     </motion.div>

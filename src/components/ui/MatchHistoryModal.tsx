@@ -24,6 +24,8 @@ const MatchHistoryModal = ({ isOpen, onClose, userId, initialMode = 'all' }: Mat
     const [hasMore, setHasMore] = useState(true);
     const observerTarget = useRef<HTMLDivElement>(null);
 
+    const lastRequestMode = useRef<string | null>(null);
+
     // Initial load and filter change
     useEffect(() => {
         if (isOpen && userId) {
@@ -34,9 +36,9 @@ const MatchHistoryModal = ({ isOpen, onClose, userId, initialMode = 'all' }: Mat
         }
     }, [isOpen, userId, filter]);
 
-    // Update filter when initialMode changes (if modal is re-opened with different mode)
+    // Update filter when initialMode changes
     useEffect(() => {
-        if (isOpen) {
+        if (isOpen && initialMode !== filter) {
             setFilter(initialMode);
         }
     }, [initialMode, isOpen]);
@@ -63,6 +65,11 @@ const MatchHistoryModal = ({ isOpen, onClose, userId, initialMode = 'all' }: Mat
 
     const fetchHistory = async (offset: number, mode: string) => {
         if (!userId) return;
+
+        // Race Condition Guard
+        lastRequestMode.current = mode;
+        const currentRequestMode = mode;
+
         setLoading(true);
         try {
             const { data, error } = await supabase.rpc('get_player_match_history', {
@@ -73,6 +80,12 @@ const MatchHistoryModal = ({ isOpen, onClose, userId, initialMode = 'all' }: Mat
             });
 
             if (error) throw error;
+
+            // Check if this request is still relevant
+            if (lastRequestMode.current !== currentRequestMode) {
+                console.log(`Ignoring stale request for ${mode} (Current: ${lastRequestMode.current})`);
+                return;
+            }
 
             if (data && data.length > 0) {
                 if (offset === 0) {
@@ -91,7 +104,9 @@ const MatchHistoryModal = ({ isOpen, onClose, userId, initialMode = 'all' }: Mat
         } catch (err) {
             console.error("Fetch history error:", err);
         } finally {
-            setLoading(false);
+            if (lastRequestMode.current === currentRequestMode) {
+                setLoading(false);
+            }
         }
     };
 
@@ -152,10 +167,11 @@ const MatchHistoryModal = ({ isOpen, onClose, userId, initialMode = 'all' }: Mat
                         <button
                             key={m}
                             onClick={() => {
+                                if (filter === m) return; // Fix: Prevent reload if already active
                                 setFilter(m);
                                 setPage(0);
                                 setHasMore(true);
-                                setHistory([]); // Clear history to show loading state specifically for new filter
+                                setHistory([]);
                             }}
                             className={`px-4 py-1.5 rounded-full text-sm font-bold whitespace-nowrap transition-colors ${filter === m
                                 ? 'bg-blue-600 text-white'

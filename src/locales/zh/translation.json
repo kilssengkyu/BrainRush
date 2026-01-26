@@ -206,5 +206,13 @@
         "title": "点击颜色",
         "memorize": "记住颜色的位置!",
         "remembered": "记住了!"
+    },
+    "aim": {
+        "title": "瞄准游戏",
+        "instruction": "击中红色，避开蓝色！"
+    },
+    "mostColor": {
+        "title": "寻找最多颜色",
+        "instruction": "点击出现最多的颜色！"
     }
 }
