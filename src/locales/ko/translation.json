@@ -250,9 +250,13 @@
   "sorting": {
     "title": "정의의 분류",
     "instruction": "이전과 같으면 같은 방향, 다르면 반대로!",
-    "firstMoveHint": "첫 카드는 아무 방향이나 OK!",
-    "prev": "이전",
-    "sameRule": "같음! 같은 방향으로!",
-    "diffRule": "다름! 반대 방향으로!"
+    "firstMoveHint": "첫 카드는 아무 방향이나 OK!"
+  },
+  "spy": {
+    "title": "스파이 찾기",
+    "instruction": "기호를 기억하고 바뀐 하나를 찾아내세요!",
+    "memorize": "기호를 기억하세요!",
+    "find": "달라진 것은?",
+    "ready": "기억함!"
   }
 }
