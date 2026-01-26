@@ -23,7 +23,7 @@ const AimingGame: React.FC<AimingGameProps> = ({ seed, onScore }) => {
     const { playSound } = useSound();
 
     const [targets, setTargets] = useState<Target[]>([]);
-    const [scorePopup, setScorePopup] = useState<{ id: number, x: number, y: number, text: string, type: 'good' | 'bad' } | null>(null);
+    const [scorePopup, setScorePopup] = useState<{ id: number, x: number, y: number, text: string, type: 'good' | 'bad' | 'perfect' } | null>(null);
 
     // Refs for game loop
     const requestRef = useRef<number | null>(null);
@@ -57,9 +57,13 @@ const AimingGame: React.FC<AimingGameProps> = ({ seed, onScore }) => {
             startTimeRef.current = Date.now();
             lastSpawnTime.current = Date.now();
             targetIdCounter.current = 0;
+
             setTargets([]);
+            handledTargets.current.clear();
         }
     }, [seed]);
+
+    const handledTargets = useRef<Set<number>>(new Set());
 
     const spawnTarget = useCallback(() => {
         if (!rng.current) return;
@@ -146,14 +150,27 @@ const AimingGame: React.FC<AimingGameProps> = ({ seed, onScore }) => {
     }, [gameLoop]);
 
     const handleTargetClick = (target: Target) => {
+        // Prevent double processing
+        if (handledTargets.current.has(target.id)) return;
+        handledTargets.current.add(target.id);
+
         // Remove target immediately
         setTargets(prev => prev.filter(t => t.id !== target.id));
 
         if (target.type === 'score') {
-            // Good click
-            playSound('correct');
-            onScore(30);
-            showPopup(target.x, target.y, '+30', 'good');
+            const age = Date.now() - target.createdAt;
+            // Speed Bonus Limit: 600ms
+            if (age < 600) {
+                // Perfect Hit
+                playSound('correct');
+                onScore(50); // 30 base + 20 bonus
+                showPopup(target.x, target.y, 'PERFECT!! +50', 'perfect');
+            } else {
+                // Good Hit
+                playSound('correct');
+                onScore(30);
+                showPopup(target.x, target.y, '+30', 'good');
+            }
         } else {
             // Bad click
             playSound('error');
@@ -162,10 +179,10 @@ const AimingGame: React.FC<AimingGameProps> = ({ seed, onScore }) => {
         }
     };
 
-    const showPopup = (x: number, y: number, text: string, type: 'good' | 'bad') => {
+    const showPopup = (x: number, y: number, text: string, type: 'good' | 'bad' | 'perfect') => {
         setScorePopup({ id: Math.random(), x, y, text, type });
         // Auto clear is handled by AnimatePresence
-        setTimeout(() => setScorePopup(null), 500);
+        setTimeout(() => setScorePopup(null), type === 'perfect' ? 800 : 500);
     };
 
     if (!seed) return <div className="text-white">{t('common.loading')}</div>;
@@ -212,10 +229,18 @@ const AimingGame: React.FC<AimingGameProps> = ({ seed, onScore }) => {
                     {scorePopup && (
                         <motion.div
                             key={scorePopup.id}
-                            initial={{ opacity: 1, y: 0, scale: 1 }}
-                            animate={{ opacity: 0, y: -50, scale: 1.5 }}
+                            initial={{ opacity: 1, y: 0, scale: 0.5 }}
+                            animate={{
+                                opacity: scorePopup.type === 'perfect' ? [1, 1, 0] : 0,
+                                y: -50,
+                                scale: scorePopup.type === 'perfect' ? 1.5 : 1
+                            }}
                             exit={{ opacity: 0 }}
-                            className={`absolute font-black text-2xl ${scorePopup.type === 'good' ? 'text-green-400' : 'text-red-500'}`}
+                            transition={{ duration: scorePopup.type === 'perfect' ? 0.8 : 0.5 }}
+                            className={`absolute font-black whitespace-nowrap pointer-events-none select-none
+                                ${scorePopup.type === 'good' ? 'text-green-400 text-2xl' :
+                                    scorePopup.type === 'perfect' ? 'text-yellow-400 text-3xl drop-shadow-[0_0_10px_rgba(250,204,21,0.8)]' :
+                                        'text-red-500 text-2xl'}`}
                             style={{
                                 left: `${scorePopup.x}%`,
                                 top: `${scorePopup.y}%`,

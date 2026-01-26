@@ -246,5 +246,13 @@
   "mostColor": {
     "title": "색깔 탐색",
     "instruction": "가장 많이 보이는 색을 찾으세요!"
+  },
+  "sorting": {
+    "title": "정의의 분류",
+    "instruction": "이전과 같으면 같은 방향, 다르면 반대로!",
+    "firstMoveHint": "첫 카드는 아무 방향이나 OK!",
+    "prev": "이전",
+    "sameRule": "같음! 같은 방향으로!",
+    "diffRule": "다름! 반대 방향으로!"
   }
 }
