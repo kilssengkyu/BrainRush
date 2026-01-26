@@ -252,9 +252,13 @@
     "sorting": {
         "title": "Sorting Game",
         "instruction": "Same symbol = Same direction, Diff symbol = Opposite!",
-        "firstMoveHint": "First card: Any direction!",
-        "prev": "Prev",
-        "sameRule": "Same! Same Direction!",
-        "diffRule": "Diff! Opposite Direction!"
+        "firstMoveHint": "First card: Any direction!"
+    },
+    "spy": {
+        "title": "Find The Spy",
+        "instruction": "Memorize symbols and find the changed one!",
+        "memorize": "Memorize these!",
+        "find": "Who is new?",
+        "ready": "Ready!"
     }
 }

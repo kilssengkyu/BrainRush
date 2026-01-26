@@ -44,7 +44,15 @@ const SortingGame: React.FC<SortingGameProps> = ({ seed, onScore }) => {
             // Initial Symbols
             const pool = getSymbolPool(0);
             const first = pool[Math.floor(rng.current.next() * pool.length)];
-            const second = pool[Math.floor(rng.current.next() * pool.length)];
+
+            // Generate second symbol with 50/50 rule relative to first
+            let second;
+            if (rng.current.next() < 0.5) {
+                second = first;
+            } else {
+                const diffPool = pool.filter(s => s.id !== first.id);
+                second = diffPool[Math.floor(rng.current.next() * diffPool.length)];
+            }
 
             setCurrentSymbol(first);
             setNextSymbol(second);
@@ -109,10 +117,26 @@ const SortingGame: React.FC<SortingGameProps> = ({ seed, onScore }) => {
             setStreak(prev => prev + 1);
 
             // Shift Next -> Current, Generate New Next
+            if (!nextSymbol) return;
             setCurrentSymbol(nextSymbol);
 
             const pool = getSymbolPool(streak + 1);
-            const newNext = pool[Math.floor(rng.current.next() * pool.length)];
+            let newNext: typeof SYMBOLS[0];
+
+            if (rng.current.next() < 0.5) {
+                // 50% Chance: SAME symbol as the one becoming current
+                newNext = nextSymbol;
+            } else {
+                // 50% Chance: DIFFERENT symbol
+                const diffPool = pool.filter(s => s.id !== nextSymbol.id);
+                // Fallback to random from full pool if diffPool is empty (should unlikely happen as min count is 2)
+                if (diffPool.length > 0) {
+                    newNext = diffPool[Math.floor(rng.current.next() * diffPool.length)];
+                } else {
+                    newNext = pool[Math.floor(rng.current.next() * pool.length)];
+                }
+            }
+
             setNextSymbol(newNext);
 
             // Reset position for new card

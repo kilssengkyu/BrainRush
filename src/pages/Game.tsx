@@ -24,6 +24,7 @@ import TapTheColor from '../components/minigames/TapTheColor';
 import AimingGame from '../components/minigames/AimingGame';
 import FindMostColor from '../components/minigames/FindMostColor';
 import SortingGame from '../components/minigames/SortingGame';
+import FindTheSpy from '../components/minigames/FindTheSpy';
 import ScoreProgressBar from '../components/ui/ScoreProgressBar';
 import Flag from '../components/ui/Flag';
 
@@ -336,6 +337,7 @@ const Game: React.FC = () => {
                                                 {gameState.gameType === 'AIM' && t('aim.title')}
                                                 {gameState.gameType === 'MOST_COLOR' && t('mostColor.title')}
                                                 {gameState.gameType === 'SORTING' && t('sorting.title')}
+                                                {gameState.gameType === 'SPY' && t('spy.title')}
                                             </h2>
                                             <p className="text-2xl text-white mb-12 font-bold max-w-2xl">
                                                 {gameState.gameType === 'RPS' && t('rps.instruction')}
@@ -358,6 +360,7 @@ const Game: React.FC = () => {
                                                 {gameState.gameType === 'AIM' && t('aim.instruction')}
                                                 {gameState.gameType === 'MOST_COLOR' && t('mostColor.instruction')}
                                                 {gameState.gameType === 'SORTING' && t('sorting.instruction')}
+                                                {gameState.gameType === 'SPY' && t('spy.instruction')}
                                             </p>
 
                                             <div className="text-9xl font-black font-mono text-white animate-pulse">
@@ -457,6 +460,9 @@ const Game: React.FC = () => {
                             )}
                             {gameState.gameType === 'SORTING' && (
                                 <SortingGame seed={gameState.seed} onScore={incrementScore} />
+                            )}
+                            {gameState.gameType === 'SPY' && (
+                                <FindTheSpy seed={gameState.seed} onScore={incrementScore} />
                             )}
                         </div>
                     </motion.div>
