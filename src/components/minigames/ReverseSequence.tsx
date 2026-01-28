@@ -95,7 +95,7 @@ const ReverseSequence: React.FC<ReverseSequenceProps> = ({ seed, onScore, isPlay
 
 
     const handlePadClick = (index: number) => {
-        if (phase !== 'INPUT') return;
+        if (phase !== 'INPUT' || !isPlaying) return;
 
         // Check if clicked pad is in the sequence (Validation? Or just strict order?)
         // Rule: "Reverse Order".
@@ -206,7 +206,17 @@ const ReverseSequence: React.FC<ReverseSequenceProps> = ({ seed, onScore, isPlay
                             key={i}
                             className={`rounded-xl transition-all duration-200 border-4 border-transparent ${bgClass}`}
                             style={style}
-                            onClick={() => handlePadClick(i)}
+                            onPointerDown={(e) => {
+                                e.preventDefault();
+                                if (e.currentTarget.setPointerCapture) {
+                                    try {
+                                        e.currentTarget.setPointerCapture(e.pointerId);
+                                    } catch {
+                                        // Ignore capture errors on unsupported pointer types
+                                    }
+                                }
+                                handlePadClick(i);
+                            }}
                             layout
                             whileTap={{ scale: 0.95 }}
                         />

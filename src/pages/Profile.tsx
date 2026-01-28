@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save, LogOut, User as UserIcon, Trophy } from 'lucide-react';
@@ -14,6 +14,7 @@ import AddFriend from '../components/social/AddFriend';
 import FriendRequests from '../components/social/FriendRequests';
 import ChatWindow from '../components/social/ChatWindow';
 import MatchHistoryModal from '../components/ui/MatchHistoryModal';
+import HexRadar from '../components/ui/HexRadar';
 import { getTierFromMMR, getTierColor, getTierIcon } from '../utils/rankUtils';
 
 const Profile = () => {
@@ -28,6 +29,11 @@ const Profile = () => {
     const [country, setCountry] = useState<string | null>(null);
     const [isEditing, setIsEditing] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+    const avatarInputRef = useRef<HTMLInputElement | null>(null);
+
+    const MAX_AVATAR_SIZE = 2 * 1024 * 1024; // 2MB
+    const ALLOWED_AVATAR_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
     // Match History Modal State
     const [showHistoryModal, setShowHistoryModal] = useState(false);
@@ -88,6 +94,68 @@ const Profile = () => {
             showToast(`${t('profile.updateFail')}: ${error.message || error}`, 'error');
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handleAvatarSelect = async (file: File) => {
+        if (!user) return;
+
+        if (!ALLOWED_AVATAR_TYPES.includes(file.type)) {
+            showToast(t('profile.avatarInvalidType', '지원되지 않는 이미지 형식입니다.'), 'error');
+            return;
+        }
+
+        if (file.size > MAX_AVATAR_SIZE) {
+            showToast(t('profile.avatarTooLarge', '파일 용량이 너무 큽니다.'), 'error');
+            return;
+        }
+
+        setIsUploadingAvatar(true);
+        try {
+            const extFromType: Record<string, string> = {
+                'image/jpeg': 'jpg',
+                'image/png': 'png',
+                'image/webp': 'webp'
+            };
+            const fileExt = extFromType[file.type] || file.name.split('.').pop() || 'jpg';
+            const filePath = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${fileExt}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('avatars')
+                .upload(filePath, file, {
+                    contentType: file.type,
+                    cacheControl: '3600',
+                    upsert: true
+                });
+
+            if (uploadError) throw uploadError;
+
+            const { data: publicUrlData } = supabase.storage
+                .from('avatars')
+                .getPublicUrl(filePath);
+
+            const publicUrl = publicUrlData?.publicUrl;
+            if (!publicUrl) {
+                throw new Error('Failed to get public URL');
+            }
+
+            const { error: updateError } = await supabase
+                .from('profiles')
+                .update({ avatar_url: publicUrl })
+                .eq('id', user.id);
+
+            if (updateError) throw updateError;
+
+            await refreshProfile();
+            showToast(t('profile.avatarUploadSuccess', '프로필 사진이 업데이트되었습니다.'), 'success');
+        } catch (error: any) {
+            console.error('Avatar upload error:', error);
+            showToast(`${t('profile.avatarUploadFail', '프로필 사진 업로드 실패')}: ${error.message || error}`, 'error');
+        } finally {
+            setIsUploadingAvatar(false);
+            if (avatarInputRef.current) {
+                avatarInputRef.current.value = '';
+            }
         }
     };
 
@@ -172,6 +240,14 @@ const Profile = () => {
     const losses = profile?.losses || 0;
     const casualWins = profile?.casual_wins || 0;
     const casualLosses = profile?.casual_losses || 0;
+    const statValues = {
+        speed: profile?.speed || 0,
+        memory: profile?.memory || 0,
+        judgment: profile?.judgment || 0,
+        calculation: profile?.calculation || 0,
+        accuracy: profile?.accuracy || 0,
+        observation: profile?.observation || 0
+    };
 
     return (
         <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center p-4 relative overflow-y-auto">
@@ -225,6 +301,23 @@ const Profile = () => {
                                     )}
                                 </div>
                             </div>
+                            <input
+                                ref={avatarInputRef}
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp"
+                                className="hidden"
+                                onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) handleAvatarSelect(file);
+                                }}
+                            />
+                            <button
+                                onClick={() => avatarInputRef.current?.click()}
+                                disabled={isUploadingAvatar || isLoading}
+                                className="text-xs text-blue-300 hover:text-blue-200 border border-blue-500/40 px-3 py-1 rounded-full transition-colors disabled:opacity-50"
+                            >
+                                {isUploadingAvatar ? t('profile.avatarUploading', '업로드 중...') : t('profile.changeAvatar', '사진 변경')}
+                            </button>
 
                             {/* Nickname & Country Edit */}
                             <div className="flex flex-col items-center gap-4 w-full justify-center">
@@ -332,6 +425,50 @@ const Profile = () => {
                                     <span className="text-lg font-bold text-red-300">{casualLosses}L</span>
                                 </div>
                             </button>
+                        </div>
+
+                        {/* Skill Radar */}
+                        <div className="mt-8 pt-6 border-t border-white/10">
+                            <h3 className="text-sm font-bold uppercase tracking-widest text-gray-400 mb-4 text-center">
+                                {t('profile.statsTitle', '능력치')}
+                            </h3>
+                            <HexRadar
+                                values={statValues}
+                                labels={{
+                                    speed: t('profile.stats.speed', '스피드'),
+                                    memory: t('profile.stats.memory', '기억력'),
+                                    judgment: t('profile.stats.judgment', '판단력'),
+                                    calculation: t('profile.stats.calculation', '계산력'),
+                                    accuracy: t('profile.stats.accuracy', '정확성'),
+                                    observation: t('profile.stats.observation', '관찰력')
+                                }}
+                            />
+                            <div className="grid grid-cols-3 gap-2 mt-4 text-xs text-gray-400">
+                                <div className="flex items-center justify-between bg-gray-800/50 rounded-lg px-2 py-1">
+                                    <span>{t('profile.stats.speed', '스피드')}</span>
+                                    <span className="text-blue-300 font-bold">{statValues.speed}</span>
+                                </div>
+                                <div className="flex items-center justify-between bg-gray-800/50 rounded-lg px-2 py-1">
+                                    <span>{t('profile.stats.memory', '기억력')}</span>
+                                    <span className="text-blue-300 font-bold">{statValues.memory}</span>
+                                </div>
+                                <div className="flex items-center justify-between bg-gray-800/50 rounded-lg px-2 py-1">
+                                    <span>{t('profile.stats.judgment', '판단력')}</span>
+                                    <span className="text-blue-300 font-bold">{statValues.judgment}</span>
+                                </div>
+                                <div className="flex items-center justify-between bg-gray-800/50 rounded-lg px-2 py-1">
+                                    <span>{t('profile.stats.calculation', '계산력')}</span>
+                                    <span className="text-blue-300 font-bold">{statValues.calculation}</span>
+                                </div>
+                                <div className="flex items-center justify-between bg-gray-800/50 rounded-lg px-2 py-1">
+                                    <span>{t('profile.stats.accuracy', '정확성')}</span>
+                                    <span className="text-blue-300 font-bold">{statValues.accuracy}</span>
+                                </div>
+                                <div className="flex items-center justify-between bg-gray-800/50 rounded-lg px-2 py-1">
+                                    <span>{t('profile.stats.observation', '관찰력')}</span>
+                                    <span className="text-blue-300 font-bold">{statValues.observation}</span>
+                                </div>
+                            </div>
                         </div>
                     </motion.div>
                 ) : (

@@ -7,13 +7,14 @@ import { useSound } from '../../contexts/SoundContext';
 interface LadderGameProps {
     seed: string | null;
     onScore: (amount: number) => void;
+    isPlaying: boolean;
 }
 
 // Coordinate type for bridges: [stepIndex, lineIndex]
 // Bridge connects lineIndex and lineIndex + 1 at stepIndex
 type Bridge = [number, number];
 
-const LadderGame: React.FC<LadderGameProps> = ({ seed, onScore }) => {
+const LadderGame: React.FC<LadderGameProps> = ({ seed, onScore, isPlaying }) => {
     const { t } = useTranslation();
     const { playSound } = useSound();
     const [panelIndex, setPanelIndex] = useState(0);
@@ -84,7 +85,7 @@ const LadderGame: React.FC<LadderGameProps> = ({ seed, onScore }) => {
     }, [seed, panelIndex]);
 
     const handleEndClick = (endIndex: number) => {
-        if (isAnimating || !gameState) return;
+        if (isAnimating || !gameState || !isPlaying) return;
 
         const isCorrect = endIndex === gameState.correctEndIndex;
         const scoreBase = 30 + (panelIndex * 5);
@@ -247,7 +248,17 @@ const LadderGame: React.FC<LadderGameProps> = ({ seed, onScore }) => {
                                 }
                             `}
                             style={{ left: i * LINE_GAP - 24 }} // Center 48px button
-                            onClick={() => handleEndClick(i)}
+                            onPointerDown={(e) => {
+                                e.preventDefault();
+                                if (e.currentTarget.setPointerCapture) {
+                                    try {
+                                        e.currentTarget.setPointerCapture(e.pointerId);
+                                    } catch {
+                                        // Ignore capture errors on unsupported pointer types
+                                    }
+                                }
+                                handleEndClick(i);
+                            }}
                             disabled={isAnimating}
                         >
                             {i + 1}

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
 export interface GameState {
-    status: 'waiting' | 'playing' | 'finished';
+    status: 'waiting' | 'countdown' | 'playing' | 'finished';
     gameType: 'RPS' | 'NUMBER' | 'MATH' | 'TEN' | 'COLOR' | 'MEMORY' | 'SEQUENCE' | 'LARGEST' | 'PAIR' | 'UPDOWN' | 'SEQUENCE_NORMAL' | 'NUMBER_DESC' | 'SLIDER' | 'ARROW' | 'BLANK' | 'OPERATOR' | 'LADDER' | 'TAP_COLOR' | 'AIM' | 'MOST_COLOR' | 'SORTING' | 'SPY' | null;
     seed: string | null;
     startAt: string | null;
@@ -17,7 +17,9 @@ export interface GameState {
     gameTypes: string[];
     roundScores: any[];
     isPlayer1: boolean;
-    mode?: 'normal' | 'rank' | 'practice'; // Added mode
+    mode?: 'normal' | 'rank' | 'practice';
+    myWins: number;
+    opWins: number;
 }
 
 export const useGameState = (roomId: string, myId: string, opponentId: string) => {
@@ -35,7 +37,9 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
         totalRounds: 3,
         gameTypes: [],
         roundScores: [],
-        isPlayer1: true
+        isPlayer1: true,
+        myWins: 0,
+        opWins: 0
     });
 
     const [serverOffset, setServerOffset] = useState<number>(0);
@@ -93,11 +97,18 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
         if (!record) return;
 
         const isP1 = myId === record.player1_id;
-        const sP1 = record.player1_score;
-        const sP2 = record.player2_score;
+        // WINS (Previously playerX_score)
+        const sP1_wins = record.player1_score;
+        const sP2_wins = record.player2_score;
 
-        const myServerScore = isP1 ? sP1 : sP2;
-        const opServerScore = isP1 ? sP2 : sP1;
+        // POINTS (New columns)
+        const sP1_points = record.p1_current_score || 0;
+        const sP2_points = record.p2_current_score || 0;
+
+        const myServerScore = isP1 ? sP1_points : sP2_points;
+        const opServerScore = isP1 ? sP2_points : sP1_points;
+        const myWins = isP1 ? sP1_wins : sP2_wins;
+        const opWins = isP1 ? sP2_wins : sP1_wins;
 
         if (record.status === 'finished') {
             console.log('Game FINISHED! Winner:', record.winner_id);
@@ -105,10 +116,16 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
 
         // Fix: Sync local score ref if server is ahead (e.g. reload or round transition)
         // This ensures that if we reload page in Round 2, we pick up the accumulated score
-        if (!hasLocalScoreChanges.current && myServerScore > scoreRef.current) {
-            scoreRef.current = myServerScore;
+        if (!hasLocalScoreChanges.current) {
+            // If local score is 0 (new round) or server has more points, take server
+            if (scoreRef.current === 0 || myServerScore > scoreRef.current) {
+                scoreRef.current = myServerScore;
+            }
         }
-        if (myServerScore === scoreRef.current) {
+
+        // Safety: If server reset to 0 (new round), verify local ref reset
+        if (myServerScore === 0 && record.status === 'countdown') {
+            scoreRef.current = 0;
             hasLocalScoreChanges.current = false;
         }
 
@@ -128,14 +145,19 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
                 }
             }
 
+            const startAt = record.start_at ?? record.phase_end_at ?? record.phase_start_at;
+            const endAt = record.end_at ?? record.phase_end_at ?? record.phase_start_at;
+
             return {
                 status: record.status,
                 gameType: record.game_type,
                 seed: record.seed,
-                startAt: record.start_at,
-                endAt: record.end_at,
+                startAt,
+                endAt,
                 myScore: record.status === 'playing' ? scoreRef.current : myServerScore,
                 opScore: opServerScore,
+                myWins: myWins, // New
+                opWins: opWins, // New
                 winnerId: record.winner_id,
                 remainingTime: remaining,
                 currentRound: (record.current_round_index || 0) + 1,
@@ -205,16 +227,17 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
 
     // --- Game Ticker & Host Enforcer ---
     useEffect(() => {
-        if (gameState.status !== 'playing' || !gameState.endAt) return;
+        // Run ticker for both Playing and Countdown states
+        if ((gameState.status !== 'playing' && gameState.status !== 'countdown') || !gameState.endAt) return;
 
         const ticker = setInterval(async () => {
             const now = Date.now() + serverOffset;
             const start = gameState.startAt ? new Date(gameState.startAt).getTime() : 0;
             const end = new Date(gameState.endAt!).getTime();
 
-            // Warm-up check
+            // Warm-up check (Only relevant if startAt is in future, usually startAt is phase_start_at)
+            // In our schema, phase_start_at is "NOW" when state changes.
             if (now < start) {
-                // In warm-up, we don't tick down the MAIN game timer yet
                 setGameState(prev => ({ ...prev, remainingTime: 30 }));
                 return;
             }
@@ -224,38 +247,49 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
 
             setGameState(prev => ({ ...prev, remainingTime: remaining }));
 
-            // Grace Period Logic:
-            // 0s: Set isTimeUp = true (Disable Inputs locally)
-            // -1.5s: Host calls next_round/finish (Allow last packets to land)
-            if (remaining === 0 && !isTimeUp) {
-                setIsTimeUp(true);
+            // Any Player Logic: Countdown -> Playing
+            if (gameState.status === 'countdown' && diff <= 0) {
+                // Trigger Game Start
+                console.log('Ticker: Countdown finished. Triggering Game Start...');
+                await supabase.rpc('trigger_game_start', { p_room_id: roomId });
+                return; // Wait for update
             }
 
-            // Host Logic: Finish Game w/ Grace Period
-            if (isHostUser && diff <= -1.5) {
-                if (!isFinishing.current) {
-                    isFinishing.current = true;
-                    console.log('Ticker: Grace period over! FORCE SYNCING AND NEXT ROUND...');
+            // Grace Period Logic (Playing -> Finished/NextRound):
+            // 0s: Set isTimeUp = true (Disable Inputs locally)
+            // -1.5s: Host calls next_round/finish (Allow last packets to land)
+            if (gameState.status === 'playing') {
+                if (remaining === 0 && !isTimeUp) {
+                    setIsTimeUp(true);
+                }
 
-                    // 1. Force Push Final Score
-                    const { error: syncError } = await supabase.rpc('update_score', {
-                        p_room_id: roomId,
-                        p_player_id: myId,
-                        p_score: scoreRef.current
-                    });
+                // Host Logic: Finish Game w/ Grace Period
+                if (isHostUser && diff <= -1.5) {
+                    if (!isFinishing.current) {
+                        isFinishing.current = true;
+                        console.log('Ticker: Grace period over! FORCE SYNCING AND NEXT ROUND...');
 
-                    if (syncError) console.error('FINAL SCORE SYNC ERROR:', syncError);
-                    else console.log('FINAL SCORE SYNC SUCCESS');
+                        // 1. Force Push Final Score
+                        const { error: syncError } = await supabase.rpc('update_score', {
+                            p_room_id: roomId,
+                            p_player_id: myId,
+                            p_score: scoreRef.current
+                        });
 
-                    // 2. Next Round or Finish
-                    console.log('Ticker: Calling NEXT_ROUND...');
-                    const { error: finishError } = await supabase.rpc('next_round', { p_room_id: roomId });
+                        if (syncError) console.error('FINAL SCORE SYNC ERROR:', syncError);
+                        else console.log('FINAL SCORE SYNC SUCCESS');
 
-                    if (finishError) {
-                        console.error('NEXT_ROUND ERROR:', finishError);
-                        isFinishing.current = false; // Allow retry
-                    } else {
-                        console.log('NEXT_ROUND SUCCESS');
+                        // 2. Next Round or Finish
+                        console.log('Ticker: Calling START_NEXT_ROUND...');
+                        // CORRECTED RPC NAME: start_next_round
+                        const { error: finishError } = await supabase.rpc('start_next_round', { p_room_id: roomId });
+
+                        if (finishError) {
+                            console.error('START_NEXT_ROUND ERROR:', finishError);
+                            isFinishing.current = false; // Allow retry
+                        } else {
+                            console.log('START_NEXT_ROUND SUCCESS');
+                        }
                     }
                 }
             }

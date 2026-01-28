@@ -98,6 +98,21 @@
     "profile": {
         "nicknamePlaceholder": "输入昵称",
         "edit": "编辑",
+        "statsTitle": "能力值",
+        "stats": {
+            "speed": "速度",
+            "memory": "记忆力",
+            "judgment": "判断力",
+            "calculation": "计算力",
+            "accuracy": "准确性",
+            "observation": "观察力"
+        },
+        "changeAvatar": "更换头像",
+        "avatarUploading": "上传中...",
+        "avatarInvalidType": "不支持的图片格式。",
+        "avatarTooLarge": "文件太大。",
+        "avatarUploadSuccess": "头像已更新。",
+        "avatarUploadFail": "头像上传失败",
         "record": "战绩",
         "disconnects": "掉线",
         "updateSuccess": "更新成功",

@@ -7,6 +7,7 @@ import { useSound } from '../../contexts/SoundContext';
 interface AimingGameProps {
     seed: string | null;
     onScore: (amount: number) => void;
+    isPlaying: boolean;
 }
 
 interface Target {
@@ -18,7 +19,7 @@ interface Target {
     duration: number;
 }
 
-const AimingGame: React.FC<AimingGameProps> = ({ seed, onScore }) => {
+const AimingGame: React.FC<AimingGameProps> = ({ seed, onScore, isPlaying }) => {
     const { t } = useTranslation();
     const { playSound } = useSound();
 
@@ -110,6 +111,11 @@ const AimingGame: React.FC<AimingGameProps> = ({ seed, onScore }) => {
     }, [targets, getGameParams]);
 
     const gameLoop = useCallback(() => {
+        if (!isPlaying) {
+            requestRef.current = requestAnimationFrame(gameLoop);
+            return;
+        }
+
         const now = Date.now();
         const { spawnInterval } = getGameParams();
 
@@ -140,7 +146,7 @@ const AimingGame: React.FC<AimingGameProps> = ({ seed, onScore }) => {
         });
 
         requestRef.current = requestAnimationFrame(gameLoop);
-    }, [spawnTarget, getGameParams, onScore]);
+    }, [spawnTarget, getGameParams, onScore, isPlaying]);
 
     useEffect(() => {
         requestRef.current = requestAnimationFrame(gameLoop);
@@ -205,8 +211,17 @@ const AimingGame: React.FC<AimingGameProps> = ({ seed, onScore }) => {
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0, opacity: 0 }}
                             transition={{ duration: 0.2 }}
-                            onMouseDown={() => handleTargetClick(target)}
-                            onTouchStart={(e) => { e.preventDefault(); handleTargetClick(target); }} // Prevent default touch behavior (scrolling etc)
+                            onPointerDown={(e) => {
+                                e.preventDefault();
+                                if (e.currentTarget.setPointerCapture) {
+                                    try {
+                                        e.currentTarget.setPointerCapture(e.pointerId);
+                                    } catch {
+                                        // Ignore capture errors on unsupported pointer types
+                                    }
+                                }
+                                handleTargetClick(target);
+                            }}
                             className={`absolute w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 shadow-xl flex items-center justify-center
                                 ${target.type === 'score'
                                     ? 'bg-red-500 border-red-300 shadow-red-500/50'

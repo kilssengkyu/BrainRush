@@ -7,6 +7,7 @@ import { useSound } from '../../contexts/SoundContext';
 interface FindMostColorProps {
     seed: string | null;
     onScore: (amount: number) => void;
+    isPlaying: boolean;
 }
 
 // Color Palette
@@ -21,7 +22,7 @@ const COLORS = [
     'bg-orange-500'
 ];
 
-const FindMostColor: React.FC<FindMostColorProps> = ({ seed, onScore }) => {
+const FindMostColor: React.FC<FindMostColorProps> = ({ seed, onScore, isPlaying }) => {
     const { t } = useTranslation();
     const { playSound } = useSound();
 
@@ -150,6 +151,7 @@ const FindMostColor: React.FC<FindMostColorProps> = ({ seed, onScore }) => {
     }, [successCount]);
 
     const handleTileClick = (color: string) => {
+        if (!isPlaying) return;
         // Count frequencies in current grid
         const counts: { [key: string]: number } = {};
         grid.forEach(c => counts[c] = (counts[c] || 0) + 1);
@@ -193,7 +195,17 @@ const FindMostColor: React.FC<FindMostColorProps> = ({ seed, onScore }) => {
                         key={idx}
                         whileHover={{ scale: 0.95 }}
                         whileTap={{ scale: 0.9 }}
-                        onClick={() => handleTileClick(color)}
+                        onPointerDown={(e) => {
+                            e.preventDefault();
+                            if (e.currentTarget.setPointerCapture) {
+                                try {
+                                    e.currentTarget.setPointerCapture(e.pointerId);
+                                } catch {
+                                    // Ignore capture errors on unsupported pointer types
+                                }
+                            }
+                            handleTileClick(color);
+                        }}
                         className={`${color} w-full h-full rounded-lg shadow-inner border-2 border-white/10 transition-colors`}
                     />
                 ))}

@@ -12,6 +12,7 @@ import { useSound } from '../../contexts/SoundContext';
 interface FindTheSpyProps {
     seed: string | null;
     onScore: (amount: number) => void;
+    isPlaying: boolean;
 }
 
 const SYMBOLS = [
@@ -33,7 +34,7 @@ const SYMBOLS = [
     { id: 'skull', icon: Skull, color: 'text-gray-400' },
 ];
 
-const FindTheSpy: React.FC<FindTheSpyProps> = ({ seed, onScore }) => {
+const FindTheSpy: React.FC<FindTheSpyProps> = ({ seed, onScore, isPlaying }) => {
     const { t } = useTranslation();
     const { playSound } = useSound();
 
@@ -82,7 +83,7 @@ const FindTheSpy: React.FC<FindTheSpyProps> = ({ seed, onScore }) => {
     };
 
     const handleReady = () => {
-        if (!rng.current) return;
+        if (!rng.current || !isPlaying) return;
         setPhase('shuffling');
 
         // Wait for gather animation (visual only, logical change happens instantly or mid-animation)
@@ -129,7 +130,7 @@ const FindTheSpy: React.FC<FindTheSpyProps> = ({ seed, onScore }) => {
     };
 
     const handleTileClick = (symbolId: string) => {
-        if (phase !== 'guessing') return;
+        if (phase !== 'guessing' || !isPlaying) return;
 
         if (symbolId === targetSymbolId) {
             // Correct
@@ -187,7 +188,17 @@ const FindTheSpy: React.FC<FindTheSpyProps> = ({ seed, onScore }) => {
                                         layout
                                         initial={{ scale: 0 }}
                                         animate={{ scale: 1 }}
-                                        onClick={() => handleTileClick(tile.id)}
+                                        onPointerDown={(e) => {
+                                            e.preventDefault();
+                                            if (e.currentTarget.setPointerCapture) {
+                                                try {
+                                                    e.currentTarget.setPointerCapture(e.pointerId);
+                                                } catch {
+                                                    // Ignore capture errors on unsupported pointer types
+                                                }
+                                            }
+                                            handleTileClick(tile.id);
+                                        }}
                                         className={`${tileWidth} bg-white/10 rounded-xl border-2 border-white/20 flex items-center justify-center cursor-pointer hover:bg-white/20 active:scale-95 transition-colors shadow-lg`}
                                     >
                                         <Icon size={32} className={tile.color} />
@@ -208,7 +219,17 @@ const FindTheSpy: React.FC<FindTheSpyProps> = ({ seed, onScore }) => {
                         exit={{ opacity: 0, y: 20 }}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        onClick={handleReady}
+                        onPointerDown={(e) => {
+                            e.preventDefault();
+                            if (e.currentTarget.setPointerCapture) {
+                                try {
+                                    e.currentTarget.setPointerCapture(e.pointerId);
+                                } catch {
+                                    // Ignore capture errors on unsupported pointer types
+                                }
+                            }
+                            handleReady();
+                        }}
                         className="absolute bottom-10 px-8 py-3 bg-red-500 hover:bg-red-600 text-white font-black rounded-full shadow-lg text-xl z-20"
                     >
                         {t('spy.ready')}

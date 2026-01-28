@@ -13,6 +13,7 @@ import { useSound } from '../../contexts/SoundContext';
 interface FindPairProps {
     seed: string | null;
     onScore: (amount: number) => void;
+    isPlaying: boolean;
 }
 
 const SHAPES = [
@@ -33,7 +34,7 @@ interface CardItem {
     isCorrect: boolean; // Debugging purpose mostly, but logically this pair is the target
 }
 
-const FindPair: React.FC<FindPairProps> = ({ seed, onScore }) => {
+const FindPair: React.FC<FindPairProps> = ({ seed, onScore, isPlaying }) => {
     const { t } = useTranslation();
     const { playSound } = useSound();
     const [round, setRound] = useState(1);
@@ -117,7 +118,7 @@ const FindPair: React.FC<FindPairProps> = ({ seed, onScore }) => {
     }, [seed, round, difficulty]);
 
     const handleCardClick = (id: string) => {
-        if (isResolving || selectedIds.includes(id) || clearedIds.includes(id)) return;
+        if (isResolving || selectedIds.includes(id) || clearedIds.includes(id) || !isPlaying) return;
 
         const newSelected = [...selectedIds, id];
         setSelectedIds(newSelected);
@@ -211,7 +212,17 @@ const FindPair: React.FC<FindPairProps> = ({ seed, onScore }) => {
                         return (
                             <motion.button
                                 key={card.id}
-                                onClick={() => handleCardClick(card.id)}
+                                onPointerDown={(e) => {
+                                    e.preventDefault();
+                                    if (e.currentTarget.setPointerCapture) {
+                                        try {
+                                            e.currentTarget.setPointerCapture(e.pointerId);
+                                        } catch {
+                                            // Ignore capture errors on unsupported pointer types
+                                        }
+                                    }
+                                    handleCardClick(card.id);
+                                }}
                                 animate={{
                                     x: isShaking ? [-5, 5, -5, 5, 0] : 0,
                                     backgroundColor: bgColor,

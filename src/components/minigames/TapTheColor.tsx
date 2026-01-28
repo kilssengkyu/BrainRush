@@ -7,6 +7,7 @@ import { useSound } from '../../contexts/SoundContext';
 interface TapTheColorProps {
     seed: string | null;
     onScore: (amount: number) => void;
+    isPlaying: boolean;
 }
 
 type Phase = 'memorize' | 'input' | 'result';
@@ -23,7 +24,7 @@ const COLORS = [
     '#14b8a6', // teal
 ];
 
-const TapTheColor: React.FC<TapTheColorProps> = ({ seed, onScore }) => {
+const TapTheColor: React.FC<TapTheColorProps> = ({ seed, onScore, isPlaying }) => {
     const { t } = useTranslation();
     const { playSound } = useSound();
     const [panelIndex, setPanelIndex] = useState(0);
@@ -76,11 +77,12 @@ const TapTheColor: React.FC<TapTheColorProps> = ({ seed, onScore }) => {
     }, [seed, panelIndex, difficulty]);
 
     const handleStartClick = () => {
+        if (!isPlaying) return;
         setPhase('input');
     };
 
     const handleTileClick = (index: number) => {
-        if (phase !== 'input' || !gameState) return;
+        if (phase !== 'input' || !gameState || !isPlaying) return;
 
         const targetColor = gameState.sequenceColors[currentStep];
         const clickedColor = gameState.tileColors[index];
@@ -174,7 +176,17 @@ const TapTheColor: React.FC<TapTheColorProps> = ({ seed, onScore }) => {
                             style={{
                                 backgroundColor: isVisible ? color : undefined
                             }}
-                            onClick={() => handleTileClick(index)}
+                            onPointerDown={(e) => {
+                                e.preventDefault();
+                                if (e.currentTarget.setPointerCapture) {
+                                    try {
+                                        e.currentTarget.setPointerCapture(e.pointerId);
+                                    } catch {
+                                        // Ignore capture errors on unsupported pointer types
+                                    }
+                                }
+                                handleTileClick(index);
+                            }}
                             disabled={phase !== 'input' || isVisible} // Disable if wrong phase or already revealed (matched)
                         />
                     );
@@ -187,7 +199,17 @@ const TapTheColor: React.FC<TapTheColorProps> = ({ seed, onScore }) => {
                     initial={{ y: 20, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     className="mt-8 px-8 py-3 bg-yellow-500 rounded-full text-white font-bold text-xl shadow-lg hover:bg-yellow-400 active:scale-95"
-                    onClick={handleStartClick}
+                    onPointerDown={(e) => {
+                        e.preventDefault();
+                        if (e.currentTarget.setPointerCapture) {
+                            try {
+                                e.currentTarget.setPointerCapture(e.pointerId);
+                            } catch {
+                                // Ignore capture errors on unsupported pointer types
+                            }
+                        }
+                        handleStartClick();
+                    }}
                 >
                     {t('tapTheColor.remembered', 'Ready!')}
                 </motion.button>

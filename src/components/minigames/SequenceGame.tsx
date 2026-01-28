@@ -106,7 +106,7 @@ const SequenceGame: React.FC<SequenceGameProps> = ({ seed, onScore, isPlaying, m
 
 
     const handlePadClick = (index: number) => {
-        if (phase !== 'INPUT') return;
+        if (phase !== 'INPUT' || !isPlaying) return;
 
         // Validation Logic based on Mode
         // Mode 'reverse': sequence[sequence.length - 1 - userInput.length]
@@ -194,7 +194,17 @@ const SequenceGame: React.FC<SequenceGameProps> = ({ seed, onScore, isPlaying, m
                             key={i}
                             className={`rounded-xl transition-all duration-200 border-4 border-transparent ${bgClass}`}
                             style={style}
-                            onClick={() => handlePadClick(i)}
+                            onPointerDown={(e) => {
+                                e.preventDefault();
+                                if (e.currentTarget.setPointerCapture) {
+                                    try {
+                                        e.currentTarget.setPointerCapture(e.pointerId);
+                                    } catch {
+                                        // Ignore capture errors on unsupported pointer types
+                                    }
+                                }
+                                handlePadClick(i);
+                            }}
                             layout
                             whileTap={{ scale: 0.95 }}
                         />

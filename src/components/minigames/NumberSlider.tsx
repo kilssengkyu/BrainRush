@@ -7,6 +7,7 @@ import { useSound } from '../../contexts/SoundContext';
 interface NumberSliderProps {
     seed: string | null;
     onScore: (amount: number) => void;
+    isPlaying: boolean;
 }
 
 interface Cell {
@@ -16,7 +17,7 @@ interface Cell {
     col: number;
 }
 
-const NumberSlider: React.FC<NumberSliderProps> = ({ seed, onScore }) => {
+const NumberSlider: React.FC<NumberSliderProps> = ({ seed, onScore, isPlaying }) => {
     const { t } = useTranslation();
     const { playSound } = useSound();
     const [grid, setGrid] = useState<Cell[]>([]);
@@ -71,7 +72,7 @@ const NumberSlider: React.FC<NumberSliderProps> = ({ seed, onScore }) => {
     };
 
     const handlePointerDown = (e: React.PointerEvent) => {
-        if (feedback) return;
+        if (feedback || !isPlaying) return;
         setIsDragging(true);
         const cell = getCellAtPoint(e.clientX, e.clientY);
         if (cell) {

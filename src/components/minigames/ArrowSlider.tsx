@@ -8,12 +8,13 @@ import { useSound } from '../../contexts/SoundContext';
 interface ArrowSliderProps {
     seed: string | null;
     onScore: (amount: number) => void;
+    isPlaying: boolean;
 }
 
 type Direction = 'left' | 'right' | 'up' | 'down';
 type Color = 'blue' | 'red';
 
-const ArrowSlider: React.FC<ArrowSliderProps> = ({ seed, onScore }) => {
+const ArrowSlider: React.FC<ArrowSliderProps> = ({ seed, onScore, isPlaying }) => {
     const { t } = useTranslation();
     const { playSound } = useSound();
     const [rng, setRng] = useState<SeededRandom | null>(null);
@@ -55,7 +56,7 @@ const ArrowSlider: React.FC<ArrowSliderProps> = ({ seed, onScore }) => {
     };
 
     const handlePanEnd = async (_: any, info: PanInfo) => {
-        if (feedback) return;
+        if (feedback || !isPlaying) return;
 
         const { offset, velocity } = info;
         const threshold = 50;
