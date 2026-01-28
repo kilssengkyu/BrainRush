@@ -8,9 +8,10 @@ import { useSound } from '../../contexts/SoundContext';
 interface FillBlanksProps {
     seed: string | null;
     onScore: (amount: number) => void;
+    isPlaying: boolean;
 }
 
-const FillBlanks: React.FC<FillBlanksProps> = ({ seed, onScore }) => {
+const FillBlanks: React.FC<FillBlanksProps> = ({ seed, onScore, isPlaying }) => {
     const { t } = useTranslation();
     const { playSound } = useSound();
     const [panelIndex, setPanelIndex] = useState(0);
@@ -129,7 +130,7 @@ const FillBlanks: React.FC<FillBlanksProps> = ({ seed, onScore }) => {
 
 
     const handleOptionClick = (selected: number) => {
-        if (!currentProblem) return;
+        if (!currentProblem || !isPlaying) return;
 
         const scoreBase = 20 + (panelIndex * 5);
 
@@ -191,7 +192,17 @@ const FillBlanks: React.FC<FillBlanksProps> = ({ seed, onScore }) => {
                 {currentProblem.options.map((opt) => (
                     <motion.button
                         key={`${panelIndex}-${opt}`}
-                        onMouseDown={() => handleOptionClick(opt)}
+                        onPointerDown={(e) => {
+                            e.preventDefault();
+                            if (e.currentTarget.setPointerCapture) {
+                                try {
+                                    e.currentTarget.setPointerCapture(e.pointerId);
+                                } catch {
+                                    // Ignore capture errors on unsupported pointer types
+                                }
+                            }
+                            handleOptionClick(opt);
+                        }}
                         animate={shakeId === opt ? { x: [-5, 5, -5, 5, 0], backgroundColor: '#ef4444' } : {}}
                         whileTap={{ scale: 0.95 }}
                         className={`h-24 rounded-2xl flex items-center justify-center font-bold bg-gray-800 border-b-4 border-gray-950 active:border-b-0 active:translate-y-1 hover:bg-gray-700 transition-all ${currentProblem.options.length === 4 ? 'text-3xl' : 'text-4xl'}`}

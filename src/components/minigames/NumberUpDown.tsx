@@ -9,9 +9,10 @@ import { useSound } from '../../contexts/SoundContext';
 interface NumberUpDownProps {
     seed: string | null;
     onScore: (amount: number) => void;
+    isPlaying: boolean;
 }
 
-const NumberUpDown: React.FC<NumberUpDownProps> = ({ seed, onScore }) => {
+const NumberUpDown: React.FC<NumberUpDownProps> = ({ seed, onScore, isPlaying }) => {
     const { t } = useTranslation();
     const { playSound } = useSound();
 
@@ -72,7 +73,7 @@ const NumberUpDown: React.FC<NumberUpDownProps> = ({ seed, onScore }) => {
 
     // Use onPanEnd for swipe detection without moving the element during drag
     const handlePanEnd = async (_: any, info: PanInfo) => {
-        if (!isGameStarted || feedback !== null) return;
+        if (!isGameStarted || feedback !== null || !isPlaying) return;
 
         const threshold = 50; // Smaller threshold since it's a quick swipe check
         const { offset, velocity } = info;
@@ -129,13 +130,13 @@ const NumberUpDown: React.FC<NumberUpDownProps> = ({ seed, onScore }) => {
     // Keyboard support
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (!isGameStarted || feedback !== null) return; // Prevent input if game not started or feedback is active
+            if (!isGameStarted || feedback !== null || !isPlaying) return; // Prevent input if game not started or feedback is active
             if (e.key === 'ArrowUp') handleChoice('up');
             if (e.key === 'ArrowDown') handleChoice('down');
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [currentNumber, prevNumber, rng, isGameStarted, feedback]); // Added isGameStarted and feedback to dependencies
+    }, [currentNumber, prevNumber, rng, isGameStarted, feedback, isPlaying]); // Added isGameStarted and feedback to dependencies
 
 
 
@@ -186,7 +187,17 @@ const NumberUpDown: React.FC<NumberUpDownProps> = ({ seed, onScore }) => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     whileTap={{ scale: 0.95 }}
-                    onClick={startGame}
+                    onPointerDown={(e) => {
+                        e.preventDefault();
+                        if (e.currentTarget.setPointerCapture) {
+                            try {
+                                e.currentTarget.setPointerCapture(e.pointerId);
+                            } catch {
+                                // Ignore capture errors on unsupported pointer types
+                            }
+                        }
+                        startGame();
+                    }}
                     className="absolute bottom-20 bg-white text-blue-600 px-8 py-3 rounded-full font-bold text-xl shadow-lg z-30 hover:bg-blue-50 transition-colors"
                 >
                     {t('updown.start')}

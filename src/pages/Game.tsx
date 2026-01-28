@@ -90,8 +90,9 @@ const Game: React.FC = () => {
     const isPlaying = gameState.status === 'playing';
     const isFinished = gameState.status === 'finished';
     const isWaiting = gameState.status === 'waiting';
+    const isCountdown = gameState.status === 'countdown';
     const isCountdownActive = Boolean(
-        gameState.startAt && new Date(gameState.startAt).getTime() > (Date.now() + serverOffset)
+        isCountdown || (gameState.startAt && new Date(gameState.startAt).getTime() > (Date.now() + serverOffset))
     );
 
     const [isButtonEnabled, setIsButtonEnabled] = useState(false);
@@ -154,6 +155,29 @@ const Game: React.FC = () => {
         return gameState.winnerId === myId ? t('game.victory') : t('game.defeat');
     };
 
+    const totalScores = React.useMemo(() => {
+        const rounds = gameState.roundScores || [];
+        if (rounds.length === 0) {
+            return { my: gameState.myScore, op: gameState.opScore };
+        }
+        const sum = rounds.reduce(
+            (acc, round) => {
+                const p1 = Number(round?.p1_score || 0);
+                const p2 = Number(round?.p2_score || 0);
+                if (gameState.isPlayer1) {
+                    acc.my += p1;
+                    acc.op += p2;
+                } else {
+                    acc.my += p2;
+                    acc.op += p1;
+                }
+                return acc;
+            },
+            { my: 0, op: 0 }
+        );
+        return sum;
+    }, [gameState.roundScores, gameState.isPlayer1, gameState.myScore, gameState.opScore]);
+
     return (
         <div className="relative w-full h-[100dvh] bg-gray-900 text-white overflow-hidden flex flex-col font-sans select-none">
 
@@ -188,8 +212,11 @@ const Game: React.FC = () => {
                 {/* Center Timer */}
                 <div className="flex flex-col items-center w-1/3 pt-2">
                     {gameState.mode !== 'practice' && (
-                        <div className="text-sm font-bold text-blue-300 tracking-widest uppercase mb-1">
-                            Round {gameState.currentRound}/{gameState.totalRounds}
+                        <div className="flex flex-col items-center mb-1">
+                            <div className="text-sm font-bold text-blue-300 tracking-widest uppercase">
+                                Round {gameState.currentRound}/{gameState.totalRounds}
+                            </div>
+                            {/* Wins Display Removed */}
                         </div>
                     )}
                     <div
@@ -245,7 +272,7 @@ const Game: React.FC = () => {
                 )}
 
                 {/* Playing Area */}
-                {isPlaying && gameState.gameType && (
+                {(isPlaying || isCountdown) && gameState.gameType && (
                     <motion.div
                         key="gameContainer"
                         initial={{ opacity: 0, scale: 0.9 }}
@@ -258,55 +285,12 @@ const Game: React.FC = () => {
                             const start = gameState.startAt ? new Date(gameState.startAt).getTime() : 0;
                             const diff = (start - now) / 1000;
 
-                            // 1. Intermediate Result Phase (First 3 seconds of warmup for Rounds 2 & 3)
-                            // Show result of the PREVIOUS round.
-                            // Round 2 Starts -> Show Round 1 Result.
-                            if (diff > 3 && gameState.currentRound > 1) {
-                                const prevRoundIndex = gameState.currentRound - 2; // currentRound is 1-based, array is 0-based. Prev round is index-2.
-                                const prevRound = gameState.roundScores[prevRoundIndex];
-
-                                if (prevRound) {
-                                    const p1Score = prevRound.p1_score || 0;
-                                    const p2Score = prevRound.p2_score || 0;
-
-                                    const myRoundScore = gameState.isPlayer1 ? p1Score : p2Score;
-                                    const opRoundScore = gameState.isPlayer1 ? p2Score : p1Score;
-
-                                    const isWin = myRoundScore > opRoundScore;
-                                    const isDraw = myRoundScore === opRoundScore;
-
-                                    return (
-                                        <div className="absolute inset-0 bg-black/90 z-50 flex flex-col items-center justify-center p-8 text-center backdrop-blur-sm">
-                                            <motion.div
-                                                initial={{ scale: 0.8, opacity: 0 }}
-                                                animate={{ scale: 1, opacity: 1 }}
-                                                className="flex flex-col items-center"
-                                            >
-                                                <h2 className="text-4xl text-gray-300 mb-2 font-bold uppercase tracking-widest">{t('game.roundResult', { round: gameState.currentRound - 1 })}</h2>
-                                                <div className={`text-6xl font-black mb-8 ${isWin ? 'text-blue-400' : isDraw ? 'text-gray-400' : 'text-red-400'}`}>
-                                                    {isWin ? t('game.victory') : isDraw ? t('game.draw') : t('game.defeat')}
-                                                </div>
-
-                                                <div className="flex gap-12 text-4xl font-mono font-bold">
-                                                    <div className="flex flex-col items-center">
-                                                        <span className="text-sm text-gray-500 mb-1">{t('game.you')}</span>
-                                                        <span className="text-blue-400">{myRoundScore}</span>
-                                                    </div>
-                                                    <div className="flex flex-col items-center justify-center">
-                                                        <span className="text-2xl text-gray-600">VS</span>
-                                                    </div>
-                                                    <div className="flex flex-col items-center">
-                                                        <span className="text-sm text-gray-500 mb-1">{t('game.opponent')}</span>
-                                                        <span className="text-red-400">{opRoundScore}</span>
-                                                    </div>
-                                                </div>
-                                            </motion.div>
-                                        </div>
-                                    );
-                                }
-                            }
-
                             if (diff > 0) {
+                                // Result calculation variables removed as UI is hidden
+                                // Result calculation variables removed as UI is hidden
+                                // Result calculation variables removed as UI is hidden
+                                // Result calculation variables removed as UI is hidden
+
                                 return (
                                     <div className="absolute inset-0 bg-black/90 z-50 flex flex-col items-center justify-center p-8 text-center backdrop-blur-sm">
                                         <motion.div
@@ -315,6 +299,7 @@ const Game: React.FC = () => {
                                             exit={{ scale: 2, opacity: 0 }}
                                             className="flex flex-col items-center"
                                         >
+                                            {/* Previous round result removed */}
                                             <h2 className="text-6xl font-black text-yellow-400 mb-6 drop-shadow-lg flex flex-col items-center">
                                                 <span className="text-3xl text-white mb-2">Round {gameState.currentRound}</span>
                                                 {gameState.gameType === 'RPS' && t('rps.title')}
@@ -387,82 +372,86 @@ const Game: React.FC = () => {
                             </div>
                         )}
 
-                        <div className={`w-full h-full ${isCountdownActive || isTimeUp ? 'blur-sm pointer-events-none' : ''}`}>
-                            {gameState.gameType === 'RPS' && (
-                                <RockPaperScissors seed={gameState.seed} onScore={incrementScore} />
-                            )}
-                            {gameState.gameType === 'NUMBER' && (
-                                <NumberSortGame mode="asc" seed={gameState.seed} onScore={incrementScore} />
-                            )}
-                            {gameState.gameType === 'NUMBER_DESC' && (
-                                <NumberSortGame mode="desc" seed={gameState.seed} onScore={incrementScore} />
-                            )}
-                            {gameState.gameType === 'MATH' && (
-                                <MathChallenge seed={gameState.seed} onScore={incrementScore} />
-                            )}
-                            {gameState.gameType === 'TEN' && (
-                                <MakeTen seed={gameState.seed} onScore={incrementScore} />
-                            )}
-                            {gameState.gameType === 'COLOR' && (
-                                <ColorMatch seed={gameState.seed} onScore={incrementScore} />
-                            )}
-                            {gameState.gameType === 'MEMORY' && (
-                                <MemoryMatch seed={gameState.seed || ''} onScore={incrementScore} />
-                            )}
-                            {gameState.gameType === 'SEQUENCE' && (
-                                <SequenceGame
-                                    mode="reverse"
-                                    seed={gameState.seed}
-                                    onScore={incrementScore}
-                                    isPlaying={isPlaying && !isCountdownActive}
-                                />
-                            )}
-                            {gameState.gameType === 'SEQUENCE_NORMAL' && (
-                                <SequenceGame
-                                    mode="forward"
-                                    seed={gameState.seed}
-                                    onScore={incrementScore}
-                                    isPlaying={isPlaying && !isCountdownActive}
-                                />
-                            )}
-                            {gameState.gameType === 'LARGEST' && (
-                                <FindLargest seed={gameState.seed} onScore={incrementScore} />
-                            )}
-                            {gameState.gameType === 'PAIR' && (
-                                <FindPair seed={gameState.seed} onScore={incrementScore} />
-                            )}
-                            {gameState.gameType === 'UPDOWN' && (
-                                <NumberUpDown seed={gameState.seed} onScore={incrementScore} />
-                            )}
-                            {gameState.gameType === 'SLIDER' && (
-                                <NumberSlider seed={gameState.seed} onScore={incrementScore} />
-                            )}
-                            {gameState.gameType === 'ARROW' && (
-                                <ArrowSlider seed={gameState.seed} onScore={incrementScore} />
-                            )}
-                            {gameState.gameType === 'BLANK' && (
-                                <FillBlanks seed={gameState.seed} onScore={incrementScore} />
-                            )}
-                            {gameState.gameType === 'OPERATOR' && (
-                                <FindOperator seed={gameState.seed} onScore={incrementScore} />
-                            )}
-                            {gameState.gameType === 'LADDER' && (
-                                <LadderGame seed={gameState.seed} onScore={incrementScore} />
-                            )}
-                            {gameState.gameType === 'TAP_COLOR' && (
-                                <TapTheColor seed={gameState.seed} onScore={incrementScore} />
-                            )}
-                            {gameState.gameType === 'AIM' && (
-                                <AimingGame seed={gameState.seed} onScore={incrementScore} />
-                            )}
-                            {gameState.gameType === 'MOST_COLOR' && (
-                                <FindMostColor seed={gameState.seed} onScore={incrementScore} />
-                            )}
-                            {gameState.gameType === 'SORTING' && (
-                                <SortingGame seed={gameState.seed} onScore={incrementScore} />
-                            )}
-                            {gameState.gameType === 'SPY' && (
-                                <FindTheSpy seed={gameState.seed} onScore={incrementScore} />
+                        <div className="w-full h-full select-none minigame-area">
+                            {isPlaying && !isCountdownActive && (
+                                <>
+                                    {gameState.gameType === 'RPS' && (
+                                        <RockPaperScissors seed={gameState.seed} onScore={incrementScore} isPlaying />
+                                    )}
+                                    {gameState.gameType === 'NUMBER' && (
+                                        <NumberSortGame mode="asc" seed={gameState.seed} onScore={incrementScore} isPlaying />
+                                    )}
+                                    {gameState.gameType === 'NUMBER_DESC' && (
+                                        <NumberSortGame mode="desc" seed={gameState.seed} onScore={incrementScore} isPlaying />
+                                    )}
+                                    {gameState.gameType === 'MATH' && (
+                                        <MathChallenge seed={gameState.seed} onScore={incrementScore} isPlaying />
+                                    )}
+                                    {gameState.gameType === 'TEN' && (
+                                        <MakeTen seed={gameState.seed} onScore={incrementScore} isPlaying />
+                                    )}
+                                    {gameState.gameType === 'COLOR' && (
+                                        <ColorMatch seed={gameState.seed} onScore={incrementScore} isPlaying />
+                                    )}
+                                    {gameState.gameType === 'MEMORY' && (
+                                        <MemoryMatch seed={gameState.seed || ''} onScore={incrementScore} isPlaying />
+                                    )}
+                                    {gameState.gameType === 'SEQUENCE' && (
+                                        <SequenceGame
+                                            mode="reverse"
+                                            seed={gameState.seed}
+                                            onScore={incrementScore}
+                                            isPlaying
+                                        />
+                                    )}
+                                    {gameState.gameType === 'SEQUENCE_NORMAL' && (
+                                        <SequenceGame
+                                            mode="forward"
+                                            seed={gameState.seed}
+                                            onScore={incrementScore}
+                                            isPlaying
+                                        />
+                                    )}
+                                    {gameState.gameType === 'LARGEST' && (
+                                        <FindLargest seed={gameState.seed} onScore={incrementScore} isPlaying />
+                                    )}
+                                    {gameState.gameType === 'PAIR' && (
+                                        <FindPair seed={gameState.seed} onScore={incrementScore} isPlaying />
+                                    )}
+                                    {gameState.gameType === 'UPDOWN' && (
+                                        <NumberUpDown seed={gameState.seed} onScore={incrementScore} isPlaying />
+                                    )}
+                                    {gameState.gameType === 'SLIDER' && (
+                                        <NumberSlider seed={gameState.seed} onScore={incrementScore} isPlaying />
+                                    )}
+                                    {gameState.gameType === 'ARROW' && (
+                                        <ArrowSlider seed={gameState.seed} onScore={incrementScore} isPlaying />
+                                    )}
+                                    {gameState.gameType === 'BLANK' && (
+                                        <FillBlanks seed={gameState.seed} onScore={incrementScore} isPlaying />
+                                    )}
+                                    {gameState.gameType === 'OPERATOR' && (
+                                        <FindOperator seed={gameState.seed} onScore={incrementScore} isPlaying />
+                                    )}
+                                    {gameState.gameType === 'LADDER' && (
+                                        <LadderGame seed={gameState.seed} onScore={incrementScore} isPlaying />
+                                    )}
+                                    {gameState.gameType === 'TAP_COLOR' && (
+                                        <TapTheColor seed={gameState.seed} onScore={incrementScore} isPlaying />
+                                    )}
+                                    {gameState.gameType === 'AIM' && (
+                                        <AimingGame seed={gameState.seed} onScore={incrementScore} isPlaying />
+                                    )}
+                                    {gameState.gameType === 'MOST_COLOR' && (
+                                        <FindMostColor seed={gameState.seed} onScore={incrementScore} isPlaying />
+                                    )}
+                                    {gameState.gameType === 'SORTING' && (
+                                        <SortingGame seed={gameState.seed} onScore={incrementScore} isPlaying />
+                                    )}
+                                    {gameState.gameType === 'SPY' && (
+                                        <FindTheSpy seed={gameState.seed} onScore={incrementScore} isPlaying />
+                                    )}
+                                </>
                             )}
                         </div>
                     </motion.div>
@@ -597,10 +586,10 @@ const Game: React.FC = () => {
                                             className="grid grid-cols-4 p-4 bg-white/5 border-t-2 border-white/10 items-center font-mono"
                                         >
                                             <div className="text-left pl-4 text-yellow-400 font-black">{t('game.total')}</div>
-                                            <div className="text-blue-400 font-black text-2xl">{gameState.myScore}</div>
-                                            <div className="text-red-400 font-black text-2xl">{gameState.opScore}</div>
+                                            <div className="text-blue-400 font-black text-2xl">{totalScores.my}</div>
+                                            <div className="text-red-400 font-black text-2xl">{totalScores.op}</div>
                                             <div>
-                                                {gameState.myScore > gameState.opScore ? (
+                                                {totalScores.my > totalScores.op ? (
                                                     <Trophy className="w-6 h-6 text-yellow-400 mx-auto animate-bounce" />
                                                 ) : (
                                                     <span className="text-gray-500">-</span>

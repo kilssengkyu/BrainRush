@@ -7,6 +7,7 @@ import { useSound } from '../../contexts/SoundContext';
 interface ColorMatchProps {
     seed: string | null;
     onScore: (amount: number) => void;
+    isPlaying: boolean;
 }
 
 type ColorType = 'red' | 'blue' | 'green' | 'yellow';
@@ -18,7 +19,7 @@ const COLORS: Record<ColorType, { tailwind: string; hex: string }> = {
     yellow: { tailwind: 'text-yellow-400', hex: '#facc15' },
 };
 
-const ColorMatch: React.FC<ColorMatchProps> = ({ seed, onScore }) => {
+const ColorMatch: React.FC<ColorMatchProps> = ({ seed, onScore, isPlaying }) => {
     const { t } = useTranslation();
     const { playSound } = useSound();
     const [panelIndex, setPanelIndex] = useState(0);
@@ -71,7 +72,7 @@ const ColorMatch: React.FC<ColorMatchProps> = ({ seed, onScore }) => {
     }, [seed, panelIndex]);
 
     const handleItemClick = (index: number) => {
-        if (!currentPanel || isSolved) return;
+        if (!currentPanel || isSolved || !isPlaying) return;
         if (selectedIndices.has(index)) return;
 
         // Toggle selection
@@ -163,7 +164,17 @@ const ColorMatch: React.FC<ColorMatchProps> = ({ seed, onScore }) => {
                             }
                             transition={{ duration: 0.25 }}
                             exit={{ scale: 0, opacity: 0 }}
-                            onClick={() => handleItemClick(idx)}
+                            onPointerDown={(e) => {
+                                e.preventDefault();
+                                if (e.currentTarget.setPointerCapture) {
+                                    try {
+                                        e.currentTarget.setPointerCapture(e.pointerId);
+                                    } catch {
+                                        // Ignore capture errors on unsupported pointer types
+                                    }
+                                }
+                                handleItemClick(idx);
+                            }}
                             className={`w-36 h-36 rounded-2xl flex items-center justify-center text-4xl font-bold bg-gray-900 border-8 transition-all shadow-lg ${COLORS[item.visual].tailwind}`}
                             style={{
                                 borderColor: COLORS[item.visual].hex,

@@ -9,6 +9,7 @@ import { useSound } from '../../contexts/SoundContext';
 interface SortingGameProps {
     seed: string | null;
     onScore: (amount: number) => void;
+    isPlaying: boolean;
 }
 
 const SYMBOLS = [
@@ -20,7 +21,7 @@ const SYMBOLS = [
     { id: 'hexagon', icon: Hexagon, color: 'text-pink-400' },
 ];
 
-const SortingGame: React.FC<SortingGameProps> = ({ seed, onScore }) => {
+const SortingGame: React.FC<SortingGameProps> = ({ seed, onScore, isPlaying }) => {
     const { t } = useTranslation();
     const { playSound } = useSound();
     const controls = useAnimation();
@@ -70,6 +71,11 @@ const SortingGame: React.FC<SortingGameProps> = ({ seed, onScore }) => {
     };
 
     const handleDragEnd = async (_: any, info: PanInfo) => {
+        if (!isPlaying) {
+            controls.start({ x: 0, opacity: 1 });
+            return;
+        }
+
         const threshold = 100;
         if (Math.abs(info.offset.x) > threshold) {
             const direction = info.offset.x > 0 ? 'right' : 'left';

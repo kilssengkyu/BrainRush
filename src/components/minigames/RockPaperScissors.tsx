@@ -10,10 +10,11 @@ const MOVES: Move[] = ['rock', 'paper', 'scissors'];
 interface RPSProps {
     seed: string | null;
     onScore: (amount: number) => void;
+    isPlaying: boolean;
     // We can also pass 'combo' or 'multiplier' if we want fancier scoring later
 }
 
-const RockPaperScissors: React.FC<RPSProps> = ({ seed, onScore }) => {
+const RockPaperScissors: React.FC<RPSProps> = ({ seed, onScore, isPlaying }) => {
     const { t } = useTranslation();
     const { playSound } = useSound();
     const [index, setIndex] = useState(0);
@@ -34,7 +35,7 @@ const RockPaperScissors: React.FC<RPSProps> = ({ seed, onScore }) => {
 
     // Handle Input
     const handlePress = (move: Move) => {
-        if (!currentProblem) return;
+        if (!currentProblem || !isPlaying) return;
         const { target, isReverse } = currentProblem;
 
         let correctMove: Move;
@@ -105,7 +106,17 @@ const RockPaperScissors: React.FC<RPSProps> = ({ seed, onScore }) => {
                 {MOVES.map((move) => (
                     <motion.button
                         key={move}
-                        onMouseDown={() => handlePress(move)} // onMouseDown for faster reaction than onClick
+                        onPointerDown={(e) => {
+                            e.preventDefault();
+                            if (e.currentTarget.setPointerCapture) {
+                                try {
+                                    e.currentTarget.setPointerCapture(e.pointerId);
+                                } catch {
+                                    // Ignore capture errors on unsupported pointer types
+                                }
+                            }
+                            handlePress(move);
+                        }}
                         animate={shake === move ? { x: [-10, 10, -10, 10, 0], backgroundColor: "#ef4444" } : {}}
                         transition={{ duration: 0.4 }}
                         whileTap={{ scale: 0.9 }}

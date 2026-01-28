@@ -12,6 +12,7 @@ import { useSound } from '../../contexts/SoundContext';
 interface MemoryMatchProps {
     seed: string; // Used to sync randomization if needed (though local random is often fine for logic if not strict PVP lockstep)
     onScore: (amount: number) => void;
+    isPlaying: boolean;
 }
 
 interface Card {
@@ -27,7 +28,7 @@ const ICONS = [
     Umbrella, Anchor, Music, Camera, Gift
 ];
 
-const MemoryMatch: React.FC<MemoryMatchProps> = ({ seed, onScore }) => {
+const MemoryMatch: React.FC<MemoryMatchProps> = ({ seed, onScore, isPlaying }) => {
     const { t } = useTranslation();
     const { playSound } = useSound();
     const [stage, setStage] = useState(1);
@@ -120,6 +121,7 @@ const MemoryMatch: React.FC<MemoryMatchProps> = ({ seed, onScore }) => {
     };
 
     const handleCardClick = (index: number) => {
+        if (!isPlaying) return; // Block interaction on isPlaying false
         if (gameState !== 'PLAYING') return;
         if (isResolving) return;
         if (cards[index].isMatched || cards[index].isFlipped) return;
@@ -183,7 +185,17 @@ const MemoryMatch: React.FC<MemoryMatchProps> = ({ seed, onScore }) => {
                                 transition={{ duration: card.isMatched ? 0.25 : 0.15 }}
                                 exit={{ scale: 0, opacity: 0, transition: { duration: 0.2 } }}
                                 className={`aspect-square relative perspective-1000 ${card.isMatched ? 'pointer-events-none' : 'cursor-pointer'}`}
-                                onClick={() => handleCardClick(index)}
+                                onPointerDown={(e) => {
+                                    e.preventDefault();
+                                    if (e.currentTarget.setPointerCapture) {
+                                        try {
+                                            e.currentTarget.setPointerCapture(e.pointerId);
+                                        } catch {
+                                            // Ignore capture errors on unsupported pointer types
+                                        }
+                                    }
+                                    handleCardClick(index);
+                                }}
                             >
                                 <motion.div
                                     className={`w-full h-full rounded-xl shadow-xl flex items-center justify-center border-4 transform-style-3d ${card.isFlipped
@@ -227,7 +239,17 @@ const MemoryMatch: React.FC<MemoryMatchProps> = ({ seed, onScore }) => {
 
             <div className="mt-8 min-h-[64px]">
                 <button
-                    onClick={handleMemorizeDone}
+                    onPointerDown={(e) => {
+                        e.preventDefault();
+                        if (e.currentTarget.setPointerCapture) {
+                            try {
+                                e.currentTarget.setPointerCapture(e.pointerId);
+                            } catch {
+                                // Ignore capture errors on unsupported pointer types
+                            }
+                        }
+                        handleMemorizeDone();
+                    }}
                     disabled={gameState !== 'MEMORIZING'}
                     className={`px-8 py-4 bg-green-500 text-white font-black text-2xl rounded-2xl shadow-[0_4px_0_rgb(21,128,61)] transition-all ${gameState === 'MEMORIZING'
                         ? 'hover:bg-green-600 hover:shadow-[0_2px_0_rgb(21,128,61)] hover:translate-y-[2px]'

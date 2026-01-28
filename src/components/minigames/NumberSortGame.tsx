@@ -8,9 +8,10 @@ interface NumberSortGameProps {
     seed: string | null;
     onScore: (amount: number) => void;
     mode: 'asc' | 'desc';
+    isPlaying: boolean;
 }
 
-const NumberSortGame: React.FC<NumberSortGameProps> = ({ seed, onScore, mode }) => {
+const NumberSortGame: React.FC<NumberSortGameProps> = ({ seed, onScore, mode, isPlaying }) => {
     const { t } = useTranslation();
     const { playSound } = useSound();
     const [panelIndex, setPanelIndex] = useState(0);
@@ -64,7 +65,7 @@ const NumberSortGame: React.FC<NumberSortGameProps> = ({ seed, onScore, mode }) 
     }, [seed, panelIndex, mode]);
 
     const handleNumberClick = (num: number) => {
-        if (clearedNumbers.includes(num)) return;
+        if (clearedNumbers.includes(num) || !isPlaying) return;
 
         // Current target is the next number in the sorted answer key
         const nextExpectedIndex = clearedNumbers.length;
@@ -138,7 +139,17 @@ const NumberSortGame: React.FC<NumberSortGameProps> = ({ seed, onScore, mode }) 
                             return (
                                 <motion.button
                                     key={`${panelIndex}-${num}`}
-                                    onMouseDown={() => handleNumberClick(num)}
+                                    onPointerDown={(e) => {
+                                        e.preventDefault();
+                                        if (e.currentTarget.setPointerCapture) {
+                                            try {
+                                                e.currentTarget.setPointerCapture(e.pointerId);
+                                            } catch {
+                                                // Ignore capture errors on unsupported pointer types
+                                            }
+                                        }
+                                        handleNumberClick(num);
+                                    }}
                                     animate={
                                         shakeId === num
                                             ? { x: [-5, 5, -5, 5, 0], backgroundColor: cellErrorColor }

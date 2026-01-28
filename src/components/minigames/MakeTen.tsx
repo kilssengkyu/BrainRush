@@ -7,9 +7,10 @@ import { useSound } from '../../contexts/SoundContext';
 interface MakeTenProps {
     seed: string | null;
     onScore: (amount: number) => void;
+    isPlaying: boolean;
 }
 
-const MakeTen: React.FC<MakeTenProps> = ({ seed, onScore }) => {
+const MakeTen: React.FC<MakeTenProps> = ({ seed, onScore, isPlaying }) => {
     const { t } = useTranslation();
     const { playSound } = useSound();
     const [panelIndex, setPanelIndex] = useState(0);
@@ -82,7 +83,7 @@ const MakeTen: React.FC<MakeTenProps> = ({ seed, onScore }) => {
 
     // Handle Selection
     const toggleSelection = (index: number) => {
-        if (isSolved) return; // Disable interaction when solved
+        if (isSolved || !isPlaying) return; // Disable interaction when solved or not playing
         const newSet = new Set(selectedIndices);
         if (newSet.has(index)) {
             newSet.delete(index);
@@ -178,7 +179,17 @@ const MakeTen: React.FC<MakeTenProps> = ({ seed, onScore }) => {
                             }}
                             exit={{ scale: 0, opacity: 0 }}
                             whileTap={{ scale: 0.95 }}
-                            onClick={() => toggleSelection(idx)}
+                            onPointerDown={(e) => {
+                                e.preventDefault();
+                                if (e.currentTarget.setPointerCapture) {
+                                    try {
+                                        e.currentTarget.setPointerCapture(e.pointerId);
+                                    } catch {
+                                        // Ignore capture errors on unsupported pointer types
+                                    }
+                                }
+                                toggleSelection(idx);
+                            }}
                             className={`w-28 h-28 rounded-3xl flex items-center justify-center text-5xl font-bold text-white border-4 border-gray-700 transition-colors shadow-xl`}
                         >
                             {num}

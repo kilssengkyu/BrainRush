@@ -9,6 +9,7 @@ type Operator = '+' | '-' | '*' | '/';
 interface FindLargestProps {
     seed: string | null;
     onScore: (amount: number) => void;
+    isPlaying: boolean;
 }
 
 interface ExpressionOption {
@@ -44,7 +45,7 @@ const getLevel = (index: number) => {
 
 const formatExpression = (raw: string) => raw;
 
-const FindLargest: React.FC<FindLargestProps> = ({ seed, onScore }) => {
+const FindLargest: React.FC<FindLargestProps> = ({ seed, onScore, isPlaying }) => {
     const { t } = useTranslation();
     const { playSound } = useSound();
     const [panelIndex, setPanelIndex] = useState(0);
@@ -174,7 +175,7 @@ const FindLargest: React.FC<FindLargestProps> = ({ seed, onScore }) => {
     }, [seed, panelIndex]);
 
     const handleOptionClick = (option: ExpressionOption) => {
-        if (!currentProblem) return;
+        if (!currentProblem || !isPlaying) return;
 
         const scoreBase = 20 + panelIndex * 5;
 
@@ -224,7 +225,17 @@ const FindLargest: React.FC<FindLargestProps> = ({ seed, onScore }) => {
                     {currentProblem.options.map(option => (
                         <motion.button
                             key={option.id}
-                            onMouseDown={() => handleOptionClick(option)}
+                            onPointerDown={(e) => {
+                                e.preventDefault();
+                                if (e.currentTarget.setPointerCapture) {
+                                    try {
+                                        e.currentTarget.setPointerCapture(e.pointerId);
+                                    } catch {
+                                        // Ignore capture errors on unsupported pointer types
+                                    }
+                                }
+                                handleOptionClick(option);
+                            }}
                             animate={shakeId === option.id ? { x: [-6, 6, -6, 6, 0], backgroundColor: '#ef4444' } : {}}
                             whileTap={{ scale: 0.95 }}
                             className={`h-24 rounded-2xl flex items-center justify-center ${textClass} font-bold text-white bg-gray-800 border-b-4 border-gray-950 hover:bg-gray-700 active:border-b-0 active:translate-y-1 transition-all`}
