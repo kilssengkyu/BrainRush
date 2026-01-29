@@ -80,6 +80,10 @@
     "logout": "로그아웃",
     "profile": "프로필"
   },
+  "leaderboard": {
+    "button": "랭킹",
+    "title": "랭킹"
+  },
   "user": {
     "level": "레벨",
     "rank": "랭크"

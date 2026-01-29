@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Trophy } from 'lucide-react';
 import { useGameState } from '../hooks/useGameState';
 import { supabase } from '../lib/supabaseClient';
@@ -43,9 +43,86 @@ const Game: React.FC = () => {
     const [opponentProfile, setOpponentProfile] = useState<any>(null);
 
     // Game Hook
-    const { gameState, incrementScore, serverOffset, isWaitingTimeout, isTimeUp, onlineUsers } = useGameState(roomId!, myId, opponentId);
+    const { gameState, incrementScore, serverOffset, isWaitingTimeout, isTimeUp, onlineUsers, connectionStatus } = useGameState(roomId!, myId, opponentId);
 
     const isOpponentOnline = !opponentId || opponentId.startsWith('practice') || onlineUsers.includes(opponentId);
+
+    // Determine Status Logic
+    const isPlaying = gameState.status === 'playing';
+    const isFinished = gameState.status === 'finished';
+    const isWaiting = gameState.status === 'waiting';
+    const isCountdown = gameState.status === 'countdown';
+    const isCountdownActive = Boolean(
+        isCountdown || (gameState.startAt && new Date(gameState.startAt).getTime() > (Date.now() + serverOffset))
+    );
+
+    const now = Date.now() + serverOffset;
+    const warmupStart = gameState.startAt ? new Date(gameState.startAt).getTime() : 0;
+    const warmupDiff = (warmupStart - now) / 1000;
+    const isWarmup = warmupDiff > 0;
+    const showEmojiBar = isWarmup || isTimeUp || isFinished || isWaiting;
+
+    const showEmojiBarRef = useRef(false);
+    useEffect(() => {
+        showEmojiBarRef.current = showEmojiBar;
+    }, [showEmojiBar]);
+
+    const [emojiBursts, setEmojiBursts] = useState<Array<{ id: string; emoji: string; side: 'left' | 'right'; driftX: number; driftY: number; baseY: number; travelX: number }>>([]);
+    const emojiChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+
+    const spawnEmoji = useCallback((emoji: string, side: 'left' | 'right') => {
+        const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        const driftX = Math.floor(Math.random() * 18) - 9;
+        const driftY = Math.floor(Math.random() * 18) - 9;
+        const baseY = 45 + (Math.random() * 12 - 6);
+        const travelX = 70 + Math.floor(Math.random() * 30) - 15;
+        setEmojiBursts(prev => [...prev, { id, emoji, side, driftX, driftY, baseY, travelX }]);
+        window.setTimeout(() => {
+            setEmojiBursts(prev => prev.filter(item => item.id !== id));
+        }, 1400);
+    }, []);
+
+    useEffect(() => {
+        if (!roomId || !myId) return;
+        const channel = supabase.channel(`game_emoji_${roomId}`, {
+            config: { broadcast: { self: false } }
+        });
+
+        channel.on('broadcast', { event: 'emoji' }, ({ payload }) => {
+            if (!showEmojiBarRef.current) return;
+            const incomingEmoji = payload?.emoji;
+            const senderId = payload?.senderId;
+            if (!incomingEmoji || senderId === myId) return;
+            spawnEmoji(incomingEmoji, 'right');
+        });
+
+        channel.subscribe();
+        emojiChannelRef.current = channel;
+
+        return () => {
+            supabase.removeChannel(channel);
+            emojiChannelRef.current = null;
+        };
+    }, [roomId, myId, spawnEmoji]);
+
+    const handleEmojiSend = useCallback((emoji: string) => {
+        if (!myId || !emojiChannelRef.current) return;
+        spawnEmoji(emoji, 'left');
+        emojiChannelRef.current.send({
+            type: 'broadcast',
+            event: 'emoji',
+            payload: { emoji, senderId: myId }
+        });
+    }, [myId, spawnEmoji]);
+
+    const emojiRowTop = ['🙂', '😭', '😂', '☹️'];
+    const emojiRowBottom = ['❤️', '💔', '👍', '👎'];
+    const isConnectionUnstable = connectionStatus !== 'connected';
+    const connectionLabel = connectionStatus === 'disconnected'
+        ? '연결이 끊어졌어요. 재연결 중...'
+        : connectionStatus === 'reconnecting'
+            ? '연결 상태가 불안정합니다...'
+            : '연결 중...';
 
     useEffect(() => {
         if (!roomId) {
@@ -85,15 +162,6 @@ const Game: React.FC = () => {
         }
     }, [isWaitingTimeout, navigate]);
 
-
-    // Determine Status Logic
-    const isPlaying = gameState.status === 'playing';
-    const isFinished = gameState.status === 'finished';
-    const isWaiting = gameState.status === 'waiting';
-    const isCountdown = gameState.status === 'countdown';
-    const isCountdownActive = Boolean(
-        isCountdown || (gameState.startAt && new Date(gameState.startAt).getTime() > (Date.now() + serverOffset))
-    );
 
     const [isButtonEnabled, setIsButtonEnabled] = useState(false);
 
@@ -195,7 +263,12 @@ const Game: React.FC = () => {
 
                 {/* My Profile */}
                 <div className="flex items-center gap-4 w-1/3 pt-2">
-                    <img src={myProfile?.avatar_url || '/default-avatar.png'} className="w-12 h-12 rounded-full border-2 border-blue-500" />
+                    <div className="relative">
+                        <img src={myProfile?.avatar_url || '/default-avatar.png'} className="w-12 h-12 rounded-full border-2 border-blue-500" />
+                        {isConnectionUnstable && (
+                            <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-yellow-300 border-t-transparent animate-spin bg-gray-900/80" />
+                        )}
+                    </div>
                     <div>
                         <div className="font-bold text-lg flex items-center gap-2">
                             <Flag code={myProfile?.country} />
@@ -259,15 +332,61 @@ const Game: React.FC = () => {
                 </div>
             </header>
 
+            {isConnectionUnstable && (
+                <div className="absolute top-24 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 bg-yellow-500/20 border border-yellow-400/40 text-yellow-100 text-xs font-bold px-3 py-1.5 rounded-full backdrop-blur-md">
+                    <span className="w-3 h-3 rounded-full border-2 border-yellow-200 border-t-transparent animate-spin" />
+                    <span>{connectionLabel}</span>
+                </div>
+            )}
+
 
             {/* Main Game Area */}
             <main className="flex-1 relative flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-black">
 
                 {/* Waiting Screen */}
                 {isWaiting && (
-                    <div className="flex flex-col items-center animate-pulse">
-                        <div className="text-2xl font-bold mb-4">{t('game.opponentWaiting')}</div>
-                        <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                    <div className="absolute inset-0 flex flex-col">
+                        <div className="flex-1 flex items-center justify-center bg-gradient-to-b from-blue-900/40 to-transparent">
+                            <div className="flex items-center gap-6 bg-gray-900/60 border border-blue-400/20 rounded-3xl px-8 py-6 shadow-xl">
+                                <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-blue-500 bg-gray-800">
+                                    <img src={myProfile?.avatar_url || '/default-avatar.png'} className="w-full h-full object-cover" />
+                                </div>
+                                <div>
+                                    <div className="text-lg font-bold text-white flex items-center gap-2">
+                                        <Flag code={myProfile?.country} />
+                                        <span>{myProfile?.nickname || t('game.unknownPlayer')}</span>
+                                    </div>
+                                    <div className="text-blue-300 font-mono font-bold">{(myProfile?.mmr ?? 1000).toLocaleString()} MMR</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex-1 flex items-center justify-center bg-gradient-to-t from-red-900/40 to-transparent">
+                            <div className="flex items-center gap-6 bg-gray-900/60 border border-red-400/20 rounded-3xl px-8 py-6 shadow-xl">
+                                <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-red-500 bg-gray-800 flex items-center justify-center">
+                                    {opponentProfile?.avatar_url ? (
+                                        <img src={opponentProfile.avatar_url} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <div className="w-10 h-10 rounded-full border-2 border-red-400 border-dashed" />
+                                    )}
+                                </div>
+                                <div>
+                                    <div className="text-lg font-bold text-white flex items-center gap-2">
+                                        <Flag code={opponentProfile?.country} />
+                                        <span>{opponentProfile?.nickname || t('game.opponentWaiting')}</span>
+                                    </div>
+                                    <div className="text-red-300 font-mono font-bold">
+                                        {opponentProfile?.mmr ? `${opponentProfile.mmr.toLocaleString()} MMR` : t('game.opponentWaiting')}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+                            <div className="w-16 h-16 rounded-full bg-gray-900 border-2 border-white/20 flex items-center justify-center text-xl font-black text-white shadow-lg">
+                                VS
+                            </div>
+                        </div>
                     </div>
                 )}
 
@@ -280,84 +399,70 @@ const Game: React.FC = () => {
                         className="w-full h-full p-4 relative"
                     >
                         {/* WARM UP OVERLAY */}
-                        {(() => {
-                            const now = Date.now() + serverOffset;
-                            const start = gameState.startAt ? new Date(gameState.startAt).getTime() : 0;
-                            const diff = (start - now) / 1000;
+                        {isWarmup && (
+                            <div className="absolute inset-0 bg-black/90 z-50 flex flex-col items-center justify-center p-8 text-center backdrop-blur-sm">
+                                <motion.div
+                                    initial={{ scale: 0.5, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    exit={{ scale: 2, opacity: 0 }}
+                                    className="flex flex-col items-center"
+                                >
+                                    {/* Previous round result removed */}
+                                    <h2 className="text-6xl font-black text-yellow-400 mb-6 drop-shadow-lg flex flex-col items-center">
+                                        <span className="text-3xl text-white mb-2">Round {gameState.currentRound}</span>
+                                        {gameState.gameType === 'RPS' && t('rps.title')}
+                                        {gameState.gameType === 'NUMBER' && t('number.title')}
+                                        {gameState.gameType === 'NUMBER_DESC' && t('number.titleDesc')}
+                                        {gameState.gameType === 'MATH' && t('math.title')}
+                                        {gameState.gameType === 'TEN' && t('ten.title')}
+                                        {gameState.gameType === 'COLOR' && t('color.title')}
+                                        {gameState.gameType === 'MEMORY' && t('memory.title')}
+                                        {gameState.gameType === 'SEQUENCE' && t('sequence.title')}
+                                        {gameState.gameType === 'SEQUENCE_NORMAL' && t('sequence.titleNormal')}
+                                        {gameState.gameType === 'LARGEST' && t('largest.title')}
+                                        {gameState.gameType === 'PAIR' && t('pair.title')}
+                                        {gameState.gameType === 'UPDOWN' && t('updown.title')}
+                                        {gameState.gameType === 'SLIDER' && t('slider.title')}
+                                        {gameState.gameType === 'ARROW' && t('arrow.title')}
+                                        {gameState.gameType === 'BLANK' && t('fillBlanks.title')}
+                                        {gameState.gameType === 'OPERATOR' && t('findOperator.title')}
+                                        {gameState.gameType === 'LADDER' && t('ladder.title')}
+                                        {gameState.gameType === 'AIM' && t('aim.title')}
+                                        {gameState.gameType === 'MOST_COLOR' && t('mostColor.title')}
+                                        {gameState.gameType === 'SORTING' && t('sorting.title')}
+                                        {gameState.gameType === 'SPY' && t('spy.title')}
+                                    </h2>
+                                    <p className="text-2xl text-white mb-12 font-bold max-w-2xl">
+                                        {gameState.gameType === 'RPS' && t('rps.instruction')}
+                                        {gameState.gameType === 'NUMBER' && t('number.instruction')}
+                                        {gameState.gameType === 'NUMBER_DESC' && t('number.instructionDesc')}
+                                        {gameState.gameType === 'MATH' && t('math.instruction')}
+                                        {gameState.gameType === 'TEN' && t('ten.instruction')}
+                                        {gameState.gameType === 'COLOR' && t('color.instruction')}
+                                        {gameState.gameType === 'MEMORY' && t('memory.instruction')}
+                                        {gameState.gameType === 'SEQUENCE' && t('sequence.instruction')}
+                                        {gameState.gameType === 'SEQUENCE_NORMAL' && t('sequence.instructionNormal')}
+                                        {gameState.gameType === 'LARGEST' && t('largest.instruction')}
+                                        {gameState.gameType === 'PAIR' && t('pair.instruction')}
+                                        {gameState.gameType === 'UPDOWN' && t('updown.instruction')}
+                                        {gameState.gameType === 'SLIDER' && t('slider.instruction')}
+                                        {gameState.gameType === 'ARROW' && t('arrow.instruction')}
+                                        {gameState.gameType === 'BLANK' && t('fillBlanks.instruction')}
+                                        {gameState.gameType === 'OPERATOR' && t('findOperator.instruction')}
+                                        {gameState.gameType === 'LADDER' && t('ladder.instruction')}
+                                        {gameState.gameType === 'AIM' && t('aim.instruction')}
+                                        {gameState.gameType === 'MOST_COLOR' && t('mostColor.instruction')}
+                                        {gameState.gameType === 'SORTING' && t('sorting.instruction')}
+                                        {gameState.gameType === 'SPY' && t('spy.instruction')}
+                                    </p>
 
-                            if (diff > 0) {
-                                // Result calculation variables removed as UI is hidden
-                                // Result calculation variables removed as UI is hidden
-                                // Result calculation variables removed as UI is hidden
-                                // Result calculation variables removed as UI is hidden
-
-                                return (
-                                    <div className="absolute inset-0 bg-black/90 z-50 flex flex-col items-center justify-center p-8 text-center backdrop-blur-sm">
-                                        <motion.div
-                                            initial={{ scale: 0.5, opacity: 0 }}
-                                            animate={{ scale: 1, opacity: 1 }}
-                                            exit={{ scale: 2, opacity: 0 }}
-                                            className="flex flex-col items-center"
-                                        >
-                                            {/* Previous round result removed */}
-                                            <h2 className="text-6xl font-black text-yellow-400 mb-6 drop-shadow-lg flex flex-col items-center">
-                                                <span className="text-3xl text-white mb-2">Round {gameState.currentRound}</span>
-                                                {gameState.gameType === 'RPS' && t('rps.title')}
-                                                {gameState.gameType === 'NUMBER' && t('number.title')}
-                                                {gameState.gameType === 'NUMBER_DESC' && t('number.titleDesc')}
-                                                {gameState.gameType === 'MATH' && t('math.title')}
-                                                {gameState.gameType === 'TEN' && t('ten.title')}
-                                                {gameState.gameType === 'COLOR' && t('color.title')}
-                                                {gameState.gameType === 'MEMORY' && t('memory.title')}
-                                                {gameState.gameType === 'SEQUENCE' && t('sequence.title')}
-                                                {gameState.gameType === 'SEQUENCE_NORMAL' && t('sequence.titleNormal')}
-                                                {gameState.gameType === 'LARGEST' && t('largest.title')}
-                                                {gameState.gameType === 'PAIR' && t('pair.title')}
-                                                {gameState.gameType === 'UPDOWN' && t('updown.title')}
-                                                {gameState.gameType === 'SLIDER' && t('slider.title')}
-                                                {gameState.gameType === 'ARROW' && t('arrow.title')}
-                                                {gameState.gameType === 'BLANK' && t('fillBlanks.title')}
-                                                {gameState.gameType === 'OPERATOR' && t('findOperator.title')}
-                                                {gameState.gameType === 'LADDER' && t('ladder.title')}
-                                                {gameState.gameType === 'AIM' && t('aim.title')}
-                                                {gameState.gameType === 'MOST_COLOR' && t('mostColor.title')}
-                                                {gameState.gameType === 'SORTING' && t('sorting.title')}
-                                                {gameState.gameType === 'SPY' && t('spy.title')}
-                                            </h2>
-                                            <p className="text-2xl text-white mb-12 font-bold max-w-2xl">
-                                                {gameState.gameType === 'RPS' && t('rps.instruction')}
-                                                {gameState.gameType === 'NUMBER' && t('number.instruction')}
-                                                {gameState.gameType === 'NUMBER_DESC' && t('number.instructionDesc')}
-                                                {gameState.gameType === 'MATH' && t('math.instruction')}
-                                                {gameState.gameType === 'TEN' && t('ten.instruction')}
-                                                {gameState.gameType === 'COLOR' && t('color.instruction')}
-                                                {gameState.gameType === 'MEMORY' && t('memory.instruction')}
-                                                {gameState.gameType === 'SEQUENCE' && t('sequence.instruction')}
-                                                {gameState.gameType === 'SEQUENCE_NORMAL' && t('sequence.instructionNormal')}
-                                                {gameState.gameType === 'LARGEST' && t('largest.instruction')}
-                                                {gameState.gameType === 'PAIR' && t('pair.instruction')}
-                                                {gameState.gameType === 'UPDOWN' && t('updown.instruction')}
-                                                {gameState.gameType === 'SLIDER' && t('slider.instruction')}
-                                                {gameState.gameType === 'ARROW' && t('arrow.instruction')}
-                                                {gameState.gameType === 'BLANK' && t('fillBlanks.instruction')}
-                                                {gameState.gameType === 'OPERATOR' && t('findOperator.instruction')}
-                                                {gameState.gameType === 'LADDER' && t('ladder.instruction')}
-                                                {gameState.gameType === 'AIM' && t('aim.instruction')}
-                                                {gameState.gameType === 'MOST_COLOR' && t('mostColor.instruction')}
-                                                {gameState.gameType === 'SORTING' && t('sorting.instruction')}
-                                                {gameState.gameType === 'SPY' && t('spy.instruction')}
-                                            </p>
-
-                                            <div className="text-9xl font-black font-mono text-white animate-pulse">
-                                                {Math.ceil(diff)}
-                                            </div>
-                                            <div className="text-sm text-gray-400 mt-2 font-bold tracking-widest uppercase">{t('game.startingIn')}</div>
-                                        </motion.div>
+                                    <div className="text-9xl font-black font-mono text-white animate-pulse">
+                                        {Math.ceil(warmupDiff)}
                                     </div>
-                                );
-                            }
-                            return null;
-                        })()}
+                                    <div className="text-sm text-gray-400 mt-2 font-bold tracking-widest uppercase">{t('game.startingIn')}</div>
+                                </motion.div>
+                            </div>
+                        )}
 
                         {/* Round Finished Overlay (Grace Period) */}
                         {isTimeUp && (
@@ -639,6 +744,57 @@ const Game: React.FC = () => {
                                 </>
                             )}
                         </motion.div>
+                    </div>
+                )}
+
+                {showEmojiBar && (
+                    <div className="absolute inset-0 z-[60] pointer-events-none">
+                        <AnimatePresence>
+                            {emojiBursts.map((item) => (
+                                <motion.span
+                                    key={item.id}
+                                    style={{ top: `${item.baseY}%` }}
+                                    className={`absolute -translate-y-1/2 ${item.side === 'left' ? 'left-6' : 'right-6'} text-6xl inline-flex items-center justify-center w-20 h-20 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm shadow-[0_8px_18px_rgba(0,0,0,0.35)]`}
+                                    initial={{ opacity: 0, y: 0, x: item.side === 'left' ? -6 : 6, scale: 0.7 }}
+                                    animate={{
+                                        opacity: 1,
+                                        y: item.driftY,
+                                        x: (item.side === 'left' ? item.travelX : -item.travelX) + item.driftX,
+                                        scale: 1
+                                    }}
+                                    exit={{ opacity: 0, scale: 0.8 }}
+                                    transition={{ duration: 1.1, ease: 'easeOut' }}
+                                >
+                                    {item.emoji}
+                                </motion.span>
+                            ))}
+                        </AnimatePresence>
+                        <div className={`absolute ${isFinished ? 'top-24' : 'bottom-6'} left-1/2 -translate-x-1/2 pointer-events-auto`}>
+                            <div className="bg-black/50 border border-white/10 rounded-2xl px-4 py-4 backdrop-blur-md w-[360px] max-w-[92vw]">
+                                <div className="grid grid-cols-4 gap-4 mb-4 justify-items-center">
+                                    {emojiRowTop.map((emoji) => (
+                                        <button
+                                            key={emoji}
+                                            onClick={() => handleEmojiSend(emoji)}
+                                            className="w-16 h-16 rounded-2xl bg-white/5 hover:bg-white/10 text-3xl transition active:scale-95"
+                                        >
+                                            {emoji}
+                                        </button>
+                                    ))}
+                                </div>
+                                <div className="grid grid-cols-4 gap-4 justify-items-center">
+                                    {emojiRowBottom.map((emoji) => (
+                                        <button
+                                            key={emoji}
+                                            onClick={() => handleEmojiSend(emoji)}
+                                            className="w-16 h-16 rounded-2xl bg-white/5 hover:bg-white/10 text-3xl transition active:scale-95"
+                                        >
+                                            {emoji}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 )}
             </main>

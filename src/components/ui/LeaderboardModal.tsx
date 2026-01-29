@@ -6,6 +6,7 @@ import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import Flag from './Flag';
 import { getTierColor, getTierIcon } from '../../utils/rankUtils';
+import UserProfileModal from './UserProfileModal';
 
 interface LeaderboardModalProps {
     isOpen: boolean;
@@ -28,6 +29,7 @@ const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onClose }) 
     const [topPlayers, setTopPlayers] = useState<Ranker[]>([]);
     const [myRank, setMyRank] = useState<Ranker | null>(null);
     const [loading, setLoading] = useState(false);
+    const [viewProfileId, setViewProfileId] = useState<string | null>(null);
 
     useEffect(() => {
         if (isOpen) {
@@ -56,64 +58,76 @@ const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onClose }) 
     };
 
     return (
-        <AnimatePresence>
-            {isOpen && (
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4"
-                    onClick={onClose}
-                >
+        <>
+            <AnimatePresence>
+                {isOpen && (
                     <motion.div
-                        initial={{ scale: 0.9, y: 20 }}
-                        animate={{ scale: 1, y: 0 }}
-                        exit={{ scale: 0.9, y: 20 }}
-                        className="bg-gray-900 w-full max-w-md h-[80vh] rounded-3xl border border-gray-700 shadow-2xl flex flex-col overflow-hidden relative"
-                        onClick={(e) => e.stopPropagation()}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4"
+                        onClick={onClose}
                     >
-                        {/* Header */}
-                        <div className="flex justify-between items-center p-5 border-b border-gray-800 bg-gray-900/95 sticky top-0 z-10">
-                            <h3 className="text-xl font-black text-white flex items-center gap-2">
-                                <Trophy className="text-yellow-400 w-6 h-6" />
-                                {t('leaderboard.title', 'Ranking')}
-                            </h3>
-                            <button
-                                onClick={onClose}
-                                className="p-2 rounded-full hover:bg-gray-800 transition-colors"
-                            >
-                                <X className="w-5 h-5 text-gray-400" />
-                            </button>
-                        </div>
-
-                        {/* List */}
-                        <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-hide">
-                            {loading ? (
-                                <div className="flex items-center justify-center h-full">
-                                    <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
-                                </div>
-                            ) : (
-                                topPlayers.map((player) => (
-                                    <RankItem key={player.id} player={player} isMe={player.id === user?.id} />
-                                ))
-                            )}
-                        </div>
-
-                        {/* My Rank (Sticky Bottom) */}
-                        {myRank && !topPlayers.some(p => p.id === myRank.id) && (
-                            <div className="p-4 border-t border-gray-800 bg-gray-900/95 shadow-[0_-10px_20px_rgba(0,0,0,0.5)] z-10">
-                                <div className="text-xs text-gray-500 mb-2 font-bold px-2">MY RANK</div>
-                                <RankItem player={myRank} isMe={true} />
+                        <motion.div
+                            initial={{ scale: 0.9, y: 20 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.9, y: 20 }}
+                            className="bg-gray-900 w-full max-w-md h-[80vh] rounded-3xl border border-gray-700 shadow-2xl flex flex-col overflow-hidden relative"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            {/* Header */}
+                            <div className="flex justify-between items-center p-5 border-b border-gray-800 bg-gray-900/95 sticky top-0 z-10">
+                                <h3 className="text-xl font-black text-white flex items-center gap-2">
+                                    <Trophy className="text-yellow-400 w-6 h-6" />
+                                    {t('leaderboard.title', 'Ranking')}
+                                </h3>
+                                <button
+                                    onClick={onClose}
+                                    className="p-2 rounded-full hover:bg-gray-800 transition-colors"
+                                >
+                                    <X className="w-5 h-5 text-gray-400" />
+                                </button>
                             </div>
-                        )}
+
+                            {/* List */}
+                            <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-hide">
+                                {loading ? (
+                                    <div className="flex items-center justify-center h-full">
+                                        <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+                                    </div>
+                                ) : (
+                                    topPlayers.map((player) => (
+                                        <RankItem
+                                            key={player.id || `rank-${player.rank}`}
+                                            player={player}
+                                            isMe={player.id === user?.id}
+                                            onClick={player.id ? () => setViewProfileId(player.id) : undefined}
+                                        />
+                                    ))
+                                )}
+                            </div>
+
+                            {/* My Rank (Sticky Bottom) */}
+                            {myRank && !topPlayers.some(p => p.id === myRank.id) && (
+                                <div className="p-4 border-t border-gray-800 bg-gray-900/95 shadow-[0_-10px_20px_rgba(0,0,0,0.5)] z-10">
+                                    <div className="text-xs text-gray-500 mb-2 font-bold px-2">MY RANK</div>
+                                    <RankItem player={myRank} isMe={true} onClick={() => setViewProfileId(myRank.id)} />
+                                </div>
+                            )}
+                        </motion.div>
                     </motion.div>
-                </motion.div>
-            )}
-        </AnimatePresence>
+                )}
+            </AnimatePresence>
+            <UserProfileModal
+                isOpen={!!viewProfileId}
+                onClose={() => setViewProfileId(null)}
+                userId={viewProfileId}
+            />
+        </>
     );
 };
 
-const RankItem = ({ player, isMe }: { player: Ranker, isMe: boolean }) => {
+const RankItem = ({ player, isMe, onClick }: { player: Ranker, isMe: boolean, onClick?: () => void }) => {
     const TierIcon = getTierIcon(player.tier);
     const tierColor = getTierColor(player.tier);
 
@@ -133,7 +147,10 @@ const RankItem = ({ player, isMe }: { player: Ranker, isMe: boolean }) => {
     }
 
     return (
-        <div className={`flex items-center gap-3 p-3 rounded-2xl border ${bgStyle} transition-all`}>
+        <div
+            className={`flex items-center gap-3 p-3 rounded-2xl border ${bgStyle} transition-all cursor-pointer`}
+            onClick={onClick}
+        >
             {/* Rank Number */}
             <div className={`w-8 text-center ${rankStyle}`}>
                 {player.rank}

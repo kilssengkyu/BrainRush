@@ -4,6 +4,7 @@ import { X, Trophy, Zap, User as UserIcon } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 import Flag from './Flag';
 import { useUI } from '../../contexts/UIContext';
+import UserProfileModal from './UserProfileModal';
 
 interface MatchHistoryModalProps {
     isOpen: boolean;
@@ -23,6 +24,7 @@ const MatchHistoryModal = ({ isOpen, onClose, userId, initialMode = 'all' }: Mat
     const [page, setPage] = useState(0);
     const [hasMore, setHasMore] = useState(true);
     const observerTarget = useRef<HTMLDivElement>(null);
+    const [viewProfileId, setViewProfileId] = useState<string | null>(null);
 
     const lastRequestMode = useRef<string | null>(null);
 
@@ -191,7 +193,14 @@ const MatchHistoryModal = ({ isOpen, onClose, userId, initialMode = 'all' }: Mat
                         </div>
                     ) : (
                         history.map((match) => (
-                            <div key={match.session_id} className="bg-gray-800/50 p-3 rounded-xl flex items-center justify-between border border-white/5 hover:border-white/10 transition">
+                            <div
+                                key={match.session_id}
+                                className="bg-gray-800/50 p-3 rounded-xl flex items-center justify-between border border-white/5 hover:border-white/10 transition cursor-pointer"
+                                onClick={() => {
+                                    if (!match.opponent_id || match.opponent_id.startsWith('guest_')) return;
+                                    setViewProfileId(match.opponent_id);
+                                }}
+                            >
                                 {/* Left: Result & Mode */}
                                 <div className="flex items-center gap-3">
                                     <div className={`w-12 h-12 rounded-lg flex flex-col items-center justify-center font-bold text-sm ${match.result === 'WIN' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' :
@@ -229,7 +238,7 @@ const MatchHistoryModal = ({ isOpen, onClose, userId, initialMode = 'all' }: Mat
                                     {/* Add Friend Button */}
                                     {!match.is_friend && match.opponent_id && match.opponent_id !== userId && !match.opponent_id.startsWith('guest_') && (
                                         <button
-                                            onClick={() => handleAddFriend(match.opponent_id)}
+                                            onClick={(e) => { e.stopPropagation(); handleAddFriend(match.opponent_id); }}
                                             className="p-1.5 bg-green-600/20 text-green-400 rounded-lg hover:bg-green-600 hover:text-white transition ml-1"
                                             title={t('social.addFriend')}
                                         >
@@ -249,6 +258,11 @@ const MatchHistoryModal = ({ isOpen, onClose, userId, initialMode = 'all' }: Mat
                     </div>
                 </div>
             </div>
+            <UserProfileModal
+                isOpen={!!viewProfileId}
+                onClose={() => setViewProfileId(null)}
+                userId={viewProfileId}
+            />
         </div>
     );
 };

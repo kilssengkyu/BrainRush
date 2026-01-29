@@ -41,6 +41,8 @@ const Profile = () => {
 
     // Chat State
     const [chatFriend, setChatFriend] = useState<{ id: string; nickname: string } | null>(null);
+    const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
+    const [unreadChatCount, setUnreadChatCount] = useState(0);
 
     useEffect(() => {
         if (profile?.nickname) {
@@ -50,6 +52,64 @@ const Profile = () => {
             setCountry(profile.country);
         }
     }, [profile]);
+
+    useEffect(() => {
+        if (!user) {
+            setPendingRequestsCount(0);
+            setUnreadChatCount(0);
+            return;
+        }
+
+        const fetchPendingRequestsCount = async () => {
+            const { count, error } = await supabase
+                .from('friendships')
+                .select('id', { count: 'exact', head: true })
+                .eq('friend_id', user.id)
+                .eq('status', 'pending');
+            if (!error) setPendingRequestsCount(count || 0);
+        };
+
+        const fetchUnreadChatCount = async () => {
+            const { count, error } = await supabase
+                .from('chat_messages')
+                .select('id', { count: 'exact', head: true })
+                .eq('receiver_id', user.id)
+                .eq('is_read', false);
+            if (!error) setUnreadChatCount(count || 0);
+        };
+
+        fetchPendingRequestsCount();
+        fetchUnreadChatCount();
+
+        const friendRequestChannel = supabase
+            .channel(`friend_requests_count_${user.id}`)
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'friendships',
+                filter: `friend_id=eq.${user.id}`
+            }, () => {
+                fetchPendingRequestsCount();
+            })
+            .subscribe();
+
+        const unreadChatChannel = supabase
+            .channel(`unread_chat_count_${user.id}`)
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'chat_messages',
+                filter: `receiver_id=eq.${user.id}`
+            }, () => {
+                fetchUnreadChatCount();
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(friendRequestChannel);
+            supabase.removeChannel(unreadChatChannel);
+        };
+    }, [user]);
 
     const handleBack = () => {
         playSound('click');
@@ -248,9 +308,10 @@ const Profile = () => {
         accuracy: profile?.accuracy || 0,
         observation: profile?.observation || 0
     };
+    const hasSocialNotifications = pendingRequestsCount > 0 || unreadChatCount > 0;
 
     return (
-        <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center p-4 relative overflow-y-auto">
+        <div className="h-[100dvh] bg-gray-900 text-white flex flex-col items-center p-4 relative overflow-hidden">
             {/* Background Effects */}
             <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-800 via-gray-900 to-black pointer-events-none" />
 
@@ -268,9 +329,12 @@ const Profile = () => {
                     </button>
                     <button
                         onClick={() => setActiveTab('friends')}
-                        className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all flex items-center gap-1 ${activeTab === 'friends' ? 'bg-green-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+                        className={`relative px-4 py-1.5 rounded-full text-sm font-bold transition-all flex items-center gap-1 ${activeTab === 'friends' ? 'bg-green-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
                     >
                         {t('social.friends')}
+                        {hasSocialNotifications && (
+                            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-slate-800" aria-hidden="true"></span>
+                        )}
                     </button>
                 </div>
                 <div className="flex gap-2">
@@ -281,15 +345,16 @@ const Profile = () => {
             </div>
 
             {/* Content */}
-            <AnimatePresence mode="wait">
-                {activeTab === 'profile' ? (
-                    <motion.div
-                        key="profile"
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: 20 }}
-                        className="w-full max-w-md bg-gray-800/50 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl relative z-10"
-                    >
+            <div className="flex-1 w-full flex flex-col items-center overflow-y-auto pb-8 no-scrollbar">
+                <AnimatePresence mode="wait">
+                    {activeTab === 'profile' ? (
+                        <motion.div
+                            key="profile"
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 20 }}
+                            className="w-full max-w-md bg-gray-800/50 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl relative z-10"
+                        >
                         {/* Avatar Section */}
                         <div className="flex flex-col items-center mb-8">
                             <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 p-[3px] mb-4">
@@ -406,11 +471,6 @@ const Profile = () => {
                                 <div className="flex gap-4 items-end">
                                     <span className="text-lg font-bold text-blue-400">{wins}W</span>
                                     <span className="text-lg font-bold text-red-400">{losses}L</span>
-                                    {profile?.disconnects && profile.disconnects > 0 && (
-                                        <span className="text-lg font-bold text-gray-500 flex items-center gap-1" title={t('profile.disconnects')}>
-                                            <LogOut className="w-4 h-4" /> {profile.disconnects}
-                                        </span>
-                                    )}
                                 </div>
                             </button>
 
@@ -471,23 +531,25 @@ const Profile = () => {
                             </div>
                         </div>
                     </motion.div>
-                ) : (
-                    <motion.div
-                        key="friends"
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        className="w-full max-w-md flex flex-col gap-4 relative z-10"
-                    >
-                        <FriendRequests />
-                        <AddFriend />
-                        <FriendList
-                            onChatClick={handleChatClick}
-                            onChallengeClick={handleChallengeClick}
-                        />
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                    ) : (
+                        <motion.div
+                            key="friends"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            className="w-full max-w-md flex flex-col gap-4 relative z-10"
+                        >
+                            <FriendRequests onCountChange={setPendingRequestsCount} />
+                            <AddFriend />
+                            <FriendList
+                                onChatClick={handleChatClick}
+                                onChallengeClick={handleChallengeClick}
+                                onUnreadChange={setUnreadChatCount}
+                            />
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
 
             {/* Match History Modal */}
             <MatchHistoryModal

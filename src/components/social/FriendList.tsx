@@ -5,6 +5,7 @@ import { useUI } from '../../contexts/UIContext';
 import { User, MessageCircle, Swords, UserMinus, Trophy } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import Flag from '../ui/Flag';
+import UserProfileModal from '../ui/UserProfileModal';
 
 interface Friend {
     id: string;
@@ -19,14 +20,17 @@ interface Friend {
 interface FriendListProps {
     onChatClick: (friendId: string, nickname: string) => void;
     onChallengeClick: (friendId: string) => void;
+    onUnreadChange?: (count: number) => void;
 }
 
-const FriendList: React.FC<FriendListProps> = ({ onChatClick, onChallengeClick }) => {
+const FriendList: React.FC<FriendListProps> = ({ onChatClick, onChallengeClick, onUnreadChange }) => {
     const { user, onlineUsers } = useAuth();
     const { confirm } = useUI();
     const { t } = useTranslation();
     const [friends, setFriends] = useState<Friend[]>([]);
     const [loading, setLoading] = useState(true);
+    const [unreadByFriend, setUnreadByFriend] = useState<Record<string, number>>({});
+    const [viewProfileId, setViewProfileId] = useState<string | null>(null);
 
     useEffect(() => {
         if (user) {
@@ -58,6 +62,28 @@ const FriendList: React.FC<FriendListProps> = ({ onChatClick, onChallengeClick }
             };
         }
     }, [user]);
+
+    useEffect(() => {
+        if (!user) return;
+
+        fetchUnreadCounts();
+
+        const unreadChannel = supabase
+            .channel(`unread_messages_${user.id}`)
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'chat_messages',
+                filter: `receiver_id=eq.${user.id}`
+            }, () => {
+                fetchUnreadCounts();
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(unreadChannel);
+        };
+    }, [user, onUnreadChange]);
 
     const fetchFriends = async () => {
         if (!user) return;
@@ -100,6 +126,31 @@ const FriendList: React.FC<FriendListProps> = ({ onChatClick, onChallengeClick }
             console.error("Error fetching friends:", err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchUnreadCounts = async () => {
+        if (!user) return;
+
+        try {
+            const { data, error } = await supabase
+                .from('chat_messages')
+                .select('id, sender_id')
+                .eq('receiver_id', user.id)
+                .eq('is_read', false);
+
+            if (error) throw error;
+
+            const counts: Record<string, number> = {};
+            (data || []).forEach((msg) => {
+                counts[msg.sender_id] = (counts[msg.sender_id] || 0) + 1;
+            });
+
+            setUnreadByFriend(counts);
+            const totalUnread = Object.values(counts).reduce((sum, count) => sum + count, 0);
+            onUnreadChange?.(totalUnread);
+        } catch (err) {
+            console.error("Error fetching unread counts:", err);
         }
     };
 
@@ -170,10 +221,19 @@ const FriendList: React.FC<FriendListProps> = ({ onChatClick, onChallengeClick }
                 </div>
             ) : (
                 <div className="space-y-3">
-                    {friends.map(friend => (
-                        <div key={friend.id} className="flex items-center justify-between bg-slate-700/50 p-3 rounded-lg hover:bg-slate-700 transition">
+                    {friends.map(friend => {
+                        const unreadCount = unreadByFriend[friend.id] || 0;
+                        return (
+                        <div
+                            key={friend.id}
+                            className="flex items-center justify-between bg-slate-700/50 p-3 rounded-lg hover:bg-slate-700 transition cursor-pointer"
+                            onClick={() => setViewProfileId(friend.id)}
+                        >
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-full bg-slate-600 overflow-hidden border border-slate-500 relative">
+                                    {unreadCount > 0 && (
+                                        <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-slate-700" aria-hidden="true"></span>
+                                    )}
                                     {friend.avatar_url ? (
                                         <img src={friend.avatar_url} alt={friend.nickname} className="w-full h-full object-cover" />
                                     ) : (
@@ -205,21 +265,24 @@ const FriendList: React.FC<FriendListProps> = ({ onChatClick, onChallengeClick }
 
                             <div className="flex items-center gap-2">
                                 <button
-                                    onClick={() => onChatClick(friend.id, friend.nickname)}
-                                    className="p-2 bg-blue-600/20 text-blue-400 rounded-full hover:bg-blue-600 hover:text-white transition"
+                                    onClick={(e) => { e.stopPropagation(); onChatClick(friend.id, friend.nickname); }}
+                                    className="relative p-2 bg-blue-600/20 text-blue-400 rounded-full hover:bg-blue-600 hover:text-white transition"
                                     title={t('social.chat')}
                                 >
                                     <MessageCircle size={18} />
+                                    {unreadCount > 0 && (
+                                        <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-red-500 ring-2 ring-slate-800" aria-hidden="true"></span>
+                                    )}
                                 </button>
                                 <button
-                                    onClick={() => onChallengeClick(friend.id)}
+                                    onClick={(e) => { e.stopPropagation(); onChallengeClick(friend.id); }}
                                     className="p-2 bg-red-600/20 text-red-400 rounded-full hover:bg-red-600 hover:text-white transition"
                                     title={t('social.challenge')}
                                 >
                                     <Swords size={18} />
                                 </button>
                                 <button
-                                    onClick={() => handleDelete(friend.id, friend.nickname)}
+                                    onClick={(e) => { e.stopPropagation(); handleDelete(friend.id, friend.nickname); }}
                                     className="p-2 bg-gray-600/20 text-gray-400 rounded-full hover:bg-gray-600 hover:text-white transition"
                                     title={t('social.deleteFriend')}
                                 >
@@ -227,9 +290,16 @@ const FriendList: React.FC<FriendListProps> = ({ onChatClick, onChallengeClick }
                                 </button>
                             </div>
                         </div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
+
+            <UserProfileModal
+                isOpen={!!viewProfileId}
+                onClose={() => setViewProfileId(null)}
+                userId={viewProfileId}
+            />
         </div>
     );
 };

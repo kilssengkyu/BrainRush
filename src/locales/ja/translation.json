@@ -46,6 +46,10 @@
         "logout": "ログアウト",
         "profile": "プロフィール"
     },
+    "leaderboard": {
+        "button": "ランキング",
+        "title": "ランキング"
+    },
     "settings": {
         "title": "設定",
         "language": "言語",
