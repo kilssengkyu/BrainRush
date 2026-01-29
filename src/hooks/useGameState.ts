@@ -69,6 +69,7 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
     // --- Host Logic ---
     // --- Host Logic (Dynamic Failover) ---
     const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
+    const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'reconnecting' | 'disconnected'>('connecting');
 
     const sortedParticipants = useMemo(() => {
         // Filter only current participants and sort
@@ -183,6 +184,7 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
     // --- Realtime Subscription ---
     useEffect(() => {
         if (!roomId) return;
+        setConnectionStatus('connecting');
         const channel = supabase.channel(`game_ta_${roomId}`)
             .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'game_sessions', filter: `id=eq.${roomId}` },
                 payload => handleUpdate(payload.new)
@@ -194,7 +196,12 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
             })
             .subscribe(status => {
                 if (status === 'SUBSCRIBED') {
+                    setConnectionStatus('connected');
                     channel.track({ user_id: myId });
+                } else if (status === 'TIMED_OUT' || status === 'CHANNEL_ERROR') {
+                    setConnectionStatus('reconnecting');
+                } else if (status === 'CLOSED') {
+                    setConnectionStatus('disconnected');
                 }
             });
 
@@ -368,5 +375,5 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
         console.log('Resetting isFinishing flag and scoreRef for new round/game type');
     }, [gameState.currentRound, gameState.gameType, gameState.status]);
 
-    return { gameState, incrementScore, serverOffset, isWaitingTimeout, isTimeUp, onlineUsers };
+    return { gameState, incrementScore, serverOffset, isWaitingTimeout, isTimeUp, onlineUsers, connectionStatus };
 };

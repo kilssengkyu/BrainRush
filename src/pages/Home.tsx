@@ -57,12 +57,72 @@ const Home = () => {
     const navigate = useNavigate();
     const { t } = useTranslation();
     const { playSound } = useSound();
-    const { user, profile, refreshProfile } = useAuth();
+    const { user, profile, refreshProfile, loading: authLoading } = useAuth();
+    const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
+    const [unreadChatCount, setUnreadChatCount] = useState(0);
 
     // Refresh profile on mount to get latest MMR after game
     useEffect(() => {
         refreshProfile();
     }, []);
+
+    useEffect(() => {
+        if (!user) {
+            setPendingRequestsCount(0);
+            setUnreadChatCount(0);
+            return;
+        }
+
+        const fetchPendingRequestsCount = async () => {
+            const { count, error } = await supabase
+                .from('friendships')
+                .select('id', { count: 'exact', head: true })
+                .eq('friend_id', user.id)
+                .eq('status', 'pending');
+            if (!error) setPendingRequestsCount(count || 0);
+        };
+
+        const fetchUnreadChatCount = async () => {
+            const { count, error } = await supabase
+                .from('chat_messages')
+                .select('id', { count: 'exact', head: true })
+                .eq('receiver_id', user.id)
+                .eq('is_read', false);
+            if (!error) setUnreadChatCount(count || 0);
+        };
+
+        fetchPendingRequestsCount();
+        fetchUnreadChatCount();
+
+        const friendRequestChannel = supabase
+            .channel(`home_friend_requests_${user.id}`)
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'friendships',
+                filter: `friend_id=eq.${user.id}`
+            }, () => {
+                fetchPendingRequestsCount();
+            })
+            .subscribe();
+
+        const unreadChatChannel = supabase
+            .channel(`home_unread_chats_${user.id}`)
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'chat_messages',
+                filter: `receiver_id=eq.${user.id}`
+            }, () => {
+                fetchUnreadChatCount();
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(friendRequestChannel);
+            supabase.removeChannel(unreadChatChannel);
+        };
+    }, [user]);
 
     // Calculate Level from MMR (Temporary: MMR / 100)
     // const level = profile?.mmr ? Math.floor(profile.mmr / 100) : 1; 
@@ -77,6 +137,7 @@ const Home = () => {
     const nickname = profile?.nickname || user?.email?.split('@')[0] || t('game.unknownPlayer');
     const avatarUrl = profile?.avatar_url;
     const countryCode = profile?.country;
+    const hasSocialNotifications = pendingRequestsCount > 0 || unreadChatCount > 0;
 
     // Track selected mode for navigation callback
     const currentMode = useRef('rank');
@@ -186,7 +247,7 @@ const Home = () => {
                     className="absolute top-4 left-4 z-50 flex items-center"
                 >
                     <div className="flex items-center gap-4 bg-gray-800/80 backdrop-blur-md p-2 pr-6 rounded-full border border-gray-700 shadow-lg cursor-pointer hover:bg-gray-800 transition-colors" onClick={() => navigate('/profile')}>
-                        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 p-[2px]">
+                        <div className="relative w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 p-[2px]">
                             <div className="w-full h-full rounded-full bg-gray-900 flex items-center justify-center overflow-hidden">
                                 {avatarUrl ? (
                                     <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
@@ -194,6 +255,9 @@ const Home = () => {
                                     <User className="w-7 h-7 text-gray-400" />
                                 )}
                             </div>
+                            {hasSocialNotifications && (
+                                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-gray-900" aria-hidden="true"></span>
+                            )}
                         </div>
                         <div>
                             <div className="font-bold text-white text-lg leading-none flex items-center gap-2">
@@ -237,6 +301,16 @@ const Home = () => {
                         </div>
                         <span className="text-2xl">✏️</span>
                     </button>
+                </div>
+            )}
+
+            {/* Auth Loading Overlay */}
+            {authLoading && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm">
+                    <div className="flex items-center gap-3 bg-gray-900/80 border border-white/10 rounded-2xl px-5 py-4 shadow-xl">
+                        <Loader2 className="w-5 h-5 text-blue-400 animate-spin" />
+                        <span className="text-sm font-bold text-gray-200">{t('common.loading')}</span>
+                    </div>
                 </div>
             )}
 
@@ -411,7 +485,12 @@ const Home = () => {
                             onClick={() => { playSound('click'); navigate('/profile'); }}
                             className="flex-1 p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 group cursor-pointer"
                         >
-                            <User className="w-5 h-5 text-blue-400 group-hover:text-white transition-colors" />
+                            <span className="relative">
+                                <User className="w-5 h-5 text-blue-400 group-hover:text-white transition-colors" />
+                                {hasSocialNotifications && (
+                                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-gray-900" aria-hidden="true"></span>
+                                )}
+                            </span>
                             <span className="text-blue-300 group-hover:text-white transition-colors">{t('menu.profile')}</span>
                         </button>
                     ) : (

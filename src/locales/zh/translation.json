@@ -46,6 +46,10 @@
         "logout": "登出",
         "profile": "个人资料"
     },
+    "leaderboard": {
+        "button": "排行榜",
+        "title": "排行榜"
+    },
     "settings": {
         "title": "设置",
         "language": "语言",

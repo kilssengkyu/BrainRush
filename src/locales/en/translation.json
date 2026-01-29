@@ -81,6 +81,10 @@
         "logout": "Logout",
         "profile": "Profile"
     },
+    "leaderboard": {
+        "button": "Ranking",
+        "title": "Ranking"
+    },
     "user": {
         "level": "Level",
         "rank": "Rank"

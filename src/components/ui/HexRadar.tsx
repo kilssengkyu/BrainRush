@@ -21,7 +21,7 @@ const polarPoint = (cx: number, cy: number, radius: number, angleDeg: number) =>
 };
 
 const HexRadar: React.FC<HexRadarProps> = ({ values, labels, max = 999, size = 240, className }) => {
-    const padding = 28;
+    const padding = 40;
     const radius = size / 2 - padding;
     const center = size / 2;
     const angles = STAT_ORDER.map((_, idx) => -90 + idx * 60);
@@ -46,7 +46,7 @@ const HexRadar: React.FC<HexRadarProps> = ({ values, labels, max = 999, size = 2
 
     return (
         <div className={className}>
-            <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="mx-auto">
+            <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="mx-auto overflow-visible">
                 {/* Grid */}
                 {gridLevels.map((level, idx) => (
                     <polygon
@@ -85,7 +85,7 @@ const HexRadar: React.FC<HexRadarProps> = ({ values, labels, max = 999, size = 2
                 {/* Labels */}
                 {angles.map((angle, idx) => {
                     const key = STAT_ORDER[idx];
-                    const labelPt = polarPoint(center, center, radius + 16, angle);
+                    const labelPt = polarPoint(center, center, radius + 12, angle);
                     const anchor = Math.abs(angle) === 90 ? 'middle' : angle > 90 || angle < -90 ? 'end' : 'start';
                     return (
                         <text
@@ -94,7 +94,7 @@ const HexRadar: React.FC<HexRadarProps> = ({ values, labels, max = 999, size = 2
                             y={labelPt.y}
                             textAnchor={anchor}
                             alignmentBaseline="middle"
-                            className="fill-gray-300 text-[10px] font-bold"
+                            className="fill-slate-200 text-[11px] font-medium tracking-[0.02em]"
                         >
                             {labels[key]}
                         </text>

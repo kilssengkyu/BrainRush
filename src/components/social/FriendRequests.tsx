@@ -1,10 +1,14 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { Check, X, Bell } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-const FriendRequests = () => {
+interface FriendRequestsProps {
+    onCountChange?: (count: number) => void;
+}
+
+const FriendRequests: React.FC<FriendRequestsProps> = ({ onCountChange }) => {
     const { user } = useAuth();
     const { t } = useTranslation();
     const [requests, setRequests] = useState<any[]>([]);
@@ -33,6 +37,10 @@ const FriendRequests = () => {
             };
         }
     }, [user]);
+
+    useEffect(() => {
+        onCountChange?.(requests.length);
+    }, [onCountChange, requests.length]);
 
     const fetchRequests = async () => {
         if (!user) return;
