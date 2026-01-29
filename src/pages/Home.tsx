@@ -57,7 +57,7 @@ const Home = () => {
     const navigate = useNavigate();
     const { t } = useTranslation();
     const { playSound } = useSound();
-    const { user, profile, refreshProfile } = useAuth();
+    const { user, profile, refreshProfile, loading: authLoading } = useAuth();
     const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
     const [unreadChatCount, setUnreadChatCount] = useState(0);
 
@@ -301,6 +301,16 @@ const Home = () => {
                         </div>
                         <span className="text-2xl">✏️</span>
                     </button>
+                </div>
+            )}
+
+            {/* Auth Loading Overlay */}
+            {authLoading && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm">
+                    <div className="flex items-center gap-3 bg-gray-900/80 border border-white/10 rounded-2xl px-5 py-4 shadow-xl">
+                        <Loader2 className="w-5 h-5 text-blue-400 animate-spin" />
+                        <span className="text-sm font-bold text-gray-200">{t('common.loading')}</span>
+                    </div>
                 </div>
             )}
 
