@@ -324,7 +324,7 @@ const Home = () => {
                             )}
                         </div>
                         <img
-                            src="/images/Icon/icon_pen.png"
+                            src="/images/icon/icon_pen.png"
                             alt="Pencil"
                             className="w-6 h-6 object-contain"
                         />

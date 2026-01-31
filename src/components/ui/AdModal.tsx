@@ -171,7 +171,7 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
                                             <Loader2 className="w-10 h-10 text-blue-400 animate-spin" />
                                         ) : (
                                             <img
-                                                src="/images/Icon/icon_tv.png"
+                                                src="/images/icon/icon_tv.png"
                                                 alt="Watch Ad"
                                                 className="w-10 h-10 object-contain"
                                             />
@@ -241,7 +241,7 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
                                 <>
                                     <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mb-4 animate-bounce">
                                         <img
-                                            src="/images/Icon/icon_pen.png"
+                                            src="/images/icon/icon_pen.png"
                                             alt="Pencil"
                                             className="w-10 h-10 object-contain"
                                         />
