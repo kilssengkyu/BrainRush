@@ -114,7 +114,6 @@ const MathChallenge: React.FC<MathChallengeProps> = ({ seed, onScore, isPlaying 
         options.add(answer);
 
         const ensureSameOnesDigit = () => {
-            const ones = Math.abs(answer) % 10;
             const candidates: number[] = [];
             for (let delta = 1; delta <= 9; delta += 1) {
                 const plus = answer + (10 * delta);

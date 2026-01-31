@@ -23,15 +23,19 @@ const GameInviteListener = () => {
                 filter: `receiver_id=eq.${user.id}`
             }, async (payload: any) => {
                 const msg = payload.new;
+                if (typeof msg?.content !== 'string') return;
                 if (msg.content.startsWith('INVITE:')) {
                     const roomId = msg.content.split(':')[1];
-                    const senderId = msg.sender_id;
+                    const senderId = msg.sender_id as string | undefined;
+                    if (!roomId || !senderId) return;
 
                     console.log('Received invite:', roomId, 'from', senderId);
 
-                    const { data: activeSession, error: activeSessionError } = await supabase
+                    type ActiveSession = { room_id: string; status: string };
+                    const { data: activeSessionData, error: activeSessionError } = await supabase
                         .rpc('check_active_session', { p_player_id: user.id })
                         .maybeSingle();
+                    const activeSession = activeSessionData as ActiveSession | null;
 
                     if (activeSessionError) {
                         console.error('Failed to check active session:', activeSessionError);

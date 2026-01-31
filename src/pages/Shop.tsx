@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import type { ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -13,7 +14,7 @@ type ShopItem = {
     priceLabel?: string;
     tagKey?: string;
     accent: string;
-    icon: JSX.Element;
+    icon: ReactNode;
 };
 
 const Shop = () => {

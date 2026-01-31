@@ -33,16 +33,18 @@ const ChatNotificationListener = () => {
                 if (typeof msg.content === 'string') {
                     if (msg.content.startsWith('INVITE:') || msg.content.startsWith('INVITE_')) return;
                 }
-
-                let nickname = nameCache.current.get(msg.sender_id);
+                const senderId = typeof msg.sender_id === 'string' ? msg.sender_id : '';
+                if (!senderId) return;
+                let nickname = nameCache.current.get(senderId);
                 if (!nickname) {
                     const { data } = await supabase
                         .from('profiles')
                         .select('nickname')
-                        .eq('id', msg.sender_id)
+                        .eq('id', senderId)
                         .single();
-                    nickname = data?.nickname || t('game.unknownPlayer');
-                    nameCache.current.set(msg.sender_id, nickname);
+                    const resolvedNickname = (data?.nickname ?? t('game.unknownPlayer')).toString();
+                    nameCache.current.set(senderId, resolvedNickname);
+                    nickname = resolvedNickname;
                 }
 
                 const preview = (msg.content || '').toString().trim();
