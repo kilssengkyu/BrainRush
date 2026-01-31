@@ -47,16 +47,28 @@
         "deleteFriendConfirm": "Are you sure you want to remove '{{nickname}}'?",
         "deleteFriendFail": "Failed to remove friend",
         "online": "Online",
+        "ingame": "In Game",
         "offline": "Offline",
         "challengeTitle": "Challenge Friend",
         "challengeConfirm": "Do you want to challenge this friend?",
         "challengeFail": "Failed to challenge: ",
+        "challengeWaiting": "Invite sent. Waiting for acceptance...",
+        "challengeWaitingTitle": "Waiting for Friendly Match",
+        "challengeWaitingDesc": "Waiting for your friend to accept.",
+        "challengeWaitingTime": "Time left: {{seconds}}s",
+        "challengeAccepted": "Friendly match accepted!",
+        "challengeRejected": "Friendly match rejected.",
+        "challengeTimeout": "Invite timed out.",
+        "challengeCancelled": "Invite cancelled.",
+        "challengeAlreadyPending": "You already have a pending invite.",
+        "challengeInGame": "You can't invite a friend who is in a game.",
         "typeMessage": "Type a message...",
         "sendFail": "Failed to send message",
         "chat": "Chat",
         "challenge": "Challenge",
         "accept": "Accept",
-        "reject": "Reject"
+        "reject": "Reject",
+        "newMessage": "New message from {{nickname}}"
     },
     "menu": {
         "normal": {
@@ -76,14 +88,49 @@
             "title": "Practice Mode",
             "subtitle": "Practice minigames freely"
         },
+        "shop": "Shop",
         "settings": "Settings",
         "login": "Login",
         "logout": "Logout",
         "profile": "Profile"
     },
+    "shop": {
+        "title": "Shop",
+        "subtitle": "Boost your play",
+        "removeAds": {
+            "title": "Ad Removal",
+            "desc": "Skip ads and get pencils instantly."
+        },
+        "pencils5": {
+            "title": "Pencils x5",
+            "desc": "Quick refill for a few matches."
+        },
+        "pencils20": {
+            "title": "Pencils x20",
+            "desc": "Good for daily sessions."
+        },
+        "pencils100": {
+            "title": "Pencils x100",
+            "desc": "Best value for long sessions."
+        },
+        "buy": "Buy",
+        "premium": "Premium",
+        "popular": "Popular",
+        "bestValue": "Best Value",
+        "notice": "Payments are processed via App Store / Google Play.",
+        "comingSoon": "Preparing purchase flow...",
+        "priceTbd": "TBD"
+    },
     "leaderboard": {
         "button": "Ranking",
         "title": "Ranking"
+    },
+    "ad": {
+        "remaining": "Remaining today: {{count}}/{{limit}}",
+        "limitReached": "Daily ad limit reached.",
+        "limitReachedDesc": "Come back tomorrow to watch more ads.",
+        "rewardFailed": "Reward failed.",
+        "rewardFailedDesc": "Please try again later."
     },
     "user": {
         "level": "Level",

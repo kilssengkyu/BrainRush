@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save, LogOut, User as UserIcon, Trophy } from 'lucide-react';
@@ -43,6 +43,9 @@ const Profile = () => {
     const [chatFriend, setChatFriend] = useState<{ id: string; nickname: string } | null>(null);
     const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
     const [unreadChatCount, setUnreadChatCount] = useState(0);
+    const [pendingInvite, setPendingInvite] = useState<{ roomId: string; friendId: string; expiresAt: number } | null>(null);
+    const [inviteTimeLeft, setInviteTimeLeft] = useState(0);
+    const INVITE_TIMEOUT_MS = 60000;
 
     useEffect(() => {
         if (profile?.nickname) {
@@ -110,6 +113,107 @@ const Profile = () => {
             supabase.removeChannel(unreadChatChannel);
         };
     }, [user]);
+
+    const cancelPendingInvite = useCallback(async (reason: 'cancel' | 'timeout', inviteOverride?: { roomId: string; friendId: string }) => {
+        if (!user) return;
+        const invite = inviteOverride ?? pendingInvite;
+        if (!invite) return;
+
+        setPendingInvite(null);
+        setInviteTimeLeft(0);
+
+        try {
+            const { error: cancelError } = await supabase
+                .rpc('cancel_friendly_session', { p_room_id: invite.roomId });
+            if (cancelError) throw cancelError;
+
+            const { error: msgError } = await supabase
+                .from('chat_messages')
+                .insert({
+                    sender_id: user.id,
+                    receiver_id: invite.friendId,
+                    content: `INVITE_CANCELLED:${invite.roomId}`
+                });
+
+            if (msgError) console.error('Failed to send invite cancel message', msgError);
+        } catch (err) {
+            console.error('Failed to cancel friendly invite:', err);
+            showToast(t('common.error'), 'error');
+            return;
+        }
+
+        if (reason === 'timeout') {
+            showToast(t('social.challengeTimeout'), 'info');
+        } else {
+            showToast(t('social.challengeCancelled'), 'info');
+        }
+    }, [pendingInvite, showToast, t, user]);
+
+    useEffect(() => {
+        if (!pendingInvite) return;
+        let didTimeout = false;
+
+        const tick = () => {
+            const remainingMs = pendingInvite.expiresAt - Date.now();
+            const remainingSec = Math.max(0, Math.ceil(remainingMs / 1000));
+            setInviteTimeLeft(remainingSec);
+
+            if (!didTimeout && remainingMs <= 0) {
+                didTimeout = true;
+                cancelPendingInvite('timeout');
+            }
+        };
+
+        tick();
+        const timer = setInterval(tick, 500);
+        return () => clearInterval(timer);
+    }, [pendingInvite, cancelPendingInvite]);
+
+    useEffect(() => {
+        if (!user || !pendingInvite) return;
+
+        const channel = supabase
+            .channel(`invite_responses_${user.id}_${pendingInvite.roomId}`)
+            .on('postgres_changes', {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'chat_messages',
+                filter: `receiver_id=eq.${user.id}`
+            }, (payload: any) => {
+                const msg = payload.new;
+                if (!msg?.content || typeof msg.content !== 'string') return;
+                if (!msg.content.startsWith('INVITE_')) return;
+
+                const [type, roomId] = msg.content.split(':');
+                if (!roomId || roomId !== pendingInvite.roomId) return;
+
+                if (type === 'INVITE_ACCEPTED') {
+                    setPendingInvite(null);
+                    setInviteTimeLeft(0);
+                    showToast(t('social.challengeAccepted'), 'success');
+                    navigate(`/game/${roomId}`, {
+                        state: { roomId, myId: user.id, opponentId: pendingInvite.friendId, mode: 'friendly' }
+                    });
+                } else if (type === 'INVITE_REJECTED') {
+                    setPendingInvite(null);
+                    setInviteTimeLeft(0);
+                    showToast(t('social.challengeRejected'), 'info');
+                } else if (type === 'INVITE_BUSY') {
+                    setPendingInvite(null);
+                    setInviteTimeLeft(0);
+                    showToast(t('social.challengeInGame'), 'info');
+                } else if (type === 'INVITE_CANCELLED') {
+                    setPendingInvite(null);
+                    setInviteTimeLeft(0);
+                    showToast(t('social.challengeCancelled'), 'info');
+                }
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [user, pendingInvite, navigate, showToast, t]);
 
     const handleBack = () => {
         playSound('click');
@@ -250,6 +354,10 @@ const Profile = () => {
 
     const handleChallengeClick = async (friendId: string) => {
         if (!user) return;
+        if (pendingInvite) {
+            showToast(t('social.challengeAlreadyPending'), 'info');
+            return;
+        }
 
         try {
             const confirmed = await confirm(t('social.challengeTitle'), t('social.challengeConfirm'));
@@ -274,8 +382,10 @@ const Profile = () => {
 
             if (msgError) console.error("Failed to send invite message", msgError);
 
-            // 3. Go to Game
-            navigate(`/game/${roomId}`, { state: { roomId, myId: user.id, opponentId: friendId, mode: 'friendly' } });
+            // 3. Wait for acceptance before entering the room
+            setPendingInvite({ roomId, friendId, expiresAt: Date.now() + INVITE_TIMEOUT_MS });
+            setInviteTimeLeft(Math.ceil(INVITE_TIMEOUT_MS / 1000));
+            showToast(t('social.challengeWaiting'), 'info');
 
         } catch (err: any) {
             console.error('Error challenging friend:', err);
@@ -567,6 +677,34 @@ const Profile = () => {
                     onClose={() => setChatFriend(null)}
                 />
             )}
+
+            <AnimatePresence>
+                {pendingInvite && (
+                    <motion.div
+                        className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.95, opacity: 0 }}
+                            className="bg-gray-800 border border-white/10 rounded-2xl p-6 w-full max-w-sm text-center shadow-2xl"
+                        >
+                            <h3 className="text-xl font-bold text-white mb-2">{t('social.challengeWaitingTitle')}</h3>
+                            <p className="text-gray-300 mb-4">{t('social.challengeWaitingDesc')}</p>
+                            <p className="text-sm text-gray-400 mb-6">{t('social.challengeWaitingTime', { seconds: inviteTimeLeft })}</p>
+                            <button
+                                onClick={() => cancelPendingInvite('cancel')}
+                                className="px-5 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-white font-semibold transition-colors"
+                            >
+                                {t('common.cancel')}
+                            </button>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

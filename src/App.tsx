@@ -46,8 +46,10 @@ import { UIProvider } from './contexts/UIContext';
 import Login from './pages/Login';
 import Profile from './pages/Profile';
 import PracticeMode from './pages/PracticeMode';
+import Shop from './pages/Shop';
 
 import GameInviteListener from './components/social/GameInviteListener';
+import ChatNotificationListener from './components/social/ChatNotificationListener';
 
 
 import BGMManager from './components/audio/BGMManager';
@@ -61,6 +63,7 @@ function App() {
             <BackButtonHandler />
             <BGMManager />
             <GameInviteListener />
+            <ChatNotificationListener />
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/game/:roomId" element={<Game />} />
@@ -68,6 +71,7 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/practice" element={<PracticeMode />} />
+              <Route path="/shop" element={<Shop />} />
             </Routes>
           </BrowserRouter>
         </UIProvider>

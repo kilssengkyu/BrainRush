@@ -47,16 +47,28 @@
     "deleteFriendConfirm": "'{{nickname}}'님을 친구 목록에서 삭제하시겠습니까?",
     "deleteFriendFail": "친구 삭제 실패",
     "online": "온라인",
+    "ingame": "게임 중",
     "offline": "오프라인",
     "challengeTitle": "친선전 신청",
     "challengeConfirm": "친구에게 대결을 신청하시겠습니까?",
     "challengeFail": "대결 신청 실패: ",
+    "challengeWaiting": "친선전 요청을 보냈습니다. 수락을 기다리는 중...",
+    "challengeWaitingTitle": "친선전 대기 중",
+    "challengeWaitingDesc": "상대의 수락을 기다리고 있습니다.",
+    "challengeWaitingTime": "남은 시간 {{seconds}}초",
+    "challengeAccepted": "친선전이 수락되었습니다!",
+    "challengeRejected": "친선전이 거절되었습니다.",
+    "challengeTimeout": "응답 시간이 초과되었습니다.",
+    "challengeCancelled": "친선전 요청을 취소했습니다.",
+    "challengeAlreadyPending": "이미 대기 중인 친선전이 있습니다.",
+    "challengeInGame": "게임 중인 친구는 대결을 신청할 수 없습니다.",
     "typeMessage": "메시지 입력...",
     "sendFail": "메시지 전송 실패",
     "chat": "채팅",
     "challenge": "대결 신청",
     "accept": "수락",
-    "reject": "거절"
+    "reject": "거절",
+    "newMessage": "{{nickname}}님에게서 메시지가 왔어요"
   },
   "menu": {
     "normal": {
@@ -75,14 +87,49 @@
       "title": "연습 모드",
       "subtitle": "미니게임을 자유롭게 연습하세요"
     },
+    "shop": "상점",
     "settings": "설정",
     "login": "로그인",
     "logout": "로그아웃",
     "profile": "프로필"
   },
+  "shop": {
+    "title": "상점",
+    "subtitle": "플레이를 강화하세요",
+    "removeAds": {
+      "title": "광고 제거 패키지",
+      "desc": "광고 없이 연필을 즉시 지급받아요."
+    },
+    "pencils5": {
+      "title": "연필 5개",
+      "desc": "짧은 플레이용 빠른 충전."
+    },
+    "pencils20": {
+      "title": "연필 20개",
+      "desc": "하루 플레이에 딱 좋아요."
+    },
+    "pencils100": {
+      "title": "연필 100개",
+      "desc": "가성비 최고 패키지."
+    },
+    "buy": "구매",
+    "premium": "프리미엄",
+    "popular": "인기",
+    "bestValue": "최고 효율",
+    "notice": "결제는 App Store / Google Play에서 처리됩니다.",
+    "comingSoon": "결제 준비 중입니다...",
+    "priceTbd": "가격 미정"
+  },
   "leaderboard": {
     "button": "랭킹",
     "title": "랭킹"
+  },
+  "ad": {
+    "remaining": "오늘 남은 광고: {{count}}/{{limit}}",
+    "limitReached": "오늘 광고 한도를 모두 사용했어요.",
+    "limitReachedDesc": "내일 다시 시청할 수 있어요.",
+    "rewardFailed": "보상 지급 실패",
+    "rewardFailedDesc": "잠시 후 다시 시도해 주세요."
   },
   "user": {
     "level": "레벨",
