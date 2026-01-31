@@ -17,7 +17,7 @@ export interface GameState {
     gameTypes: string[];
     roundScores: any[];
     isPlayer1: boolean;
-    mode?: 'normal' | 'rank' | 'practice';
+    mode?: 'normal' | 'rank' | 'practice' | 'friendly';
     myWins: number;
     opWins: number;
 }
@@ -225,8 +225,10 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
             } else if (opponentHere) {
                 startGame();
             } else {
-                const timer = setTimeout(() => startGame(), 5000); // Force start fallback
-                return () => clearTimeout(timer);
+                if (gameState.mode !== 'friendly') {
+                    const timer = setTimeout(() => startGame(), 5000); // Force start fallback
+                    return () => clearTimeout(timer);
+                }
             }
         }
     }, [isHostUser, gameState.status, onlineUsers, opponentId, roomId, startGame, gameState.mode]);

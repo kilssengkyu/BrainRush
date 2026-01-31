@@ -2,10 +2,11 @@ import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Settings, User, Trophy, Zap, Loader2, Lock, AlertTriangle, Dumbbell } from 'lucide-react';
+import { Settings, User, Trophy, Zap, Loader2, Lock, AlertTriangle, Dumbbell, ShoppingBag } from 'lucide-react';
 import { useMatchmaking } from '../hooks/useMatchmaking';
 import { useSound } from '../contexts/SoundContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useUI } from '../contexts/UIContext';
 // COUNTRIES import removed as it's no longer needed for direct emoji lookup if we use Flag component
 import Flag from '../components/ui/Flag';
 import AdModal from '../components/ui/AdModal';
@@ -58,6 +59,7 @@ const Home = () => {
     const { t } = useTranslation();
     const { playSound } = useSound();
     const { user, profile, refreshProfile, loading: authLoading } = useAuth();
+    const { showToast } = useUI();
     const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
     const [unreadChatCount, setUnreadChatCount] = useState(0);
 
@@ -138,6 +140,15 @@ const Home = () => {
     const avatarUrl = profile?.avatar_url;
     const countryCode = profile?.country;
     const hasSocialNotifications = pendingRequestsCount > 0 || unreadChatCount > 0;
+    const AD_DAILY_LIMIT = 5;
+    const today = new Date().toISOString().slice(0, 10);
+    const adRewardDay = profile?.ad_reward_day;
+    const adRewardCount = profile?.ad_reward_count ?? 0;
+    const adRemaining = user
+        ? (!adRewardDay || adRewardDay !== today)
+            ? AD_DAILY_LIMIT
+            : Math.max(0, AD_DAILY_LIMIT - adRewardCount)
+        : AD_DAILY_LIMIT;
 
     // Track selected mode for navigation callback
     const currentMode = useRef('rank');
@@ -168,8 +179,12 @@ const Home = () => {
     const [showAdModal, setShowAdModal] = useState(false);
     const [showLeaderboard, setShowLeaderboard] = useState(false);
 
-    const handleAdReward = async () => {
-        if (!user) return;
+    const handleAdReward = async (): Promise<'ok' | 'limit' | 'error'> => {
+        if (!user) return 'error';
+        if (adRemaining <= 0) {
+            showToast(t('ad.limitReached', 'Daily ad limit reached.'), 'info');
+            return 'limit';
+        }
         try {
             const { error } = await supabase.rpc('reward_ad_pencils', { user_id: user.id });
             if (!error) {
@@ -177,9 +192,18 @@ const Home = () => {
                 await refreshProfile();
                 // Don't close modal yet, let AdModal show success state
                 playSound('level_complete');
+                return 'ok';
             }
+            if (error?.message?.toLowerCase().includes('daily ad reward limit')) {
+                showToast(t('ad.limitReached', 'Daily ad limit reached.'), 'info');
+                return 'limit';
+            }
+            showToast(t('common.error'), 'error');
+            return 'error';
         } catch (err) {
             console.error(err);
+            showToast(t('common.error'), 'error');
+            return 'error';
         }
     };
 
@@ -235,7 +259,7 @@ const Home = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center p-4 relative overflow-hidden">
+        <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center p-4 pt-[env(safe-area-inset-top)] relative overflow-hidden">
             {/* Background Effects */}
             <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-800 via-gray-900 to-black pointer-events-none" />
 
@@ -299,7 +323,11 @@ const Home = () => {
                                 </div>
                             )}
                         </div>
-                        <span className="text-2xl">✏️</span>
+                        <img
+                            src="/images/Icon/icon_pen.png"
+                            alt="Pencil"
+                            className="w-6 h-6 object-contain"
+                        />
                     </button>
                 </div>
             )}
@@ -319,6 +347,8 @@ const Home = () => {
                 isOpen={showAdModal}
                 onClose={() => setShowAdModal(false)}
                 onReward={handleAdReward}
+                adRemaining={adRemaining}
+                adLimit={AD_DAILY_LIMIT}
             />
 
             <LeaderboardModal
@@ -462,19 +492,27 @@ const Home = () => {
                 </motion.div>
 
                 {/* Footer Buttons */}
-                <motion.div variants={itemVariants} className="flex gap-4 w-full justify-between mt-4">
+                <motion.div variants={itemVariants} className="grid grid-cols-2 gap-4 w-full mt-4">
                     <button
                         onMouseEnter={() => playSound('hover')}
                         onClick={() => { playSound('click'); setShowLeaderboard(true); }}
-                        className="flex-1 p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 group cursor-pointer"
+                        className="p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 group cursor-pointer"
                     >
                         <Trophy className="w-5 h-5 text-yellow-500 group-hover:text-yellow-400 transition-colors" />
                         <span className="text-gray-300 group-hover:text-white transition-colors">{t('leaderboard.button', 'Ranking')}</span>
                     </button>
                     <button
                         onMouseEnter={() => playSound('hover')}
+                        onClick={() => { playSound('click'); navigate('/shop'); }}
+                        className="p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 group cursor-pointer"
+                    >
+                        <ShoppingBag className="w-5 h-5 text-cyan-400 group-hover:text-white transition-colors" />
+                        <span className="text-gray-300 group-hover:text-white transition-colors">{t('menu.shop', 'Shop')}</span>
+                    </button>
+                    <button
+                        onMouseEnter={() => playSound('hover')}
                         onClick={() => { playSound('click'); navigate('/settings'); }}
-                        className="flex-1 p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 group cursor-pointer"
+                        className="p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 group cursor-pointer"
                     >
                         <Settings className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
                         <span className="text-gray-300 group-hover:text-white transition-colors">{t('menu.settings')}</span>
@@ -483,7 +521,7 @@ const Home = () => {
                         <button
                             onMouseEnter={() => playSound('hover')}
                             onClick={() => { playSound('click'); navigate('/profile'); }}
-                            className="flex-1 p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 group cursor-pointer"
+                            className="p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 group cursor-pointer"
                         >
                             <span className="relative">
                                 <User className="w-5 h-5 text-blue-400 group-hover:text-white transition-colors" />
@@ -497,7 +535,7 @@ const Home = () => {
                         <button
                             onMouseEnter={() => playSound('hover')}
                             onClick={() => { playSound('click'); navigate('/login'); }}
-                            className="flex-1 p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 group cursor-pointer"
+                            className="p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 group cursor-pointer"
                         >
                             <User className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
                             <span className="text-gray-300 group-hover:text-white transition-colors">{t('menu.login')}</span>

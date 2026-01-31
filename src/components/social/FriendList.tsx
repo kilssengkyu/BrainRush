@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { useUI } from '../../contexts/UIContext';
@@ -23,14 +23,17 @@ interface FriendListProps {
     onUnreadChange?: (count: number) => void;
 }
 
+const ACTIVE_STATUSES = ['waiting', 'countdown', 'playing', 'round_end'];
+
 const FriendList: React.FC<FriendListProps> = ({ onChatClick, onChallengeClick, onUnreadChange }) => {
     const { user, onlineUsers } = useAuth();
-    const { confirm } = useUI();
+    const { confirm, showToast } = useUI();
     const { t } = useTranslation();
     const [friends, setFriends] = useState<Friend[]>([]);
     const [loading, setLoading] = useState(true);
     const [unreadByFriend, setUnreadByFriend] = useState<Record<string, number>>({});
     const [viewProfileId, setViewProfileId] = useState<string | null>(null);
+    const [inGameIds, setInGameIds] = useState<Set<string>>(new Set());
 
     useEffect(() => {
         if (user) {
@@ -129,6 +132,55 @@ const FriendList: React.FC<FriendListProps> = ({ onChatClick, onChallengeClick, 
         }
     };
 
+    const fetchInGameStatus = useCallback(async (friendIds: string[]) => {
+        if (!friendIds.length) {
+            setInGameIds(new Set());
+            return;
+        }
+
+        try {
+            const { data, error } = await supabase
+                .from('game_sessions')
+                .select('player1_id, player2_id, status, created_at')
+                .in('status', ACTIVE_STATUSES)
+                .or(`player1_id.in.(${friendIds.join(',')}),player2_id.in.(${friendIds.join(',')})`);
+
+            if (error) throw error;
+
+            const now = Date.now();
+            const friendIdSet = new Set(friendIds);
+            const nextInGameIds = new Set<string>();
+
+            (data || []).forEach((session: { player1_id: string; player2_id: string; status: string; created_at: string }) => {
+                const createdAtMs = new Date(session.created_at).getTime();
+                if (session.status === 'waiting' && now - createdAtMs > 60000) return;
+                if (session.status !== 'waiting' && now - createdAtMs > 60 * 60 * 1000) return;
+                if (friendIdSet.has(session.player1_id)) nextInGameIds.add(session.player1_id);
+                if (friendIdSet.has(session.player2_id)) nextInGameIds.add(session.player2_id);
+            });
+
+            setInGameIds(nextInGameIds);
+        } catch (err) {
+            console.error("Error fetching in-game status:", err);
+            setInGameIds(new Set());
+        }
+    }, []);
+
+    useEffect(() => {
+        if (!user) return;
+        if (friends.length === 0) {
+            setInGameIds(new Set());
+            return;
+        }
+
+        const friendIds = friends.map(friend => friend.id);
+        const refresh = () => fetchInGameStatus(friendIds);
+
+        refresh();
+        const interval = setInterval(refresh, 10000);
+        return () => clearInterval(interval);
+    }, [user, friends, fetchInGameStatus]);
+
     const fetchUnreadCounts = async () => {
         if (!user) return;
 
@@ -223,6 +275,8 @@ const FriendList: React.FC<FriendListProps> = ({ onChatClick, onChallengeClick, 
                 <div className="space-y-3">
                     {friends.map(friend => {
                         const unreadCount = unreadByFriend[friend.id] || 0;
+                        const isInGame = inGameIds.has(friend.id);
+                        const isOnline = onlineUsers.has(friend.id);
                         return (
                         <div
                             key={friend.id}
@@ -254,10 +308,12 @@ const FriendList: React.FC<FriendListProps> = ({ onChatClick, onChallengeClick, 
                                             <span>{friend.mmr || 1000}</span>
                                         </div>
                                         <div className="flex items-center gap-1 text-gray-400">
-                                            <div className={`w-1.5 h-1.5 rounded-full ${onlineUsers.has(friend.id) ? 'bg-green-500' : 'bg-gray-500'}`}></div>
-                                            {onlineUsers.has(friend.id)
-                                                ? <span className="text-green-400">{t('social.online')}</span>
-                                                : <span>{formatLastSeen(friend.last_seen)}</span>}
+                                            <div className={`w-1.5 h-1.5 rounded-full ${isInGame ? 'bg-amber-400' : isOnline ? 'bg-green-500' : 'bg-gray-500'}`}></div>
+                                            {isInGame
+                                                ? <span className="text-amber-400">{t('social.ingame')}</span>
+                                                : isOnline
+                                                    ? <span className="text-green-400">{t('social.online')}</span>
+                                                    : <span>{formatLastSeen(friend.last_seen)}</span>}
                                         </div>
                                     </div>
                                 </div>
@@ -275,9 +331,17 @@ const FriendList: React.FC<FriendListProps> = ({ onChatClick, onChallengeClick, 
                                     )}
                                 </button>
                                 <button
-                                    onClick={(e) => { e.stopPropagation(); onChallengeClick(friend.id); }}
-                                    className="p-2 bg-red-600/20 text-red-400 rounded-full hover:bg-red-600 hover:text-white transition"
-                                    title={t('social.challenge')}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (isInGame) {
+                                            showToast(t('social.challengeInGame'), 'info');
+                                            return;
+                                        }
+                                        onChallengeClick(friend.id);
+                                    }}
+                                    className={`p-2 rounded-full transition ${isInGame ? 'bg-red-600/10 text-red-400/50 cursor-not-allowed' : 'bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white'}`}
+                                    title={isInGame ? t('social.challengeInGame') : t('social.challenge')}
+                                    disabled={isInGame}
                                 >
                                     <Swords size={18} />
                                 </button>

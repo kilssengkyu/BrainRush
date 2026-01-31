@@ -41,14 +41,63 @@
             "title": "练习模式",
             "subtitle": "自由练习迷你游戏"
         },
+        "shop": "商店",
         "settings": "设置",
         "login": "登录",
         "logout": "登出",
         "profile": "个人资料"
     },
+    "shop": {
+        "title": "商店",
+        "subtitle": "提升你的游戏体验",
+        "removeAds": {
+            "title": "去广告包",
+            "desc": "无需观看广告，立即获得铅笔。"
+        },
+        "pencils5": {
+            "title": "铅笔 x5",
+            "desc": "适合短时间快速补充。"
+        },
+        "pencils20": {
+            "title": "铅笔 x20",
+            "desc": "日常游玩刚刚好。"
+        },
+        "pencils100": {
+            "title": "铅笔 x100",
+            "desc": "超值大礼包。"
+        },
+        "buy": "购买",
+        "premium": "高级",
+        "popular": "热门",
+        "bestValue": "超值",
+        "notice": "付款将通过 App Store / Google Play 处理。",
+        "comingSoon": "购买流程准备中...",
+        "priceTbd": "价格待定"
+    },
+    "social": {
+        "ingame": "游戏中",
+        "challengeInGame": "对方正在游戏中，无法邀请。",
+        "challengeWaiting": "邀请已发送，等待接受...",
+        "challengeWaitingTitle": "好友对战等待中",
+        "challengeWaitingDesc": "正在等待对方接受。",
+        "challengeWaitingTime": "剩余时间 {{seconds}}秒",
+        "challengeAccepted": "好友对战已接受！",
+        "challengeRejected": "好友对战被拒绝。",
+        "challengeTimeout": "邀请已超时。",
+        "challengeCancelled": "邀请已取消。",
+        "challengeAlreadyPending": "已有待处理的邀请。",
+        "newMessage": "{{nickname}} 给你发来消息"
+    },
     "leaderboard": {
         "button": "排行榜",
         "title": "排行榜"
+    },
+    "ad": {
+        "remaining": "今日剩余：{{count}}/{{limit}}",
+        "limitReached": "今日广告次数已用完。",
+        "limitReachedDesc": "请明天再来观看。",
+        "rewardFailed": "奖励发放失败。",
+        "rewardFailedDesc": "请稍后再试。"
     },
     "settings": {
         "title": "设置",

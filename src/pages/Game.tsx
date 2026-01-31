@@ -60,12 +60,13 @@ const Game: React.FC = () => {
     const warmupStart = gameState.startAt ? new Date(gameState.startAt).getTime() : 0;
     const warmupDiff = (warmupStart - now) / 1000;
     const isWarmup = warmupDiff > 0;
-    const showEmojiBar = isWarmup || isTimeUp || isFinished || isWaiting;
+    const showEmojiBar = isWarmup || isTimeUp || isWaiting;
+    const showEmojiOverlay = showEmojiBar || isFinished;
 
-    const showEmojiBarRef = useRef(false);
+    const showEmojiOverlayRef = useRef(false);
     useEffect(() => {
-        showEmojiBarRef.current = showEmojiBar;
-    }, [showEmojiBar]);
+        showEmojiOverlayRef.current = showEmojiOverlay;
+    }, [showEmojiOverlay]);
 
     const [emojiBursts, setEmojiBursts] = useState<Array<{ id: string; emoji: string; side: 'left' | 'right'; driftX: number; driftY: number; baseY: number; travelX: number }>>([]);
     const emojiChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
@@ -89,7 +90,7 @@ const Game: React.FC = () => {
         });
 
         channel.on('broadcast', { event: 'emoji' }, ({ payload }) => {
-            if (!showEmojiBarRef.current) return;
+            if (!showEmojiOverlayRef.current) return;
             const incomingEmoji = payload?.emoji;
             const senderId = payload?.senderId;
             if (!incomingEmoji || senderId === myId) return;
@@ -250,87 +251,89 @@ const Game: React.FC = () => {
         <div className="relative w-full h-[100dvh] bg-gray-900 text-white overflow-hidden flex flex-col font-sans select-none">
 
             {/* Top Info Bar (Timer & Scores) */}
-            <header className="h-24 w-full bg-gray-800/80 backdrop-blur-md flex items-center justify-between px-6 shadow-lg z-50 relative">
+            {!isFinished && (
+                <header className="h-24 w-full bg-gray-800/80 backdrop-blur-md flex items-center justify-between px-6 shadow-lg z-50 relative">
 
-                {/* Score Progress Bar - Hide in Practice */}
-                {gameState.mode !== 'practice' && (
-                    <div className="absolute bottom-0 left-0 w-full px-0">
-                        <div className="w-full h-1.5 bg-gray-900/50 overflow-hidden backdrop-blur-sm">
-                            <ScoreProgressBar myScore={gameState.myScore} opScore={gameState.opScore} />
-                        </div>
-                    </div>
-                )}
-
-                {/* My Profile */}
-                <div className="flex items-center gap-4 w-1/3 pt-2">
-                    <div className="relative">
-                        <img src={myProfile?.avatar_url || '/default-avatar.png'} className="w-12 h-12 rounded-full border-2 border-blue-500" />
-                        {isConnectionUnstable && (
-                            <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-yellow-300 border-t-transparent animate-spin bg-gray-900/80" />
-                        )}
-                    </div>
-                    <div>
-                        <div className="font-bold text-lg flex items-center gap-2">
-                            <Flag code={myProfile?.country} />
-                            <span className="hidden sm:inline">{myProfile?.nickname}</span>
-                        </div>
-                        {gameState.mode !== 'practice' && (
-                            <div className="text-3xl font-black text-blue-400 font-mono transition-all">
-                                {gameState.myScore.toLocaleString()}
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                {/* Center Timer */}
-                <div className="flex flex-col items-center w-1/3 pt-2">
+                    {/* Score Progress Bar - Hide in Practice */}
                     {gameState.mode !== 'practice' && (
-                        <div className="flex flex-col items-center mb-1">
-                            <div className="text-sm font-bold text-blue-300 tracking-widest uppercase">
-                                Round {gameState.currentRound}/{gameState.totalRounds}
+                        <div className="absolute bottom-0 left-0 w-full px-0">
+                            <div className="w-full h-1.5 bg-gray-900/50 overflow-hidden backdrop-blur-sm">
+                                <ScoreProgressBar myScore={gameState.myScore} opScore={gameState.opScore} />
                             </div>
-                            {/* Wins Display Removed */}
                         </div>
                     )}
-                    <div
-                        key={gameState.remainingTime <= 10 ? 'urgent' : 'normal'}
-                        className={`text-5xl font-black font-mono tracking-widest ${gameState.remainingTime <= 10 ? 'text-red-500 animate-pulse' : 'text-yellow-400'}`}
-                    >
-                        {Math.floor(gameState.remainingTime)}
-                    </div>
-                    <div className="text-xs text-gray-500 font-bold uppercase tracking-wider">Time Left</div>
-                </div>
 
-                {/* Opponent Profile - Hide in Solo Practice */}
-                <div className="flex items-center justify-end gap-4 w-1/3 text-right pt-2 relative">
-                    {opponentProfile && (
-                        <>
-                            <div>
-                                <div className="font-bold text-lg flex items-center justify-end gap-2">
-                                    <span className="hidden sm:inline">{opponentProfile?.nickname}</span>
-                                    <Flag code={opponentProfile?.country} />
-                                </div>
-                                <div className="text-3xl font-black text-red-400 font-mono transition-all">
-                                    {gameState.opScore.toLocaleString()}
-                                </div>
-                            </div>
-                            <div className="relative">
-                                <img src={opponentProfile?.avatar_url || '/default-avatar.png'} className={`w-12 h-12 rounded-full border-2 ${!isOpponentOnline ? 'border-gray-500 grayscale opacity-50' : 'border-red-500'}`} />
-                                {!isOpponentOnline && gameState.status !== 'finished' && (
-                                    <div className="absolute -bottom-2 -right-2 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded animate-pulse border border-red-400 whitespace-nowrap z-50">
-                                        DISCONNECT
-                                    </div>
-                                )}
-                            </div>
-                        </>
-                    )}
-                    {!opponentProfile && gameState.mode === 'practice' && (
-                        <div className="text-gray-500 font-bold uppercase tracking-widest text-sm">
-                            Practice Mode
+                    {/* My Profile */}
+                    <div className="flex items-center gap-4 w-1/3 pt-2">
+                        <div className="relative">
+                            <img src={myProfile?.avatar_url || '/default-avatar.png'} className="w-12 h-12 rounded-full border-2 border-blue-500" />
+                            {isConnectionUnstable && (
+                                <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-yellow-300 border-t-transparent animate-spin bg-gray-900/80" />
+                            )}
                         </div>
-                    )}
-                </div>
-            </header>
+                        <div>
+                            <div className="font-bold text-lg flex items-center gap-2">
+                                <Flag code={myProfile?.country} />
+                                <span className="hidden sm:inline">{myProfile?.nickname}</span>
+                            </div>
+                            {gameState.mode !== 'practice' && (
+                                <div className="text-3xl font-black text-blue-400 font-mono transition-all">
+                                    {gameState.myScore.toLocaleString()}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Center Timer */}
+                    <div className="flex flex-col items-center w-1/3 pt-2">
+                        {gameState.mode !== 'practice' && (
+                            <div className="flex flex-col items-center mb-1">
+                                <div className="text-sm font-bold text-blue-300 tracking-widest uppercase">
+                                    Round {gameState.currentRound}/{gameState.totalRounds}
+                                </div>
+                                {/* Wins Display Removed */}
+                            </div>
+                        )}
+                        <div
+                            key={gameState.remainingTime <= 10 ? 'urgent' : 'normal'}
+                            className={`text-5xl font-black font-mono tracking-widest ${gameState.remainingTime <= 10 ? 'text-red-500 animate-pulse' : 'text-yellow-400'}`}
+                        >
+                            {Math.floor(gameState.remainingTime)}
+                        </div>
+                        <div className="text-xs text-gray-500 font-bold uppercase tracking-wider">Time Left</div>
+                    </div>
+
+                    {/* Opponent Profile - Hide in Solo Practice */}
+                    <div className="flex items-center justify-end gap-4 w-1/3 text-right pt-2 relative">
+                        {opponentProfile && (
+                            <>
+                                <div>
+                                    <div className="font-bold text-lg flex items-center justify-end gap-2">
+                                        <span className="hidden sm:inline">{opponentProfile?.nickname}</span>
+                                        <Flag code={opponentProfile?.country} />
+                                    </div>
+                                    <div className="text-3xl font-black text-red-400 font-mono transition-all">
+                                        {gameState.opScore.toLocaleString()}
+                                    </div>
+                                </div>
+                                <div className="relative">
+                                    <img src={opponentProfile?.avatar_url || '/default-avatar.png'} className={`w-12 h-12 rounded-full border-2 ${!isOpponentOnline ? 'border-gray-500 grayscale opacity-50' : 'border-red-500'}`} />
+                                    {!isOpponentOnline && gameState.status !== 'finished' && (
+                                        <div className="absolute -bottom-2 -right-2 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded animate-pulse border border-red-400 whitespace-nowrap z-50">
+                                            DISCONNECT
+                                        </div>
+                                    )}
+                                </div>
+                            </>
+                        )}
+                        {!opponentProfile && gameState.mode === 'practice' && (
+                            <div className="text-gray-500 font-bold uppercase tracking-widest text-sm">
+                                Practice Mode
+                            </div>
+                        )}
+                    </div>
+                </header>
+            )}
 
             {isConnectionUnstable && (
                 <div className="absolute top-24 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 bg-yellow-500/20 border border-yellow-400/40 text-yellow-100 text-xs font-bold px-3 py-1.5 rounded-full backdrop-blur-md">
@@ -564,190 +567,197 @@ const Game: React.FC = () => {
 
                 {/* Result Overlay */}
                 {isFinished && (
-                    <div className="absolute inset-0 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center z-50">
-                        <motion.div
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            className="bg-gray-800 p-8 rounded-3xl border-4 border-white/10 shadow-2xl text-center max-w-2xl w-full"
-                        >
-                            {/* PRACTICE MODE RESULT */}
-                            {gameState.mode === 'practice' ? (
-                                <div className="text-center">
-                                    <h2 className="text-5xl font-black mb-4 text-green-400 tracking-wider">
-                                        {t('game.practiceComplete', '연습 완료!')}
-                                    </h2>
-                                    <div className="text-2xl text-white mb-8">
-                                        {/* Show Score or Time based on game type if tracked, currently just completion */}
-                                        <p>{t('game.greatJob', '수고하셨습니다!')}</p>
-                                    </div>
-                                    <motion.button
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: 0.5 }}
-                                        onClick={() => navigate('/')}
-                                        className="px-8 py-4 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold text-xl transition-all shadow-lg hover:shadow-green-500/50"
-                                    >
-                                        {t('game.returnMenu')}
-                                    </motion.button>
-                                </div>
-                            ) : (
-                                /* NORMAL / RANK MODE RESULT */
-                                <>
-                                    <h2 className="text-5xl font-black mb-8 text-yellow-400 tracking-wider flex justify-center gap-4">
-                                        {t('game.matchResult').split('').map((char, i) => (
-                                            <motion.span
-                                                key={i}
-                                                initial={{ opacity: 0, y: -20 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                transition={{ delay: i * 0.1 }}
-                                            >
-                                                {char}
-                                            </motion.span>
-                                        ))}
-                                    </h2>
-
-                                    {/* VICTORY / DEFEAT TEXT - SLAM ANIMATION (After Rounds) */}
-                                    <motion.div
-                                        initial={{ scale: 5, opacity: 0, rotate: -10 }}
-                                        animate={{ scale: 1, opacity: 1, rotate: 0 }}
-                                        transition={{
-                                            delay: 0.2 + (gameState.roundScores.length + 1) * 0.4,
-                                            type: "spring", stiffness: 200, damping: 15
-                                        }}
-                                        className="mb-8"
-                                    >
-                                        <h3 className={`text-6xl font-black drop-shadow-2xl ${getWinnerMessage() === t('game.victory') ? 'text-blue-500' : 'text-red-500'}`}>
-                                            {getWinnerMessage()}
-                                        </h3>
-                                    </motion.div>
-
-                                    {/* Scoreboard Table */}
-                                    <div className="w-full bg-gray-900/50 rounded-xl overflow-hidden mb-8 border border-white/5">
-                                        <div className="grid grid-cols-4 bg-gray-800 p-3 text-xs font-bold text-gray-400 uppercase tracking-widest">
-                                            <div className="text-left pl-4">{t('game.table.round')}</div>
-                                            <div>{t('game.table.myScore')}</div>
-                                            <div>{t('game.table.opScore')}</div>
-                                            <div>{t('game.table.result')}</div>
+                    <div className="absolute inset-0 bg-black/80 backdrop-blur-md z-50 overflow-y-auto">
+                        <div className="min-h-full flex flex-col items-center justify-center p-4">
+                            <motion.div
+                                initial={{ scale: 0.9, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                className="bg-gray-800 p-8 rounded-3xl border-4 border-white/10 shadow-2xl text-center max-w-2xl w-full"
+                            >
+                                {/* PRACTICE MODE RESULT */}
+                                {gameState.mode === 'practice' ? (
+                                    <div className="text-center">
+                                        <h2 className="text-5xl font-black mb-4 text-green-400 tracking-wider">
+                                            {t('game.practiceComplete', '연습 완료!')}
+                                        </h2>
+                                        <div className="text-2xl text-white mb-8">
+                                            {/* Show Score or Time based on game type if tracked, currently just completion */}
+                                            <p>{t('game.greatJob', '수고하셨습니다!')}</p>
                                         </div>
-                                        {gameState.roundScores.map((round, idx) => {
-                                            const myS = gameState.isPlayer1 ? round.p1_score : round.p2_score;
-                                            const opS = gameState.isPlayer1 ? round.p2_score : round.p1_score;
-                                            const win = myS > opS;
-                                            const totalS = myS + opS;
-                                            const myRatio = totalS > 0 ? (myS / totalS) * 100 : 50;
-
-                                            return (
-                                                <motion.div
-                                                    key={idx}
-                                                    initial={{ opacity: 0, x: -50 }}
-                                                    animate={{ opacity: 1, x: 0 }}
-                                                    transition={{ delay: 0.5 + idx * 0.4 }}
-                                                    className="grid grid-cols-4 p-4 border-t border-white/5 items-center font-mono relative overflow-hidden"
-                                                >
-                                                    {/* Background Bar */}
-                                                    <div className="absolute inset-0 z-0 opacity-10">
-                                                        {/* Left (Blue) - Anchored Left */}
-                                                        <motion.div
-                                                            initial={{ width: 0 }}
-                                                            animate={{ width: `${myRatio}%` }}
-                                                            transition={{ delay: 0.5 + idx * 0.4, duration: 0.8, ease: "easeOut" }}
-                                                            className="absolute left-0 top-0 h-full bg-blue-500"
-                                                        />
-                                                        {/* Right (Red) - Anchored Right */}
-                                                        <motion.div
-                                                            initial={{ width: 0 }}
-                                                            animate={{ width: `${100 - myRatio}%` }}
-                                                            transition={{ delay: 0.5 + idx * 0.4, duration: 0.8, ease: "easeOut" }}
-                                                            className="absolute right-0 top-0 h-full bg-red-500"
-                                                        />
-                                                    </div>
-
-                                                    <div className="text-left pl-4 text-white font-bold relative z-10">#{round.round}</div>
-                                                    <div className="text-blue-400 font-bold text-lg relative z-10">{myS}</div>
-                                                    <div className="text-red-400 font-bold text-lg relative z-10">{opS}</div>
-                                                    <div className="relative z-10">
-                                                        <motion.div
-                                                            initial={{ scale: 0 }}
-                                                            animate={{ scale: 1 }}
-                                                            transition={{ delay: 0.8 + idx * 0.4, type: "spring" }}
-                                                        >
-                                                            {win ? (
-                                                                <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">{t('game.table.win')}</span>
-                                                            ) : myS === opS ? (
-                                                                <span className="text-xs bg-gray-500/20 text-gray-400 px-2 py-1 rounded">{t('game.table.draw')}</span>
-                                                            ) : (
-                                                                <span className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded">{t('game.table.lose')}</span>
-                                                            )}
-                                                        </motion.div>
-                                                    </div>
-                                                </motion.div>
-                                            );
-                                        })}
-                                        {/* TOTAL */}
-                                        <motion.div
+                                        <motion.button
                                             initial={{ opacity: 0, y: 20 }}
                                             animate={{ opacity: 1, y: 0 }}
-                                            transition={{ delay: 0.5 + gameState.roundScores.length * 0.4 }}
-                                            className="grid grid-cols-4 p-4 bg-white/5 border-t-2 border-white/10 items-center font-mono"
+                                            transition={{ delay: 0.5 }}
+                                            onClick={() => navigate('/')}
+                                            className="px-8 py-4 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold text-xl transition-all shadow-lg hover:shadow-green-500/50"
                                         >
-                                            <div className="text-left pl-4 text-yellow-400 font-black">{t('game.total')}</div>
-                                            <div className="text-blue-400 font-black text-2xl">{totalScores.my}</div>
-                                            <div className="text-red-400 font-black text-2xl">{totalScores.op}</div>
-                                            <div>
-                                                {totalScores.my > totalScores.op ? (
-                                                    <Trophy className="w-6 h-6 text-yellow-400 mx-auto animate-bounce" />
-                                                ) : (
-                                                    <span className="text-gray-500">-</span>
-                                                )}
-                                            </div>
-                                        </motion.div>
+                                            {t('game.returnMenu')}
+                                        </motion.button>
                                     </div>
+                                ) : (
+                                    /* NORMAL / RANK MODE RESULT */
+                                    <>
+                                        {/* MATCH RESULT Header Removed */}
 
-                                    {/* Rank Result Animation */}
-                                    {gameState.mode === 'rank' && displayMMR !== null && (
+                                        {/* VICTORY / DEFEAT TEXT - SLAM ANIMATION (After Rounds) */}
                                         <motion.div
-                                            initial={{ opacity: 0, height: 0 }}
-                                            animate={{ opacity: 1, height: 'auto' }}
-                                            transition={{ delay: 0.8 + gameState.roundScores.length * 0.4 }}
-                                            className="mb-8 p-4 bg-white/10 rounded-xl border border-white/20 overflow-hidden"
+                                            initial={{ scale: 5, opacity: 0, rotate: -10 }}
+                                            animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                                            transition={{
+                                                delay: 0.2 + (gameState.roundScores.length + 1) * 0.4,
+                                                type: "spring", stiffness: 200, damping: 15
+                                            }}
+                                            className="mb-8"
                                         >
-                                            <div className="text-gray-400 text-sm font-bold uppercase tracking-widest mb-2">{t('game.rankScore')}</div>
-                                            <div className="flex items-center justify-center gap-4 text-4xl font-black">
-                                                <div className="text-white">{displayMMR}</div>
-                                                {mmrDelta !== null && mmrDelta !== 0 && (
-                                                    <motion.div
-                                                        initial={{ opacity: 0, y: 10 }}
-                                                        animate={{ opacity: 1, y: 0 }}
-                                                        transition={{ delay: 0.5 }} // local delay
-                                                        className={`text-2xl ${mmrDelta > 0 ? 'text-green-400' : 'text-red-400'}`}
-                                                    >
-                                                        {mmrDelta > 0 ? `+${mmrDelta}` : mmrDelta}
-                                                    </motion.div>
-                                                )}
-                                            </div>
+                                            <h3 className={`text-6xl font-black drop-shadow-2xl ${getWinnerMessage() === t('game.victory') ? 'text-blue-500' : 'text-red-500'}`}>
+                                                {getWinnerMessage()}
+                                            </h3>
                                         </motion.div>
-                                    )}
 
-                                    <motion.button
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: 1.5 + (gameState.roundScores.length + 1) * 0.4 }}
-                                        onClick={() => navigate('/')}
-                                        disabled={!isButtonEnabled}
-                                        className={`w-full py-4 font-bold text-xl rounded-xl transition-all ${isButtonEnabled
-                                            ? 'bg-white text-black hover:bg-gray-200'
-                                            : 'bg-gray-700 text-gray-500 cursor-not-allowed opacity-50'
-                                            }`}
-                                    >
-                                        {isButtonEnabled ? t('game.returnMenu') : t('common.loading')}
-                                    </motion.button>
-                                </>
-                            )}
-                        </motion.div>
+                                        {/* Scoreboard Table */}
+                                        <div className="w-full bg-gray-900/50 rounded-xl overflow-hidden mb-8 border border-white/5">
+                                            <div className="grid grid-cols-4 bg-gray-800 p-3 text-xs font-bold text-gray-400 uppercase tracking-widest">
+                                                <div className="text-left pl-4">{t('game.table.round')}</div>
+                                                <div>{t('game.table.myScore')}</div>
+                                                <div>{t('game.table.opScore')}</div>
+                                                <div>{t('game.table.result')}</div>
+                                            </div>
+                                            {gameState.roundScores.map((round, idx) => {
+                                                const myS = gameState.isPlayer1 ? round.p1_score : round.p2_score;
+                                                const opS = gameState.isPlayer1 ? round.p2_score : round.p1_score;
+                                                const win = myS > opS;
+                                                const totalS = myS + opS;
+                                                const myRatio = totalS > 0 ? (myS / totalS) * 100 : 50;
+
+                                                return (
+                                                    <motion.div
+                                                        key={idx}
+                                                        initial={{ opacity: 0, x: -50 }}
+                                                        animate={{ opacity: 1, x: 0 }}
+                                                        transition={{ delay: 0.5 + idx * 0.4 }}
+                                                        className="grid grid-cols-4 p-4 border-t border-white/5 items-center font-mono relative overflow-hidden"
+                                                    >
+                                                        {/* Background Bar */}
+                                                        <div className="absolute inset-0 z-0 opacity-10">
+                                                            {/* Left (Blue) - Anchored Left */}
+                                                            <motion.div
+                                                                initial={{ width: 0 }}
+                                                                animate={{ width: `${myRatio}%` }}
+                                                                transition={{ delay: 0.5 + idx * 0.4, duration: 0.8, ease: "easeOut" }}
+                                                                className="absolute left-0 top-0 h-full bg-blue-500"
+                                                            />
+                                                            {/* Right (Red) - Anchored Right */}
+                                                            <motion.div
+                                                                initial={{ width: 0 }}
+                                                                animate={{ width: `${100 - myRatio}%` }}
+                                                                transition={{ delay: 0.5 + idx * 0.4, duration: 0.8, ease: "easeOut" }}
+                                                                className="absolute right-0 top-0 h-full bg-red-500"
+                                                            />
+                                                        </div>
+
+                                                        <div className="text-left pl-4 text-white font-bold relative z-10">#{round.round}</div>
+                                                        <div className="text-blue-400 font-bold text-lg relative z-10">{myS}</div>
+                                                        <div className="text-red-400 font-bold text-lg relative z-10">{opS}</div>
+                                                        <div className="relative z-10">
+                                                            <motion.div
+                                                                initial={{ scale: 0 }}
+                                                                animate={{ scale: 1 }}
+                                                                transition={{ delay: 0.8 + idx * 0.4, type: "spring" }}
+                                                            >
+                                                                {win ? (
+                                                                    <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">{t('game.table.win')}</span>
+                                                                ) : myS === opS ? (
+                                                                    <span className="text-xs bg-gray-500/20 text-gray-400 px-2 py-1 rounded">{t('game.table.draw')}</span>
+                                                                ) : (
+                                                                    <span className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded">{t('game.table.lose')}</span>
+                                                                )}
+                                                            </motion.div>
+                                                        </div>
+                                                    </motion.div>
+                                                );
+                                            })}
+                                            {/* TOTAL */}
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 20 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: 0.5 + gameState.roundScores.length * 0.4 }}
+                                                className="grid grid-cols-4 p-4 bg-white/5 border-t-2 border-white/10 items-center font-mono"
+                                            >
+                                                <div className="text-left pl-4 text-yellow-400 font-black">{t('game.total')}</div>
+                                                <div className="text-blue-400 font-black text-2xl">{totalScores.my}</div>
+                                                <div className="text-red-400 font-black text-2xl">{totalScores.op}</div>
+                                                <div>
+                                                    {totalScores.my > totalScores.op ? (
+                                                        <Trophy className="w-6 h-6 text-yellow-400 mx-auto animate-bounce" />
+                                                    ) : (
+                                                        <span className="text-gray-500">-</span>
+                                                    )}
+                                                </div>
+                                            </motion.div>
+                                        </div>
+
+                                        {/* Rank Result Animation */}
+                                        {gameState.mode === 'rank' && displayMMR !== null && (
+                                            <motion.div
+                                                initial={{ opacity: 0, height: 0 }}
+                                                animate={{ opacity: 1, height: 'auto' }}
+                                                transition={{ delay: 0.8 + gameState.roundScores.length * 0.4 }}
+                                                className="mb-8 p-4 bg-white/10 rounded-xl border border-white/20 overflow-hidden"
+                                            >
+                                                <div className="text-gray-400 text-sm font-bold uppercase tracking-widest mb-2">{t('game.rankScore')}</div>
+                                                <div className="flex items-center justify-center gap-4 text-4xl font-black">
+                                                    <div className="text-white">{displayMMR}</div>
+                                                    {mmrDelta !== null && mmrDelta !== 0 && (
+                                                        <motion.div
+                                                            initial={{ opacity: 0, y: 10 }}
+                                                            animate={{ opacity: 1, y: 0 }}
+                                                            transition={{ delay: 0.5 }} // local delay
+                                                            className={`text-2xl ${mmrDelta > 0 ? 'text-green-400' : 'text-red-400'}`}
+                                                        >
+                                                            {mmrDelta > 0 ? `+${mmrDelta}` : mmrDelta}
+                                                        </motion.div>
+                                                    )}
+                                                </div>
+                                            </motion.div>
+                                        )}
+
+                                        {/* Emoji Grid in Result Card */}
+                                        <div className="w-full bg-black/20 rounded-xl p-4 mb-6 border border-white/5">
+                                            {/* Reactions Label Removed */}
+                                            <div className="grid grid-cols-4 gap-3">
+                                                {[...emojiRowTop, ...emojiRowBottom].map((emoji) => (
+                                                    <button
+                                                        key={emoji}
+                                                        onClick={() => handleEmojiSend(emoji)}
+                                                        className="aspect-square rounded-xl bg-white/5 hover:bg-white/10 text-2xl flex items-center justify-center transition active:scale-95 border border-white/5"
+                                                    >
+                                                        {emoji}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        <motion.button
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: 1.5 + (gameState.roundScores.length + 1) * 0.4 }}
+                                            onClick={() => navigate('/')}
+                                            disabled={!isButtonEnabled}
+                                            className={`w-full py-4 font-bold text-xl rounded-xl transition-all ${isButtonEnabled
+                                                ? 'bg-white text-black hover:bg-gray-200'
+                                                : 'bg-gray-700 text-gray-500 cursor-not-allowed opacity-50'
+                                                }`}
+                                        >
+                                            {isButtonEnabled ? t('game.returnMenu') : t('common.loading')}
+                                        </motion.button>
+                                    </>
+                                )}
+                            </motion.div>
+                        </div>
                     </div>
                 )}
 
-                {showEmojiBar && (
+                {showEmojiOverlay && (
                     <div className="absolute inset-0 z-[60] pointer-events-none">
                         <AnimatePresence>
                             {emojiBursts.map((item) => (
@@ -769,32 +779,34 @@ const Game: React.FC = () => {
                                 </motion.span>
                             ))}
                         </AnimatePresence>
-                        <div className={`absolute ${isFinished ? 'top-24' : 'bottom-6'} left-1/2 -translate-x-1/2 pointer-events-auto`}>
-                            <div className="bg-black/50 border border-white/10 rounded-2xl px-4 py-4 backdrop-blur-md w-[360px] max-w-[92vw]">
-                                <div className="grid grid-cols-4 gap-4 mb-4 justify-items-center">
-                                    {emojiRowTop.map((emoji) => (
-                                        <button
-                                            key={emoji}
-                                            onClick={() => handleEmojiSend(emoji)}
-                                            className="w-16 h-16 rounded-2xl bg-white/5 hover:bg-white/10 text-3xl transition active:scale-95"
-                                        >
-                                            {emoji}
-                                        </button>
-                                    ))}
-                                </div>
-                                <div className="grid grid-cols-4 gap-4 justify-items-center">
-                                    {emojiRowBottom.map((emoji) => (
-                                        <button
-                                            key={emoji}
-                                            onClick={() => handleEmojiSend(emoji)}
-                                            className="w-16 h-16 rounded-2xl bg-white/5 hover:bg-white/10 text-3xl transition active:scale-95"
-                                        >
-                                            {emoji}
-                                        </button>
-                                    ))}
+                        {showEmojiBar && (
+                            <div className={`absolute ${isFinished ? 'top-24' : 'bottom-6'} left-1/2 -translate-x-1/2 pointer-events-auto`}>
+                                <div className="bg-black/50 border border-white/10 rounded-2xl px-4 py-4 backdrop-blur-md w-[360px] max-w-[92vw]">
+                                    <div className="grid grid-cols-4 gap-4 mb-4 justify-items-center">
+                                        {emojiRowTop.map((emoji) => (
+                                            <button
+                                                key={emoji}
+                                                onClick={() => handleEmojiSend(emoji)}
+                                                className="w-16 h-16 rounded-2xl bg-white/5 hover:bg-white/10 text-3xl transition active:scale-95"
+                                            >
+                                                {emoji}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <div className="grid grid-cols-4 gap-4 justify-items-center">
+                                        {emojiRowBottom.map((emoji) => (
+                                            <button
+                                                key={emoji}
+                                                onClick={() => handleEmojiSend(emoji)}
+                                                className="w-16 h-16 rounded-2xl bg-white/5 hover:bg-white/10 text-3xl transition active:scale-95"
+                                            >
+                                                {emoji}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        )}
                     </div>
                 )}
             </main>

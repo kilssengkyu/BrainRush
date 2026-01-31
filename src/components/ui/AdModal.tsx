@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { X, Play, Loader2, Gift } from 'lucide-react';
@@ -9,14 +9,34 @@ import { AdMob, RewardAdPluginEvents } from '@capacitor-community/admob';
 interface AdModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onReward: () => void;
+    onReward: () => Promise<'ok' | 'limit' | 'error'>;
+    adRemaining?: number;
+    adLimit?: number;
 }
 
-const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward }) => {
+const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemaining, adLimit }) => {
     const { t } = useTranslation();
     const { playSound } = useSound();
-    const [adState, setAdState] = useState<'idle' | 'loading' | 'playing' | 'rewarded'>('idle');
+    const [adState, setAdState] = useState<'idle' | 'loading' | 'playing' | 'rewarded' | 'limit' | 'error'>('idle');
     const [timeLeft, setTimeLeft] = useState(5);
+    const hasLimit = typeof adRemaining === 'number' && typeof adLimit === 'number';
+    const isLimitReached = hasLimit && adRemaining <= 0;
+
+    const grantReward = useCallback(async () => {
+        try {
+            const result = await onReward();
+            if (result === 'ok') {
+                setAdState('rewarded');
+            } else if (result === 'limit') {
+                setAdState('limit');
+            } else {
+                setAdState('error');
+            }
+        } catch (err) {
+            console.error('Reward grant failed:', err);
+            setAdState('error');
+        }
+    }, [onReward]);
 
     // Initialize AdMob on mount
     useEffect(() => {
@@ -36,8 +56,7 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward }) => {
         const setupListeners = async () => {
             rewardListener = await AdMob.addListener(RewardAdPluginEvents.Rewarded, (reward) => {
                 console.log('AdMob Reward:', reward);
-                setAdState('rewarded');
-                onReward();
+                grantReward();
             });
 
             dismissListener = await AdMob.addListener(RewardAdPluginEvents.Dismissed, () => {
@@ -63,7 +82,7 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward }) => {
             if (dismissListener) dismissListener.remove();
             if (failedLoadListener) failedLoadListener.remove();
         };
-    }, [onReward]);
+    }, [grantReward]);
 
     // Reset state on open/close
     useEffect(() => {
@@ -75,6 +94,10 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward }) => {
 
     const startAd = async () => {
         playSound('click');
+        if (isLimitReached) {
+            setAdState('limit');
+            return;
+        }
 
         if (!Capacitor.isNativePlatform()) {
             // Web / Fallback Mode
@@ -86,8 +109,7 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward }) => {
                 setTimeLeft(timer);
                 if (timer <= 0) {
                     clearInterval(interval);
-                    setAdState('rewarded');
-                    onReward();
+                    grantReward();
                 }
             }, 1000);
             return;
@@ -148,7 +170,11 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward }) => {
                                         {adState === 'loading' ? (
                                             <Loader2 className="w-10 h-10 text-blue-400 animate-spin" />
                                         ) : (
-                                            <Play className="w-10 h-10 text-blue-400 fill-current" />
+                                            <img
+                                                src="/images/Icon/icon_tv.png"
+                                                alt="Watch Ad"
+                                                className="w-10 h-10 object-contain"
+                                            />
                                         )}
                                     </div>
                                     <p className="text-gray-300 mb-6">
@@ -156,15 +182,26 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward }) => {
                                             ? t('ad.loading', 'Loading Ad...')
                                             : t('ad.watchDesc', 'Watch a short ad to get 2 Pencils!')}
                                     </p>
+                                    {hasLimit && (
+                                        <p className={`text-xs font-mono mb-4 ${isLimitReached ? 'text-red-400' : 'text-gray-400'}`}>
+                                            {isLimitReached
+                                                ? t('ad.limitReached', 'Daily ad limit reached.')
+                                                : t('ad.remaining', 'Remaining today: {{count}}/{{limit}}', { count: adRemaining, limit: adLimit })}
+                                        </p>
+                                    )}
                                     <button
                                         onClick={startAd}
-                                        disabled={adState === 'loading'}
+                                        disabled={adState === 'loading' || isLimitReached}
                                         className={`w-full py-3 font-bold rounded-xl transition-all shadow-lg 
-                                            ${adState === 'loading'
+                                            ${(adState === 'loading' || isLimitReached)
                                                 ? 'bg-gray-600 cursor-not-allowed opacity-50'
                                                 : 'bg-blue-600 hover:bg-blue-500 text-white active:scale-95 shadow-blue-500/20'}`}
                                     >
-                                        {adState === 'loading' ? t('common.loading', 'Loading...') : t('ad.watchBtn', 'Watch Ad')}
+                                        {adState === 'loading'
+                                            ? t('common.loading', 'Loading...')
+                                            : isLimitReached
+                                                ? t('ad.limitReached', 'Daily ad limit reached.')
+                                                : t('ad.watchBtn', 'Watch Ad')}
                                     </button>
                                 </>
                             )}
@@ -203,13 +240,57 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward }) => {
                             {adState === 'rewarded' && (
                                 <>
                                     <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mb-4 animate-bounce">
-                                        <div className="text-4xl">✏️</div>
+                                        <img
+                                            src="/images/Icon/icon_pen.png"
+                                            alt="Pencil"
+                                            className="w-10 h-10 object-contain"
+                                        />
                                     </div>
                                     <h4 className="text-2xl font-bold text-white mb-2">
                                         +2 {t('ad.pencils', 'Pencils')}!
                                     </h4>
                                     <p className="text-gray-400 mb-6">
                                         {t('ad.success', 'Reward earned successfully.')}
+                                    </p>
+                                    <button
+                                        onClick={() => { playSound('click'); onClose(); }}
+                                        className="w-full py-3 bg-gray-700 hover:bg-gray-600 text-white font-bold rounded-xl transition-all active:scale-95"
+                                    >
+                                        {t('common.close', 'Close')}
+                                    </button>
+                                </>
+                            )}
+
+                            {adState === 'limit' && (
+                                <>
+                                    <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mb-4">
+                                        <div className="text-3xl">⛔</div>
+                                    </div>
+                                    <h4 className="text-2xl font-bold text-white mb-2">
+                                        {t('ad.limitReached', 'Daily ad limit reached.')}
+                                    </h4>
+                                    <p className="text-gray-400 mb-6">
+                                        {t('ad.limitReachedDesc', 'Come back tomorrow to watch more ads.')}
+                                    </p>
+                                    <button
+                                        onClick={() => { playSound('click'); onClose(); }}
+                                        className="w-full py-3 bg-gray-700 hover:bg-gray-600 text-white font-bold rounded-xl transition-all active:scale-95"
+                                    >
+                                        {t('common.close', 'Close')}
+                                    </button>
+                                </>
+                            )}
+
+                            {adState === 'error' && (
+                                <>
+                                    <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mb-4">
+                                        <div className="text-3xl">⚠️</div>
+                                    </div>
+                                    <h4 className="text-2xl font-bold text-white mb-2">
+                                        {t('ad.rewardFailed', 'Reward failed.')}
+                                    </h4>
+                                    <p className="text-gray-400 mb-6">
+                                        {t('ad.rewardFailedDesc', 'Please try again later.')}
                                     </p>
                                     <button
                                         onClick={() => { playSound('click'); onClose(); }}

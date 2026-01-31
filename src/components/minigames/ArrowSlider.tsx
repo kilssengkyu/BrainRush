@@ -59,19 +59,27 @@ const ArrowSlider: React.FC<ArrowSliderProps> = ({ seed, onScore, isPlaying }) =
         if (feedback || !isPlaying) return;
 
         const { offset, velocity } = info;
-        const threshold = 50;
-        const velocityThreshold = 500;
+        const threshold = 25;
+        const velocityThreshold = 250;
+
+        const absX = Math.abs(offset.x);
+        const absY = Math.abs(offset.y);
+        const absVX = Math.abs(velocity.x);
+        const absVY = Math.abs(velocity.y);
+
+        const xHit = absX > threshold || absVX > velocityThreshold;
+        const yHit = absY > threshold || absVY > velocityThreshold;
 
         let swipeDir: Direction | null = null;
 
-        if (Math.abs(offset.x) > Math.abs(offset.y)) {
-            // Horizontal
-            if (offset.x > threshold || velocity.x > velocityThreshold) swipeDir = 'right';
-            else if (offset.x < -threshold || velocity.x < -velocityThreshold) swipeDir = 'left';
-        } else {
-            // Vertical
-            if (offset.y > threshold || velocity.y > velocityThreshold) swipeDir = 'down';
-            else if (offset.y < -threshold || velocity.y < -velocityThreshold) swipeDir = 'up';
+        if (xHit || yHit) {
+            const xScore = absX + absVX;
+            const yScore = absY + absVY;
+            if (xHit && (!yHit || xScore >= yScore)) {
+                swipeDir = offset.x >= 0 ? 'right' : 'left';
+            } else {
+                swipeDir = offset.y >= 0 ? 'down' : 'up';
+            }
         }
 
         if (swipeDir) {

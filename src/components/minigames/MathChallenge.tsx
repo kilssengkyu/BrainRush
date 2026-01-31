@@ -113,12 +113,46 @@ const MathChallenge: React.FC<MathChallengeProps> = ({ seed, onScore, isPlaying 
         const options = new Set<number>();
         options.add(answer);
 
+        const ensureSameOnesDigit = () => {
+            const ones = Math.abs(answer) % 10;
+            const candidates: number[] = [];
+            for (let delta = 1; delta <= 9; delta += 1) {
+                const plus = answer + (10 * delta);
+                const minus = answer - (10 * delta);
+                if (plus !== answer) candidates.push(plus);
+                if (minus >= 0 && minus !== answer) candidates.push(minus);
+            }
+            if (candidates.length === 0) return false;
+            const pick = candidates[Math.floor(rng.next() * candidates.length)];
+            options.add(pick);
+            return true;
+        };
+
+        let hasSameOnes = ensureSameOnesDigit();
+
         while (options.size < optionCount) {
             // Generate distractors close to answer
             const distractor = answer + (rng.next() > 0.5 ? 1 : -1) * (Math.floor(rng.next() * 5) + 1);
 
             if (distractor !== answer) {
                 options.add(distractor);
+            }
+        }
+
+        if (!hasSameOnes) {
+            const ones = Math.abs(answer) % 10;
+            const existing = Array.from(options).filter(opt => Math.abs(opt) % 10 === ones);
+            if (existing.length < 2) {
+                const fallback = answer + 10;
+                if (fallback !== answer) {
+                    options.add(fallback);
+                    // If we exceeded count, remove a non-matching distractor
+                    while (options.size > optionCount) {
+                        const candidate = Array.from(options).find(opt => opt !== answer && Math.abs(opt) % 10 !== ones);
+                        if (candidate === undefined) break;
+                        options.delete(candidate);
+                    }
+                }
             }
         }
 

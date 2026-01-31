@@ -10,16 +10,33 @@ interface FindMostColorProps {
     isPlaying: boolean;
 }
 
-// Color Palette
-const COLORS = [
-    'bg-red-500',
-    'bg-blue-500',
-    'bg-green-500',
-    'bg-yellow-500',
-    'bg-purple-500',
-    'bg-pink-500',
-    'bg-teal-500',
-    'bg-orange-500'
+// Colorblind-friendly palette (Okabe-Ito inspired)
+const COLOR_PALETTE = [
+    { id: 'blue', value: '#0072B2' },
+    { id: 'orange', value: '#E69F00' },
+    { id: 'green', value: '#009E73' },
+    { id: 'yellow', value: '#F0E442' },
+    { id: 'purple', value: '#CC79A7' }
+];
+
+const SAFE_PAIRS = [
+    ['blue', 'orange'],
+    ['blue', 'yellow'],
+    ['blue', 'purple'],
+    ['orange', 'green'],
+    ['orange', 'yellow'],
+    ['orange', 'purple'],
+    ['green', 'yellow'],
+    ['green', 'purple']
+];
+
+const SAFE_TRIADS = [
+    ['blue', 'orange', 'yellow'],
+    ['blue', 'orange', 'purple'],
+    ['blue', 'green', 'orange'],
+    ['blue', 'yellow', 'purple'],
+    ['orange', 'green', 'purple'],
+    ['green', 'yellow', 'purple']
 ];
 
 const FindMostColor: React.FC<FindMostColorProps> = ({ seed, onScore, isPlaying }) => {
@@ -68,9 +85,20 @@ const FindMostColor: React.FC<FindMostColorProps> = ({ seed, onScore, isPlaying 
         setCols(gridSize);
         const totalCells = gridSize * gridSize;
 
-        // Select Colors
-        const shuffledColors = [...COLORS].sort(() => rng.current!.next() - 0.5);
-        const selectedColors = shuffledColors.slice(0, numColors);
+        // Select Colors (use safe combos for colorblind-friendly contrast)
+        const colorMap = new Map(COLOR_PALETTE.map(c => [c.id, c.value]));
+        let selectedColors: string[] = [];
+
+        if (numColors === 2) {
+            const pair = SAFE_PAIRS[Math.floor(rng.current.next() * SAFE_PAIRS.length)];
+            selectedColors = pair.map(id => colorMap.get(id)!);
+        } else if (numColors === 3) {
+            const triad = SAFE_TRIADS[Math.floor(rng.current.next() * SAFE_TRIADS.length)];
+            selectedColors = triad.map(id => colorMap.get(id)!);
+        } else {
+            const shuffled = [...COLOR_PALETTE].sort(() => rng.current!.next() - 0.5);
+            selectedColors = shuffled.slice(0, numColors).map(c => c.value);
+        }
 
         // Distribute Counts
         // Requirement: Winner must be unique. 
@@ -206,7 +234,8 @@ const FindMostColor: React.FC<FindMostColorProps> = ({ seed, onScore, isPlaying 
                             }
                             handleTileClick(color);
                         }}
-                        className={`${color} w-full h-full rounded-lg shadow-inner border-2 border-white/10 transition-colors`}
+                        className="w-full h-full rounded-lg shadow-inner border-2 border-white/10 transition-colors"
+                        style={{ backgroundColor: color }}
                     />
                 ))}
             </motion.div>
