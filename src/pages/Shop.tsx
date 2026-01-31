@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -6,15 +6,20 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ShoppingBag, Pencil, Ban, Sparkles } from 'lucide-react';
 import { useSound } from '../contexts/SoundContext';
 import { useUI } from '../contexts/UIContext';
+import { loadProducts, PRODUCT_IDS, purchaseProduct, type ShopProductId } from '../lib/purchaseService';
+import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabaseClient';
 
 type ShopItem = {
     id: string;
+    productId: ShopProductId;
     titleKey: string;
     descKey: string;
     priceLabel?: string;
     tagKey?: string;
     accent: string;
     icon: ReactNode;
+    isConsumable?: boolean;
 };
 
 const Shop = () => {
@@ -22,54 +27,129 @@ const Shop = () => {
     const { t } = useTranslation();
     const { playSound } = useSound();
     const { showToast } = useUI();
+    const { user, profile, refreshProfile } = useAuth();
+    const [priceMap, setPriceMap] = useState<Record<string, string>>({});
+    const [loadingPrices, setLoadingPrices] = useState(false);
 
     const items = useMemo<ShopItem[]>(() => ([
         {
             id: 'remove_ads',
+            productId: PRODUCT_IDS.removeAds,
             titleKey: 'shop.removeAds.title',
             descKey: 'shop.removeAds.desc',
-            priceLabel: t('shop.priceTbd', 'TBD'),
+            priceLabel: priceMap[PRODUCT_IDS.removeAds] || t('shop.priceTbd', 'TBD'),
             tagKey: 'shop.premium',
             accent: 'from-rose-500/20 to-transparent',
             icon: <Ban className="w-8 h-8 text-rose-300" />
         },
         {
             id: 'pencils_5',
+            productId: PRODUCT_IDS.pencils5,
             titleKey: 'shop.pencils5.title',
             descKey: 'shop.pencils5.desc',
-            priceLabel: '₩1,200',
+            priceLabel: priceMap[PRODUCT_IDS.pencils5] || '₩1,200',
             accent: 'from-yellow-500/20 to-transparent',
-            icon: <Pencil className="w-8 h-8 text-yellow-300" />
+            icon: <Pencil className="w-8 h-8 text-yellow-300" />,
+            isConsumable: true,
         },
         {
             id: 'pencils_20',
+            productId: PRODUCT_IDS.pencils20,
             titleKey: 'shop.pencils20.title',
             descKey: 'shop.pencils20.desc',
-            priceLabel: '₩5,500',
+            priceLabel: priceMap[PRODUCT_IDS.pencils20] || '₩3,900',
             tagKey: 'shop.popular',
             accent: 'from-emerald-500/20 to-transparent',
-            icon: <Pencil className="w-8 h-8 text-emerald-300" />
+            icon: <Pencil className="w-8 h-8 text-emerald-300" />,
+            isConsumable: true,
         },
         {
             id: 'pencils_100',
+            productId: PRODUCT_IDS.pencils100,
             titleKey: 'shop.pencils100.title',
             descKey: 'shop.pencils100.desc',
-            priceLabel: '₩25,000',
+            priceLabel: priceMap[PRODUCT_IDS.pencils100] || '₩19,000',
             tagKey: 'shop.bestValue',
             accent: 'from-sky-500/20 to-transparent',
-            icon: <Sparkles className="w-8 h-8 text-sky-300" />
+            icon: <Sparkles className="w-8 h-8 text-sky-300" />,
+            isConsumable: true,
         }
-    ]), [t]);
+    ]), [priceMap, t]);
+
+    useEffect(() => {
+        let active = true;
+        const fetchPrices = async () => {
+            setLoadingPrices(true);
+            try {
+                const products = await loadProducts([
+                    PRODUCT_IDS.removeAds,
+                    PRODUCT_IDS.pencils5,
+                    PRODUCT_IDS.pencils20,
+                    PRODUCT_IDS.pencils100,
+                ]);
+                if (!active) return;
+                const nextMap: Record<string, string> = {};
+                products.forEach((product) => {
+                    if (product?.identifier && product.priceString) {
+                        nextMap[product.identifier] = product.priceString;
+                    }
+                });
+                setPriceMap(nextMap);
+            } catch (err) {
+                console.error('Failed to load store products', err);
+            } finally {
+                if (active) setLoadingPrices(false);
+            }
+        };
+
+        fetchPrices();
+        return () => {
+            active = false;
+        };
+    }, []);
 
     const handleBack = () => {
         playSound('click');
         navigate('/');
     };
 
-    const handlePurchase = (itemId: string) => {
+    const handlePurchase = async (item: ShopItem) => {
         playSound('click');
-        showToast(t('shop.comingSoon', 'Preparing purchase flow...'), 'info');
-        console.log('Purchase clicked:', itemId);
+        if (!user) {
+            showToast(t('auth.loginRequired'), 'error');
+            return;
+        }
+        if (item.productId === PRODUCT_IDS.removeAds && profile?.ads_removed) {
+            return;
+        }
+        try {
+            await purchaseProduct(item.productId);
+            if (item.productId === PRODUCT_IDS.removeAds) {
+                const { error } = await supabase.rpc('grant_ads_removal', { user_id: user.id });
+                if (error) throw error;
+                await refreshProfile();
+            } else if (item.productId === PRODUCT_IDS.pencils5) {
+                const { error } = await supabase.rpc('grant_pencils', { user_id: user.id, amount: 5 });
+                if (error) throw error;
+                await refreshProfile();
+            } else if (item.productId === PRODUCT_IDS.pencils20) {
+                const { error } = await supabase.rpc('grant_pencils', { user_id: user.id, amount: 20 });
+                if (error) throw error;
+                await refreshProfile();
+            } else if (item.productId === PRODUCT_IDS.pencils100) {
+                const { error } = await supabase.rpc('grant_pencils', { user_id: user.id, amount: 100 });
+                if (error) throw error;
+                await refreshProfile();
+            }
+            showToast(t('shop.purchaseSuccess', 'Purchase completed.'), 'success');
+            console.log('Purchase success:', item.productId);
+        } catch (err: any) {
+            console.error('Purchase failed:', err);
+            const message = err?.message?.includes('Billing not supported')
+                ? t('shop.billingUnavailable', 'Billing not supported on this device.')
+                : t('shop.purchaseFail', 'Purchase failed.');
+            showToast(message, 'error');
+        }
     };
 
     const containerVariants = {
@@ -88,7 +168,7 @@ const Shop = () => {
     };
 
     return (
-        <div className="h-[100dvh] bg-gray-900 text-white flex flex-col p-4 relative overflow-hidden">
+        <div className="h-[100dvh] bg-gray-900 text-white flex flex-col p-4 pt-[calc(env(safe-area-inset-top)+1rem)] relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-800 via-gray-900 to-black pointer-events-none" />
 
             <div className="w-full max-w-5xl mx-auto flex items-center justify-between z-10 mb-6 pt-4">
@@ -148,12 +228,22 @@ const Shop = () => {
                                     <div className="text-2xl font-black text-white">
                                         {item.priceLabel}
                                     </div>
-                                    <button
-                                        onClick={() => handlePurchase(item.id)}
-                                        className="px-4 py-2 rounded-xl bg-white text-black font-bold text-sm hover:bg-gray-200 transition-colors active:scale-95"
-                                    >
-                                        {t('shop.buy', 'Buy')}
-                                    </button>
+                                    {item.productId === PRODUCT_IDS.removeAds && profile?.ads_removed ? (
+                                        <button
+                                            disabled
+                                            className="px-4 py-2 rounded-xl bg-gray-600 text-gray-300 font-bold text-sm cursor-not-allowed"
+                                        >
+                                            {t('shop.purchased', 'Purchased')}
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={() => handlePurchase(item)}
+                                            disabled={loadingPrices}
+                                            className="px-4 py-2 rounded-xl bg-white text-black font-bold text-sm hover:bg-gray-200 transition-colors active:scale-95"
+                                        >
+                                            {loadingPrices ? t('shop.loading', 'Loading...') : t('shop.buy', 'Buy')}
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         </motion.div>

@@ -12,9 +12,10 @@ interface AdModalProps {
     onReward: () => Promise<'ok' | 'limit' | 'error'>;
     adRemaining?: number;
     adLimit?: number;
+    adsRemoved?: boolean;
 }
 
-const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemaining, adLimit }) => {
+const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemaining, adLimit, adsRemoved }) => {
     const { t } = useTranslation();
     const { playSound } = useSound();
     const [adState, setAdState] = useState<'idle' | 'loading' | 'playing' | 'rewarded' | 'limit' | 'error'>('idle');
@@ -98,6 +99,11 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
             setAdState('limit');
             return;
         }
+        if (adsRemoved) {
+            setAdState('loading');
+            await grantReward();
+            return;
+        }
 
         if (!Capacitor.isNativePlatform()) {
             // Web / Fallback Mode
@@ -179,8 +185,12 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
                                     </div>
                                     <p className="text-gray-300 mb-6">
                                         {adState === 'loading'
-                                            ? t('ad.loading', 'Loading Ad...')
-                                            : t('ad.watchDesc', 'Watch a short ad to get 2 Pencils!')}
+                                            ? adsRemoved
+                                                ? t('ad.granting', 'Granting reward...')
+                                                : t('ad.loading', 'Loading Ad...')
+                                            : adsRemoved
+                                                ? t('ad.adFreeDesc', 'Ad-free reward. Get 2 Pencils instantly.')
+                                                : t('ad.watchDesc', 'Watch a short ad to get 2 Pencils!')}
                                     </p>
                                     {hasLimit && (
                                         <p className={`text-xs font-mono mb-4 ${isLimitReached ? 'text-red-400' : 'text-gray-400'}`}>
@@ -201,7 +211,9 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
                                             ? t('common.loading', 'Loading...')
                                             : isLimitReached
                                                 ? t('ad.limitReached', 'Daily ad limit reached.')
-                                                : t('ad.watchBtn', 'Watch Ad')}
+                                                : adsRemoved
+                                                    ? t('ad.claimBtn', 'Get Pencils')
+                                                    : t('ad.watchBtn', 'Watch Ad')}
                                     </button>
                                 </>
                             )}

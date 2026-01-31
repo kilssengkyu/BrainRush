@@ -98,20 +98,20 @@
         "title": "Shop",
         "subtitle": "Boost your play",
         "removeAds": {
-            "title": "Ad Removal",
-            "desc": "Skip ads and get pencils instantly."
+            "title": "Ad Removal Pack",
+            "desc": "No ads. Get pencils instantly when you tap ad rewards."
         },
         "pencils5": {
             "title": "Pencils x5",
-            "desc": "Quick refill for a few matches."
+            "desc": "Small boost for a short session."
         },
         "pencils20": {
             "title": "Pencils x20",
-            "desc": "Good for daily sessions."
+            "desc": "Great for daily play."
         },
         "pencils100": {
             "title": "Pencils x100",
-            "desc": "Best value for long sessions."
+            "desc": "Best value for long-term play."
         },
         "buy": "Buy",
         "premium": "Premium",
@@ -119,7 +119,12 @@
         "bestValue": "Best Value",
         "notice": "Payments are processed via App Store / Google Play.",
         "comingSoon": "Preparing purchase flow...",
-        "priceTbd": "TBD"
+        "priceTbd": "TBD",
+        "loading": "Loading...",
+        "purchased": "Purchased",
+        "purchaseSuccess": "Purchase completed.",
+        "purchaseFail": "Purchase failed.",
+        "billingUnavailable": "Billing not supported on this device."
     },
     "leaderboard": {
         "button": "Ranking",
@@ -129,8 +134,17 @@
         "remaining": "Remaining today: {{count}}/{{limit}}",
         "limitReached": "Daily ad limit reached.",
         "limitReachedDesc": "Come back tomorrow to watch more ads.",
+        "adFreeDesc": "Ad-free reward. Get 2 Pencils instantly.",
+        "claimBtn": "Get Pencils",
+        "granting": "Granting reward...",
         "rewardFailed": "Reward failed.",
         "rewardFailedDesc": "Please try again later."
+    },
+    "notifications": {
+        "fullTitle": "Pencils full",
+        "fullBody": "Pencils are full. Time to use your brain!",
+        "reminderTitle": "Time to use your brain",
+        "reminderBody": "It has been 24 hours. Come back and play!"
     },
     "user": {
         "level": "Level",

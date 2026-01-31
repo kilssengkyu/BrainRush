@@ -259,7 +259,7 @@ const Home = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center p-4 pt-[env(safe-area-inset-top)] relative overflow-hidden">
+        <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center p-4 pt-[calc(env(safe-area-inset-top)+1rem)] relative overflow-hidden">
             {/* Background Effects */}
             <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-800 via-gray-900 to-black pointer-events-none" />
 
@@ -349,6 +349,7 @@ const Home = () => {
                 onReward={handleAdReward}
                 adRemaining={adRemaining}
                 adLimit={AD_DAILY_LIMIT}
+                adsRemoved={!!profile?.ads_removed}
             />
 
             <LeaderboardModal

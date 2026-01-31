@@ -52,19 +52,19 @@
         "subtitle": "プレイを強化",
         "removeAds": {
             "title": "広告削除パック",
-            "desc": "広告なしで鉛筆を即時獲得。"
+            "desc": "広告なしで鉛筆をすぐに獲得。"
         },
         "pencils5": {
             "title": "鉛筆 x5",
-            "desc": "短いプレイ向けの補充。"
+            "desc": "短時間プレイ向けの少量パック。"
         },
         "pencils20": {
             "title": "鉛筆 x20",
-            "desc": "日常プレイに最適。"
+            "desc": "日常プレイにちょうど良い。"
         },
         "pencils100": {
             "title": "鉛筆 x100",
-            "desc": "長時間プレイにお得。"
+            "desc": "長く遊ぶ人向けの大容量。"
         },
         "buy": "購入",
         "premium": "プレミアム",
@@ -72,7 +72,12 @@
         "bestValue": "お得",
         "notice": "決済はApp Store / Google Playで処理されます。",
         "comingSoon": "購入フロー準備中...",
-        "priceTbd": "価格未定"
+        "priceTbd": "価格未定",
+        "loading": "読み込み中...",
+        "purchased": "購入済み",
+        "purchaseSuccess": "購入が完了しました。",
+        "purchaseFail": "購入に失敗しました。",
+        "billingUnavailable": "この端末では購入に対応していません。"
     },
     "social": {
         "ingame": "対戦中",
@@ -96,8 +101,17 @@
         "remaining": "本日の残り: {{count}}/{{limit}}",
         "limitReached": "本日の広告上限に達しました。",
         "limitReachedDesc": "明日また視聴できます。",
+        "adFreeDesc": "広告なしで今すぐ鉛筆を獲得。",
+        "claimBtn": "鉛筆を受け取る",
+        "granting": "報酬を付与中...",
         "rewardFailed": "報酬の付与に失敗しました。",
         "rewardFailedDesc": "しばらくしてから再試行してください。"
+    },
+    "notifications": {
+        "fullTitle": "鉛筆が満タン！",
+        "fullBody": "鉛筆が満タンです。脳を使う時間！",
+        "reminderTitle": "脳トレの時間",
+        "reminderBody": "24時間経ちました。戻って遊びましょう！"
     },
     "settings": {
         "title": "設定",

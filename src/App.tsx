@@ -50,6 +50,7 @@ import Shop from './pages/Shop';
 
 import GameInviteListener from './components/social/GameInviteListener';
 import ChatNotificationListener from './components/social/ChatNotificationListener';
+import LocalNotificationScheduler from './components/notifications/LocalNotificationScheduler';
 
 
 import BGMManager from './components/audio/BGMManager';
@@ -64,6 +65,7 @@ function App() {
             <BGMManager />
             <GameInviteListener />
             <ChatNotificationListener />
+            <LocalNotificationScheduler />
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/game/:roomId" element={<Game />} />

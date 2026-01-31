@@ -5620,7 +5620,8 @@ ALTER TABLE public.profiles
 ADD COLUMN IF NOT EXISTS pencils INTEGER DEFAULT 5,
 ADD COLUMN IF NOT EXISTS last_recharge_at TIMESTAMPTZ DEFAULT NOW(),
 ADD COLUMN IF NOT EXISTS ad_reward_count INTEGER DEFAULT 0,
-ADD COLUMN IF NOT EXISTS ad_reward_day DATE DEFAULT CURRENT_DATE;
+ADD COLUMN IF NOT EXISTS ad_reward_day DATE DEFAULT CURRENT_DATE,
+ADD COLUMN IF NOT EXISTS ads_removed BOOLEAN DEFAULT FALSE;
 
 -- 2. Create RPC to get profile with auto-recharge logic
 -- This function checks if time passed and recharges pencils up to 5
@@ -5766,6 +5767,48 @@ BEGIN
     RETURNING pencils INTO new_count;
     
     RETURN new_count;
+END;
+$$;
+
+-- 5. Create RPC to grant ad removal
+CREATE OR REPLACE FUNCTION grant_ads_removal(user_id UUID)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+    IF user_id != auth.uid() THEN
+        RAISE EXCEPTION 'Cannot grant ads removal for another user';
+    END IF;
+
+    UPDATE public.profiles
+    SET ads_removed = TRUE
+    WHERE id = user_id;
+
+    RETURN TRUE;
+END;
+$$;
+
+-- 6. Create RPC to grant pencils for purchases
+CREATE OR REPLACE FUNCTION grant_pencils(user_id UUID, amount INTEGER)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+    IF user_id != auth.uid() THEN
+        RAISE EXCEPTION 'Cannot grant pencils for another user';
+    END IF;
+
+    IF amount IS NULL OR amount <= 0 OR amount > 1000 THEN
+        RAISE EXCEPTION 'Invalid pencil amount';
+    END IF;
+
+    UPDATE public.profiles
+    SET pencils = pencils + amount
+    WHERE id = user_id;
+
+    RETURN TRUE;
 END;
 $$;
 

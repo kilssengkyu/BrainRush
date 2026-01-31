@@ -52,11 +52,11 @@
         "subtitle": "提升你的游戏体验",
         "removeAds": {
             "title": "去广告包",
-            "desc": "无需观看广告，立即获得铅笔。"
+            "desc": "无需看广告，立刻获得铅笔。"
         },
         "pencils5": {
             "title": "铅笔 x5",
-            "desc": "适合短时间快速补充。"
+            "desc": "短时间游玩的小份补充。"
         },
         "pencils20": {
             "title": "铅笔 x20",
@@ -64,7 +64,7 @@
         },
         "pencils100": {
             "title": "铅笔 x100",
-            "desc": "超值大礼包。"
+            "desc": "适合长期游玩的超值包。"
         },
         "buy": "购买",
         "premium": "高级",
@@ -72,7 +72,12 @@
         "bestValue": "超值",
         "notice": "付款将通过 App Store / Google Play 处理。",
         "comingSoon": "购买流程准备中...",
-        "priceTbd": "价格待定"
+        "priceTbd": "价格待定",
+        "loading": "加载中...",
+        "purchased": "已购买",
+        "purchaseSuccess": "购买成功。",
+        "purchaseFail": "购买失败。",
+        "billingUnavailable": "此设备不支持购买。"
     },
     "social": {
         "ingame": "游戏中",
@@ -96,8 +101,17 @@
         "remaining": "今日剩余：{{count}}/{{limit}}",
         "limitReached": "今日广告次数已用完。",
         "limitReachedDesc": "请明天再来观看。",
+        "adFreeDesc": "无需广告，立刻获得铅笔。",
+        "claimBtn": "领取铅笔",
+        "granting": "正在发放奖励...",
         "rewardFailed": "奖励发放失败。",
         "rewardFailedDesc": "请稍后再试。"
+    },
+    "notifications": {
+        "fullTitle": "铅笔已满",
+        "fullBody": "铅笔满啦，快来动动脑！",
+        "reminderTitle": "动动脑的时间",
+        "reminderBody": "已经 24 小时了，回来玩一局吧！"
     },
     "settings": {
         "title": "设置",
