@@ -421,7 +421,7 @@ const Profile = () => {
     const hasSocialNotifications = pendingRequestsCount > 0 || unreadChatCount > 0;
 
     return (
-        <div className="h-[100dvh] bg-gray-900 text-white flex flex-col items-center p-4 relative overflow-hidden">
+        <div className="h-[100dvh] bg-gray-900 text-white flex flex-col items-center p-4 pt-[calc(env(safe-area-inset-top)+1rem)] relative overflow-hidden">
             {/* Background Effects */}
             <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-800 via-gray-900 to-black pointer-events-none" />
 
@@ -465,182 +465,182 @@ const Profile = () => {
                             exit={{ opacity: 0, x: 20 }}
                             className="w-full max-w-md bg-gray-800/50 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl relative z-10"
                         >
-                        {/* Avatar Section */}
-                        <div className="flex flex-col items-center mb-8">
-                            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 p-[3px] mb-4">
-                                <div className="w-full h-full rounded-full bg-gray-900 flex items-center justify-center overflow-hidden">
-                                    {profile?.avatar_url ? (
-                                        <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
-                                    ) : (
-                                        <UserIcon className="w-12 h-12 text-gray-400" />
-                                    )}
-                                </div>
-                            </div>
-                            <input
-                                ref={avatarInputRef}
-                                type="file"
-                                accept="image/jpeg,image/png,image/webp"
-                                className="hidden"
-                                onChange={(e) => {
-                                    const file = e.target.files?.[0];
-                                    if (file) handleAvatarSelect(file);
-                                }}
-                            />
-                            <button
-                                onClick={() => avatarInputRef.current?.click()}
-                                disabled={isUploadingAvatar || isLoading}
-                                className="text-xs text-blue-300 hover:text-blue-200 border border-blue-500/40 px-3 py-1 rounded-full transition-colors disabled:opacity-50"
-                            >
-                                {isUploadingAvatar ? t('profile.avatarUploading', '업로드 중...') : t('profile.changeAvatar', '사진 변경')}
-                            </button>
-
-                            {/* Nickname & Country Edit */}
-                            <div className="flex flex-col items-center gap-4 w-full justify-center">
-                                {isEditing ? (
-                                    <div className="flex flex-col gap-2 w-full max-w-[240px]">
-                                        <input
-                                            type="text"
-                                            value={nickname}
-                                            onChange={(e) => setNickname(e.target.value)}
-                                            className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-center text-white focus:outline-none focus:border-blue-500"
-                                            placeholder={t('profile.nicknamePlaceholder')}
-                                            maxLength={12}
-                                        />
-
-                                        <select
-                                            value={country || ''}
-                                            onChange={(e) => setCountry(e.target.value || null)}
-                                            className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500 appearance-none text-center"
-                                        >
-                                            <option value="">{t('profile.selectCountry')}</option>
-                                            {COUNTRIES.map((c) => (
-                                                <option key={c.code} value={c.code}>
-                                                    {c.name}
-                                                </option>
-                                            ))}
-                                        </select>
-
-                                        <button
-                                            onClick={handleSave}
-                                            disabled={isLoading}
-                                            className="p-2 bg-blue-600 rounded-lg hover:bg-blue-500 disabled:opacity-50 w-full flex justify-center mt-2"
-                                        >
-                                            <Save className="w-5 h-5" />
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <div className="flex flex-col items-center gap-1">
-                                        <div className="flex items-center gap-2">
-                                            <Flag code={country} size="lg" className="mr-1" />
-                                            <h2 className="text-2xl font-bold">{nickname}</h2>
-                                            <button
-                                                onClick={() => { playSound('click'); setIsEditing(true); }}
-                                                className="text-gray-500 hover:text-white text-xs bg-gray-800 px-2 py-1 rounded border border-gray-700 ml-2"
-                                            >
-                                                {t('profile.edit')}
-                                            </button>
-                                        </div>
-                                        {country && (
-                                            <span className="text-gray-500 text-xs">
-                                                {COUNTRIES.find(c => c.code === country)?.name}
-                                            </span>
+                            {/* Avatar Section */}
+                            <div className="flex flex-col items-center mb-8">
+                                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 p-[3px] mb-4">
+                                    <div className="w-full h-full rounded-full bg-gray-900 flex items-center justify-center overflow-hidden">
+                                        {profile?.avatar_url ? (
+                                            <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <UserIcon className="w-12 h-12 text-gray-400" />
                                         )}
                                     </div>
-                                )}
+                                </div>
+                                <input
+                                    ref={avatarInputRef}
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/webp"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) handleAvatarSelect(file);
+                                    }}
+                                />
+                                <button
+                                    onClick={() => avatarInputRef.current?.click()}
+                                    disabled={isUploadingAvatar || isLoading}
+                                    className="text-xs text-blue-300 hover:text-blue-200 border border-blue-500/40 px-3 py-1 rounded-full transition-colors disabled:opacity-50"
+                                >
+                                    {isUploadingAvatar ? t('profile.avatarUploading', '업로드 중...') : t('profile.changeAvatar', '사진 변경')}
+                                </button>
+
+                                {/* Nickname & Country Edit */}
+                                <div className="flex flex-col items-center gap-4 w-full justify-center">
+                                    {isEditing ? (
+                                        <div className="flex flex-col gap-2 w-full max-w-[240px]">
+                                            <input
+                                                type="text"
+                                                value={nickname}
+                                                onChange={(e) => setNickname(e.target.value)}
+                                                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-center text-white focus:outline-none focus:border-blue-500"
+                                                placeholder={t('profile.nicknamePlaceholder')}
+                                                maxLength={12}
+                                            />
+
+                                            <select
+                                                value={country || ''}
+                                                onChange={(e) => setCountry(e.target.value || null)}
+                                                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500 appearance-none text-center"
+                                            >
+                                                <option value="">{t('profile.selectCountry')}</option>
+                                                {COUNTRIES.map((c) => (
+                                                    <option key={c.code} value={c.code}>
+                                                        {c.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+
+                                            <button
+                                                onClick={handleSave}
+                                                disabled={isLoading}
+                                                className="p-2 bg-blue-600 rounded-lg hover:bg-blue-500 disabled:opacity-50 w-full flex justify-center mt-2"
+                                            >
+                                                <Save className="w-5 h-5" />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col items-center gap-1">
+                                            <div className="flex items-center gap-2">
+                                                <Flag code={country} size="lg" className="mr-1" />
+                                                <h2 className="text-2xl font-bold">{nickname}</h2>
+                                                <button
+                                                    onClick={() => { playSound('click'); setIsEditing(true); }}
+                                                    className="text-gray-500 hover:text-white text-xs bg-gray-800 px-2 py-1 rounded border border-gray-700 ml-2"
+                                                >
+                                                    {t('profile.edit')}
+                                                </button>
+                                            </div>
+                                            {country && (
+                                                <span className="text-gray-500 text-xs">
+                                                    {COUNTRIES.find(c => c.code === country)?.name}
+                                                </span>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                                <p className="text-gray-400 text-sm mt-1">{user?.email}</p>
+
+                                <button onClick={handleDeleteAccount} className="mt-4 text-xs text-red-500/70 hover:text-red-500 underline">
+                                    {t('settings.deleteAccount')}
+                                </button>
                             </div>
-                            <p className="text-gray-400 text-sm mt-1">{user?.email}</p>
 
-                            <button onClick={handleDeleteAccount} className="mt-4 text-xs text-red-500/70 hover:text-red-500 underline">
-                                {t('settings.deleteAccount')}
-                            </button>
-                        </div>
+                            {/* Stats Grid */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className={`bg-gradient-to-br ${tierColor} p-[2px] rounded-2xl shadow-lg transform hover:scale-105 transition-transform`}>
+                                    <div className="bg-gray-800 w-full h-full rounded-2xl p-4 flex flex-col items-center justify-center">
+                                        <TierIcon className="w-8 h-8 text-white mb-2 filter drop-shadow-md" />
+                                        <span className="text-xs text-gray-400 font-bold uppercase tracking-widest mb-1">{t('game.tier', 'TIER')}</span>
+                                        <span className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300">
+                                            {tier}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className="bg-gray-700/30 p-4 rounded-2xl flex flex-col items-center justify-center border border-white/5">
+                                    <Trophy className="w-8 h-8 text-purple-400 mb-2" />
+                                    <span className="text-xs text-gray-400 font-bold uppercase tracking-widest mb-1">{t('user.rank')}</span>
+                                    <span className="text-xl font-bold text-white">{rank}</span>
+                                </div>
 
-                        {/* Stats Grid */}
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className={`bg-gradient-to-br ${tierColor} p-[2px] rounded-2xl shadow-lg transform hover:scale-105 transition-transform`}>
-                                <div className="bg-gray-800 w-full h-full rounded-2xl p-4 flex flex-col items-center justify-center">
-                                    <TierIcon className="w-8 h-8 text-white mb-2 filter drop-shadow-md" />
-                                    <span className="text-xs text-gray-400 font-bold uppercase tracking-widest mb-1">{t('game.tier', 'TIER')}</span>
-                                    <span className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300">
-                                        {tier}
-                                    </span>
+                                {/* Rank Record */}
+                                <button
+                                    onClick={() => handleOpenHistory('rank')}
+                                    className="bg-gray-700/30 p-4 rounded-2xl flex flex-col items-center col-span-2 hover:bg-gray-700/50 transition-colors cursor-pointer"
+                                >
+                                    <span className="text-xs text-blue-300 mb-1 font-bold uppercase tracking-wider">{t('game.rank')} {t('profile.record')}</span>
+                                    <div className="flex gap-4 items-end">
+                                        <span className="text-lg font-bold text-blue-400">{wins}W</span>
+                                        <span className="text-lg font-bold text-red-400">{losses}L</span>
+                                    </div>
+                                </button>
+
+                                {/* Casual Record */}
+                                <button
+                                    onClick={() => handleOpenHistory('normal')}
+                                    className="bg-gray-700/30 p-4 rounded-2xl flex flex-col items-center col-span-2 border border-white/5 hover:bg-gray-700/50 transition-colors cursor-pointer"
+                                >
+                                    <span className="text-xs text-green-300 mb-1 font-bold uppercase tracking-wider">{t('game.normal')} {t('profile.record')}</span>
+                                    <div className="flex gap-4 items-end">
+                                        <span className="text-lg font-bold text-blue-300">{casualWins}W</span>
+                                        <span className="text-lg font-bold text-red-300">{casualLosses}L</span>
+                                    </div>
+                                </button>
+                            </div>
+
+                            {/* Skill Radar */}
+                            <div className="mt-8 pt-6 border-t border-white/10">
+                                <h3 className="text-sm font-bold uppercase tracking-widest text-gray-400 mb-4 text-center">
+                                    {t('profile.statsTitle', '능력치')}
+                                </h3>
+                                <HexRadar
+                                    values={statValues}
+                                    labels={{
+                                        speed: t('profile.stats.speed', '스피드'),
+                                        memory: t('profile.stats.memory', '기억력'),
+                                        judgment: t('profile.stats.judgment', '판단력'),
+                                        calculation: t('profile.stats.calculation', '계산력'),
+                                        accuracy: t('profile.stats.accuracy', '정확성'),
+                                        observation: t('profile.stats.observation', '관찰력')
+                                    }}
+                                />
+                                <div className="grid grid-cols-3 gap-2 mt-4 text-xs text-gray-400">
+                                    <div className="flex items-center justify-between bg-gray-800/50 rounded-lg px-2 py-1">
+                                        <span>{t('profile.stats.speed', '스피드')}</span>
+                                        <span className="text-blue-300 font-bold">{statValues.speed}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between bg-gray-800/50 rounded-lg px-2 py-1">
+                                        <span>{t('profile.stats.memory', '기억력')}</span>
+                                        <span className="text-blue-300 font-bold">{statValues.memory}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between bg-gray-800/50 rounded-lg px-2 py-1">
+                                        <span>{t('profile.stats.judgment', '판단력')}</span>
+                                        <span className="text-blue-300 font-bold">{statValues.judgment}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between bg-gray-800/50 rounded-lg px-2 py-1">
+                                        <span>{t('profile.stats.calculation', '계산력')}</span>
+                                        <span className="text-blue-300 font-bold">{statValues.calculation}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between bg-gray-800/50 rounded-lg px-2 py-1">
+                                        <span>{t('profile.stats.accuracy', '정확성')}</span>
+                                        <span className="text-blue-300 font-bold">{statValues.accuracy}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between bg-gray-800/50 rounded-lg px-2 py-1">
+                                        <span>{t('profile.stats.observation', '관찰력')}</span>
+                                        <span className="text-blue-300 font-bold">{statValues.observation}</span>
+                                    </div>
                                 </div>
                             </div>
-                            <div className="bg-gray-700/30 p-4 rounded-2xl flex flex-col items-center justify-center border border-white/5">
-                                <Trophy className="w-8 h-8 text-purple-400 mb-2" />
-                                <span className="text-xs text-gray-400 font-bold uppercase tracking-widest mb-1">{t('user.rank')}</span>
-                                <span className="text-xl font-bold text-white">{rank}</span>
-                            </div>
-
-                            {/* Rank Record */}
-                            <button
-                                onClick={() => handleOpenHistory('rank')}
-                                className="bg-gray-700/30 p-4 rounded-2xl flex flex-col items-center col-span-2 hover:bg-gray-700/50 transition-colors cursor-pointer"
-                            >
-                                <span className="text-xs text-blue-300 mb-1 font-bold uppercase tracking-wider">{t('game.rank')} {t('profile.record')}</span>
-                                <div className="flex gap-4 items-end">
-                                    <span className="text-lg font-bold text-blue-400">{wins}W</span>
-                                    <span className="text-lg font-bold text-red-400">{losses}L</span>
-                                </div>
-                            </button>
-
-                            {/* Casual Record */}
-                            <button
-                                onClick={() => handleOpenHistory('normal')}
-                                className="bg-gray-700/30 p-4 rounded-2xl flex flex-col items-center col-span-2 border border-white/5 hover:bg-gray-700/50 transition-colors cursor-pointer"
-                            >
-                                <span className="text-xs text-green-300 mb-1 font-bold uppercase tracking-wider">{t('game.normal')} {t('profile.record')}</span>
-                                <div className="flex gap-4 items-end">
-                                    <span className="text-lg font-bold text-blue-300">{casualWins}W</span>
-                                    <span className="text-lg font-bold text-red-300">{casualLosses}L</span>
-                                </div>
-                            </button>
-                        </div>
-
-                        {/* Skill Radar */}
-                        <div className="mt-8 pt-6 border-t border-white/10">
-                            <h3 className="text-sm font-bold uppercase tracking-widest text-gray-400 mb-4 text-center">
-                                {t('profile.statsTitle', '능력치')}
-                            </h3>
-                            <HexRadar
-                                values={statValues}
-                                labels={{
-                                    speed: t('profile.stats.speed', '스피드'),
-                                    memory: t('profile.stats.memory', '기억력'),
-                                    judgment: t('profile.stats.judgment', '판단력'),
-                                    calculation: t('profile.stats.calculation', '계산력'),
-                                    accuracy: t('profile.stats.accuracy', '정확성'),
-                                    observation: t('profile.stats.observation', '관찰력')
-                                }}
-                            />
-                            <div className="grid grid-cols-3 gap-2 mt-4 text-xs text-gray-400">
-                                <div className="flex items-center justify-between bg-gray-800/50 rounded-lg px-2 py-1">
-                                    <span>{t('profile.stats.speed', '스피드')}</span>
-                                    <span className="text-blue-300 font-bold">{statValues.speed}</span>
-                                </div>
-                                <div className="flex items-center justify-between bg-gray-800/50 rounded-lg px-2 py-1">
-                                    <span>{t('profile.stats.memory', '기억력')}</span>
-                                    <span className="text-blue-300 font-bold">{statValues.memory}</span>
-                                </div>
-                                <div className="flex items-center justify-between bg-gray-800/50 rounded-lg px-2 py-1">
-                                    <span>{t('profile.stats.judgment', '판단력')}</span>
-                                    <span className="text-blue-300 font-bold">{statValues.judgment}</span>
-                                </div>
-                                <div className="flex items-center justify-between bg-gray-800/50 rounded-lg px-2 py-1">
-                                    <span>{t('profile.stats.calculation', '계산력')}</span>
-                                    <span className="text-blue-300 font-bold">{statValues.calculation}</span>
-                                </div>
-                                <div className="flex items-center justify-between bg-gray-800/50 rounded-lg px-2 py-1">
-                                    <span>{t('profile.stats.accuracy', '정확성')}</span>
-                                    <span className="text-blue-300 font-bold">{statValues.accuracy}</span>
-                                </div>
-                                <div className="flex items-center justify-between bg-gray-800/50 rounded-lg px-2 py-1">
-                                    <span>{t('profile.stats.observation', '관찰력')}</span>
-                                    <span className="text-blue-300 font-bold">{statValues.observation}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </motion.div>
+                        </motion.div>
                     ) : (
                         <motion.div
                             key="friends"

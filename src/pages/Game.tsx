@@ -248,7 +248,7 @@ const Game: React.FC = () => {
     }, [gameState.roundScores, gameState.isPlayer1, gameState.myScore, gameState.opScore]);
 
     return (
-        <div className="relative w-full h-[100dvh] bg-gray-900 text-white overflow-hidden flex flex-col font-sans select-none">
+        <div className="relative w-full h-[100dvh] bg-gray-900 text-white overflow-hidden flex flex-col font-sans select-none pt-[env(safe-area-inset-top)]">
 
             {/* Top Info Bar (Timer & Scores) */}
             {!isFinished && (

@@ -17,6 +17,8 @@
     "@capacitor/core": "^6.2.1",
     "@capacitor/haptics": "^6.0.0",
     "@capacitor/ios": "^6.2.1",
+    "@capacitor/local-notifications": "^6.0.0",
+    "@capgo/native-purchases": "^6.0.42",
     "@supabase/supabase-js": "^2.90.1",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/howler": "^2.2.12",

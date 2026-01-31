@@ -7,7 +7,10 @@ import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
     @Override
+
     public void onCreate(Bundle savedInstanceState) {
+        registerPlugin(com.getcapacitor.community.admob.AdMob.class);
+        registerPlugin(ee.forgr.nativepurchases.NativePurchasesPlugin.class);
         super.onCreate(savedInstanceState);
         Log.e("BrainRush", ">>> MainActivity onCreate called <<<");
         if (getIntent() != null) {
