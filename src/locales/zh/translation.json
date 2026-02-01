@@ -165,6 +165,12 @@
     "profile": {
         "nicknamePlaceholder": "输入昵称",
         "edit": "编辑",
+        "highscoresTitle": "最高分",
+        "highscoresColumns": {
+            "game": "游戏",
+            "highscore": "最高分",
+            "rankWinRate": "排位胜率"
+        },
         "statsTitle": "能力值",
         "stats": {
             "speed": "速度",

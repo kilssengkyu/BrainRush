@@ -163,6 +163,12 @@
         "nicknamePlaceholder": "Enter nickname",
         "selectCountry": "Select Country",
         "edit": "Edit",
+        "highscoresTitle": "High Scores",
+        "highscoresColumns": {
+            "game": "Game",
+            "highscore": "Highscore",
+            "rankWinRate": "Rank Win Rate"
+        },
         "statsTitle": "Skills",
         "stats": {
             "speed": "Speed",

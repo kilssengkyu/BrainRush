@@ -166,6 +166,12 @@
         "nicknamePlaceholder": "ニックネーム入力",
         "selectCountry": "国を選択",
         "edit": "編集",
+        "highscoresTitle": "ハイスコア",
+        "highscoresColumns": {
+            "game": "ゲーム",
+            "highscore": "ハイスコア",
+            "rankWinRate": "ランク勝率"
+        },
         "statsTitle": "能力値",
         "stats": {
             "speed": "スピード",

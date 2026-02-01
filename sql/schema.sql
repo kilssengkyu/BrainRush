@@ -9,6 +9,8 @@ drop table if exists game_moves cascade;
 drop table if exists game_sessions cascade;
 drop table if exists public.profiles cascade;
 drop table if exists public.bot_profiles cascade;
+drop table if exists public.player_highscores cascade;
+drop table if exists public.player_game_stats cascade;
 drop table if exists matchmaking_queue cascade;
 drop table if exists public.friendships cascade;
 drop table if exists public.chat_messages cascade;
@@ -54,6 +56,31 @@ create table public.bot_profiles (
   created_at timestamptz default now()
 );
 
+-- Player Highscores (per minigame)
+create table public.player_highscores (
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  game_type text not null,
+  best_score int not null default 0,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now(),
+  primary key (user_id, game_type)
+);
+
+-- Player Game Stats (per minigame; normal/rank)
+create table public.player_game_stats (
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  game_type text not null,
+  normal_wins int not null default 0,
+  normal_losses int not null default 0,
+  normal_draws int not null default 0,
+  rank_wins int not null default 0,
+  rank_losses int not null default 0,
+  rank_draws int not null default 0,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now(),
+  primary key (user_id, game_type)
+);
+
 -- RLS: Public can read, User can update own
 alter table public.profiles enable row level security;
 create policy "Public profiles are viewable by everyone" on public.profiles for select using (true);
@@ -63,6 +90,18 @@ create policy "Users can update own profile" on public.profiles for update using
 -- Bot profiles are public read only
 alter table public.bot_profiles enable row level security;
 create policy "Public bot profiles are viewable by everyone" on public.bot_profiles for select using (true);
+
+-- Player highscores are private (owner read)
+alter table public.player_highscores enable row level security;
+create policy "Users can view own highscores" on public.player_highscores for select using (auth.uid() = user_id);
+create policy "Users can insert own highscores" on public.player_highscores for insert with check (auth.uid() = user_id);
+create policy "Users can update own highscores" on public.player_highscores for update using (auth.uid() = user_id);
+
+-- Player game stats are private (owner read)
+alter table public.player_game_stats enable row level security;
+create policy "Users can view own game stats" on public.player_game_stats for select using (auth.uid() = user_id);
+create policy "Users can insert own game stats" on public.player_game_stats for insert with check (auth.uid() = user_id);
+create policy "Users can update own game stats" on public.player_game_stats for update using (auth.uid() = user_id);
 
 -- Trigger to create profile on signup
 create or replace function public.handle_new_user()
@@ -5581,44 +5620,183 @@ DECLARE
   v_status text;
   v_current_round int;
   v_next_round int;
-  v_p1_score int;
-  v_p2_score int;
+  v_next_round_index int;
+  
+  -- Scores (Wins)
+  v_p1_wins int;
+  v_p2_wins int;
+  
+  -- Current Points
+  v_p1_points int;
+  v_p2_points int;
+  
   v_game_data jsonb;
   v_target text;
-  v_mode text;
-  -- Added 'TAP_COLOR' here
-  v_types text[] := ARRAY['RPS', 'NUMBER', 'MATH', 'TEN', 'COLOR', 'MEMORY', 'SEQUENCE', 'SEQUENCE_NORMAL', 'LARGEST', 'PAIR', 'UPDOWN', 'SLIDER', 'ARROW', 'BLANK', 'OPERATOR', 'LADDER', 'TAP_COLOR'];
+  v_types text[] := ARRAY['RPS', 'NUMBER', 'MATH', 'TEN', 'COLOR', 'MEMORY', 'SEQUENCE', 'SEQUENCE_NORMAL', 'LARGEST', 'PAIR', 'UPDOWN', 'SLIDER', 'ARROW', 'NUMBER_DESC', 'BLANK', 'OPERATOR', 'LADDER', 'TAP_COLOR', 'AIM', 'MOST_COLOR', 'SORTING', 'SPY'];
   v_opts text[] := ARRAY['rock','paper','scissors'];
+  
+  v_round_snapshot jsonb;
+  v_mode text;
+  v_p1_id text;
+  v_p2_id text;
 BEGIN
-  -- [SECURE] Caller Check
-  IF NOT EXISTS (SELECT 1 FROM game_sessions WHERE id = p_room_id 
-      AND (player1_id = auth.uid()::text OR player2_id = auth.uid()::text)) THEN
-     RAISE EXCEPTION 'Not authorized';
-  END IF;
-
   -- Get current state
-  SELECT game_type, status, current_round, player1_score, player2_score, mode
-  INTO v_current_type, v_status, v_current_round, v_p1_score, v_p2_score, v_mode
-  FROM game_sessions WHERE id = p_room_id;
+  SELECT game_type, status, COALESCE(current_round, 0), player1_score, player2_score, COALESCE(p1_current_score, 0), COALESCE(p2_current_score, 0), mode, player1_id, player2_id
+  INTO v_current_type, v_status, v_current_round, v_p1_wins, v_p2_wins, v_p1_points, v_p2_points, v_mode, v_p1_id, v_p2_id
+  FROM game_sessions WHERE id = p_room_id
+  FOR UPDATE;
 
-  -- CRITICAL: Check Practice Mode Termination
+  -- Graceful Exit if Room Not Found
+  -- Note: v_current_type can be NULL for a brand new game (waiting state), so do NOT check type here.
+  IF v_status IS NULL THEN
+      RETURN;
+  END IF;
+
+  IF v_status = 'finished' THEN
+      RETURN;
+  END IF;
+
+  -- Race Condition Fix: If already in countdown (someone else triggered it), do not advance round again.
+  IF v_status = 'countdown' THEN
+      RETURN;
+  END IF;
+
+  -- 1. Snapshot Previous Round (if not first round)
+  IF v_current_round > 0 THEN
+      -- Determine Round Winner based on POINTS
+      IF v_p1_points > v_p2_points THEN
+          v_p1_wins := v_p1_wins + 1;
+      ELSIF v_p2_points > v_p1_points THEN
+          v_p2_wins := v_p2_wins + 1;
+      ELSE
+          -- Draw? No wins incremented
+      END IF;
+
+      -- Create Snapshot Object
+      v_round_snapshot := jsonb_build_object(
+          'round', v_current_round,
+          'game_type', v_current_type,
+          'p1_score', v_p1_points,
+          'p2_score', v_p2_points,
+          'winner', CASE WHEN v_p1_points > v_p2_points THEN 'p1' WHEN v_p2_points > v_p1_points THEN 'p2' ELSE 'draw' END
+      );
+
+      -- Update Session: Add Snapshot, Update Wins, RESET Current Points
+      UPDATE game_sessions
+      SET round_scores = COALESCE(round_scores, '[]'::jsonb) || jsonb_build_array(v_round_snapshot),
+          player1_score = v_p1_wins,
+          player2_score = v_p2_wins,
+          p1_current_score = 0,
+          p2_current_score = 0
+      WHERE id = p_room_id;
+
+      -- Update highscores (per minigame)
+      IF v_current_type IS NOT NULL THEN
+          IF v_p1_id ~ '^[0-9a-fA-F-]{36}$' THEN
+              INSERT INTO player_highscores (user_id, game_type, best_score, updated_at)
+              VALUES (v_p1_id::uuid, v_current_type, v_p1_points, now())
+              ON CONFLICT (user_id, game_type)
+              DO UPDATE SET best_score = GREATEST(player_highscores.best_score, EXCLUDED.best_score),
+                            updated_at = now();
+          END IF;
+
+          IF v_p2_id ~ '^[0-9a-fA-F-]{36}$' THEN
+              INSERT INTO player_highscores (user_id, game_type, best_score, updated_at)
+              VALUES (v_p2_id::uuid, v_current_type, v_p2_points, now())
+              ON CONFLICT (user_id, game_type)
+              DO UPDATE SET best_score = GREATEST(player_highscores.best_score, EXCLUDED.best_score),
+                            updated_at = now();
+          END IF;
+      END IF;
+
+      -- Update per-minigame stats (normal/rank)
+      IF v_current_type IS NOT NULL AND v_mode IN ('rank', 'normal') THEN
+          IF v_p1_id ~ '^[0-9a-fA-F-]{36}$' THEN
+              INSERT INTO player_game_stats (
+                  user_id,
+                  game_type,
+                  normal_wins,
+                  normal_losses,
+                  normal_draws,
+                  rank_wins,
+                  rank_losses,
+                  rank_draws,
+                  updated_at
+              )
+              VALUES (
+                  v_p1_id::uuid,
+                  v_current_type,
+                  CASE WHEN v_mode = 'normal' AND v_p1_points > v_p2_points THEN 1 ELSE 0 END,
+                  CASE WHEN v_mode = 'normal' AND v_p1_points < v_p2_points THEN 1 ELSE 0 END,
+                  CASE WHEN v_mode = 'normal' AND v_p1_points = v_p2_points THEN 1 ELSE 0 END,
+                  CASE WHEN v_mode = 'rank' AND v_p1_points > v_p2_points THEN 1 ELSE 0 END,
+                  CASE WHEN v_mode = 'rank' AND v_p1_points < v_p2_points THEN 1 ELSE 0 END,
+                  CASE WHEN v_mode = 'rank' AND v_p1_points = v_p2_points THEN 1 ELSE 0 END,
+                  now()
+              )
+              ON CONFLICT (user_id, game_type)
+              DO UPDATE SET
+                  normal_wins = player_game_stats.normal_wins + EXCLUDED.normal_wins,
+                  normal_losses = player_game_stats.normal_losses + EXCLUDED.normal_losses,
+                  normal_draws = player_game_stats.normal_draws + EXCLUDED.normal_draws,
+                  rank_wins = player_game_stats.rank_wins + EXCLUDED.rank_wins,
+                  rank_losses = player_game_stats.rank_losses + EXCLUDED.rank_losses,
+                  rank_draws = player_game_stats.rank_draws + EXCLUDED.rank_draws,
+                  updated_at = now();
+          END IF;
+
+          IF v_p2_id ~ '^[0-9a-fA-F-]{36}$' THEN
+              INSERT INTO player_game_stats (
+                  user_id,
+                  game_type,
+                  normal_wins,
+                  normal_losses,
+                  normal_draws,
+                  rank_wins,
+                  rank_losses,
+                  rank_draws,
+                  updated_at
+              )
+              VALUES (
+                  v_p2_id::uuid,
+                  v_current_type,
+                  CASE WHEN v_mode = 'normal' AND v_p2_points > v_p1_points THEN 1 ELSE 0 END,
+                  CASE WHEN v_mode = 'normal' AND v_p2_points < v_p1_points THEN 1 ELSE 0 END,
+                  CASE WHEN v_mode = 'normal' AND v_p2_points = v_p1_points THEN 1 ELSE 0 END,
+                  CASE WHEN v_mode = 'rank' AND v_p2_points > v_p1_points THEN 1 ELSE 0 END,
+                  CASE WHEN v_mode = 'rank' AND v_p2_points < v_p1_points THEN 1 ELSE 0 END,
+                  CASE WHEN v_mode = 'rank' AND v_p2_points = v_p1_points THEN 1 ELSE 0 END,
+                  now()
+              )
+              ON CONFLICT (user_id, game_type)
+              DO UPDATE SET
+                  normal_wins = player_game_stats.normal_wins + EXCLUDED.normal_wins,
+                  normal_losses = player_game_stats.normal_losses + EXCLUDED.normal_losses,
+                  normal_draws = player_game_stats.normal_draws + EXCLUDED.normal_draws,
+                  rank_wins = player_game_stats.rank_wins + EXCLUDED.rank_wins,
+                  rank_losses = player_game_stats.rank_losses + EXCLUDED.rank_losses,
+                  rank_draws = player_game_stats.rank_draws + EXCLUDED.rank_draws,
+                  updated_at = now();
+          END IF;
+      END IF;
+  END IF;
+
+  -- Practice: End after 1 round
   IF v_mode = 'practice' THEN
-      -- In Practice, if we are in Round 1 (or more), we FINISH immediately.
-      -- We do NOT start a next round.
-      UPDATE game_sessions SET status = 'finished', end_at = now() WHERE id = p_room_id;
+      UPDATE game_sessions SET status = 'finished', phase_end_at = now(), end_at = now() WHERE id = p_room_id;
       RETURN;
   END IF;
 
-  -- Normal Victory Check
-  IF v_p1_score >= 3 or v_p2_score >= 3 THEN
-      UPDATE game_sessions SET status = 'finished', end_at = now() WHERE id = p_room_id;
+  -- 2. Check Victory Condition (3 rounds fixed)
+  IF v_current_round >= 3 THEN
+      PERFORM finish_game(p_room_id);
       RETURN;
   END IF;
 
-  -- Pick Next Game Type (Random for normal)
+  -- 3. Pick Next Game Type (Random)
   v_next_type := v_types[floor(random()*array_length(v_types, 1) + 1)];
   
-  -- Setup Game Data
+  -- 4. Setup Game Data
   IF v_next_type = 'RPS' THEN
       v_target := v_opts[floor(random()*3 + 1)];
       v_game_data := '{}';
@@ -5627,18 +5805,24 @@ BEGIN
       v_game_data := jsonb_build_object('seed', floor(random()*10000));
   END IF;
 
-  -- Increment Round
+  -- 5. Calculate Next Round
   v_next_round := v_current_round + 1;
+  v_next_round_index := GREATEST(v_next_round - 1, 0);
 
-  -- Update Session
+  -- 6. Update Session -> COUNTDOWN State
   UPDATE game_sessions
   SET status = 'countdown',
       current_round = v_next_round,
+      current_round_index = v_next_round_index,
       game_type = v_next_type,
       game_data = v_game_data,
       target_move = v_target,
       phase_start_at = now(),
-      phase_end_at = now() + interval '3 seconds'
+      phase_end_at = now() + interval '4 seconds', -- 4s Prep time
+      start_at = now(),
+      end_at = now() + interval '4 seconds',
+      player1_ready = false, -- Reset ready flags if used
+      player2_ready = false
   WHERE id = p_room_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;

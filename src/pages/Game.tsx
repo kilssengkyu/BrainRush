@@ -359,11 +359,9 @@ const Game: React.FC = () => {
                                 <Flag code={myProfile?.country} />
                                 <span className="hidden sm:inline">{myProfile?.nickname}</span>
                             </div>
-                            {gameState.mode !== 'practice' && (
-                                <div className="text-3xl font-black text-blue-400 font-mono transition-all">
-                                    {gameState.myScore.toLocaleString()}
-                                </div>
-                            )}
+                            <div className="text-3xl font-black text-blue-400 font-mono transition-all">
+                                {gameState.myScore.toLocaleString()}
+                            </div>
                         </div>
                     </div>
 
