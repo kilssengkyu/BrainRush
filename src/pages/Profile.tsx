@@ -18,6 +18,7 @@ import HexRadar from '../components/ui/HexRadar';
 import { getTierFromMMR, getTierColor, getTierIcon } from '../utils/rankUtils';
 import LevelBadge from '../components/ui/LevelBadge';
 import { getLevelFromXp } from '../utils/levelUtils';
+import AvatarModal from '../components/ui/AvatarModal';
 
 const HIGHSCORE_GAME_TYPES = [
     { type: 'RPS', labelKey: 'rps.title' },
@@ -61,6 +62,7 @@ const Profile = () => {
     const [highscores, setHighscores] = useState<Record<string, number>>({});
     const [rankStats, setRankStats] = useState<Record<string, { wins: number; losses: number; draws: number }>>({});
     const [isHighscoresLoading, setIsHighscoresLoading] = useState(false);
+    const [avatarPreview, setAvatarPreview] = useState<{ src: string; alt: string } | null>(null);
 
     const MAX_AVATAR_SIZE = 2 * 1024 * 1024; // 2MB
     const ALLOWED_AVATAR_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -558,13 +560,22 @@ const Profile = () => {
                             {/* Avatar Section */}
                             <div className="flex flex-col items-center mb-8">
                                 <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 p-[3px] mb-4">
-                                    <div className="w-full h-full rounded-full bg-gray-900 flex items-center justify-center overflow-hidden">
+                                    <button
+                                        type="button"
+                                        className="w-full h-full rounded-full bg-gray-900 flex items-center justify-center overflow-hidden cursor-zoom-in"
+                                        onClick={() => {
+                                            if (profile?.avatar_url) {
+                                                setAvatarPreview({ src: profile.avatar_url, alt: nickname || 'Avatar' });
+                                            }
+                                        }}
+                                        aria-label="Open avatar"
+                                    >
                                         {profile?.avatar_url ? (
                                             <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
                                         ) : (
                                             <UserIcon className="w-12 h-12 text-gray-400" />
                                         )}
-                                    </div>
+                                    </button>
                                     <LevelBadge level={level} size="md" className="absolute -bottom-1 -right-1 ring-2 ring-gray-900" />
                                 </div>
                                 <input
@@ -835,6 +846,12 @@ const Profile = () => {
                     </motion.div>
                 )}
             </AnimatePresence>
+            <AvatarModal
+                isOpen={!!avatarPreview}
+                onClose={() => setAvatarPreview(null)}
+                src={avatarPreview?.src ?? null}
+                alt={avatarPreview?.alt}
+            />
         </div>
     );
 };

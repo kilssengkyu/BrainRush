@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import Flag from '../ui/Flag';
 import UserProfileModal from '../ui/UserProfileModal';
 import LevelBadge from '../ui/LevelBadge';
+import AvatarModal from '../ui/AvatarModal';
 
 interface Friend {
     id: string;
@@ -36,6 +37,7 @@ const FriendList: React.FC<FriendListProps> = ({ onChatClick, onChallengeClick, 
     const [unreadByFriend, setUnreadByFriend] = useState<Record<string, number>>({});
     const [viewProfileId, setViewProfileId] = useState<string | null>(null);
     const [inGameIds, setInGameIds] = useState<Set<string>>(new Set());
+    const [avatarPreview, setAvatarPreview] = useState<{ src: string; alt: string } | null>(null);
 
     useEffect(() => {
         if (user) {
@@ -286,7 +288,17 @@ const FriendList: React.FC<FriendListProps> = ({ onChatClick, onChallengeClick, 
                             onClick={() => setViewProfileId(friend.id)}
                         >
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-slate-600 overflow-hidden border border-slate-500 relative">
+                                <button
+                                    type="button"
+                                    className="w-10 h-10 rounded-full bg-slate-600 overflow-hidden border border-slate-500 relative cursor-zoom-in"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (friend.avatar_url) {
+                                            setAvatarPreview({ src: friend.avatar_url, alt: friend.nickname });
+                                        }
+                                    }}
+                                    aria-label={`${friend.nickname} avatar`}
+                                >
                                     {unreadCount > 0 && (
                                         <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-slate-700" aria-hidden="true"></span>
                                     )}
@@ -297,12 +309,14 @@ const FriendList: React.FC<FriendListProps> = ({ onChatClick, onChallengeClick, 
                                             <User size={20} />
                                         </div>
                                     )}
-                                    <LevelBadge level={friend.level} size="sm" className="absolute -bottom-1 -right-1 ring-2 ring-slate-700" />
-                                </div>
+                                </button>
                                 <div className="flex flex-col">
                                     <div className="flex items-center gap-1.5">
                                         <Flag code={friend.country} size="sm" />
                                         <span className="font-semibold text-white">{friend.nickname}</span>
+                                        {typeof friend.level === 'number' && (
+                                            <LevelBadge level={friend.level} size="xs" className="ml-1" />
+                                        )}
                                     </div>
 
                                     <div className="flex items-center gap-3 text-xs">
@@ -366,6 +380,12 @@ const FriendList: React.FC<FriendListProps> = ({ onChatClick, onChallengeClick, 
                 isOpen={!!viewProfileId}
                 onClose={() => setViewProfileId(null)}
                 userId={viewProfileId}
+            />
+            <AvatarModal
+                isOpen={!!avatarPreview}
+                onClose={() => setAvatarPreview(null)}
+                src={avatarPreview?.src ?? null}
+                alt={avatarPreview?.alt}
             />
         </div>
     );
