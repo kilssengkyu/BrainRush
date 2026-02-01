@@ -7,6 +7,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import Flag from './Flag';
 import { getTierColor, getTierIcon } from '../../utils/rankUtils';
 import UserProfileModal from './UserProfileModal';
+import LevelBadge from './LevelBadge';
 
 interface LeaderboardModalProps {
     isOpen: boolean;
@@ -20,6 +21,7 @@ interface Ranker {
     avatar_url: string;
     country: string;
     mmr: number;
+    level?: number | null;
     tier: string;
 }
 
@@ -163,6 +165,7 @@ const RankItem = ({ player, isMe, onClick }: { player: Ranker, isMe: boolean, on
                 ) : (
                     <UserIcon className="w-full h-full p-2 text-gray-400" />
                 )}
+                <LevelBadge level={player.level} size="sm" className="absolute -bottom-1 -right-1 ring-2 ring-gray-900" />
             </div>
 
             {/* Info */}

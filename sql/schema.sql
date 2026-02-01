@@ -6163,6 +6163,7 @@ BEGIN
             avatar_url,
             country,
             mmr,
+            level,
             get_tier_name(mmr) as tier
         FROM profiles
         LIMIT 100
@@ -6177,11 +6178,12 @@ BEGIN
             'avatar_url', avatar_url,
             'country', country,
             'mmr', mmr,
+            'level', level,
             'tier', get_tier_name(mmr)
         ) INTO v_user_rank
         FROM (
             SELECT 
-                id, nickname, avatar_url, country, mmr,
+                id, nickname, avatar_url, country, mmr, level,
                 RANK() OVER (ORDER BY mmr DESC) as rank
             FROM profiles
         ) sub

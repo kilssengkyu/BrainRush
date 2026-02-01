@@ -6,6 +6,7 @@ import { User, MessageCircle, Swords, UserMinus, Trophy } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import Flag from '../ui/Flag';
 import UserProfileModal from '../ui/UserProfileModal';
+import LevelBadge from '../ui/LevelBadge';
 
 interface Friend {
     id: string;
@@ -13,6 +14,7 @@ interface Friend {
     avatar_url: string;
     country: string | null;
     mmr: number;
+    level?: number | null;
     last_seen: string | null;
     status?: 'online' | 'offline' | 'ingame';
 }
@@ -115,7 +117,7 @@ const FriendList: React.FC<FriendListProps> = ({ onChatClick, onChallengeClick, 
             // Fetch profiles
             const { data: profiles, error: profileError } = await supabase
                 .from('profiles')
-                .select('id, nickname, avatar_url, country, mmr, last_seen')
+                .select('id, nickname, avatar_url, country, mmr, level, last_seen')
                 .in('id', friendIds);
 
             if (profileError) throw profileError;
@@ -295,6 +297,7 @@ const FriendList: React.FC<FriendListProps> = ({ onChatClick, onChallengeClick, 
                                             <User size={20} />
                                         </div>
                                     )}
+                                    <LevelBadge level={friend.level} size="sm" className="absolute -bottom-1 -right-1 ring-2 ring-slate-700" />
                                 </div>
                                 <div className="flex flex-col">
                                     <div className="flex items-center gap-1.5">
