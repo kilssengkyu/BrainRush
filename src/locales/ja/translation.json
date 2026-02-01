@@ -166,6 +166,12 @@
         "nicknamePlaceholder": "ニックネーム入力",
         "selectCountry": "国を選択",
         "edit": "編集",
+        "highscoresTitle": "ハイスコア",
+        "highscoresColumns": {
+            "game": "ゲーム",
+            "highscore": "ハイスコア",
+            "rankWinRate": "ランク勝率"
+        },
         "statsTitle": "能力値",
         "stats": {
             "speed": "スピード",
@@ -196,7 +202,8 @@
         "entering": "アリーナへ移動中...",
         "timeout": "マッチ不成立",
         "timeoutDesc": "対戦相手が見つかりませんでした",
-        "range": "範囲"
+        "range": "範囲",
+        "rankLevelRequired": "ランクはレベル{{level}}から解放されます。"
     },
     "rps": {
         "ready": "準備...",

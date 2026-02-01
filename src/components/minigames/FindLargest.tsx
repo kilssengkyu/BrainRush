@@ -181,7 +181,7 @@ const FindLargest: React.FC<FindLargestProps> = ({ seed, onScore, isPlaying }) =
 
         if (option.value === currentProblem.maxValue) {
             // Correct
-            onScore(10);
+            onScore(scoreBase);
             playSound('correct');
             setPanelIndex(prev => prev + 1);
             setAnimationKey(prev => prev + 1);

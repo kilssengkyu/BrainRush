@@ -71,7 +71,7 @@ const NumberSortGame: React.FC<NumberSortGameProps> = ({ seed, onScore, mode, is
         const nextExpectedIndex = clearedNumbers.length;
         const expected = sortedAnswer[nextExpectedIndex];
 
-        const scoreAmount = 20 + (panelIndex * 5);
+        const scoreAmount = 15 + (panelIndex * 5);
 
         if (num === expected) {
             // Correct
@@ -83,7 +83,7 @@ const NumberSortGame: React.FC<NumberSortGameProps> = ({ seed, onScore, mode, is
             // Check if Panel Cleared (Compare length against answer key length)
             if (newCleared.length === sortedAnswer.length) {
                 // Bonus
-                onScore(100);
+                onScore(50);
                 setTimeout(() => {
                     setPanelIndex(prev => prev + 1);
                     setClearedNumbers([]);

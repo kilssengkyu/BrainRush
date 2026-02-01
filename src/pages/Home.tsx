@@ -13,6 +13,8 @@ import AdModal from '../components/ui/AdModal';
 import LeaderboardModal from '../components/ui/LeaderboardModal';
 import { supabase } from '../lib/supabaseClient';
 import { getTierFromMMR, getTierColor, getTierIcon } from '../utils/rankUtils';
+import LevelBadge from '../components/ui/LevelBadge';
+import { getLevelFromXp } from '../utils/levelUtils';
 
 // Simple Timer Component
 const RechargeTimer = ({ lastRecharge }: { lastRecharge: string }) => {
@@ -136,6 +138,14 @@ const Home = () => {
     const tier = getTierFromMMR(rank);
     const tierColor = getTierColor(tier);
     const TierIcon = getTierIcon(tier);
+    const level = typeof profile?.level === 'number'
+        ? profile.level
+        : typeof profile?.xp === 'number'
+            ? getLevelFromXp(profile.xp)
+            : 1;
+    const requiredRankLevel = 5;
+    const isRankUnlocked = level >= requiredRankLevel;
+    const canPlayRank = Boolean(user) && isRankUnlocked;
     const nickname = profile?.nickname || user?.email?.split('@')[0] || t('game.unknownPlayer');
     const avatarUrl = profile?.avatar_url;
     const countryCode = profile?.country;
@@ -247,6 +257,11 @@ const Home = () => {
                 navigate('/login');
                 return;
             }
+            if (!isRankUnlocked) {
+                playSound('error');
+                showToast(t('matchmaking.rankLevelRequired', { level: requiredRankLevel }), 'info');
+                return;
+            }
             startSearch('rank');
         } else if (mode === 'normal') {
             // "Normal" mode supports both Guests and Logged-in users.
@@ -279,6 +294,7 @@ const Home = () => {
                                     <User className="w-7 h-7 text-gray-400" />
                                 )}
                             </div>
+                            <LevelBadge level={level} size="sm" className="absolute -bottom-1 -right-1 ring-2 ring-gray-900" />
                             {hasSocialNotifications && (
                                 <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-gray-900" aria-hidden="true"></span>
                             )}
@@ -457,7 +473,7 @@ const Home = () => {
                     <button
                         onMouseEnter={() => playSound('hover')}
                         onClick={() => handleModeSelect('rank')}
-                        className={`group relative w-full p-6 bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-300 ${user ? 'hover:border-purple-500 hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] active:scale-95 cursor-pointer' : 'opacity-50 grayscale cursor-not-allowed'} flex items-center gap-4 text-left`}
+                        className={`group relative w-full p-6 bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-300 ${canPlayRank ? 'hover:border-purple-500 hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] active:scale-95 cursor-pointer' : 'opacity-50 grayscale cursor-not-allowed'} flex items-center gap-4 text-left`}
                     >
                         <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                         <div className="p-3 rounded-full bg-purple-500/20 group-hover:bg-purple-500/30 transition-colors">

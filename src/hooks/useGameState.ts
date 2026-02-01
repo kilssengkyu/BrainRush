@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import { isBotId } from '../constants/bot';
 
 export interface GameState {
     status: 'waiting' | 'countdown' | 'playing' | 'finished';
@@ -78,7 +79,7 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
 
     const isHostUser = useMemo(() => {
         // 1. Practice/Bot modes: Always Host
-        if (opponentId === 'practice_solo' || opponentId === 'practice_bot') return true;
+        if (opponentId === 'practice_solo' || opponentId === 'practice_bot' || isBotId(opponentId)) return true;
 
         // 2. Initial state safety (if presence not synced yet): Fallback to ID comparison
         if (onlineUsers.length === 0) return myId < opponentId;

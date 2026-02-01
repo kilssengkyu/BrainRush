@@ -109,7 +109,7 @@ const ReverseSequence: React.FC<ReverseSequenceProps> = ({ seed, onScore, isPlay
             // Correct
             const newInput = [...userInput, index];
             setUserInput(newInput);
-            onScore(20);
+            onScore(15);
             playSound('correct');
 
             if (newInput.length === sequence.length) {
@@ -121,7 +121,7 @@ const ReverseSequence: React.FC<ReverseSequenceProps> = ({ seed, onScore, isPlay
             }
         } else {
             // Wrong
-            onScore(-20);
+            onScore(-15);
             playSound('error');
             // Shake effect or feedback?
             // Maybe reset user input to try again? Or just penalty?

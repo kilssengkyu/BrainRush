@@ -125,7 +125,7 @@ const SequenceGame: React.FC<SequenceGameProps> = ({ seed, onScore, isPlaying, m
             // Correct
             const newInput = [...userInput, index];
             setUserInput(newInput);
-            onScore(20);
+            onScore(15);
             playSound('correct'); // Added correct sound here
 
             if (newInput.length === sequence.length) {
@@ -137,7 +137,7 @@ const SequenceGame: React.FC<SequenceGameProps> = ({ seed, onScore, isPlaying, m
             }
         } else {
             // Wrong
-            onScore(-20);
+            onScore(-15);
             playSound('error');
             // Visual feedback
             const btn = document.getElementById(`pad-${index}`);

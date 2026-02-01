@@ -16,6 +16,33 @@ import ChatWindow from '../components/social/ChatWindow';
 import MatchHistoryModal from '../components/ui/MatchHistoryModal';
 import HexRadar from '../components/ui/HexRadar';
 import { getTierFromMMR, getTierColor, getTierIcon } from '../utils/rankUtils';
+import LevelBadge from '../components/ui/LevelBadge';
+import { getLevelFromXp } from '../utils/levelUtils';
+
+const HIGHSCORE_GAME_TYPES = [
+    { type: 'RPS', labelKey: 'rps.title' },
+    { type: 'NUMBER', labelKey: 'number.title' },
+    { type: 'NUMBER_DESC', labelKey: 'number.titleDesc' },
+    { type: 'MATH', labelKey: 'math.title' },
+    { type: 'TEN', labelKey: 'ten.title' },
+    { type: 'COLOR', labelKey: 'color.title' },
+    { type: 'MEMORY', labelKey: 'memory.title' },
+    { type: 'SEQUENCE', labelKey: 'sequence.title' },
+    { type: 'SEQUENCE_NORMAL', labelKey: 'sequence.titleNormal' },
+    { type: 'LARGEST', labelKey: 'largest.title' },
+    { type: 'PAIR', labelKey: 'pair.title' },
+    { type: 'UPDOWN', labelKey: 'updown.title' },
+    { type: 'SLIDER', labelKey: 'slider.title' },
+    { type: 'ARROW', labelKey: 'arrow.title' },
+    { type: 'BLANK', labelKey: 'fillBlanks.title' },
+    { type: 'OPERATOR', labelKey: 'findOperator.title' },
+    { type: 'LADDER', labelKey: 'ladder.title' },
+    { type: 'TAP_COLOR', labelKey: 'tapTheColor.title' },
+    { type: 'AIM', labelKey: 'aim.title' },
+    { type: 'MOST_COLOR', labelKey: 'mostColor.title' },
+    { type: 'SORTING', labelKey: 'sorting.title' },
+    { type: 'SPY', labelKey: 'spy.title' }
+] as const;
 
 const Profile = () => {
     const { user, profile, signOut, refreshProfile } = useAuth();
@@ -31,6 +58,9 @@ const Profile = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
     const avatarInputRef = useRef<HTMLInputElement | null>(null);
+    const [highscores, setHighscores] = useState<Record<string, number>>({});
+    const [rankStats, setRankStats] = useState<Record<string, { wins: number; losses: number; draws: number }>>({});
+    const [isHighscoresLoading, setIsHighscoresLoading] = useState(false);
 
     const MAX_AVATAR_SIZE = 2 * 1024 * 1024; // 2MB
     const ALLOWED_AVATAR_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -113,6 +143,61 @@ const Profile = () => {
             supabase.removeChannel(unreadChatChannel);
         };
     }, [user]);
+
+    useEffect(() => {
+        if (activeTab !== 'profile') return;
+        if (!user) {
+            setHighscores({});
+            setRankStats({});
+            return;
+        }
+
+        let isActive = true;
+        const fetchHighscores = async () => {
+            setIsHighscoresLoading(true);
+            const [highscoreResult, statsResult] = await Promise.all([
+                supabase
+                    .from('player_highscores')
+                    .select('game_type, best_score')
+                    .eq('user_id', user.id),
+                supabase
+                    .from('player_game_stats')
+                    .select('game_type, rank_wins, rank_losses, rank_draws')
+                    .eq('user_id', user.id)
+            ]);
+            if (!isActive) return;
+
+            if (highscoreResult.error) {
+                console.error('Failed to load highscores', highscoreResult.error);
+            } else {
+                const nextScores = (highscoreResult.data || []).reduce<Record<string, number>>((acc, row) => {
+                    acc[row.game_type] = row.best_score ?? 0;
+                    return acc;
+                }, {});
+                setHighscores(nextScores);
+            }
+
+            if (statsResult.error) {
+                console.error('Failed to load game stats', statsResult.error);
+            } else {
+                const nextRankStats = (statsResult.data || []).reduce<Record<string, { wins: number; losses: number; draws: number }>>((acc, row) => {
+                    acc[row.game_type] = {
+                        wins: row.rank_wins ?? 0,
+                        losses: row.rank_losses ?? 0,
+                        draws: row.rank_draws ?? 0
+                    };
+                    return acc;
+                }, {});
+                setRankStats(nextRankStats);
+            }
+            setIsHighscoresLoading(false);
+        };
+
+        fetchHighscores();
+        return () => {
+            isActive = false;
+        };
+    }, [activeTab, user]);
 
     const cancelPendingInvite = useCallback(async (reason: 'cancel' | 'timeout', inviteOverride?: { roomId: string; friendId: string }) => {
         if (!user) return;
@@ -406,6 +491,11 @@ const Profile = () => {
     const tier = getTierFromMMR(rank);
     const tierColor = getTierColor(tier);
     const TierIcon = getTierIcon(tier);
+    const level = typeof profile?.level === 'number'
+        ? profile.level
+        : typeof profile?.xp === 'number'
+            ? getLevelFromXp(profile.xp)
+            : 1;
     const wins = profile?.wins || 0;
     const losses = profile?.losses || 0;
     const casualWins = profile?.casual_wins || 0;
@@ -467,7 +557,7 @@ const Profile = () => {
                         >
                             {/* Avatar Section */}
                             <div className="flex flex-col items-center mb-8">
-                                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 p-[3px] mb-4">
+                                <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 p-[3px] mb-4">
                                     <div className="w-full h-full rounded-full bg-gray-900 flex items-center justify-center overflow-hidden">
                                         {profile?.avatar_url ? (
                                             <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
@@ -475,6 +565,7 @@ const Profile = () => {
                                             <UserIcon className="w-12 h-12 text-gray-400" />
                                         )}
                                     </div>
+                                    <LevelBadge level={level} size="md" className="absolute -bottom-1 -right-1 ring-2 ring-gray-900" />
                                 </div>
                                 <input
                                     ref={avatarInputRef}
@@ -639,6 +730,45 @@ const Profile = () => {
                                         <span className="text-blue-300 font-bold">{statValues.observation}</span>
                                     </div>
                                 </div>
+                            </div>
+
+                            {/* Highscores */}
+                            <div className="mt-8 pt-6 border-t border-white/10">
+                                <h3 className="text-sm font-bold uppercase tracking-widest text-gray-400 mb-4 text-center">
+                                    {t('profile.highscoresTitle', '하이스코어')}
+                                </h3>
+                                {isHighscoresLoading ? (
+                                    <div className="text-center text-sm text-gray-500">
+                                        {t('common.loading')}
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col gap-2 text-xs">
+                                        <div className="grid grid-cols-[1.4fr_0.8fr_0.6fr] gap-2 text-[10px] uppercase tracking-wider text-gray-500 px-2">
+                                            <span>{t('profile.highscoresColumns.game', '게임')}</span>
+                                            <span className="text-right">{t('profile.highscoresColumns.highscore', '하이스코어')}</span>
+                                            <span className="text-right">{t('profile.highscoresColumns.rankWinRate', '랭크 승률')}</span>
+                                        </div>
+                                        {HIGHSCORE_GAME_TYPES.map(({ type, labelKey }) => {
+                                            const stats = rankStats[type] ?? { wins: 0, losses: 0, draws: 0 };
+                                            const total = stats.wins + stats.losses + stats.draws;
+                                            const winRate = total > 0 ? Math.round((stats.wins / total) * 100) : 0;
+                                            return (
+                                                <div
+                                                    key={type}
+                                                    className="grid grid-cols-[1.4fr_0.8fr_0.6fr] gap-2 bg-gray-800/50 rounded-lg px-2 py-1"
+                                                >
+                                                    <span className="text-gray-300">{t(labelKey)}</span>
+                                                    <span className="text-right text-yellow-300 font-bold tabular-nums">
+                                                        {highscores[type] ?? 0}
+                                                    </span>
+                                                    <span className="text-right text-green-300 font-bold tabular-nums">
+                                                        {winRate}%
+                                                    </span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
                             </div>
                         </motion.div>
                     ) : (

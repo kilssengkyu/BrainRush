@@ -106,7 +106,7 @@ const FindOperator: React.FC<FindOperatorProps> = ({ seed, onScore, isPlaying })
     const handleOptionClick = (selected: string) => {
         if (!currentProblem || !isPlaying) return;
 
-        const scoreBase = 20 + (panelIndex * 5);
+        const scoreBase = 30 + (panelIndex * 5);
 
         if (selected === currentProblem.operator) {
             // Correct
