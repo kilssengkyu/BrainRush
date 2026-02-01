@@ -16,6 +16,8 @@ import ChatWindow from '../components/social/ChatWindow';
 import MatchHistoryModal from '../components/ui/MatchHistoryModal';
 import HexRadar from '../components/ui/HexRadar';
 import { getTierFromMMR, getTierColor, getTierIcon } from '../utils/rankUtils';
+import LevelBadge from '../components/ui/LevelBadge';
+import { getLevelFromXp } from '../utils/levelUtils';
 
 const Profile = () => {
     const { user, profile, signOut, refreshProfile } = useAuth();
@@ -406,6 +408,11 @@ const Profile = () => {
     const tier = getTierFromMMR(rank);
     const tierColor = getTierColor(tier);
     const TierIcon = getTierIcon(tier);
+    const level = typeof profile?.level === 'number'
+        ? profile.level
+        : typeof profile?.xp === 'number'
+            ? getLevelFromXp(profile.xp)
+            : 1;
     const wins = profile?.wins || 0;
     const losses = profile?.losses || 0;
     const casualWins = profile?.casual_wins || 0;
@@ -467,7 +474,7 @@ const Profile = () => {
                         >
                             {/* Avatar Section */}
                             <div className="flex flex-col items-center mb-8">
-                                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 p-[3px] mb-4">
+                                <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 p-[3px] mb-4">
                                     <div className="w-full h-full rounded-full bg-gray-900 flex items-center justify-center overflow-hidden">
                                         {profile?.avatar_url ? (
                                             <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
@@ -475,6 +482,7 @@ const Profile = () => {
                                             <UserIcon className="w-12 h-12 text-gray-400" />
                                         )}
                                     </div>
+                                    <LevelBadge level={level} size="md" className="absolute -bottom-1 -right-1 ring-2 ring-gray-900" />
                                 </div>
                                 <input
                                     ref={avatarInputRef}

@@ -197,7 +197,7 @@ const MatchHistoryModal = ({ isOpen, onClose, userId, initialMode = 'all' }: Mat
                                 key={match.session_id}
                                 className="bg-gray-800/50 p-3 rounded-xl flex items-center justify-between border border-white/5 hover:border-white/10 transition cursor-pointer"
                                 onClick={() => {
-                                    if (!match.opponent_id || match.opponent_id.startsWith('guest_')) return;
+                                    if (!match.opponent_id || match.opponent_id.startsWith('guest_') || match.opponent_id.startsWith('bot_')) return;
                                     setViewProfileId(match.opponent_id);
                                 }}
                             >
@@ -236,7 +236,7 @@ const MatchHistoryModal = ({ isOpen, onClose, userId, initialMode = 'all' }: Mat
                                     </div>
 
                                     {/* Add Friend Button */}
-                                    {!match.is_friend && match.opponent_id && match.opponent_id !== userId && !match.opponent_id.startsWith('guest_') && (
+                                    {!match.is_friend && match.opponent_id && match.opponent_id !== userId && !match.opponent_id.startsWith('guest_') && !match.opponent_id.startsWith('bot_') && (
                                         <button
                                             onClick={(e) => { e.stopPropagation(); handleAddFriend(match.opponent_id); }}
                                             className="p-1.5 bg-green-600/20 text-green-400 rounded-lg hover:bg-green-600 hover:text-white transition ml-1"

@@ -196,7 +196,8 @@
         "entering": "アリーナへ移動中...",
         "timeout": "マッチ不成立",
         "timeoutDesc": "対戦相手が見つかりませんでした",
-        "range": "範囲"
+        "range": "範囲",
+        "rankLevelRequired": "ランクはレベル{{level}}から解放されます。"
     },
     "rps": {
         "ready": "準備...",

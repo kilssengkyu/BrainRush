@@ -8,6 +8,7 @@ BEGIN;
 drop table if exists game_moves cascade;
 drop table if exists game_sessions cascade;
 drop table if exists public.profiles cascade;
+drop table if exists public.bot_profiles cascade;
 drop table if exists matchmaking_queue cascade;
 drop table if exists public.friendships cascade;
 drop table if exists public.chat_messages cascade;
@@ -23,6 +24,7 @@ DROP FUNCTION IF EXISTS update_score(uuid, text, int);
 DROP FUNCTION IF EXISTS submit_move(uuid, text, text);
 DROP FUNCTION IF EXISTS check_active_session(text);
 DROP FUNCTION IF EXISTS create_session(text, text);
+DROP FUNCTION IF EXISTS create_bot_session(text);
 
 -- [NEW] Authentication & Profiles
 create table public.profiles (
@@ -36,7 +38,19 @@ create table public.profiles (
   wins int default 0,
   losses int default 0,
   mmr int default 1000,
+  xp int default 0,
+  level int default 1,
   
+  created_at timestamptz default now()
+);
+
+-- Bot Profiles (for matchmaking; not tied to auth.users)
+create table public.bot_profiles (
+  id text primary key,
+  nickname text not null,
+  avatar_url text,
+  country text,
+  mmr int default 1000,
   created_at timestamptz default now()
 );
 
@@ -45,6 +59,10 @@ alter table public.profiles enable row level security;
 create policy "Public profiles are viewable by everyone" on public.profiles for select using (true);
 create policy "Users can insert their own profile" on public.profiles for insert with check (auth.uid() = id);
 create policy "Users can update own profile" on public.profiles for update using (auth.uid() = id);
+
+-- Bot profiles are public read only
+alter table public.bot_profiles enable row level security;
+create policy "Public bot profiles are viewable by everyone" on public.bot_profiles for select using (true);
 
 -- Trigger to create profile on signup
 create or replace function public.handle_new_user()
@@ -76,6 +94,21 @@ select
   'Player_' || floor(random() * 9000 + 1000)::text
 from auth.users
 where id not in (select id from public.profiles);
+
+-- Seed bot profiles (id is internal)
+insert into public.bot_profiles (id, nickname, avatar_url, country, mmr)
+values
+  ('bot_a1f3c9d2', 'Player_4821', 'https://api.dicebear.com/9.x/pixel-art/svg?seed=Ivy', 'US', 980),
+  ('bot_b7e2d4f9', 'Player_1934', 'https://api.dicebear.com/9.x/pixel-art/svg?seed=Noah', 'KR', 1020),
+  ('bot_c4a8e1b0', 'Player_7750', 'https://api.dicebear.com/9.x/pixel-art/svg?seed=Jade', 'JP', 995),
+  ('bot_d9f1b3c7', 'Player_2048', 'https://api.dicebear.com/9.x/pixel-art/svg?seed=Milo', 'FR', 1015),
+  ('bot_e2c7f4a1', 'Player_5603', 'https://api.dicebear.com/9.x/pixel-art/svg?seed=Rin', 'DE', 970),
+  ('bot_f6b0d8c3', 'Player_8472', 'https://api.dicebear.com/9.x/pixel-art/svg?seed=Luna', 'GB', 990),
+  ('bot_g3d9a6e4', 'Player_3310', 'https://api.dicebear.com/9.x/pixel-art/svg?seed=Kai', 'CA', 1030),
+  ('bot_h5c2e8f1', 'Player_6117', 'https://api.dicebear.com/9.x/pixel-art/svg?seed=Zoe', 'AU', 985),
+  ('bot_i8b4c0d6', 'Player_9284', 'https://api.dicebear.com/9.x/pixel-art/svg?seed=Eli', 'BR', 1005),
+  ('bot_j0f6a2c8', 'Player_4096', 'https://api.dicebear.com/9.x/pixel-art/svg?seed=Uma', 'SG', 975)
+on conflict (id) do nothing;
 
 -- 2. Game Sessions Table
 create table game_sessions (
@@ -1427,6 +1460,7 @@ RETURNS uuid AS $$
 DECLARE
     v_opponent_id text;
     v_room_id uuid;
+    v_level int;
 BEGIN
     -- A. Cleanup Stale Entries (Relaxed to 60s)
     DELETE FROM matchmaking_queue 
@@ -1882,6 +1916,7 @@ RETURNS uuid AS $$
 DECLARE
     v_opponent_id text;
     v_room_id uuid;
+    v_level int;
 BEGIN
     -- Cleanup Stale
     DELETE FROM matchmaking_queue 
@@ -3102,10 +3137,23 @@ RETURNS uuid AS $$
 DECLARE
     v_opponent_id text;
     v_room_id uuid;
+    v_level int;
 BEGIN
     -- [SECURE] Verify ownership if UUID
     IF p_player_id ~ '^[0-9a-fA-F-]{36}$' THEN
          IF p_player_id != auth.uid()::text THEN RAISE EXCEPTION 'Not authorized'; END IF;
+    END IF;
+
+    -- Rank gate: require authenticated user with level >= 5
+    IF p_mode = 'rank' THEN
+        IF p_player_id !~ '^[0-9a-fA-F-]{36}$' THEN
+            RAISE EXCEPTION 'Rank requires login';
+        END IF;
+
+        SELECT level INTO v_level FROM profiles WHERE id = p_player_id::uuid;
+        IF v_level IS NULL OR v_level < 5 THEN
+            RAISE EXCEPTION 'Rank requires level 5';
+        END IF;
     END IF;
 
     -- A. Cleanup Stale Entries
@@ -3145,6 +3193,48 @@ BEGIN
     RETURN NULL;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- Bot matchmaking: create a normal session against a bot profile
+CREATE OR REPLACE FUNCTION create_bot_session(p_player_id text)
+RETURNS TABLE (room_id uuid, opponent_id text) AS $$
+DECLARE
+    v_bot record;
+    v_room_id uuid;
+    v_level int;
+BEGIN
+    -- Ownership check if UUID
+    IF p_player_id ~ '^[0-9a-fA-F-]{36}$' THEN
+         IF p_player_id != auth.uid()::text THEN RAISE EXCEPTION 'Not authorized'; END IF;
+    END IF;
+
+    -- Only allow low-level users (<= 5) to use bot matchmaking
+    IF p_player_id ~ '^[0-9a-fA-F-]{36}$' THEN
+        SELECT level INTO v_level FROM profiles WHERE id = p_player_id::uuid;
+        IF v_level IS NULL OR v_level > 5 THEN
+            RAISE EXCEPTION 'Bot match restricted';
+        END IF;
+    END IF;
+
+    -- Remove from queue to avoid race
+    DELETE FROM matchmaking_queue WHERE player_id = p_player_id;
+
+    -- Pick a random bot profile
+    SELECT * INTO v_bot FROM bot_profiles ORDER BY random() LIMIT 1;
+    IF v_bot.id IS NULL THEN
+        RAISE EXCEPTION 'No bot profiles available';
+    END IF;
+
+    INSERT INTO game_sessions (player1_id, player2_id, status, current_round, mode)
+    VALUES (p_player_id, v_bot.id, 'waiting', 0, 'normal')
+    RETURNING id INTO v_room_id;
+
+    room_id := v_room_id;
+    opponent_id := v_bot.id;
+    RETURN NEXT;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+GRANT EXECUTE ON FUNCTION create_bot_session(text) TO anon, authenticated, service_role;
 
 -- Migration: fix_start_game_logic.sql
 -- FIX: Ensure Start Game Logic and Schema are correct
@@ -3407,9 +3497,12 @@ DECLARE
     v_p1 text;
     v_p2 text;
     v_status text;
+    v_p1_points int;
+    v_p2_points int;
+    v_bot_target int;
 BEGIN
-    SELECT player1_id, player2_id, status 
-    INTO v_p1, v_p2, v_status
+    SELECT player1_id, player2_id, status, COALESCE(p1_current_score, 0), COALESCE(p2_current_score, 0)
+    INTO v_p1, v_p2, v_status, v_p1_points, v_p2_points
     FROM game_sessions WHERE id = p_room_id;
 
     IF v_p1 IS NULL THEN
@@ -3422,13 +3515,36 @@ BEGIN
         RETURN;
     END IF;
 
+    -- Security Check: Allow if p_player_id matches valid players in the room
+    -- This supports both Authenticated Users (auth.uid matches ID) AND Guests (ID matches session record)
+    IF p_player_id != v_p1 AND p_player_id != v_p2 THEN
+        IF auth.uid() IS NOT NULL AND auth.uid()::text != p_player_id THEN
+            RAISE EXCEPTION 'Not authorized';
+        END IF;
+    END IF;
+
     IF p_player_id = v_p1 THEN
-        UPDATE game_sessions SET player1_score = p_score WHERE id = p_room_id;
+        UPDATE game_sessions SET p1_current_score = p_score WHERE id = p_room_id;
+
+        -- Bot follows player score (if opponent is bot)
+        IF v_p2 LIKE 'bot_%' THEN
+            v_bot_target := GREATEST(0, LEAST(p_score - 20, floor(p_score * 0.9)));
+            IF v_bot_target < v_p2_points THEN
+                v_bot_target := v_p2_points;
+            END IF;
+            UPDATE game_sessions SET p2_current_score = v_bot_target WHERE id = p_room_id;
+        END IF;
     ELSIF p_player_id = v_p2 THEN
-        UPDATE game_sessions SET player2_score = p_score WHERE id = p_room_id;
-    ELSE
-        -- Allow silent fail or raise exception. Exception is better for debugging.
-        RAISE EXCEPTION 'Player ID % not found in room %', p_player_id, p_room_id;
+        UPDATE game_sessions SET p2_current_score = p_score WHERE id = p_room_id;
+
+        -- Bot follows player score (if opponent is bot)
+        IF v_p1 LIKE 'bot_%' THEN
+            v_bot_target := GREATEST(0, LEAST(p_score - 20, floor(p_score * 0.9)));
+            IF v_bot_target < v_p1_points THEN
+                v_bot_target := v_p1_points;
+            END IF;
+            UPDATE game_sessions SET p1_current_score = v_bot_target WHERE id = p_room_id;
+        END IF;
     END IF;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
@@ -3856,8 +3972,8 @@ BEGIN
     -- STATS UPDATE LOGIC
     IF v_winner IS NOT NULL AND NOT v_is_draw THEN
         IF v_session.mode = 'rank' THEN
-             -- RANK MODE: Update MMR + Standard Wins/Losses
-             IF v_winner NOT LIKE 'guest_%' AND v_loser NOT LIKE 'guest_%' THEN
+             -- RANK MODE: Update MMR + Standard Wins/Losses (only for real users)
+             IF v_session.player1_id ~ '^[0-9a-fA-F-]{36}$' AND v_session.player2_id ~ '^[0-9a-fA-F-]{36}$' THEN
                  SELECT mmr INTO v_p1_mmr FROM profiles WHERE id = v_session.player1_id::uuid;
                  SELECT mmr INTO v_p2_mmr FROM profiles WHERE id = v_session.player2_id::uuid;
                  
@@ -3880,16 +3996,32 @@ BEGIN
              END IF;
         ELSIF v_session.mode = 'normal' THEN
              -- NORMAL MODE: Update Casual Wins/Losses (No MMR)
-             -- Only for real users
-             IF v_winner NOT LIKE 'guest_%' THEN
+             IF v_winner ~ '^[0-9a-fA-F-]{36}$' THEN
                  UPDATE profiles SET casual_wins = casual_wins + 1 WHERE id = v_winner::uuid;
              END IF;
-             IF v_loser NOT LIKE 'guest_%' THEN
+             IF v_loser ~ '^[0-9a-fA-F-]{36}$' THEN
                  UPDATE profiles SET casual_losses = casual_losses + 1 WHERE id = v_loser::uuid;
              END IF;
         ELSE
             -- FRIENDLY or PRACTICE MODE: Do NOT update any stats
             -- Just finish the session (already done above)
+        END IF;
+    END IF;
+
+    -- XP/Level Update (Rank + Normal only)
+    IF v_session.mode IN ('rank', 'normal') THEN
+        IF v_session.player1_id ~ '^[0-9a-fA-F-]{36}$' THEN
+            UPDATE profiles
+            SET xp = COALESCE(xp, 0) + (10 + CASE WHEN v_winner = v_session.player1_id THEN 5 ELSE 0 END),
+                level = floor((-(45)::numeric + sqrt((45 * 45) + (40 * (COALESCE(xp, 0) + (10 + CASE WHEN v_winner = v_session.player1_id THEN 5 ELSE 0 END))))) / 10) + 1
+            WHERE id = v_session.player1_id::uuid;
+        END IF;
+
+        IF v_session.player2_id ~ '^[0-9a-fA-F-]{36}$' THEN
+            UPDATE profiles
+            SET xp = COALESCE(xp, 0) + (10 + CASE WHEN v_winner = v_session.player2_id THEN 5 ELSE 0 END),
+                level = floor((-(45)::numeric + sqrt((45 * 45) + (40 * (COALESCE(xp, 0) + (10 + CASE WHEN v_winner = v_session.player2_id THEN 5 ELSE 0 END))))) / 10) + 1
+            WHERE id = v_session.player2_id::uuid;
         END IF;
     END IF;
 END;
@@ -6212,9 +6344,9 @@ BEGIN
             WHEN gs.player1_id::text = p_user_id::text THEN gs.player2_id::text
             ELSE gs.player1_id::text
         END) AS opponent_id,
-        p.nickname AS opponent_nickname,
-        p.avatar_url AS opponent_avatar_url,
-        p.country AS opponent_country,
+        COALESCE(p.nickname, b.nickname) AS opponent_nickname,
+        COALESCE(p.avatar_url, b.avatar_url) AS opponent_avatar_url,
+        COALESCE(p.country, b.country) AS opponent_country,
         (EXISTS (
             SELECT 1 FROM friendships f
             WHERE (f.user_id = p_user_id AND f.friend_id::text = (CASE WHEN gs.player1_id::text = p_user_id::text THEN gs.player2_id::text ELSE gs.player1_id::text END))
@@ -6225,6 +6357,8 @@ BEGIN
         game_sessions gs
     LEFT JOIN
         profiles p ON p.id::text = (CASE WHEN gs.player1_id::text = p_user_id::text THEN gs.player2_id::text ELSE gs.player1_id::text END)
+    LEFT JOIN
+        bot_profiles b ON b.id = (CASE WHEN gs.player1_id::text = p_user_id::text THEN gs.player2_id::text ELSE gs.player1_id::text END)
     WHERE
         (gs.player1_id::text = p_user_id::text OR gs.player2_id::text = p_user_id::text)
         AND gs.status IN ('finished', 'forfeited', 'completed')

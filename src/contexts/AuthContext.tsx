@@ -91,7 +91,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                             avatar_url: userData.user.user_metadata?.avatar_url,
                             created_at: new Date().toISOString(),
                             pencils: 5,
-                            last_recharge_at: new Date().toISOString()
+                            last_recharge_at: new Date().toISOString(),
+                            xp: 0,
+                            level: 1
                         };
 
                         const { error: insertError } = await supabase
@@ -154,7 +156,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                             avatar_url: userData.user.user_metadata?.avatar_url,
                             created_at: new Date().toISOString(),
                             pencils: 5,
-                            last_recharge_at: new Date().toISOString()
+                            last_recharge_at: new Date().toISOString(),
+                            xp: 0,
+                            level: 1
                         };
                         const { error: insertError } = await supabase.from('profiles').insert([newProfile]);
                         if (!insertError) {

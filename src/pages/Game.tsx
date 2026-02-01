@@ -27,6 +27,16 @@ import SortingGame from '../components/minigames/SortingGame';
 import FindTheSpy from '../components/minigames/FindTheSpy';
 import ScoreProgressBar from '../components/ui/ScoreProgressBar';
 import Flag from '../components/ui/Flag';
+import { isBotId } from '../constants/bot';
+
+const BOT_EMOJI_POOL = ['🙂', '😭', '😂', '☹️', '❤️', '💔', '👍', '👎'];
+const BOT_EMOJI_BURST = ['😂', '😭', '👍', '👎'];
+const BOT_EMOJI_REACTIVE = {
+    winning: ['😂', '🙂', '👍'],
+    losing: ['😭', '☹️', '💔'],
+    close: ['🙂', '👍', '👎']
+};
+type BotEmojiPattern = 'burst' | 'silent' | 'reactive';
 
 const Game: React.FC = () => {
     const { t } = useTranslation();
@@ -45,7 +55,7 @@ const Game: React.FC = () => {
     // Game Hook
     const { gameState, incrementScore, serverOffset, isWaitingTimeout, isTimeUp, onlineUsers, connectionStatus } = useGameState(roomId!, myId, opponentId);
 
-    const isOpponentOnline = !opponentId || opponentId.startsWith('practice') || onlineUsers.includes(opponentId);
+    const isOpponentOnline = !opponentId || opponentId.startsWith('practice') || isBotId(opponentId) || onlineUsers.includes(opponentId);
 
     // Determine Status Logic
     const isPlaying = gameState.status === 'playing';
@@ -125,6 +135,64 @@ const Game: React.FC = () => {
             ? '연결 상태가 불안정합니다...'
             : '연결 중...';
 
+    const botEmojiPatternRef = useRef<BotEmojiPattern | null>(null);
+    const botBurstEmojiRef = useRef<string>('🙂');
+
+    useEffect(() => {
+        if (!isBotId(opponentId)) {
+            botEmojiPatternRef.current = null;
+            return;
+        }
+        const roll = Math.random();
+        if (roll < 0.25) botEmojiPatternRef.current = 'silent';
+        else if (roll < 0.6) botEmojiPatternRef.current = 'burst';
+        else botEmojiPatternRef.current = 'reactive';
+        botBurstEmojiRef.current = BOT_EMOJI_BURST[Math.floor(Math.random() * BOT_EMOJI_BURST.length)];
+    }, [opponentId]);
+
+    useEffect(() => {
+        if (!isBotId(opponentId) || !showEmojiOverlay) return;
+        if (botEmojiPatternRef.current === 'silent') return;
+        let timeoutId: number | null = null;
+        let cancelled = false;
+
+        const schedule = () => {
+            if (cancelled) return;
+            const pattern = botEmojiPatternRef.current;
+            const delay = pattern === 'burst' ? 2000 + Math.random() * 2200 : 1400 + Math.random() * 2600;
+            timeoutId = window.setTimeout(() => {
+                if (!showEmojiOverlayRef.current) {
+                    schedule();
+                    return;
+                }
+
+                const pattern = botEmojiPatternRef.current;
+                if (pattern === 'burst') {
+                    const emoji = botBurstEmojiRef.current || BOT_EMOJI_POOL[Math.floor(Math.random() * BOT_EMOJI_POOL.length)];
+                    spawnEmoji(emoji, 'right');
+                    window.setTimeout(() => spawnEmoji(emoji, 'right'), 200);
+                    window.setTimeout(() => spawnEmoji(emoji, 'right'), 420);
+                } else if (pattern === 'reactive') {
+                    const diff = gameState.opScore - gameState.myScore;
+                    const bucket = diff >= 150 ? 'winning' : diff <= -150 ? 'losing' : 'close';
+                    const pool = BOT_EMOJI_REACTIVE[bucket];
+                    const emoji = pool[Math.floor(Math.random() * pool.length)];
+                    spawnEmoji(emoji, 'right');
+                } else {
+                    const emoji = BOT_EMOJI_POOL[Math.floor(Math.random() * BOT_EMOJI_POOL.length)];
+                    spawnEmoji(emoji, 'right');
+                }
+                schedule();
+            }, delay);
+        };
+
+        schedule();
+        return () => {
+            cancelled = true;
+            if (timeoutId) window.clearTimeout(timeoutId);
+        };
+    }, [opponentId, showEmojiOverlay, spawnEmoji, gameState.myScore, gameState.opScore]);
+
     useEffect(() => {
         if (!roomId) {
             navigate('/');
@@ -147,6 +215,21 @@ const Game: React.FC = () => {
                         avatar_url: 'https://api.dicebear.com/9.x/bottts-neutral/svg?seed=BrainRushBot',
                         country: 'KR' // Or generic
                     });
+                } else if (isBotId(opponentId)) {
+                    const { data } = await supabase
+                        .from('bot_profiles')
+                        .select('*')
+                        .eq('id', opponentId)
+                        .maybeSingle();
+                    if (data) {
+                        setOpponentProfile({
+                            nickname: data.nickname,
+                            avatar_url: data.avatar_url,
+                            country: data.country
+                        });
+                    } else {
+                        setOpponentProfile({ nickname: 'Player', avatar_url: null });
+                    }
                 } else {
                     const { data } = await supabase.from('profiles').select('*').eq('id', opponentId).single();
                     setOpponentProfile(data || { nickname: 'Opponent', avatar_url: null });

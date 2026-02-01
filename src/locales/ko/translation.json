@@ -225,7 +225,8 @@
     "entering": "게임장으로 이동합니다...",
     "timeout": "상대를 찾지 못함",
     "timeoutDesc": "매칭 시간이 초과되었습니다.",
-    "range": "범위"
+    "range": "범위",
+    "rankLevelRequired": "레벨 {{level}}부터 랭크가 열립니다."
   },
   "rps": {
     "ready": "준비...",

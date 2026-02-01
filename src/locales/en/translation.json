@@ -227,7 +227,8 @@
         "entering": "Entering game arena...",
         "timeout": "Match Not Found",
         "timeoutDesc": "We couldn't find an opponent in time.",
-        "range": "Range"
+        "range": "Range",
+        "rankLevelRequired": "Reach level {{level}} to unlock Rank."
     },
     "rps": {
         "ready": "READY...",

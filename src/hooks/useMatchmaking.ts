@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
+import { getLevelFromXp } from '../utils/levelUtils';
 
 export const useMatchmaking = (
     onMatchFound: (roomId: string, opponentId: string) => void
@@ -11,6 +12,7 @@ export const useMatchmaking = (
     const [elapsedTime, setElapsedTime] = useState<number>(0);
     const searchInterval = useRef<ReturnType<typeof setInterval> | null>(null);
     const searchStartTime = useRef<number>(0);
+    const botMatchTriggered = useRef<boolean>(false);
 
     // Generate a transient Guest ID if not logged in
     const guestId = useRef(`guest_${Math.random().toString(36).substring(2, 9)}`);
@@ -32,6 +34,7 @@ export const useMatchmaking = (
         setStatus('searching');
         searchStartTime.current = Date.now();
         setElapsedTime(0);
+        botMatchTriggered.current = false;
 
         // If Normal Mode, Start with huge range immediately (Ignore Elo)
         const initialRange = mode === 'normal' ? 2000 : 50;
@@ -54,6 +57,46 @@ export const useMatchmaking = (
                 await cancelSearch(false); // Do not reset to idle immediately, set to timeout
                 setStatus('timeout');
                 return;
+            }
+
+            const elapsedMs = Date.now() - searchStartTime.current;
+            const playerLevel = typeof profile?.level === 'number'
+                ? profile.level
+                : typeof profile?.xp === 'number'
+                    ? getLevelFromXp(profile.xp)
+                    : 1;
+            const isBotEligible = mode === 'normal' && playerLevel <= 5;
+
+            if (isBotEligible && !botMatchTriggered.current && elapsedMs >= 10000) {
+                botMatchTriggered.current = true;
+                try {
+                    const { data, error } = await supabase
+                        .rpc('create_bot_session', { p_player_id: playerId })
+                        .maybeSingle() as { data: { room_id: string, opponent_id: string } | null, error: any };
+
+                    if (error) throw error;
+                    if (data?.room_id && data?.opponent_id) {
+                        console.log('Bot Match Found! Room:', data.room_id);
+                        if (searchInterval.current) clearInterval(searchInterval.current);
+                        try {
+                            if (user) {
+                                const { data: consumed } = await supabase.rpc('consume_pencil', { user_id: user.id });
+                                if (!consumed) {
+                                    console.error('Failed to consume pencil (Bot Match)!');
+                                }
+                            }
+                        } catch (e) {
+                            console.error('Pencil consumption error (Bot Match):', e);
+                        }
+                        setStatus('matched');
+                        onMatchFound(data.room_id, data.opponent_id);
+                        return;
+                    }
+                    botMatchTriggered.current = false;
+                } catch (err) {
+                    console.error('Bot matchmaking error:', err);
+                    botMatchTriggered.current = false;
+                }
             }
 
 

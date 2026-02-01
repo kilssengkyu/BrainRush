@@ -195,7 +195,8 @@
         "entering": "正在进入游戏...",
         "timeout": "匹配超时",
         "timeoutDesc": "未找到对手",
-        "range": "范围"
+        "range": "范围",
+        "rankLevelRequired": "达到{{level}}级后解锁排位。"
     },
     "rps": {
         "ready": "准备...",
