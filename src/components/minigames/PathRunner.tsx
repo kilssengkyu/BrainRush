@@ -68,7 +68,6 @@ const PathRunner: React.FC<PathRunnerProps> = ({ seed, onScore, isPlaying }) => 
     const [shuffleChance, setShuffleChance] = useState(0);
     const [mapping, setMapping] = useState<Record<ButtonPos, Direction>>(defaultMapping);
     const [pathSet, setPathSet] = useState<Set<string>>(new Set());
-    const [start, setStart] = useState<Coord>({ r: 0, c: 0 });
     const [goal, setGoal] = useState<Coord>({ r: 0, c: 0 });
     const [player, setPlayer] = useState<Coord>({ r: 0, c: 0 });
     const [visited, setVisited] = useState<Set<string>>(new Set());
@@ -81,7 +80,6 @@ const PathRunner: React.FC<PathRunnerProps> = ({ seed, onScore, isPlaying }) => 
         setRows(nextRows);
         setCols(nextCols);
         setLevel(nextLevel);
-        setStart(newStart);
         setGoal(newGoal);
         setPlayer(newStart);
         setPathSet(path);
