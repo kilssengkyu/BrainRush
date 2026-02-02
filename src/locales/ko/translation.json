@@ -329,6 +329,15 @@
     "title": "사다리 타기",
     "instruction": "길을 따라 정확한 도착점을 찾으세요!"
   },
+  "path": {
+    "title": "패스 러너",
+    "instruction": "초록색을 파란 목표까지 이동하세요. 버튼 배치가 바뀔 수 있어요.",
+    "shuffle": "셔플"
+  },
+  "balls": {
+    "title": "볼 카운트",
+    "instruction": "움직이는 공 개수를 세고 정답을 눌러주세요."
+  },
   "tapTheColor": {
     "title": "색깔 터치",
     "memorize": "색깔의 위치를 기억하세요!",

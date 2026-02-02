@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { Howl, Howler } from 'howler';
+import { Capacitor } from '@capacitor/core';
 import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
+import { NativeAudio } from '@capgo/native-audio';
 
 // Increase Audio Pool globally
 Howler.html5PoolSize = 50;
@@ -53,6 +55,13 @@ const BGM_FILES: Record<BGMType, string> = {
     bgm_game: '/sounds/bgm_game.mp3'
 };
 
+const NATIVE_BGM_FILES: Record<BGMType, string> = {
+    bgm_main: 'sounds/bgm_main.mp3',
+    bgm_game: 'sounds/bgm_game.mp3'
+};
+
+const IS_NATIVE_PLATFORM = Capacitor.isNativePlatform();
+
 export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const resumeAudioContext = useCallback(() => {
         const ctx = Howler.ctx;
@@ -93,6 +102,36 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     });
 
     const currentBGM = useRef<BGMType | null>(null);
+    const nativeBgmReady = useRef(false);
+    const nativeBgmLoading = useRef<Promise<void> | null>(null);
+
+    const ensureNativeBgmReady = useCallback(async () => {
+        if (!IS_NATIVE_PLATFORM) return false;
+        if (nativeBgmReady.current) return true;
+        if (!nativeBgmLoading.current) {
+            nativeBgmLoading.current = (async () => {
+                try {
+                    await Promise.all(
+                        Object.entries(NATIVE_BGM_FILES).map(([key, assetPath]) =>
+                            NativeAudio.preload({
+                                assetId: key,
+                                assetPath,
+                                volume: 0,
+                                audioChannelNum: 1,
+                                isUrl: false
+                            })
+                        )
+                    );
+                    nativeBgmReady.current = true;
+                } catch (err) {
+                    console.error('[BGM] Native preload failed', err);
+                    nativeBgmReady.current = false;
+                }
+            })();
+        }
+        await nativeBgmLoading.current;
+        return nativeBgmReady.current;
+    }, []);
 
     // Attempt to resume audio context on first user interaction.
     useEffect(() => {
@@ -126,35 +165,45 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         });
         setSounds(loadedSounds);
 
-        // Initialize BGM
-        Object.entries(BGM_FILES).forEach(([key, src]) => {
-            const bgm = new Howl({
-                src: [src],
-                format: ['mp3', 'ogg'],
-                html5: true,
-                pool: 1,
-                loop: true,
-                volume: 0,
-                preload: true,
-                onload: () => console.log(`[BGM] Loaded: ${key}`),
-                onloaderror: (_id, err) => console.error(`[BGM] Load Error: ${key}`, err),
+        if (IS_NATIVE_PLATFORM) {
+            void ensureNativeBgmReady();
+        } else {
+            // Initialize BGM (Web)
+            Object.entries(BGM_FILES).forEach(([key, src]) => {
+                const bgm = new Howl({
+                    src: [src],
+                    format: ['mp3', 'ogg'],
+                    html5: true,
+                    pool: 1,
+                    loop: true,
+                    volume: 0,
+                    preload: true,
+                    onload: () => console.log(`[BGM] Loaded: ${key}`),
+                    onloaderror: (_id, err) => console.error(`[BGM] Load Error: ${key}`, err),
+                });
+                bgm.on('playerror', (_id, err) => {
+                    console.error(`[BGM] Play Error: ${key}`, err);
+                    const ctx = Howler.ctx;
+                    if (ctx && ctx.state === 'suspended') {
+                        ctx.resume().catch(() => undefined);
+                    }
+                    bgm.once('unlock', () => bgm.play());
+                });
+                bgmRef.current[key as BGMType] = bgm;
             });
-            bgm.on('playerror', (_id, err) => {
-                console.error(`[BGM] Play Error: ${key}`, err);
-                const ctx = Howler.ctx;
-                if (ctx && ctx.state === 'suspended') {
-                    ctx.resume().catch(() => undefined);
-                }
-                bgm.once('unlock', () => bgm.play());
-            });
-            bgmRef.current[key as BGMType] = bgm;
-        });
+        }
 
         return () => {
             Object.values(loadedSounds).forEach((s: any) => s.unload());
-            Object.values(bgmRef.current).forEach((s: any) => s?.unload());
+            if (IS_NATIVE_PLATFORM) {
+                Object.keys(NATIVE_BGM_FILES).forEach((key) => {
+                    void NativeAudio.unload({ assetId: key });
+                });
+            } else {
+                Object.values(bgmRef.current).forEach((s: any) => s?.unload());
+            }
         };
-    }, []);
+    }, [ensureNativeBgmReady]);
 
     // Effect for SFX Volume/Mute
     useEffect(() => {
@@ -175,6 +224,20 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         localStorage.setItem('bgm_volume', String(bgmVolume));
 
         const currentType = currentBGM.current;
+        if (IS_NATIVE_PLATFORM) {
+            if (currentType) {
+                void (async () => {
+                    const ready = await ensureNativeBgmReady();
+                    if (!ready) return;
+                    await NativeAudio.setVolume({
+                        assetId: currentType,
+                        volume: isMuted ? 0 : bgmVolume
+                    });
+                })();
+            }
+            return;
+        }
+
         if (currentType && bgmRef.current[currentType]) {
             const sound = bgmRef.current[currentType];
             if (sound) {
@@ -184,7 +247,7 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 if (!isMuted) sound.volume(bgmVolume);
             }
         }
-    }, [isMuted, bgmVolume]);
+    }, [isMuted, bgmVolume, ensureNativeBgmReady]);
 
 
     const triggerHaptic = async (type: SoundType) => {
@@ -222,6 +285,33 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }, [isMuted, sounds, isVibrationEnabled]);
 
     const playBGM = useCallback((type: BGMType) => {
+        if (IS_NATIVE_PLATFORM) {
+            if (currentBGM.current === type) return;
+            const previous = currentBGM.current;
+            currentBGM.current = type;
+
+            void (async () => {
+                const ready = await ensureNativeBgmReady();
+                if (!ready) {
+                    currentBGM.current = null;
+                    return;
+                }
+                try {
+                    if (previous) {
+                        await NativeAudio.stop({ assetId: previous });
+                    }
+                    await NativeAudio.loop({ assetId: type });
+                    await NativeAudio.setVolume({
+                        assetId: type,
+                        volume: isMuted ? 0 : bgmVolume
+                    });
+                } catch (err) {
+                    console.error('[BGM] Native play failed', err);
+                }
+            })();
+            return;
+        }
+
         resumeAudioContext();
         if (currentBGM.current === type) return; // Already playing this track
 
@@ -252,18 +342,29 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 newSound.fade(0, bgmVolume, 1000);
             }
         }
-    }, [bgmVolume, isMuted]);
+    }, [bgmVolume, ensureNativeBgmReady, isMuted, resumeAudioContext]);
 
     const stopBGM = useCallback(() => {
-        if (currentBGM.current) {
-            const sound = bgmRef.current[currentBGM.current];
-            if (sound) {
-                sound.fade(sound.volume(), 0, 1000);
-                setTimeout(() => sound.stop(), 1000);
-            }
-            currentBGM.current = null;
+        if (!currentBGM.current) return;
+
+        const previous = currentBGM.current;
+        currentBGM.current = null;
+
+        if (IS_NATIVE_PLATFORM) {
+            void (async () => {
+                const ready = await ensureNativeBgmReady();
+                if (!ready) return;
+                await NativeAudio.stop({ assetId: previous });
+            })();
+            return;
         }
-    }, []);
+
+        const sound = bgmRef.current[previous];
+        if (sound) {
+            sound.fade(sound.volume(), 0, 1000);
+            setTimeout(() => sound.stop(), 1000);
+        }
+    }, [ensureNativeBgmReady]);
 
     const toggleMute = () => setIsMuted(prev => !prev);
     const setVolume = (vol: number) => setVolumeState(Math.max(0, Math.min(1, vol)));

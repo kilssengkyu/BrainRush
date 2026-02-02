@@ -9,8 +9,8 @@ const BGMManager = () => {
     useEffect(() => {
         const path = location.pathname;
 
-        // Game Routes -> Battle Music
-        if (path.startsWith('/game/') || path.startsWith('/practice')) {
+        // Game Sessions -> Battle Music
+        if (path.startsWith('/game/')) {
             playBGM('bgm_game');
         }
         // Menu Routes -> Main Theme

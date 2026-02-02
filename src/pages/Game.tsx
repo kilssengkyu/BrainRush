@@ -25,6 +25,8 @@ import AimingGame from '../components/minigames/AimingGame';
 import FindMostColor from '../components/minigames/FindMostColor';
 import SortingGame from '../components/minigames/SortingGame';
 import FindTheSpy from '../components/minigames/FindTheSpy';
+import PathRunner from '../components/minigames/PathRunner';
+import BallCounter from '../components/minigames/BallCounter';
 import ScoreProgressBar from '../components/ui/ScoreProgressBar';
 import Flag from '../components/ui/Flag';
 import { isBotId } from '../constants/bot';
@@ -519,6 +521,8 @@ const Game: React.FC = () => {
                                         {gameState.gameType === 'MOST_COLOR' && t('mostColor.title')}
                                         {gameState.gameType === 'SORTING' && t('sorting.title')}
                                         {gameState.gameType === 'SPY' && t('spy.title')}
+                                        {gameState.gameType === 'PATH' && t('path.title')}
+                                        {gameState.gameType === 'BALLS' && t('balls.title')}
                                     </h2>
                                     <p className="text-2xl text-white mb-12 font-bold max-w-2xl">
                                         {gameState.gameType === 'RPS' && t('rps.instruction')}
@@ -543,6 +547,8 @@ const Game: React.FC = () => {
                                         {gameState.gameType === 'MOST_COLOR' && t('mostColor.instruction')}
                                         {gameState.gameType === 'SORTING' && t('sorting.instruction')}
                                         {gameState.gameType === 'SPY' && t('spy.instruction')}
+                                        {gameState.gameType === 'PATH' && t('path.instruction')}
+                                        {gameState.gameType === 'BALLS' && t('balls.instruction')}
                                     </p>
 
                                     <div className="text-9xl font-black font-mono text-white animate-pulse">
@@ -644,6 +650,12 @@ const Game: React.FC = () => {
                                     )}
                                     {gameState.gameType === 'SPY' && (
                                         <FindTheSpy seed={gameState.seed} onScore={incrementScore} isPlaying />
+                                    )}
+                                    {gameState.gameType === 'PATH' && (
+                                        <PathRunner seed={gameState.seed} onScore={incrementScore} isPlaying />
+                                    )}
+                                    {gameState.gameType === 'BALLS' && (
+                                        <BallCounter seed={gameState.seed} onScore={incrementScore} isPlaying />
                                     )}
                                 </>
                             )}

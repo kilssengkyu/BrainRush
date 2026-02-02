@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Play, Zap, Brain, Hash, MousePointer2, Star, Ghost } from 'lucide-react';
+import { ArrowLeft, Play, Zap, Brain, Hash, MousePointer2, Star, Ghost, Route, CircleDot } from 'lucide-react';
 import { useSound } from '../contexts/SoundContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useUI } from '../contexts/UIContext';
@@ -27,6 +27,8 @@ const MINIGAMES = [
     { id: 'BLANK', title: 'fillBlanks.title', icon: null, defaultIcon: <Brain className="w-8 h-8 text-teal-300" />, type: 'brain' },
     { id: 'OPERATOR', title: 'findOperator.title', icon: null, defaultIcon: <Brain className="w-8 h-8 text-indigo-300" />, type: 'brain' },
     { id: 'LADDER', title: 'ladder.title', icon: null, defaultIcon: <Brain className="w-8 h-8 text-yellow-300" />, type: 'brain' },
+    { id: 'PATH', title: 'path.title', icon: null, defaultIcon: <Route className="w-8 h-8 text-emerald-300" />, type: 'brain' },
+    { id: 'BALLS', title: 'balls.title', icon: null, defaultIcon: <CircleDot className="w-8 h-8 text-sky-300" />, type: 'brain' },
     { id: 'TAP_COLOR', title: 'tapTheColor.title', icon: null, defaultIcon: <Brain className="w-8 h-8 text-pink-300" />, type: 'brain' },
     { id: 'AIM', title: 'aim.title', icon: null, defaultIcon: <MousePointer2 className="w-8 h-8 text-red-500" />, type: 'speed' },
     { id: 'MOST_COLOR', title: 'mostColor.title', icon: null, defaultIcon: <Zap className="w-8 h-8 text-yellow-500" />, type: 'speed' },

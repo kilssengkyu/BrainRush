@@ -38,6 +38,8 @@ const HIGHSCORE_GAME_TYPES = [
     { type: 'BLANK', labelKey: 'fillBlanks.title' },
     { type: 'OPERATOR', labelKey: 'findOperator.title' },
     { type: 'LADDER', labelKey: 'ladder.title' },
+    { type: 'PATH', labelKey: 'path.title' },
+    { type: 'BALLS', labelKey: 'balls.title' },
     { type: 'TAP_COLOR', labelKey: 'tapTheColor.title' },
     { type: 'AIM', labelKey: 'aim.title' },
     { type: 'MOST_COLOR', labelKey: 'mostColor.title' },

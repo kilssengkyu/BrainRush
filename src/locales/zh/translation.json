@@ -299,6 +299,15 @@
         "title": "爬梯子",
         "instruction": "沿着路线找到正确的终点!"
     },
+    "path": {
+        "title": "路径冲刺",
+        "instruction": "把绿色移动到蓝色目标，按钮布局可能会变。",
+        "shuffle": "打乱"
+    },
+    "balls": {
+        "title": "数球",
+        "instruction": "数清移动的球并点击正确数字。"
+    },
     "tapTheColor": {
         "title": "点击颜色",
         "memorize": "记住颜色的位置!",
