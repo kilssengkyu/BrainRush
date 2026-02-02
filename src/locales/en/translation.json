@@ -156,8 +156,13 @@
         "sound": "Sound",
         "masterVolume": "Master Volume",
         "deleteAccount": "Delete Account",
-        "deleteAccountConfirm": "Are you sure you want to delete your account? This action cannot be undone.",
-        "logoutConfirm": "Are you sure you want to logout?"
+        "deleteAccountConfirm": "Are you sure you want to delete your account? This is permanent and cannot be undone.",
+        "logoutConfirm": "Are you sure you want to logout?",
+        "restorePurchases": "Restore Purchases",
+        "restorePurchasesDesc": "Restore non-consumable purchases such as ad removal.",
+        "restorePurchasesSuccess": "Purchases restored.",
+        "restorePurchasesFail": "Failed to restore purchases.",
+        "restorePurchasesUnavailable": "Billing not supported on this device."
     },
     "profile": {
         "nicknamePlaceholder": "Enter nickname",
@@ -169,6 +174,9 @@
             "highscore": "Highscore",
             "rankWinRate": "Rank Win Rate"
         },
+        "guestTitle": "Guest Account",
+        "guestDesc": "Guest accounts can be lost if you sign out, delete the app, or change devices. Link a Google account to keep your progress.",
+        "linkGoogle": "Link Google Account",
         "statsTitle": "Skills",
         "stats": {
             "speed": "Speed",

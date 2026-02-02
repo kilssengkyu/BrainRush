@@ -164,7 +164,7 @@ const Home = () => {
     const currentMode = useRef('rank');
 
     // Matchmaking Hook
-    const { status, startSearch, cancelSearch, searchRange, elapsedTime, playerId } = useMatchmaking((roomId, opponentId) => {
+    const { status, startSearch, cancelSearch, elapsedTime, playerId } = useMatchmaking((roomId, opponentId) => {
         playSound('match_found');
         navigate(`/game/${roomId}`, { state: { roomId, myId: playerId, opponentId, mode: currentMode.current } });
     });
@@ -395,7 +395,6 @@ const Home = () => {
                                     <p className="text-2xl font-mono text-white mb-2">
                                         {Math.floor(elapsedTime / 60)}:{(elapsedTime % 60).toString().padStart(2, '0')}
                                     </p>
-                                    <p className="text-sm text-blue-400 mb-8 font-mono">{t('matchmaking.range')}: ±{searchRange}</p>
                                     <button
                                         onClick={() => { playSound('click'); cancelSearch(); }}
                                         className="px-6 py-3 rounded-xl bg-gray-700 hover:bg-gray-600 font-bold transition-colors"

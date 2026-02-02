@@ -46,7 +46,7 @@ const HIGHSCORE_GAME_TYPES = [
 ] as const;
 
 const Profile = () => {
-    const { user, profile, signOut, refreshProfile } = useAuth();
+    const { user, profile, signOut, refreshProfile, linkWithGoogle } = useAuth();
     const { playSound } = useSound();
     const { showToast, confirm } = useUI();
     const navigate = useNavigate();
@@ -511,6 +511,7 @@ const Profile = () => {
         observation: profile?.observation || 0
     };
     const hasSocialNotifications = pendingRequestsCount > 0 || unreadChatCount > 0;
+    const isGuest = Boolean(user?.is_anonymous || user?.app_metadata?.provider === 'anonymous');
 
     return (
         <div className="h-[100dvh] bg-gray-900 text-white flex flex-col items-center p-4 pt-[calc(env(safe-area-inset-top)+1rem)] relative overflow-hidden">
@@ -557,6 +558,30 @@ const Profile = () => {
                             exit={{ opacity: 0, x: 20 }}
                             className="w-full max-w-md bg-gray-800/50 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl relative z-10"
                         >
+                            {isGuest && (
+                                <div className="mb-6 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-center">
+                                    <div className="text-sm font-bold text-amber-200">
+                                        {t('profile.guestTitle', '게스트 계정')}
+                                    </div>
+                                    <div className="mt-1 text-xs text-amber-100/80">
+                                        {t('profile.guestDesc', '게스트 계정은 로그아웃/앱 삭제/기기 변경 시 데이터가 사라질 수 있어요. 구글 계정으로 연동해 주세요.')}
+                                    </div>
+                                    <button
+                                        onClick={async () => {
+                                            try {
+                                                await linkWithGoogle();
+                                            } catch (err) {
+                                                console.error('Failed to link google:', err);
+                                                showToast(t('common.error'), 'error');
+                                            }
+                                        }}
+                                        className="mt-3 inline-flex items-center justify-center rounded-full bg-white/10 px-4 py-2 text-xs font-bold text-amber-100 hover:bg-white/20 transition-colors"
+                                    >
+                                        {t('profile.linkGoogle', '구글 계정 연동')}
+                                    </button>
+                                </div>
+                            )}
+
                             {/* Avatar Section */}
                             <div className="flex flex-col items-center mb-8">
                                 <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 p-[3px] mb-4">

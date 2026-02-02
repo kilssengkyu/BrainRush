@@ -10,6 +10,7 @@ interface AuthContextType {
     loading: boolean;
     signInWithGoogle: () => Promise<void>;
     signInAnonymously: () => Promise<void>;
+    linkWithGoogle: () => Promise<void>;
     signOut: () => Promise<void>;
     refreshProfile: () => Promise<void>;
     onlineUsers: Set<string>;
@@ -22,6 +23,7 @@ const AuthContext = createContext<AuthContextType>({
     loading: true,
     signInWithGoogle: async () => { },
     signInAnonymously: async () => { },
+    linkWithGoogle: async () => { },
     signOut: async () => { },
     refreshProfile: async () => { },
     onlineUsers: new Set(),
@@ -281,6 +283,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 provider: 'google',
                 options: {
                     redirectTo: redirectUrl,
+                    queryParams: { prompt: 'select_account' },
                     skipBrowserRedirect: false // Important for native flow
                 }
             });
@@ -288,6 +291,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         } catch (error) {
             console.error('Google Sign-in Error:', error);
             alert('구글 로그인 중 오류가 발생했습니다.');
+        }
+    };
+
+    const linkWithGoogle = async () => {
+        try {
+            let redirectUrl = window.location.origin;
+            if ((window as any).Capacitor?.isNativePlatform()) {
+                redirectUrl = 'com.kilssengkyu.brainrush://login-callback';
+            }
+
+            const { error } = await supabase.auth.linkIdentity({
+                provider: 'google',
+                options: {
+                    redirectTo: redirectUrl,
+                    queryParams: { prompt: 'select_account' },
+                    skipBrowserRedirect: false
+                }
+            });
+
+            if (error) throw error;
+        } catch (error) {
+            console.error('Google Link Error:', error);
+            alert('구글 계정 연동 중 오류가 발생했습니다.');
         }
     };
 
@@ -327,7 +353,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, session, profile, loading, signInWithGoogle, signInAnonymously, signOut, refreshProfile, onlineUsers }}>
+        <AuthContext.Provider value={{ user, session, profile, loading, signInWithGoogle, signInAnonymously, linkWithGoogle, signOut, refreshProfile, onlineUsers }}>
             {children}
         </AuthContext.Provider>
     );

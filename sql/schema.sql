@@ -407,10 +407,15 @@ $$ language plpgsql;
 create or replace function delete_account()
 returns void as $$
 begin
-  -- 1. Explicitly delete the profile first to satisfy Foreign Key constraints
-  delete from public.profiles where id = auth.uid();
-  
-  -- 2. Delete the user from Auth (Security Definer allows this)
+  -- Clean up dependent rows that reference auth.users
+  delete from public.friendships where user_id::text = auth.uid()::text or friend_id::text = auth.uid()::text;
+  delete from public.chat_messages where sender_id::text = auth.uid()::text or receiver_id::text = auth.uid()::text;
+  delete from public.matchmaking_queue where player_id::text = auth.uid()::text;
+
+  -- Delete profile (cascades to per-game stats/highscores)
+  delete from public.profiles where id::text = auth.uid()::text;
+
+  -- Delete the user from Auth (Security Definer allows this)
   delete from auth.users where id = auth.uid();
 end;
 $$ language plpgsql security definer SET search_path = public;

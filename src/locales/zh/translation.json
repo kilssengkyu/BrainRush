@@ -121,8 +121,13 @@
         "volume": "音量",
         "back": "返回",
         "deleteAccount": "删除账户",
-        "deleteAccountConfirm": "您确定要删除账户吗？此操作无法撤销。",
-        "logoutConfirm": "您确定要登出吗？"
+        "deleteAccountConfirm": "确定要删除账户吗？账户将被永久删除且无法撤销。",
+        "logoutConfirm": "您确定要登出吗？",
+        "restorePurchases": "恢复购买",
+        "restorePurchasesDesc": "恢复去广告等非消耗型购买。",
+        "restorePurchasesSuccess": "购买已恢复。",
+        "restorePurchasesFail": "恢复购买失败。",
+        "restorePurchasesUnavailable": "此设备不支持购买。"
     },
     "game": {
         "waiting": "等待游戏...",
@@ -171,6 +176,9 @@
             "highscore": "最高分",
             "rankWinRate": "排位胜率"
         },
+        "guestTitle": "游客账号",
+        "guestDesc": "游客账号在登出、卸载或更换设备时可能丢失数据。请关联 Google 账号以保留进度。",
+        "linkGoogle": "关联 Google 账号",
         "statsTitle": "能力值",
         "stats": {
             "speed": "速度",
