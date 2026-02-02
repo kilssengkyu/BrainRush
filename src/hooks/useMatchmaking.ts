@@ -37,11 +37,13 @@ export const useMatchmaking = (
         botMatchTriggered.current = false;
 
         // If Normal Mode, Start with huge range immediately (Ignore Elo)
-        const initialRange = mode === 'normal' ? 2000 : 50;
+        const initialRange = mode === 'normal' ? 100 : 50;
         setSearchRange(initialRange);
 
         let currentRange = initialRange;
         const myMMR = profile?.mmr || 1000;
+        const rangeStep = mode === 'normal' ? 100 : 50;
+        const rangeStepMs = mode === 'normal' ? 3000 : 4000;
 
         // Initial attempt
         await attemptMatch(playerId, myMMR, currentRange, mode);
@@ -140,12 +142,12 @@ export const useMatchmaking = (
                 }
             }
 
-            if (mode === 'rank') {
-                currentRange += 50; // Slowly expand for Rank
-            } else {
-                currentRange = 5000; // Keep wide range for Normal
+            const rangeSteps = Math.floor(elapsedMs / rangeStepMs);
+            const nextRange = initialRange + (rangeSteps * rangeStep);
+            if (nextRange !== currentRange) {
+                currentRange = nextRange;
+                setSearchRange(currentRange);
             }
-            setSearchRange(currentRange);
             await attemptMatch(playerId, myMMR, currentRange, mode);
         }, 1000); // Check every 1s
     };

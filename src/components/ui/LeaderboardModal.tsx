@@ -7,6 +7,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import Flag from './Flag';
 import { getTierColor, getTierIcon } from '../../utils/rankUtils';
 import UserProfileModal from './UserProfileModal';
+import LevelBadge from './LevelBadge';
+import AvatarModal from './AvatarModal';
 
 interface LeaderboardModalProps {
     isOpen: boolean;
@@ -20,6 +22,7 @@ interface Ranker {
     avatar_url: string;
     country: string;
     mmr: number;
+    level?: number | null;
     tier: string;
 }
 
@@ -30,6 +33,7 @@ const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onClose }) 
     const [myRank, setMyRank] = useState<Ranker | null>(null);
     const [loading, setLoading] = useState(false);
     const [viewProfileId, setViewProfileId] = useState<string | null>(null);
+    const [avatarPreview, setAvatarPreview] = useState<{ src: string; alt: string } | null>(null);
 
     useEffect(() => {
         if (isOpen) {
@@ -47,8 +51,42 @@ const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onClose }) 
             if (error) throw error;
 
             if (data) {
-                setTopPlayers(data.top_players || []);
-                setMyRank(data.user_rank || null);
+                let topPlayers = data.top_players || [];
+                let userRank = data.user_rank || null;
+
+                const missingIds = new Set<string>();
+                topPlayers.forEach((player: Ranker) => {
+                    if (player?.id && typeof player.level !== 'number') {
+                        missingIds.add(player.id);
+                    }
+                });
+                if (userRank?.id && typeof userRank.level !== 'number') {
+                    missingIds.add(userRank.id);
+                }
+
+                if (missingIds.size > 0) {
+                    const { data: levelRows, error: levelError } = await supabase
+                        .from('profiles')
+                        .select('id, level')
+                        .in('id', Array.from(missingIds));
+
+                    if (levelError) {
+                        console.error('Error fetching leaderboard levels:', levelError);
+                    } else {
+                        const levelMap = new Map((levelRows || []).map(row => [row.id, row.level]));
+                        topPlayers = topPlayers.map((player: Ranker) => (
+                            player?.id && levelMap.has(player.id)
+                                ? { ...player, level: levelMap.get(player.id) }
+                                : player
+                        ));
+                        if (userRank?.id && levelMap.has(userRank.id)) {
+                            userRank = { ...userRank, level: levelMap.get(userRank.id) };
+                        }
+                    }
+                }
+
+                setTopPlayers(topPlayers);
+                setMyRank(userRank);
             }
         } catch (err) {
             console.error('Error fetching leaderboard:', err);
@@ -102,6 +140,11 @@ const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onClose }) 
                                             player={player}
                                             isMe={player.id === user?.id}
                                             onClick={player.id ? () => setViewProfileId(player.id) : undefined}
+                                            onAvatarClick={() => {
+                                                if (player.avatar_url) {
+                                                    setAvatarPreview({ src: player.avatar_url, alt: player.nickname });
+                                                }
+                                            }}
                                         />
                                     ))
                                 )}
@@ -111,7 +154,16 @@ const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onClose }) 
                             {myRank && !topPlayers.some(p => p.id === myRank.id) && (
                                 <div className="p-4 border-t border-gray-800 bg-gray-900/95 shadow-[0_-10px_20px_rgba(0,0,0,0.5)] z-10">
                                     <div className="text-xs text-gray-500 mb-2 font-bold px-2">MY RANK</div>
-                                    <RankItem player={myRank} isMe={true} onClick={() => setViewProfileId(myRank.id)} />
+                                    <RankItem
+                                        player={myRank}
+                                        isMe={true}
+                                        onClick={() => setViewProfileId(myRank.id)}
+                                        onAvatarClick={() => {
+                                            if (myRank.avatar_url) {
+                                                setAvatarPreview({ src: myRank.avatar_url, alt: myRank.nickname });
+                                            }
+                                        }}
+                                    />
                                 </div>
                             )}
                         </motion.div>
@@ -123,11 +175,27 @@ const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onClose }) 
                 onClose={() => setViewProfileId(null)}
                 userId={viewProfileId}
             />
+            <AvatarModal
+                isOpen={!!avatarPreview}
+                onClose={() => setAvatarPreview(null)}
+                src={avatarPreview?.src ?? null}
+                alt={avatarPreview?.alt}
+            />
         </>
     );
 };
 
-const RankItem = ({ player, isMe, onClick }: { player: Ranker, isMe: boolean, onClick?: () => void }) => {
+const RankItem = ({
+    player,
+    isMe,
+    onClick,
+    onAvatarClick
+}: {
+    player: Ranker;
+    isMe: boolean;
+    onClick?: () => void;
+    onAvatarClick?: () => void;
+}) => {
     const TierIcon = getTierIcon(player.tier);
     const tierColor = getTierColor(player.tier);
 
@@ -157,13 +225,21 @@ const RankItem = ({ player, isMe, onClick }: { player: Ranker, isMe: boolean, on
             </div>
 
             {/* Avatar */}
-            <div className={`relative w-10 h-10 rounded-full bg-gray-700 overflow-hidden border-2 ${isMe ? 'border-blue-400' : 'border-transparent'}`}>
+            <button
+                type="button"
+                className={`relative w-10 h-10 rounded-full bg-gray-700 overflow-hidden border-2 ${isMe ? 'border-blue-400' : 'border-transparent'} cursor-zoom-in`}
+                onClick={(event) => {
+                    event.stopPropagation();
+                    onAvatarClick?.();
+                }}
+                aria-label={`${player.nickname} avatar`}
+            >
                 {player.avatar_url ? (
                     <img src={player.avatar_url} alt={player.nickname} className="w-full h-full object-cover" />
                 ) : (
                     <UserIcon className="w-full h-full p-2 text-gray-400" />
                 )}
-            </div>
+            </button>
 
             {/* Info */}
             <div className="flex-1 min-w-0">
@@ -172,6 +248,9 @@ const RankItem = ({ player, isMe, onClick }: { player: Ranker, isMe: boolean, on
                     <span className={`font-bold truncate ${isMe ? 'text-blue-300' : 'text-gray-200'}`}>
                         {player.nickname}
                     </span>
+                    {typeof player.level === 'number' && (
+                        <LevelBadge level={player.level} size="xs" className="ml-1" />
+                    )}
                 </div>
                 <div className="flex items-center gap-1.5 mt-0.5">
                     {/* Tier Badge */}

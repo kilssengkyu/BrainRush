@@ -70,6 +70,9 @@ const Game: React.FC = () => {
     const warmupStart = gameState.startAt ? new Date(gameState.startAt).getTime() : 0;
     const warmupDiff = (warmupStart - now) / 1000;
     const isWarmup = warmupDiff > 0;
+    const countdownDiff = gameState.endAt ? (new Date(gameState.endAt).getTime() - now) / 1000 : 0;
+    const warmupCountdown = isWarmup ? warmupDiff : isCountdown ? countdownDiff : 0;
+    const showWarmupOverlay = isWarmup || isCountdown;
     const showEmojiBar = isWarmup || isTimeUp || isWaiting;
     const showEmojiOverlay = showEmojiBar || isFinished;
 
@@ -483,7 +486,7 @@ const Game: React.FC = () => {
                         className="w-full h-full p-4 relative"
                     >
                         {/* WARM UP OVERLAY */}
-                        {isWarmup && (
+                        {showWarmupOverlay && (
                             <div className="absolute inset-0 bg-black/90 z-50 flex flex-col items-center justify-center p-8 text-center backdrop-blur-sm">
                                 <motion.div
                                     initial={{ scale: 0.5, opacity: 0 }}
@@ -511,6 +514,7 @@ const Game: React.FC = () => {
                                         {gameState.gameType === 'BLANK' && t('fillBlanks.title')}
                                         {gameState.gameType === 'OPERATOR' && t('findOperator.title')}
                                         {gameState.gameType === 'LADDER' && t('ladder.title')}
+                                        {gameState.gameType === 'TAP_COLOR' && t('tapTheColor.title')}
                                         {gameState.gameType === 'AIM' && t('aim.title')}
                                         {gameState.gameType === 'MOST_COLOR' && t('mostColor.title')}
                                         {gameState.gameType === 'SORTING' && t('sorting.title')}
@@ -534,6 +538,7 @@ const Game: React.FC = () => {
                                         {gameState.gameType === 'BLANK' && t('fillBlanks.instruction')}
                                         {gameState.gameType === 'OPERATOR' && t('findOperator.instruction')}
                                         {gameState.gameType === 'LADDER' && t('ladder.instruction')}
+                                        {gameState.gameType === 'TAP_COLOR' && t('tapTheColor.memorize')}
                                         {gameState.gameType === 'AIM' && t('aim.instruction')}
                                         {gameState.gameType === 'MOST_COLOR' && t('mostColor.instruction')}
                                         {gameState.gameType === 'SORTING' && t('sorting.instruction')}
@@ -541,7 +546,7 @@ const Game: React.FC = () => {
                                     </p>
 
                                     <div className="text-9xl font-black font-mono text-white animate-pulse">
-                                        {Math.ceil(warmupDiff)}
+                                        {Math.max(0, Math.ceil(warmupCountdown))}
                                     </div>
                                     <div className="text-sm text-gray-400 mt-2 font-bold tracking-widest uppercase">{t('game.startingIn')}</div>
                                 </motion.div>

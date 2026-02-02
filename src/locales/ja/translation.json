@@ -121,8 +121,13 @@
         "volume": "音量",
         "back": "戻る",
         "deleteAccount": "アカウント削除",
-        "deleteAccountConfirm": "本当にアカウントを削除しますか？この操作は取り消せません。",
-        "logoutConfirm": "本当にログアウトしますか？"
+        "deleteAccountConfirm": "本当にアカウントを削除しますか？永久に削除され、取り消せません。",
+        "logoutConfirm": "本当にログアウトしますか？",
+        "restorePurchases": "購入を復元",
+        "restorePurchasesDesc": "広告削除などの非消耗型購入を復元します。",
+        "restorePurchasesSuccess": "購入の復元が完了しました。",
+        "restorePurchasesFail": "購入の復元に失敗しました。",
+        "restorePurchasesUnavailable": "この端末では購入をサポートしていません。"
     },
     "game": {
         "waiting": "ゲーム待機中...",
@@ -172,6 +177,9 @@
             "highscore": "ハイスコア",
             "rankWinRate": "ランク勝率"
         },
+        "guestTitle": "ゲストアカウント",
+        "guestDesc": "ゲストはログアウト・アプリ削除・端末変更でデータが消える可能性があります。Googleアカウントを連携してください。",
+        "linkGoogle": "Googleアカウント連携",
         "statsTitle": "能力値",
         "stats": {
             "speed": "スピード",

@@ -63,3 +63,11 @@ export const purchaseProduct = async (productId: ShopProductId) => {
         quantity: 1,
     });
 };
+
+export const restorePurchases = async () => {
+    const ready = await ensureReady();
+    if (!ready) {
+        throw new Error('Billing not supported');
+    }
+    await NativePurchases.restorePurchases();
+};

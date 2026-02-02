@@ -18,6 +18,7 @@ import HexRadar from '../components/ui/HexRadar';
 import { getTierFromMMR, getTierColor, getTierIcon } from '../utils/rankUtils';
 import LevelBadge from '../components/ui/LevelBadge';
 import { getLevelFromXp } from '../utils/levelUtils';
+import AvatarModal from '../components/ui/AvatarModal';
 
 const HIGHSCORE_GAME_TYPES = [
     { type: 'RPS', labelKey: 'rps.title' },
@@ -45,7 +46,7 @@ const HIGHSCORE_GAME_TYPES = [
 ] as const;
 
 const Profile = () => {
-    const { user, profile, signOut, refreshProfile } = useAuth();
+    const { user, profile, signOut, refreshProfile, linkWithGoogle } = useAuth();
     const { playSound } = useSound();
     const { showToast, confirm } = useUI();
     const navigate = useNavigate();
@@ -61,6 +62,7 @@ const Profile = () => {
     const [highscores, setHighscores] = useState<Record<string, number>>({});
     const [rankStats, setRankStats] = useState<Record<string, { wins: number; losses: number; draws: number }>>({});
     const [isHighscoresLoading, setIsHighscoresLoading] = useState(false);
+    const [avatarPreview, setAvatarPreview] = useState<{ src: string; alt: string } | null>(null);
 
     const MAX_AVATAR_SIZE = 2 * 1024 * 1024; // 2MB
     const ALLOWED_AVATAR_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -509,6 +511,7 @@ const Profile = () => {
         observation: profile?.observation || 0
     };
     const hasSocialNotifications = pendingRequestsCount > 0 || unreadChatCount > 0;
+    const isGuest = Boolean(user?.is_anonymous || user?.app_metadata?.provider === 'anonymous');
 
     return (
         <div className="h-[100dvh] bg-gray-900 text-white flex flex-col items-center p-4 pt-[calc(env(safe-area-inset-top)+1rem)] relative overflow-hidden">
@@ -555,16 +558,49 @@ const Profile = () => {
                             exit={{ opacity: 0, x: 20 }}
                             className="w-full max-w-md bg-gray-800/50 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl relative z-10"
                         >
+                            {isGuest && (
+                                <div className="mb-6 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-center">
+                                    <div className="text-sm font-bold text-amber-200">
+                                        {t('profile.guestTitle', '게스트 계정')}
+                                    </div>
+                                    <div className="mt-1 text-xs text-amber-100/80">
+                                        {t('profile.guestDesc', '게스트 계정은 로그아웃/앱 삭제/기기 변경 시 데이터가 사라질 수 있어요. 구글 계정으로 연동해 주세요.')}
+                                    </div>
+                                    <button
+                                        onClick={async () => {
+                                            try {
+                                                await linkWithGoogle();
+                                            } catch (err) {
+                                                console.error('Failed to link google:', err);
+                                                showToast(t('common.error'), 'error');
+                                            }
+                                        }}
+                                        className="mt-3 inline-flex items-center justify-center rounded-full bg-white/10 px-4 py-2 text-xs font-bold text-amber-100 hover:bg-white/20 transition-colors"
+                                    >
+                                        {t('profile.linkGoogle', '구글 계정 연동')}
+                                    </button>
+                                </div>
+                            )}
+
                             {/* Avatar Section */}
                             <div className="flex flex-col items-center mb-8">
                                 <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 p-[3px] mb-4">
-                                    <div className="w-full h-full rounded-full bg-gray-900 flex items-center justify-center overflow-hidden">
+                                    <button
+                                        type="button"
+                                        className="w-full h-full rounded-full bg-gray-900 flex items-center justify-center overflow-hidden cursor-zoom-in"
+                                        onClick={() => {
+                                            if (profile?.avatar_url) {
+                                                setAvatarPreview({ src: profile.avatar_url, alt: nickname || 'Avatar' });
+                                            }
+                                        }}
+                                        aria-label="Open avatar"
+                                    >
                                         {profile?.avatar_url ? (
                                             <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
                                         ) : (
                                             <UserIcon className="w-12 h-12 text-gray-400" />
                                         )}
-                                    </div>
+                                    </button>
                                     <LevelBadge level={level} size="md" className="absolute -bottom-1 -right-1 ring-2 ring-gray-900" />
                                 </div>
                                 <input
@@ -835,6 +871,12 @@ const Profile = () => {
                     </motion.div>
                 )}
             </AnimatePresence>
+            <AvatarModal
+                isOpen={!!avatarPreview}
+                onClose={() => setAvatarPreview(null)}
+                src={avatarPreview?.src ?? null}
+                alt={avatarPreview?.alt}
+            />
         </div>
     );
 };

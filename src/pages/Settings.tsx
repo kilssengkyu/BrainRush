@@ -1,13 +1,20 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Globe, Volume2, VolumeX } from 'lucide-react';
+import { ChevronLeft, Globe, Volume2, VolumeX, RefreshCcw } from 'lucide-react';
 import { useSound } from '../contexts/SoundContext';
+import { useAuth } from '../contexts/AuthContext';
+import { useUI } from '../contexts/UIContext';
+import { restorePurchases } from '../lib/purchaseService';
 
 const Settings = () => {
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
     const { isMuted, toggleMute, volume, setVolume, playSound } = useSound();
+    const { user, refreshProfile } = useAuth();
+    const { showToast } = useUI();
+    const [isRestoring, setIsRestoring] = useState(false);
 
     const languages = [
         { code: 'ko', label: '한국어', flag: '🇰🇷' },
@@ -19,6 +26,26 @@ const Settings = () => {
     const changeLanguage = (lng: string) => {
         i18n.changeLanguage(lng);
         playSound('click');
+    };
+
+    const handleRestorePurchases = async () => {
+        if (!user) {
+            showToast(t('auth.loginRequired'), 'error');
+            return;
+        }
+        setIsRestoring(true);
+        try {
+            await restorePurchases();
+            await refreshProfile();
+            showToast(t('settings.restorePurchasesSuccess', 'Purchases restored.'), 'success');
+        } catch (err: any) {
+            const message = err?.message?.includes('Billing not supported')
+                ? t('settings.restorePurchasesUnavailable', 'Billing not supported on this device.')
+                : t('settings.restorePurchasesFail', 'Failed to restore purchases.');
+            showToast(message, 'error');
+        } finally {
+            setIsRestoring(false);
+        }
     };
 
     return (
@@ -115,6 +142,26 @@ const Settings = () => {
                                 className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500 disabled:opacity-50"
                             />
                         </div>
+                    </div>
+                </section>
+
+                {/* Purchases Section */}
+                <section className="space-y-4">
+                    <div className="flex items-center gap-3 text-emerald-400 mb-2">
+                        <RefreshCcw size={24} />
+                        <h2 className="text-xl font-semibold">{t('settings.restorePurchases', 'Restore Purchases')}</h2>
+                    </div>
+                    <div className="bg-white/5 p-6 rounded-xl border border-white/10 space-y-4 backdrop-blur-md">
+                        <p className="text-sm text-gray-400">
+                            {t('settings.restorePurchasesDesc', 'Restore non-consumable purchases such as ad removal.')}
+                        </p>
+                        <button
+                            onClick={() => { playSound('click'); handleRestorePurchases(); }}
+                            disabled={isRestoring}
+                            className="w-full px-5 py-3 rounded-xl bg-emerald-600/80 hover:bg-emerald-600 text-white font-bold transition-colors disabled:opacity-50"
+                        >
+                            {isRestoring ? t('common.loading') : t('settings.restorePurchases', 'Restore Purchases')}
+                        </button>
                     </div>
                 </section>
 
