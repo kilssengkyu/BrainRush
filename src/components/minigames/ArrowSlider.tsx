@@ -106,7 +106,7 @@ const ArrowSlider: React.FC<ArrowSliderProps> = ({ seed, onScore, isPlaying }) =
         if (swipeDir === correctDir) {
             // Correct
             setFeedback('correct');
-            onScore(50 + Math.min(scoreCount * 5, 50)); // Bonus for streak/progress
+            onScore(25);
             setScoreCount(prev => prev + 1);
             playSound('correct');
 
