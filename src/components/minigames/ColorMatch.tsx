@@ -1,5 +1,4 @@
 import React, { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { SeededRandom } from '../../utils/seededRandom';
 import { useSound } from '../../contexts/SoundContext';
@@ -25,7 +24,6 @@ const ColorMatch: React.FC<ColorMatchProps> = ({ seed, onScore, isPlaying }) => 
     const [panelIndex, setPanelIndex] = useState(0);
     const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
     const [shakeId, setShakeId] = useState<number | null>(null);
-    const [animationKey, setAnimationKey] = useState(0);
     const [isSolved, setIsSolved] = useState(false);
 
     // Difficulty
@@ -115,7 +113,6 @@ const ColorMatch: React.FC<ColorMatchProps> = ({ seed, onScore, isPlaying }) => 
                     setPanelIndex(prev => prev + 1);
                     setSelectedIndices(new Set());
                     setIsSolved(false);
-                    setAnimationKey(prev => prev + 1);
                 }, 250);
             }
         } else {
@@ -147,43 +144,29 @@ const ColorMatch: React.FC<ColorMatchProps> = ({ seed, onScore, isPlaying }) => 
             <div className="text-gray-400 text-sm mb-4">{t('color.instruction')}</div>
 
             <div className={`grid gap-6 ${currentPanel.items.length === 2 ? 'grid-cols-2' : 'grid-cols-2'}`}>
-                <AnimatePresence>
-                    {currentPanel.items.map((item, idx) => (
-                        <motion.button
-                            key={`${panelIndex}-${idx}-${animationKey}`}
-                            initial={{ scale: 0.8, opacity: 0 }}
-                            animate={
-                                shakeId === idx
-                                    ? { x: [-5, 5, -5, 5, 0], backgroundColor: '#ef4444' }
-                                    : {
-                                        scale: 1,
-                                        opacity: 1,
-                                        borderColor: COLORS[item.visual].hex
-                                    }
-                            }
-                            transition={{ duration: 0.25 }}
-                            exit={{ scale: 0, opacity: 0 }}
-                            onPointerDown={(e) => {
-                                e.preventDefault();
-                                if (e.currentTarget.setPointerCapture) {
-                                    try {
-                                        e.currentTarget.setPointerCapture(e.pointerId);
-                                    } catch {
-                                        // Ignore capture errors on unsupported pointer types
-                                    }
+                {currentPanel.items.map((item, idx) => (
+                    <button
+                        key={`${panelIndex}-${idx}`}
+                        onPointerDown={(e) => {
+                            e.preventDefault();
+                            if (e.currentTarget.setPointerCapture) {
+                                try {
+                                    e.currentTarget.setPointerCapture(e.pointerId);
+                                } catch {
+                                    // Ignore capture errors on unsupported pointer types
                                 }
-                                handleItemClick(idx);
-                            }}
-                            className={`w-36 h-36 rounded-2xl flex items-center justify-center text-4xl font-bold bg-gray-900 border-8 transition-all shadow-lg ${selectedIndices.has(idx) ? 'ring-4 ring-white/30' : ''} ${COLORS[item.visual].tailwind}`}
-                            style={{
-                                borderColor: COLORS[item.visual].hex,
-                                backgroundColor: selectedIndices.has(idx) ? '#ffffff33' : '#111827'
-                            }}
-                        >
-                            {t(`color.${item.text}`)}
-                        </motion.button>
-                    ))}
-                </AnimatePresence>
+                            }
+                            handleItemClick(idx);
+                        }}
+                        className={`w-36 h-36 rounded-2xl flex items-center justify-center text-4xl font-bold bg-gray-900 border-8 shadow-lg transition-colors active:scale-95 ${shakeId === idx ? 'animate-shake' : ''} ${selectedIndices.has(idx) ? 'ring-4 ring-white/30' : ''} ${COLORS[item.visual].tailwind}`}
+                        style={{
+                            borderColor: COLORS[item.visual].hex,
+                            backgroundColor: selectedIndices.has(idx) ? '#ffffff33' : '#111827'
+                        }}
+                    >
+                        {t(`color.${item.text}`)}
+                    </button>
+                ))}
             </div>
         </div>
     );

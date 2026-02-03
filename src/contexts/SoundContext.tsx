@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { Howl, Howler } from 'howler';
 import { Capacitor } from '@capacitor/core';
+import type { PluginListenerHandle } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 import { NativeAudio } from '@capgo/native-audio';
@@ -255,25 +256,6 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
     }, [isMuted, bgmVolume, ensureNativeBgmReady]);
 
-    useEffect(() => {
-        if (!IS_NATIVE_PLATFORM) return;
-        const handler = CapacitorApp.addListener('appStateChange', ({ isActive }) => {
-            if (!isActive) {
-                lastBgmRef.current = currentBGM.current;
-                stopBGM();
-                return;
-            }
-            const resumeType = lastBgmRef.current;
-            if (resumeType) {
-                playBGM(resumeType);
-            }
-        });
-        return () => {
-            handler.remove();
-        };
-    }, [playBGM, stopBGM]);
-
-
     const triggerHaptic = async (type: SoundType) => {
         if (!isVibrationEnabled) return;
         try {
@@ -311,7 +293,6 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const playBGM = useCallback((type: BGMType) => {
         if (IS_NATIVE_PLATFORM) {
             if (currentBGM.current === type) return;
-            const previous = currentBGM.current;
             currentBGM.current = type;
             lastBgmRef.current = type;
 
@@ -390,6 +371,39 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             setTimeout(() => sound.stop(), 1000);
         }
     }, [ensureNativeBgmReady]);
+
+    useEffect(() => {
+        if (!IS_NATIVE_PLATFORM) return;
+        let handler: PluginListenerHandle | null = null;
+        let cancelled = false;
+
+        void (async () => {
+            const listener = await CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+                if (!isActive) {
+                    lastBgmRef.current = currentBGM.current;
+                    stopBGM();
+                    return;
+                }
+                const resumeType = lastBgmRef.current;
+                if (resumeType) {
+                    playBGM(resumeType);
+                }
+            });
+
+            if (cancelled) {
+                listener.remove();
+                return;
+            }
+            handler = listener;
+        })();
+
+        return () => {
+            cancelled = true;
+            if (handler) {
+                handler.remove();
+            }
+        };
+    }, [playBGM, stopBGM]);
 
     const toggleMute = () => setIsMuted(prev => !prev);
     const setVolume = (vol: number) => setVolumeState(Math.max(0, Math.min(1, vol)));
