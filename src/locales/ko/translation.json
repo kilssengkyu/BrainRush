@@ -334,6 +334,13 @@
     "instruction": "초록색을 파란 목표까지 이동하세요. 버튼 배치가 바뀔 수 있어요.",
     "shuffle": "셔플"
   },
+  "blindPath": {
+    "title": "블라인드 패스",
+    "instruction": "보이지 않는 길을 찾아가세요.",
+    "memorizeHint": "길을 외우세요!",
+    "runHint": "길을 따라가세요!",
+    "memorized": "기억함!"
+  },
   "balls": {
     "title": "볼 카운트",
     "instruction": "움직이는 공 개수를 세고 정답을 눌러주세요."

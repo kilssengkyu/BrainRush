@@ -336,6 +336,13 @@
         "instruction": "Move the green block to the blue goal. Buttons may shuffle.",
         "shuffle": "Shuffle"
     },
+    "blindPath": {
+        "title": "Blind Path",
+        "instruction": "Find your way on the unseen path.",
+        "memorizeHint": "Memorize the path!",
+        "runHint": "Follow the path!",
+        "memorized": "Memorized!"
+    },
     "balls": {
         "title": "Ball Counter",
         "instruction": "Count the moving balls and tap the correct number."

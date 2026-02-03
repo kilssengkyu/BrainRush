@@ -304,6 +304,13 @@
         "instruction": "把绿色移动到蓝色目标，按钮布局可能会变。",
         "shuffle": "打乱"
     },
+    "blindPath": {
+        "title": "盲行路径",
+        "instruction": "找到看不见的道路并前进。",
+        "memorizeHint": "记住路线！",
+        "runHint": "沿路前进！",
+        "memorized": "记住了！"
+    },
     "balls": {
         "title": "数球",
         "instruction": "数清移动的球并点击正确数字。"

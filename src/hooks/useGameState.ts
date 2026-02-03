@@ -4,7 +4,7 @@ import { isBotId } from '../constants/bot';
 
 export interface GameState {
     status: 'waiting' | 'countdown' | 'playing' | 'finished';
-    gameType: 'RPS' | 'NUMBER' | 'MATH' | 'TEN' | 'COLOR' | 'MEMORY' | 'SEQUENCE' | 'LARGEST' | 'PAIR' | 'UPDOWN' | 'SEQUENCE_NORMAL' | 'NUMBER_DESC' | 'SLIDER' | 'ARROW' | 'BLANK' | 'OPERATOR' | 'LADDER' | 'TAP_COLOR' | 'AIM' | 'MOST_COLOR' | 'SORTING' | 'SPY' | 'PATH' | 'BALLS' | null;
+    gameType: 'RPS' | 'NUMBER' | 'MATH' | 'TEN' | 'COLOR' | 'MEMORY' | 'SEQUENCE' | 'LARGEST' | 'PAIR' | 'UPDOWN' | 'SEQUENCE_NORMAL' | 'NUMBER_DESC' | 'SLIDER' | 'ARROW' | 'BLANK' | 'OPERATOR' | 'LADDER' | 'TAP_COLOR' | 'AIM' | 'MOST_COLOR' | 'SORTING' | 'SPY' | 'PATH' | 'BALLS' | 'BLIND_PATH' | null;
     seed: string | null;
     startAt: string | null;
     endAt: string | null;

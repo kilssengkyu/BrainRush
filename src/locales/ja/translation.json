@@ -305,6 +305,13 @@
         "instruction": "緑を青いゴールまで移動。ボタン配置が変わることがあります。",
         "shuffle": "シャッフル"
     },
+    "blindPath": {
+        "title": "ブラインドパス",
+        "instruction": "見えない道を見つけて進もう。",
+        "memorizeHint": "道を覚えて！",
+        "runHint": "道を進め！",
+        "memorized": "覚えた！"
+    },
     "balls": {
         "title": "ボールカウント",
         "instruction": "動くボールの数を数えて正解をタップ。"

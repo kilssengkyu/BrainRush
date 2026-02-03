@@ -27,6 +27,7 @@ import SortingGame from '../components/minigames/SortingGame';
 import FindTheSpy from '../components/minigames/FindTheSpy';
 import PathRunner from '../components/minigames/PathRunner';
 import BallCounter from '../components/minigames/BallCounter';
+import BlindPathRunner from '../components/minigames/BlindPathRunner';
 import ScoreProgressBar from '../components/ui/ScoreProgressBar';
 import Flag from '../components/ui/Flag';
 import { isBotId } from '../constants/bot';
@@ -524,6 +525,7 @@ const Game: React.FC = () => {
                                         {gameState.gameType === 'SPY' && t('spy.title')}
                                         {gameState.gameType === 'PATH' && t('path.title')}
                                         {gameState.gameType === 'BALLS' && t('balls.title')}
+                                        {gameState.gameType === 'BLIND_PATH' && t('blindPath.title')}
                                     </h2>
                                     <p className="text-2xl text-white mb-12 font-bold max-w-2xl">
                                         {gameState.gameType === 'RPS' && t('rps.instruction')}
@@ -550,6 +552,7 @@ const Game: React.FC = () => {
                                         {gameState.gameType === 'SPY' && t('spy.instruction')}
                                         {gameState.gameType === 'PATH' && t('path.instruction')}
                                         {gameState.gameType === 'BALLS' && t('balls.instruction')}
+                                        {gameState.gameType === 'BLIND_PATH' && t('blindPath.instruction')}
                                     </p>
 
                                 </motion.div>
@@ -653,6 +656,9 @@ const Game: React.FC = () => {
                                     )}
                                     {gameState.gameType === 'BALLS' && (
                                         <BallCounter seed={gameState.seed} onScore={incrementScore} isPlaying />
+                                    )}
+                                    {gameState.gameType === 'BLIND_PATH' && (
+                                        <BlindPathRunner seed={gameState.seed} onScore={incrementScore} isPlaying />
                                     )}
                                 </>
                             )}
