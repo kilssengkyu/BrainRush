@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { Howl, Howler } from 'howler';
 import { Capacitor } from '@capacitor/core';
+import { App as CapacitorApp } from '@capacitor/app';
 import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 import { NativeAudio } from '@capgo/native-audio';
 
@@ -102,6 +103,7 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     });
 
     const currentBGM = useRef<BGMType | null>(null);
+    const lastBgmRef = useRef<BGMType | null>(null);
     const nativeBgmReady = useRef(false);
     const nativeBgmLoading = useRef<Promise<void> | null>(null);
 
@@ -123,6 +125,10 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                         )
                     );
                     nativeBgmReady.current = true;
+                    // Ensure no lingering native loops from previous webviews.
+                    await Promise.all(
+                        Object.keys(NATIVE_BGM_FILES).map((key) => NativeAudio.stop({ assetId: key }))
+                    );
                 } catch (err) {
                     console.error('[BGM] Native preload failed', err);
                     nativeBgmReady.current = false;
@@ -249,6 +255,24 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
     }, [isMuted, bgmVolume, ensureNativeBgmReady]);
 
+    useEffect(() => {
+        if (!IS_NATIVE_PLATFORM) return;
+        const handler = CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+            if (!isActive) {
+                lastBgmRef.current = currentBGM.current;
+                stopBGM();
+                return;
+            }
+            const resumeType = lastBgmRef.current;
+            if (resumeType) {
+                playBGM(resumeType);
+            }
+        });
+        return () => {
+            handler.remove();
+        };
+    }, [playBGM, stopBGM]);
+
 
     const triggerHaptic = async (type: SoundType) => {
         if (!isVibrationEnabled) return;
@@ -289,6 +313,7 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             if (currentBGM.current === type) return;
             const previous = currentBGM.current;
             currentBGM.current = type;
+            lastBgmRef.current = type;
 
             void (async () => {
                 const ready = await ensureNativeBgmReady();
@@ -297,9 +322,9 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                     return;
                 }
                 try {
-                    if (previous) {
-                        await NativeAudio.stop({ assetId: previous });
-                    }
+                    await Promise.all(
+                        Object.keys(NATIVE_BGM_FILES).map((key) => NativeAudio.stop({ assetId: key }))
+                    );
                     await NativeAudio.loop({ assetId: type });
                     await NativeAudio.setVolume({
                         assetId: type,

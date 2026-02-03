@@ -1,82 +1,6 @@
--- Migration: add_skill_stats.sql
--- Add player skill stats and apply per-round stat gains on win
+-- Migration: fix_skill_stats_finish_game.sql
+-- Restore per-round skill stat gains (+2 primary, +1 secondary) in finish_game.
 
--- 1) Add columns to profiles
-ALTER TABLE public.profiles
-ADD COLUMN IF NOT EXISTS speed int DEFAULT 0,
-ADD COLUMN IF NOT EXISTS memory int DEFAULT 0,
-ADD COLUMN IF NOT EXISTS judgment int DEFAULT 0,
-ADD COLUMN IF NOT EXISTS calculation int DEFAULT 0,
-ADD COLUMN IF NOT EXISTS accuracy int DEFAULT 0,
-ADD COLUMN IF NOT EXISTS observation int DEFAULT 0;
-
-UPDATE public.profiles
-SET speed = COALESCE(speed, 0),
-    memory = COALESCE(memory, 0),
-    judgment = COALESCE(judgment, 0),
-    calculation = COALESCE(calculation, 0),
-    accuracy = COALESCE(accuracy, 0),
-    observation = COALESCE(observation, 0)
-WHERE speed IS NULL
-   OR memory IS NULL
-   OR judgment IS NULL
-   OR calculation IS NULL
-   OR accuracy IS NULL
-   OR observation IS NULL;
-
--- 2) Stat increment mapping (primary +2, secondary +1)
-CREATE OR REPLACE FUNCTION stat_increments(p_game_type text)
-RETURNS TABLE (
-    speed int,
-    memory int,
-    judgment int,
-    calculation int,
-    accuracy int,
-    observation int
-) AS $$
-DECLARE
-    v_speed int := 0;
-    v_memory int := 0;
-    v_judgment int := 0;
-    v_calculation int := 0;
-    v_accuracy int := 0;
-    v_observation int := 0;
-BEGIN
-    CASE p_game_type
-        WHEN 'AIM' THEN v_speed := 2; v_accuracy := 1;
-        WHEN 'RPS' THEN v_speed := 2; v_judgment := 1;
-        WHEN 'UPDOWN' THEN v_judgment := 2; v_speed := 1;
-        WHEN 'ARROW' THEN v_speed := 2; v_judgment := 1;
-        WHEN 'SLIDER' THEN v_accuracy := 2; v_speed := 1;
-        WHEN 'MEMORY' THEN v_memory := 2; v_accuracy := 1;
-        WHEN 'SEQUENCE' THEN v_memory := 2; v_accuracy := 1;
-        WHEN 'SEQUENCE_NORMAL' THEN v_memory := 2; v_accuracy := 1;
-        WHEN 'SPY' THEN v_memory := 2; v_observation := 1;
-        WHEN 'PAIR' THEN v_memory := 2; v_observation := 1;
-        WHEN 'COLOR' THEN v_observation := 2; v_accuracy := 1;
-        WHEN 'MOST_COLOR' THEN v_observation := 2; v_judgment := 1;
-        WHEN 'TAP_COLOR' THEN v_observation := 2; v_speed := 1;
-        WHEN 'MATH' THEN v_calculation := 2; v_accuracy := 1;
-        WHEN 'TEN' THEN v_calculation := 2; v_judgment := 1;
-        WHEN 'BLANK' THEN v_calculation := 2; v_accuracy := 1;
-        WHEN 'OPERATOR' THEN v_calculation := 2; v_judgment := 1;
-        WHEN 'LARGEST' THEN v_calculation := 2; v_judgment := 1;
-        WHEN 'NUMBER' THEN v_accuracy := 2; v_judgment := 1;
-        WHEN 'NUMBER_DESC' THEN v_accuracy := 2; v_judgment := 1;
-        WHEN 'NUMBER_ASC' THEN v_accuracy := 2; v_judgment := 1;
-        WHEN 'SORTING' THEN v_accuracy := 2; v_judgment := 1;
-        WHEN 'LADDER' THEN v_judgment := 2; v_accuracy := 1;
-        WHEN 'PATH' THEN v_speed := 2; v_judgment := 1;
-        WHEN 'BALLS' THEN v_observation := 2; v_accuracy := 1;
-        ELSE
-            -- no-op
-    END CASE;
-
-    RETURN QUERY SELECT v_speed, v_memory, v_judgment, v_calculation, v_accuracy, v_observation;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
-
--- 3) Update finish_game to apply per-round stat gains
 CREATE OR REPLACE FUNCTION finish_game(p_room_id uuid)
 RETURNS void AS $$
 DECLARE
@@ -178,8 +102,8 @@ BEGIN
     -- STATS UPDATE LOGIC
     IF v_winner IS NOT NULL AND NOT v_is_draw THEN
         IF v_session.mode = 'rank' THEN
-             -- RANK MODE: Update MMR + Standard Wins/Losses
-             IF v_winner NOT LIKE 'guest_%' AND v_loser NOT LIKE 'guest_%' THEN
+             -- RANK MODE: Update MMR + Standard Wins/Losses (only for real users)
+             IF v_session.player1_id ~ '^[0-9a-fA-F-]{36}$' AND v_session.player2_id ~ '^[0-9a-fA-F-]{36}$' THEN
                  SELECT mmr INTO v_p1_mmr FROM profiles WHERE id = v_session.player1_id::uuid;
                  SELECT mmr INTO v_p2_mmr FROM profiles WHERE id = v_session.player2_id::uuid;
 
@@ -202,11 +126,10 @@ BEGIN
              END IF;
         ELSIF v_session.mode = 'normal' THEN
              -- NORMAL MODE: Update Casual Wins/Losses (No MMR)
-             -- Only for real users
-             IF v_winner NOT LIKE 'guest_%' THEN
+             IF v_winner ~ '^[0-9a-fA-F-]{36}$' THEN
                  UPDATE profiles SET casual_wins = casual_wins + 1 WHERE id = v_winner::uuid;
              END IF;
-             IF v_loser NOT LIKE 'guest_%' THEN
+             IF v_loser ~ '^[0-9a-fA-F-]{36}$' THEN
                  UPDATE profiles SET casual_losses = casual_losses + 1 WHERE id = v_loser::uuid;
              END IF;
         ELSE
@@ -215,9 +138,26 @@ BEGIN
         END IF;
     END IF;
 
-    -- Skill stats: per-round winner gains (rank/normal only, exclude guests)
+    -- XP/Level Update (Rank + Normal only)
     IF v_session.mode IN ('rank', 'normal') THEN
-        IF v_session.player1_id NOT LIKE 'guest_%' THEN
+        IF v_session.player1_id ~ '^[0-9a-fA-F-]{36}$' THEN
+            UPDATE profiles
+            SET xp = COALESCE(xp, 0) + (10 + CASE WHEN v_winner = v_session.player1_id THEN 5 ELSE 0 END),
+                level = floor((-(45)::numeric + sqrt((45 * 45) + (40 * (COALESCE(xp, 0) + (10 + CASE WHEN v_winner = v_session.player1_id THEN 5 ELSE 0 END))))) / 10) + 1
+            WHERE id = v_session.player1_id::uuid;
+        END IF;
+
+        IF v_session.player2_id ~ '^[0-9a-fA-F-]{36}$' THEN
+            UPDATE profiles
+            SET xp = COALESCE(xp, 0) + (10 + CASE WHEN v_winner = v_session.player2_id THEN 5 ELSE 0 END),
+                level = floor((-(45)::numeric + sqrt((45 * 45) + (40 * (COALESCE(xp, 0) + (10 + CASE WHEN v_winner = v_session.player2_id THEN 5 ELSE 0 END))))) / 10) + 1
+            WHERE id = v_session.player2_id::uuid;
+        END IF;
+    END IF;
+
+    -- Skill stats: per-round winner gains (rank/normal only, exclude guests/bots)
+    IF v_session.mode IN ('rank', 'normal') THEN
+        IF v_session.player1_id ~ '^[0-9a-fA-F-]{36}$' THEN
             UPDATE profiles
             SET speed = LEAST(999, COALESCE(speed, 0) + v_p1_speed),
                 memory = LEAST(999, COALESCE(memory, 0) + v_p1_memory),
@@ -228,7 +168,7 @@ BEGIN
             WHERE id = v_session.player1_id::uuid;
         END IF;
 
-        IF v_session.player2_id NOT LIKE 'guest_%' THEN
+        IF v_session.player2_id ~ '^[0-9a-fA-F-]{36}$' THEN
             UPDATE profiles
             SET speed = LEAST(999, COALESCE(speed, 0) + v_p2_speed),
                 memory = LEAST(999, COALESCE(memory, 0) + v_p2_memory),

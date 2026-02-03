@@ -24,6 +24,8 @@ const LEVEL_STEP = 3;
 const MAX_BALLS = 28;
 const SPEED_MIN = 35;
 const SPEED_MAX = 75;
+const SPEED_SCALE_STEP = 0.12;
+const SPEED_SCALE_MAX = 2.2;
 const SCORE_WRONG = -50;
 const COLOR_PALETTE = ['#7DD3FC', '#FCA5A5', '#FCD34D', '#A7F3D0', '#C4B5FD', '#F9A8D4'];
 
@@ -35,6 +37,7 @@ const BallCounter: React.FC<BallCounterProps> = ({ seed, onScore, isPlaying }) =
     const boundsRef = useRef({ width: 0, height: 0 });
     const rngRef = useRef<SeededRandom | null>(null);
     const flashTimerRef = useRef<number | null>(null);
+    const speedScaleRef = useRef(1);
 
     const [balls, setBalls] = useState<Ball[]>([]);
     const [options, setOptions] = useState<number[]>([]);
@@ -106,7 +109,8 @@ const BallCounter: React.FC<BallCounterProps> = ({ seed, onScore, isPlaying }) =
         for (let i = 0; i < count; i += 1) {
             const radius = (rng ? rng.next() : Math.random()) * 4 + 8;
             const angle = (rng ? rng.next() : Math.random()) * Math.PI * 2;
-            const speed = (rng ? rng.next() : Math.random()) * (SPEED_MAX - SPEED_MIN) + SPEED_MIN;
+            const baseSpeed = (rng ? rng.next() : Math.random()) * (SPEED_MAX - SPEED_MIN) + SPEED_MIN;
+            const speed = baseSpeed * speedScaleRef.current;
             const vx = Math.cos(angle) * speed;
             const vy = Math.sin(angle) * speed;
             const x = (rng ? rng.next() : Math.random()) * (width - radius * 2) + radius;
@@ -137,6 +141,7 @@ const BallCounter: React.FC<BallCounterProps> = ({ seed, onScore, isPlaying }) =
     useEffect(() => {
         if (!seed) return;
         rngRef.current = new SeededRandom(`${seed}-balls`);
+        speedScaleRef.current = 1;
         setCorrectCount(0);
         setFeedback(null);
         setCurrentColor(pickNextColor());
@@ -163,6 +168,7 @@ const BallCounter: React.FC<BallCounterProps> = ({ seed, onScore, isPlaying }) =
             onScore(currentCount * 10);
             const next = correctCount + 1;
             setCorrectCount(next);
+            speedScaleRef.current = Math.min(speedScaleRef.current + SPEED_SCALE_STEP, SPEED_SCALE_MAX);
             triggerFeedback('correct');
             setCurrentColor(prev => pickNextColor(prev));
             startRound(next);

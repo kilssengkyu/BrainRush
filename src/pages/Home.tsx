@@ -91,7 +91,12 @@ const Home = () => {
                 .from('chat_messages')
                 .select('id', { count: 'exact', head: true })
                 .eq('receiver_id', user.id)
-                .eq('is_read', false);
+                .eq('is_read', false)
+                .not('content', 'like', 'INVITE:%')
+                .not('content', 'like', 'INVITE_ACCEPTED:%')
+                .not('content', 'like', 'INVITE_REJECTED:%')
+                .not('content', 'like', 'INVITE_BUSY:%')
+                .not('content', 'like', 'INVITE_CANCELLED:%');
             if (!error) setUnreadChatCount(count || 0);
         };
 

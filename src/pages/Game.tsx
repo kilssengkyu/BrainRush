@@ -67,13 +67,12 @@ const Game: React.FC = () => {
     const isCountdownActive = Boolean(
         isCountdown || (gameState.startAt && new Date(gameState.startAt).getTime() > (Date.now() + serverOffset))
     );
+    const isUrgentRound = isPlaying && !isCountdownActive && gameState.remainingTime <= 5 && gameState.remainingTime > 0;
 
     const now = Date.now() + serverOffset;
     const warmupStart = gameState.startAt ? new Date(gameState.startAt).getTime() : 0;
     const warmupDiff = (warmupStart - now) / 1000;
     const isWarmup = warmupDiff > 0;
-    const countdownDiff = gameState.endAt ? (new Date(gameState.endAt).getTime() - now) / 1000 : 0;
-    const warmupCountdown = isWarmup ? warmupDiff : isCountdown ? countdownDiff : 0;
     const showWarmupOverlay = isWarmup || isCountdown;
     const showEmojiBar = isWarmup || isTimeUp || isWaiting;
     const showEmojiOverlay = showEmojiBar || isFinished;
@@ -338,6 +337,8 @@ const Game: React.FC = () => {
     return (
         <div className="relative w-full h-[100dvh] bg-gray-900 text-white overflow-hidden flex flex-col font-sans select-none pt-[env(safe-area-inset-top)]">
 
+            {isUrgentRound && <div className="round-urgent-frame z-[70]" aria-hidden="true" />}
+
             {/* Top Info Bar (Timer & Scores) */}
             {!isFinished && (
                 <header className="h-24 w-full bg-gray-800/80 backdrop-blur-md flex items-center justify-between px-6 shadow-lg z-50 relative">
@@ -551,10 +552,6 @@ const Game: React.FC = () => {
                                         {gameState.gameType === 'BALLS' && t('balls.instruction')}
                                     </p>
 
-                                    <div className="text-9xl font-black font-mono text-white animate-pulse">
-                                        {Math.max(0, Math.ceil(warmupCountdown))}
-                                    </div>
-                                    <div className="text-sm text-gray-400 mt-2 font-bold tracking-widest uppercase">{t('game.startingIn')}</div>
                                 </motion.div>
                             </div>
                         )}

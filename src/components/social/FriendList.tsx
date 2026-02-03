@@ -193,7 +193,12 @@ const FriendList: React.FC<FriendListProps> = ({ onChatClick, onChallengeClick, 
                 .from('chat_messages')
                 .select('id, sender_id')
                 .eq('receiver_id', user.id)
-                .eq('is_read', false);
+                .eq('is_read', false)
+                .not('content', 'like', 'INVITE:%')
+                .not('content', 'like', 'INVITE_ACCEPTED:%')
+                .not('content', 'like', 'INVITE_REJECTED:%')
+                .not('content', 'like', 'INVITE_BUSY:%')
+                .not('content', 'like', 'INVITE_CANCELLED:%');
 
             if (error) throw error;
 

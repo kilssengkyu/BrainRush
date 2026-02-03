@@ -66,49 +66,52 @@ const AimingGame: React.FC<AimingGameProps> = ({ seed, onScore, isPlaying }) => 
 
     const handledTargets = useRef<Set<number>>(new Set());
 
-    const spawnTarget = useCallback(() => {
+    const spawnTargets = useCallback((count: number) => {
         if (!rng.current) return;
 
         const { duration, penaltyChance } = getGameParams();
-        const type = rng.current.next() < penaltyChance ? 'penalty' : 'score';
+        setTargets(prev => {
+            const nextTargets = [...prev];
 
-        // Try to find a non-overlapping position
-        let x = 0, y = 0;
-        let attempts = 0;
-        let valid = false;
+            for (let i = 0; i < count; i += 1) {
+                const type = rng.current!.next() < penaltyChance ? 'penalty' : 'score';
+                // Try to find a non-overlapping position
+                let x = 0, y = 0;
+                let attempts = 0;
+                let valid = false;
 
-        // Safety loop to prevent infinite loop
-        while (!valid && attempts < 10) {
-            // Keep padding from edges (10% to 90%)
-            x = 10 + rng.current.next() * 80;
-            y = 10 + rng.current.next() * 80;
+                // Safety loop to prevent infinite loop
+                while (!valid && attempts < 10) {
+                    // Keep padding from edges (10% to 90%)
+                    x = 10 + rng.current!.next() * 80;
+                    y = 10 + rng.current!.next() * 80;
 
-            // Text overlap check against existing targets
-            // Simple distance check. Assuming target size is roughly 15% width/height
-            // We use normalized coordinates (0-100)
-            const collision = targets.some(t => {
-                const dx = t.x - x;
-                const dy = t.y - y;
-                // Distance squared check (sq distance < 15^2 + 15^2 roughly)
-                return (dx * dx + dy * dy) < 400; // 20 units distance
-            });
+                    // Simple distance check against existing targets (including newly added)
+                    const collision = nextTargets.some(t => {
+                        const dx = t.x - x;
+                        const dy = t.y - y;
+                        return (dx * dx + dy * dy) < 400; // 20 units distance
+                    });
 
-            if (!collision) valid = true;
-            attempts++;
-        }
+                    if (!collision) valid = true;
+                    attempts++;
+                }
 
-        if (valid) {
-            const newTarget: Target = {
-                id: targetIdCounter.current++,
-                x,
-                y,
-                type: type as 'score' | 'penalty',
-                createdAt: Date.now(),
-                duration
-            };
-            setTargets(prev => [...prev, newTarget]);
-        }
-    }, [targets, getGameParams]);
+                if (valid) {
+                    nextTargets.push({
+                        id: targetIdCounter.current++,
+                        x,
+                        y,
+                        type,
+                        createdAt: Date.now(),
+                        duration
+                    });
+                }
+            }
+
+            return nextTargets;
+        });
+    }, [getGameParams]);
 
     const gameLoop = useCallback(() => {
         if (!isPlaying) {
@@ -121,7 +124,12 @@ const AimingGame: React.FC<AimingGameProps> = ({ seed, onScore, isPlaying }) => 
 
         // Spawn logic
         if (now - lastSpawnTime.current > spawnInterval) {
-            spawnTarget();
+            const elapsed = now - startTimeRef.current;
+            const maxTargets = elapsed >= 20000 ? 3 : elapsed >= 10000 ? 2 : 1;
+            const spawnCount = maxTargets === 1
+                ? 1
+                : 1 + Math.floor((rng.current?.next() ?? Math.random()) * maxTargets);
+            spawnTargets(spawnCount);
             lastSpawnTime.current = now;
         }
 
@@ -146,7 +154,7 @@ const AimingGame: React.FC<AimingGameProps> = ({ seed, onScore, isPlaying }) => 
         });
 
         requestRef.current = requestAnimationFrame(gameLoop);
-    }, [spawnTarget, getGameParams, onScore, isPlaying]);
+    }, [spawnTargets, getGameParams, onScore, isPlaying]);
 
     useEffect(() => {
         requestRef.current = requestAnimationFrame(gameLoop);

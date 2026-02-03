@@ -172,8 +172,12 @@ const SequenceGame: React.FC<SequenceGameProps> = ({ seed, onScore, isPlaying, m
 
                     if (phase === 'SHOWING') {
                         if (isSequenceMember && seqIndex < seqStep) {
-                            bgClass = 'bg-black scale-105 shadow-[0_0_20px_rgba(0,0,0,0.8)] z-10';
-                            style = { backgroundColor: '#000' };
+                            bgClass = 'scale-110 z-10';
+                            style = {
+                                backgroundColor: '#F8FAFC',
+                                borderColor: 'rgba(255,255,255,0.9)',
+                                boxShadow: 'none'
+                            };
                         }
                     } else if (phase === 'INPUT' || phase === 'SUCCESS') {
                         if (isSequenceMember) {
