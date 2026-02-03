@@ -49,7 +49,7 @@ const Settings = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-900 text-white relative overflow-hidden flex flex-col items-center p-6 pt-[calc(env(safe-area-inset-top)+1.5rem)]">
+        <div className="h-[100dvh] bg-gray-900 text-white relative overflow-x-hidden overflow-y-auto flex flex-col items-center p-6 pt-[calc(env(safe-area-inset-top)+1.5rem)]">
             {/* ... (Background & Header code remains same) ... */}
             <div className="absolute top-[-20%] left-[-20%] w-[80%] h-[80%] bg-blue-600/20 rounded-full blur-3xl animate-pulse" />
             <div className="absolute bottom-[-20%] right-[-20%] w-[80%] h-[80%] bg-purple-600/20 rounded-full blur-3xl animate-pulse" />
