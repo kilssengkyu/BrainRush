@@ -5,7 +5,6 @@ index f023730..a8b2fcd 100644
 @@ -23,7 +23,7 @@ public class NativeAudio: CAPPlugin, AVAudioPlayerDelegate {
  
          do {
-             // Respect the iOS silent switch by default for this app.
 -            try self.session.setCategory(AVAudioSession.Category.playback, options: .mixWithOthers)
 +            try self.session.setCategory(AVAudioSession.Category.ambient, options: .mixWithOthers)
              try self.session.setActive(false)
