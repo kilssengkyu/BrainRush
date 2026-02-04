@@ -1,4 +1,5 @@
 import { App as CapacitorApp } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import Home from './pages/Home';
@@ -58,6 +59,12 @@ import LocalNotificationScheduler from './components/notifications/LocalNotifica
 import BGMManager from './components/audio/BGMManager';
 
 function App() {
+  useEffect(() => {
+    const isAndroid = Capacitor.getPlatform() === 'android';
+    const offset = isAndroid ? '12px' : '0px';
+    document.documentElement.style.setProperty('--home-top-offset', offset);
+  }, []);
+
   return (
     <SoundProvider>
       <AuthProvider>

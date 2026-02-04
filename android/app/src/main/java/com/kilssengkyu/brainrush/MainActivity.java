@@ -5,6 +5,8 @@ import android.os.Bundle;
 import android.util.Log;
 import com.getcapacitor.BridgeActivity;
 
+import androidx.core.view.WindowCompat;
+
 public class MainActivity extends BridgeActivity {
     @Override
 
@@ -12,6 +14,10 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(com.getcapacitor.community.admob.AdMob.class);
         registerPlugin(ee.forgr.nativepurchases.NativePurchasesPlugin.class);
         super.onCreate(savedInstanceState);
+        
+        // Let Android apply system window insets so content doesn't overlap status bar.
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), true);
+
         Log.e("BrainRush", ">>> MainActivity onCreate called <<<");
         if (getIntent() != null) {
             Log.e("BrainRush", ">>> Initial Intent Data: " + getIntent().getDataString());

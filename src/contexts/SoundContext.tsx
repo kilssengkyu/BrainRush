@@ -63,6 +63,7 @@ const NATIVE_BGM_FILES: Record<BGMType, string> = {
 };
 
 const IS_NATIVE_PLATFORM = Capacitor.isNativePlatform();
+const USE_NATIVE_BGM = IS_NATIVE_PLATFORM;
 
 export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const resumeAudioContext = useCallback(() => {
@@ -172,7 +173,7 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         });
         setSounds(loadedSounds);
 
-        if (IS_NATIVE_PLATFORM) {
+        if (USE_NATIVE_BGM) {
             void ensureNativeBgmReady();
         } else {
             // Initialize BGM (Web)
@@ -202,7 +203,7 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
         return () => {
             Object.values(loadedSounds).forEach((s: any) => s.unload());
-            if (IS_NATIVE_PLATFORM) {
+            if (USE_NATIVE_BGM) {
                 Object.keys(NATIVE_BGM_FILES).forEach((key) => {
                     void NativeAudio.unload({ assetId: key });
                 });
@@ -231,7 +232,7 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         localStorage.setItem('bgm_volume', String(bgmVolume));
 
         const currentType = currentBGM.current;
-        if (IS_NATIVE_PLATFORM) {
+        if (USE_NATIVE_BGM) {
             if (currentType) {
                 void (async () => {
                     const ready = await ensureNativeBgmReady();
@@ -291,7 +292,8 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }, [isMuted, sounds, isVibrationEnabled]);
 
     const playBGM = useCallback((type: BGMType) => {
-        if (IS_NATIVE_PLATFORM) {
+        if (USE_NATIVE_BGM) {
+            console.log('[BGM] Attempting Native Play:', type);
             if (currentBGM.current === type) return;
             currentBGM.current = type;
             lastBgmRef.current = type;
@@ -299,6 +301,7 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             void (async () => {
                 const ready = await ensureNativeBgmReady();
                 if (!ready) {
+                    console.error('[BGM] Native Audio Not Ready');
                     currentBGM.current = null;
                     return;
                 }
@@ -306,10 +309,14 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                     await Promise.all(
                         Object.keys(NATIVE_BGM_FILES).map((key) => NativeAudio.stop({ assetId: key }))
                     );
+                    console.log('[BGM] Native Looping:', type);
                     await NativeAudio.loop({ assetId: type });
+
+                    const vol = isMuted ? 0 : bgmVolume;
+                    console.log('[BGM] Native Volume Set:', vol);
                     await NativeAudio.setVolume({
                         assetId: type,
-                        volume: isMuted ? 0 : bgmVolume
+                        volume: vol
                     });
                 } catch (err) {
                     console.error('[BGM] Native play failed', err);
@@ -356,7 +363,7 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const previous = currentBGM.current;
         currentBGM.current = null;
 
-        if (IS_NATIVE_PLATFORM) {
+        if (USE_NATIVE_BGM) {
             void (async () => {
                 const ready = await ensureNativeBgmReady();
                 if (!ready) return;
@@ -373,7 +380,7 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }, [ensureNativeBgmReady]);
 
     useEffect(() => {
-        if (!IS_NATIVE_PLATFORM) return;
+        if (!USE_NATIVE_BGM) return;
         let handler: PluginListenerHandle | null = null;
         let cancelled = false;
 

@@ -285,10 +285,11 @@ const Home = () => {
 
             {/* Authenticated User Header (Top Left - Profile) */}
             {user && (
-                <motion.div
+                <>
+                    <motion.div
                     initial={{ opacity: 0, y: -50 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="absolute top-4 left-4 z-50 flex items-center"
+                    className="absolute top-[calc(env(safe-area-inset-top)+1rem+var(--home-top-offset))] left-4 z-50 flex items-center"
                 >
                     <div className="flex items-center gap-4 bg-gray-800/80 backdrop-blur-md p-2 pr-6 rounded-full border border-gray-700 shadow-lg cursor-pointer hover:bg-gray-800 transition-colors" onClick={() => navigate('/profile')}>
                         <div className="relative w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 p-[2px]">
@@ -321,11 +322,9 @@ const Home = () => {
                         </div>
                     </div>
                 </motion.div>
-            )}
 
-            {/* Pencil Display (Top Right) */}
-            {user && (
-                <div className="absolute top-4 right-4 z-50">
+                {/* Pencil Display (Top Right) */}
+                <div className="absolute top-[calc(env(safe-area-inset-top)+1rem+var(--home-top-offset))] right-4 z-50">
                     <button
                         onClick={() => setShowAdModal(true)}
                         className="bg-gray-800/80 backdrop-blur-md border border-gray-700 rounded-full py-2 px-5 flex items-center gap-3 hover:bg-gray-700 transition-all shadow-lg active:scale-95"
@@ -351,6 +350,7 @@ const Home = () => {
                         />
                     </button>
                 </div>
+                </>
             )}
 
             {/* Auth Loading Overlay */}

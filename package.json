@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@capacitor-community/admob": "^8.0.0",
@@ -18,8 +19,9 @@
     "@capacitor/haptics": "^6.0.0",
     "@capacitor/ios": "^6.2.1",
     "@capacitor/local-notifications": "^6.0.0",
-    "@capgo/native-purchases": "^6.0.42",
+    "@capacitor/status-bar": "^6.0.3",
     "@capgo/native-audio": "^6.0.60",
+    "@capgo/native-purchases": "^6.0.42",
     "@supabase/supabase-js": "^2.90.1",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/howler": "^2.2.12",
@@ -46,6 +48,7 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
+    "patch-package": "^8.0.1",
     "postcss": "^8.5.6",
     "supabase": "^2.72.8",
     "tailwindcss": "^4.1.18",
