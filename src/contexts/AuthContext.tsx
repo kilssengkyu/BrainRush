@@ -228,6 +228,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 handleDeepLink(event.url);
             });
 
+            // 1-1. 앱이 딥링크로 시작된 경우를 처리합니다.
+            try {
+                const launchUrl = await App.getLaunchUrl();
+                if (launchUrl?.url) {
+                    handleDeepLink(launchUrl.url);
+                }
+            } catch (error) {
+                console.warn('Launch URL 확인 중 오류:', error);
+            }
+
             // 2. Custom Native-to-JS Event Listener (Fallback)
             customDeepLinkHandler = ((event: CustomEvent) => {
                 console.log('Custom Deep Link Event:', event.detail);
