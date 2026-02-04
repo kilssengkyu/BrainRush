@@ -13,8 +13,9 @@ dependencies {
     implementation project(':capacitor-app')
     implementation project(':capacitor-haptics')
     implementation project(':capacitor-local-notifications')
-    implementation project(':capgo-native-purchases')
+    implementation project(':capacitor-status-bar')
     implementation project(':capgo-native-audio')
+    implementation project(':capgo-native-purchases')
 
 }
 
