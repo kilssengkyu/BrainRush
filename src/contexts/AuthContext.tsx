@@ -197,6 +197,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
                 const accessToken = hashParams.get('access_token') || searchParams.get('access_token');
                 const refreshToken = hashParams.get('refresh_token') || searchParams.get('refresh_token');
+                const code = hashParams.get('code') || searchParams.get('code');
 
                 if (accessToken && refreshToken) {
                     const { error } = await supabase.auth.setSession({
@@ -208,6 +209,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                         throw error;
                     }
                     console.log('Login Success! Session Restored.');
+                } else if (code) {
+                    const { error } = await supabase.auth.exchangeCodeForSession(code);
+                    if (error) {
+                        console.error('PKCE Exchange Error:', error.message);
+                        throw error;
+                    }
+                    console.log('Login Success! Session Exchanged.');
                 }
             } catch (err) {
                 console.error('Deep link logic error:', err);

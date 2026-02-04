@@ -9,12 +9,13 @@ const BackButtonHandler = () => {
   const location = useLocation();
 
   useEffect(() => {
+    let backButtonListener: { remove: () => void } | null = null;
     const setupBackButton = async () => {
       // Capacitor App plugin might throw if used in web, wrap in try/catch or check platform
       // But @capacitor/app supports web mostly or fails silently.
       // Actually, safely check if native? No, just add listener.
       try {
-        CapacitorApp.addListener('backButton', ({ canGoBack }) => {
+        backButtonListener = await CapacitorApp.addListener('backButton', ({ canGoBack }) => {
           if (location.pathname === '/' || location.pathname === '/home') {
             CapacitorApp.exitApp();
           } else if (canGoBack) {
@@ -30,7 +31,8 @@ const BackButtonHandler = () => {
     setupBackButton();
 
     return () => {
-      CapacitorApp.removeAllListeners();
+      // Avoid removing unrelated listeners (e.g., appUrlOpen for OAuth).
+      if (backButtonListener) backButtonListener.remove();
     };
   }, [navigate, location]);
 
