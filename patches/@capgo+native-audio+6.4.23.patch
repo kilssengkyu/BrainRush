@@ -2,11 +2,6 @@ diff --git a/node_modules/@capgo/native-audio/ios/Plugin/Plugin.swift b/node_mod
 index f023730..a8b2fcd 100644
 --- a/node_modules/@capgo/native-audio/ios/Plugin/Plugin.swift
 +++ b/node_modules/@capgo/native-audio/ios/Plugin/Plugin.swift
-@@ -23,7 +23,7 @@ public class NativeAudio: CAPPlugin, AVAudioPlayerDelegate {
- 
-         do {
+@@ -26,1 +26,1 @@
 -            try self.session.setCategory(AVAudioSession.Category.playback, options: .mixWithOthers)
 +            try self.session.setCategory(AVAudioSession.Category.ambient, options: .mixWithOthers)
-             try self.session.setActive(false)
-         } catch {
-             print("Failed to set session category")
