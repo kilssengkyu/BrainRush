@@ -3,7 +3,6 @@
 @@ -23,7 +23,7 @@
  
          do {
-             // Respect the iOS silent switch by default for this app.
 -            try self.session.setCategory(AVAudioSession.Category.playback, options: .mixWithOthers)
 +            try self.session.setCategory(AVAudioSession.Category.ambient, options: .mixWithOthers)
              try self.session.setActive(false)
