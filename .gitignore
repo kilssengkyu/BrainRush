@@ -27,3 +27,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Capacitor
+ios/App/App/public/
+ios/App/Pods/
+android/app/src/main/assets/public/
+
+# Environment
+.env
