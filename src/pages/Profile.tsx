@@ -41,6 +41,7 @@ const HIGHSCORE_GAME_TYPES = [
     { type: 'PATH', labelKey: 'path.title' },
     { type: 'BLIND_PATH', labelKey: 'blindPath.title' },
     { type: 'BALLS', labelKey: 'balls.title' },
+    { type: 'CATCH_COLOR', labelKey: 'catchColor.title' },
     { type: 'TAP_COLOR', labelKey: 'tapTheColor.title' },
     { type: 'AIM', labelKey: 'aim.title' },
     { type: 'MOST_COLOR', labelKey: 'mostColor.title' },

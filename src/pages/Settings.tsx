@@ -11,7 +11,7 @@ import { restorePurchases } from '../lib/purchaseService';
 const Settings = () => {
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
-    const { isMuted, toggleMute, volume, setVolume, playSound } = useSound();
+    const { isMuted, toggleMute, playSound } = useSound();
     const { user, refreshProfile } = useAuth();
     const { showToast } = useUI();
     const [isRestoring, setIsRestoring] = useState(false);
@@ -122,26 +122,6 @@ const Settings = () => {
                             </button>
                         </div>
 
-                        {/* Volume Slider */}
-                        <div className="space-y-2">
-                            <div className="flex justify-between text-sm text-gray-400">
-                                <span>0%</span>
-                                <span>{Math.round(volume * 100)}%</span>
-                                <span>100%</span>
-                            </div>
-                            <input
-                                type="range"
-                                min="0"
-                                max="1"
-                                step="0.1"
-                                value={volume}
-                                onChange={(e) => {
-                                    setVolume(parseFloat(e.target.value));
-                                }}
-                                disabled={isMuted}
-                                className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500 disabled:opacity-50"
-                            />
-                        </div>
                     </div>
                 </section>
 

@@ -363,6 +363,11 @@
         "title": "ボールカウント",
         "instruction": "動くボールの数を数えて正解をタップ。"
     },
+    "catchColor": {
+        "title": "カラーキャッチ",
+        "instruction": "同じ色のボールを受け取ろう。違う色は-10点。",
+        "switchSoon": "まもなく色が切り替わります"
+    },
     "tapTheColor": {
         "title": "カラータップ",
         "memorize": "色の位置を覚えてください！",

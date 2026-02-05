@@ -141,15 +141,15 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return nativeBgmReady.current;
     }, []);
 
-    // Attempt to resume audio context on first user interaction.
+    // Keep resuming audio context on user interaction (iOS can suspend on background).
     useEffect(() => {
         const unlock = () => {
             resumeAudioContext();
         };
 
-        window.addEventListener('pointerdown', unlock, { once: true });
-        window.addEventListener('keydown', unlock, { once: true });
-        window.addEventListener('touchstart', unlock, { once: true });
+        window.addEventListener('pointerdown', unlock, { passive: true });
+        window.addEventListener('keydown', unlock);
+        window.addEventListener('touchstart', unlock, { passive: true });
 
         return () => {
             window.removeEventListener('pointerdown', unlock);
@@ -391,6 +391,7 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                     stopBGM();
                     return;
                 }
+                resumeAudioContext();
                 const resumeType = lastBgmRef.current;
                 if (resumeType) {
                     playBGM(resumeType);
@@ -410,7 +411,7 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 handler.remove();
             }
         };
-    }, [playBGM, stopBGM]);
+    }, [playBGM, resumeAudioContext, stopBGM]);
 
     const toggleMute = () => setIsMuted(prev => !prev);
     const setVolume = (vol: number) => setVolumeState(Math.max(0, Math.min(1, vol)));

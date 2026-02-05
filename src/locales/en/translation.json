@@ -365,6 +365,11 @@
         "title": "Ball Counter",
         "instruction": "Count the moving balls and tap the correct number."
     },
+    "catchColor": {
+        "title": "Color Catch",
+        "instruction": "Move the bar to catch the same color. Wrong color = -10.",
+        "switchSoon": "Color switch soon"
+    },
     "tapTheColor": {
         "title": "Tap the Color",
         "memorize": "Memorize the colors!",

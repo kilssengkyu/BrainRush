@@ -362,6 +362,11 @@
         "title": "数球",
         "instruction": "数清移动的球并点击正确数字。"
     },
+    "catchColor": {
+        "title": "颜色接球",
+        "instruction": "接住同色小球得分，接错颜色 -10 分。",
+        "switchSoon": "颜色即将切换"
+    },
     "tapTheColor": {
         "title": "点击颜色",
         "memorize": "记住颜色的位置!",

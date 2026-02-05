@@ -363,6 +363,11 @@
     "title": "볼 카운트",
     "instruction": "움직이는 공 개수를 세고 정답을 눌러주세요."
   },
+  "catchColor": {
+    "title": "컬러 캐치",
+    "instruction": "같은 색 공을 받아 점수를 올리세요. 다른 색은 -10점.",
+    "switchSoon": "곧 색이 바뀝니다"
+  },
   "tapTheColor": {
     "title": "색깔 터치",
     "memorize": "색깔의 위치를 기억하세요!",

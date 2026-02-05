@@ -31,6 +31,7 @@ const MINIGAMES = [
     { id: 'PATH', title: 'path.title', icon: null, defaultIcon: <Route className="w-8 h-8 text-emerald-300" />, type: 'brain' },
     { id: 'BLIND_PATH', title: 'blindPath.title', icon: null, defaultIcon: <EyeOff className="w-8 h-8 text-rose-300" />, type: 'brain' },
     { id: 'BALLS', title: 'balls.title', icon: null, defaultIcon: <CircleDot className="w-8 h-8 text-sky-300" />, type: 'brain' },
+    { id: 'CATCH_COLOR', title: 'catchColor.title', icon: null, defaultIcon: <CircleDot className="w-8 h-8 text-blue-300" />, type: 'speed' },
     { id: 'TAP_COLOR', title: 'tapTheColor.title', icon: null, defaultIcon: <Brain className="w-8 h-8 text-pink-300" />, type: 'brain' },
     { id: 'AIM', title: 'aim.title', icon: null, defaultIcon: <MousePointer2 className="w-8 h-8 text-red-500" />, type: 'speed' },
     { id: 'MOST_COLOR', title: 'mostColor.title', icon: null, defaultIcon: <Zap className="w-8 h-8 text-yellow-500" />, type: 'speed' },
@@ -160,7 +161,7 @@ const PracticeMode = () => {
     };
 
     return (
-        <div className="h-[100dvh] bg-gray-900 text-white flex flex-col p-4 relative overflow-hidden">
+        <div className="h-[100dvh] bg-gray-900 text-white flex flex-col p-4 pt-[calc(env(safe-area-inset-top)+1rem)] pb-[calc(env(safe-area-inset-bottom)+1rem)] relative overflow-hidden">
             {/* Background Effects */}
             <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-800 via-gray-900 to-black pointer-events-none" />
 

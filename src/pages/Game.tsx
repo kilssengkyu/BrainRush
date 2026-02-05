@@ -28,6 +28,7 @@ import FindTheSpy from '../components/minigames/FindTheSpy';
 import PathRunner from '../components/minigames/PathRunner';
 import BallCounter from '../components/minigames/BallCounter';
 import BlindPathRunner from '../components/minigames/BlindPathRunner';
+import CatchColor from '../components/minigames/CatchColor';
 import ScoreProgressBar from '../components/ui/ScoreProgressBar';
 import Flag from '../components/ui/Flag';
 import { isBotId } from '../constants/bot';
@@ -69,6 +70,7 @@ const Game: React.FC = () => {
         isCountdown || (gameState.startAt && new Date(gameState.startAt).getTime() > (Date.now() + serverOffset))
     );
     const isUrgentRound = isPlaying && !isCountdownActive && gameState.remainingTime <= 5 && gameState.remainingTime > 0;
+    const isGameplayActive = isPlaying && !isCountdownActive && !isTimeUp;
 
     const now = Date.now() + serverOffset;
     const warmupStart = gameState.startAt ? new Date(gameState.startAt).getTime() : 0;
@@ -526,6 +528,7 @@ const Game: React.FC = () => {
                                         {gameState.gameType === 'PATH' && t('path.title')}
                                         {gameState.gameType === 'BALLS' && t('balls.title')}
                                         {gameState.gameType === 'BLIND_PATH' && t('blindPath.title')}
+                                        {gameState.gameType === 'CATCH_COLOR' && t('catchColor.title')}
                                     </h2>
                                     <p className="text-2xl text-white mb-12 font-bold max-w-2xl">
                                         {gameState.gameType === 'RPS' && t('rps.instruction')}
@@ -553,6 +556,7 @@ const Game: React.FC = () => {
                                         {gameState.gameType === 'PATH' && t('path.instruction')}
                                         {gameState.gameType === 'BALLS' && t('balls.instruction')}
                                         {gameState.gameType === 'BLIND_PATH' && t('blindPath.instruction')}
+                                        {gameState.gameType === 'CATCH_COLOR' && t('catchColor.instruction')}
                                     </p>
 
                                 </motion.div>
@@ -573,35 +577,35 @@ const Game: React.FC = () => {
                         )}
 
                         <div className="w-full h-full select-none minigame-area">
-                            {isPlaying && !isCountdownActive && (
+                            {isGameplayActive && (
                                 <>
                                     {gameState.gameType === 'RPS' && (
-                                        <RockPaperScissors seed={gameState.seed} onScore={incrementScore} isPlaying />
+                                        <RockPaperScissors seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
                                     )}
                                     {gameState.gameType === 'NUMBER' && (
-                                        <NumberSortGame mode="asc" seed={gameState.seed} onScore={incrementScore} isPlaying />
+                                        <NumberSortGame mode="asc" seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
                                     )}
                                     {gameState.gameType === 'NUMBER_DESC' && (
-                                        <NumberSortGame mode="desc" seed={gameState.seed} onScore={incrementScore} isPlaying />
+                                        <NumberSortGame mode="desc" seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
                                     )}
                                     {gameState.gameType === 'MATH' && (
-                                        <MathChallenge seed={gameState.seed} onScore={incrementScore} isPlaying />
+                                        <MathChallenge seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
                                     )}
                                     {gameState.gameType === 'TEN' && (
-                                        <MakeTen seed={gameState.seed} onScore={incrementScore} isPlaying />
+                                        <MakeTen seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
                                     )}
                                     {gameState.gameType === 'COLOR' && (
-                                        <ColorMatch seed={gameState.seed} onScore={incrementScore} isPlaying />
+                                        <ColorMatch seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
                                     )}
                                     {gameState.gameType === 'MEMORY' && (
-                                        <MemoryMatch seed={gameState.seed || ''} onScore={incrementScore} isPlaying />
+                                        <MemoryMatch seed={gameState.seed || ''} onScore={incrementScore} isPlaying={isGameplayActive} />
                                     )}
                                     {gameState.gameType === 'SEQUENCE' && (
                                         <SequenceGame
                                             mode="reverse"
                                             seed={gameState.seed}
                                             onScore={incrementScore}
-                                            isPlaying
+                                            isPlaying={isGameplayActive}
                                         />
                                     )}
                                     {gameState.gameType === 'SEQUENCE_NORMAL' && (
@@ -609,56 +613,59 @@ const Game: React.FC = () => {
                                             mode="forward"
                                             seed={gameState.seed}
                                             onScore={incrementScore}
-                                            isPlaying
+                                            isPlaying={isGameplayActive}
                                         />
                                     )}
                                     {gameState.gameType === 'LARGEST' && (
-                                        <FindLargest seed={gameState.seed} onScore={incrementScore} isPlaying />
+                                        <FindLargest seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
                                     )}
                                     {gameState.gameType === 'PAIR' && (
-                                        <FindPair seed={gameState.seed} onScore={incrementScore} isPlaying />
+                                        <FindPair seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
                                     )}
                                     {gameState.gameType === 'UPDOWN' && (
-                                        <NumberUpDown seed={gameState.seed} onScore={incrementScore} isPlaying />
+                                        <NumberUpDown seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
                                     )}
                                     {gameState.gameType === 'SLIDER' && (
-                                        <NumberSlider seed={gameState.seed} onScore={incrementScore} isPlaying />
+                                        <NumberSlider seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
                                     )}
                                     {gameState.gameType === 'ARROW' && (
-                                        <ArrowSlider seed={gameState.seed} onScore={incrementScore} isPlaying />
+                                        <ArrowSlider seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
                                     )}
                                     {gameState.gameType === 'BLANK' && (
-                                        <FillBlanks seed={gameState.seed} onScore={incrementScore} isPlaying />
+                                        <FillBlanks seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
                                     )}
                                     {gameState.gameType === 'OPERATOR' && (
-                                        <FindOperator seed={gameState.seed} onScore={incrementScore} isPlaying />
+                                        <FindOperator seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
                                     )}
                                     {gameState.gameType === 'LADDER' && (
-                                        <LadderGame seed={gameState.seed} onScore={incrementScore} isPlaying />
+                                        <LadderGame seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
                                     )}
                                     {gameState.gameType === 'TAP_COLOR' && (
-                                        <TapTheColor seed={gameState.seed} onScore={incrementScore} isPlaying />
+                                        <TapTheColor seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
                                     )}
                                     {gameState.gameType === 'AIM' && (
-                                        <AimingGame seed={gameState.seed} onScore={incrementScore} isPlaying />
+                                        <AimingGame seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
                                     )}
                                     {gameState.gameType === 'MOST_COLOR' && (
-                                        <FindMostColor seed={gameState.seed} onScore={incrementScore} isPlaying />
+                                        <FindMostColor seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
                                     )}
                                     {gameState.gameType === 'SORTING' && (
-                                        <SortingGame seed={gameState.seed} onScore={incrementScore} isPlaying />
+                                        <SortingGame seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
                                     )}
                                     {gameState.gameType === 'SPY' && (
-                                        <FindTheSpy seed={gameState.seed} onScore={incrementScore} isPlaying />
+                                        <FindTheSpy seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
                                     )}
                                     {gameState.gameType === 'PATH' && (
-                                        <PathRunner seed={gameState.seed} onScore={incrementScore} isPlaying />
+                                        <PathRunner seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
                                     )}
                                     {gameState.gameType === 'BALLS' && (
-                                        <BallCounter seed={gameState.seed} onScore={incrementScore} isPlaying />
+                                        <BallCounter seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
                                     )}
                                     {gameState.gameType === 'BLIND_PATH' && (
-                                        <BlindPathRunner seed={gameState.seed} onScore={incrementScore} isPlaying />
+                                        <BlindPathRunner seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
+                                    )}
+                                    {gameState.gameType === 'CATCH_COLOR' && (
+                                        <CatchColor seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
                                     )}
                                 </>
                             )}

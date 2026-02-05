@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import type { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
 import { App } from '@capacitor/app';
+import { COUNTRIES } from '../constants/countries';
 
 interface AuthContextType {
     user: User | null;
@@ -60,6 +61,33 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return () => subscription.unsubscribe();
     }, []);
 
+    const getDefaultCountry = () => {
+        if (typeof navigator === 'undefined') return null;
+        const candidates = [
+            ...(navigator.languages || []),
+            navigator.language
+        ].filter(Boolean) as string[];
+
+        const known = new Set(COUNTRIES.map(c => c.code));
+        for (const lang of candidates) {
+            const normalized = lang.replace('_', '-');
+            const parts = normalized.split('-');
+            const region = parts[1]?.toUpperCase();
+            if (region && known.has(region)) return region;
+        }
+
+        const primary = candidates[0]?.split(/[-_]/)[0]?.toLowerCase();
+        if (!primary) return null;
+        const fallbackMap: Record<string, string> = {
+            ko: 'KR',
+            ja: 'JP',
+            zh: 'CN',
+            en: 'US'
+        };
+        const fallback = fallbackMap[primary];
+        return fallback && known.has(fallback) ? fallback : null;
+    };
+
     const fetchProfile = async (userId: string) => {
         try {
             // Use RPC to get profile AND trigger potential auto-recharge
@@ -90,7 +118,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                             id: userId,
                             email: userData.user.email,
                             nickname: 'Player_' + Math.floor(Math.random() * 9000 + 1000),
-                            avatar_url: userData.user.user_metadata?.avatar_url,
+                            avatar_url: null,
                             created_at: new Date().toISOString(),
                             pencils: 5,
                             last_recharge_at: new Date().toISOString(),
@@ -98,6 +126,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                             practice_last_recharge_at: new Date().toISOString(),
                             practice_ad_reward_count: 0,
                             practice_ad_reward_day: new Date().toISOString().slice(0, 10),
+                            country: getDefaultCountry(),
                             xp: 0,
                             level: 1
                         };
@@ -159,7 +188,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                             id: userId,
                             email: userData.user.email,
                             nickname: 'Player_' + Math.floor(Math.random() * 9000 + 1000),
-                            avatar_url: userData.user.user_metadata?.avatar_url,
+                            avatar_url: null,
                             created_at: new Date().toISOString(),
                             pencils: 5,
                             last_recharge_at: new Date().toISOString(),
@@ -167,6 +196,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                             practice_last_recharge_at: new Date().toISOString(),
                             practice_ad_reward_count: 0,
                             practice_ad_reward_day: new Date().toISOString().slice(0, 10),
+                            country: getDefaultCountry(),
                             xp: 0,
                             level: 1
                         };
@@ -178,7 +208,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     }
                 }
             } else {
-                setProfile(fullProfile);
+                const defaultCountry = getDefaultCountry();
+                if (!fullProfile.country && defaultCountry) {
+                    const { error: updateError } = await supabase
+                        .from('profiles')
+                        .update({ country: defaultCountry })
+                        .eq('id', userId);
+                    if (!updateError) {
+                        setProfile({ ...fullProfile, country: defaultCountry });
+                    } else {
+                        setProfile(fullProfile);
+                    }
+                } else {
+                    setProfile(fullProfile);
+                }
             }
 
         } catch (error) {
