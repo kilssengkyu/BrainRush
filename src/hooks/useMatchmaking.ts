@@ -69,12 +69,13 @@ export const useMatchmaking = (
                     : 1;
             const isBotEligible = mode === 'normal' && (playerLevel <= 5 || elapsedMs >= 15000);
             const botDelayMs = playerLevel <= 5 ? 10000 : 15000;
+            const forceBot = playerLevel > 5 && elapsedMs >= 15000;
 
             if (isBotEligible && !botMatchTriggered.current && elapsedMs >= botDelayMs) {
                 botMatchTriggered.current = true;
                 try {
                     const { data, error } = await supabase
-                        .rpc('create_bot_session', { p_player_id: playerId })
+                        .rpc('create_bot_session', { p_player_id: playerId, p_force: forceBot })
                         .maybeSingle() as { data: { room_id: string, opponent_id: string } | null, error: any };
 
                     if (error) throw error;
