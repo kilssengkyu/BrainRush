@@ -360,12 +360,12 @@ const Profile = () => {
         if (!user) return;
 
         if (!ALLOWED_AVATAR_TYPES.includes(file.type)) {
-            showToast(t('profile.avatarInvalidType', '지원되지 않는 이미지 형식입니다.'), 'error');
+            showToast(t('profile.avatarInvalidType'), 'error');
             return;
         }
 
         if (file.size > MAX_AVATAR_SIZE) {
-            showToast(t('profile.avatarTooLarge', '파일 용량이 너무 큽니다.'), 'error');
+            showToast(t('profile.avatarTooLarge'), 'error');
             return;
         }
 
@@ -406,10 +406,10 @@ const Profile = () => {
             if (updateError) throw updateError;
 
             await refreshProfile();
-            showToast(t('profile.avatarUploadSuccess', '프로필 사진이 업데이트되었습니다.'), 'success');
+            showToast(t('profile.avatarUploadSuccess'), 'success');
         } catch (error: any) {
             console.error('Avatar upload error:', error);
-            showToast(`${t('profile.avatarUploadFail', '프로필 사진 업로드 실패')}: ${error.message || error}`, 'error');
+            showToast(`${t('profile.avatarUploadFail')}: ${error.message || error}`, 'error');
         } finally {
             setIsUploadingAvatar(false);
             if (avatarInputRef.current) {
@@ -569,10 +569,10 @@ const Profile = () => {
                             {isGuest && (
                                 <div className="mb-6 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-center">
                                     <div className="text-sm font-bold text-amber-200">
-                                        {t('profile.guestTitle', '게스트 계정')}
+                                        {t('profile.guestTitle')}
                                     </div>
                                     <div className="mt-1 text-xs text-amber-100/80">
-                                        {t('profile.guestDesc', '게스트 계정은 로그아웃/앱 삭제/기기 변경 시 데이터가 사라질 수 있어요. 구글 계정으로 연동해 주세요.')}
+                                        {t('profile.guestDesc')}
                                     </div>
                                     <button
                                         onClick={async () => {
@@ -585,7 +585,7 @@ const Profile = () => {
                                         }}
                                         className="mt-3 inline-flex items-center justify-center rounded-full bg-white/10 px-4 py-2 text-xs font-bold text-amber-100 hover:bg-white/20 transition-colors"
                                     >
-                                        {t('profile.linkGoogle', '구글 계정 연동')}
+                                        {t('profile.linkGoogle')}
                                     </button>
                                 </div>
                             )}
@@ -598,13 +598,16 @@ const Profile = () => {
                                         className="w-full h-full rounded-full bg-gray-900 flex items-center justify-center overflow-hidden cursor-zoom-in"
                                         onClick={() => {
                                             if (profile?.avatar_url) {
-                                                setAvatarPreview({ src: profile.avatar_url, alt: nickname || 'Avatar' });
+                                                setAvatarPreview({
+                                                    src: profile.avatar_url,
+                                                    alt: nickname ? t('profile.avatarAltWithName', { nickname }) : t('profile.avatarAlt')
+                                                });
                                             }
                                         }}
-                                        aria-label="Open avatar"
+                                        aria-label={t('profile.openAvatar')}
                                     >
                                         {profile?.avatar_url ? (
-                                            <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                                            <img src={profile.avatar_url} alt={t('profile.avatarAlt')} className="w-full h-full object-cover" />
                                         ) : (
                                             <UserIcon className="w-12 h-12 text-gray-400" />
                                         )}
@@ -626,7 +629,7 @@ const Profile = () => {
                                     disabled={isUploadingAvatar || isLoading}
                                     className="text-xs text-blue-300 hover:text-blue-200 border border-blue-500/40 px-3 py-1 rounded-full transition-colors disabled:opacity-50"
                                 >
-                                    {isUploadingAvatar ? t('profile.avatarUploading', '업로드 중...') : t('profile.changeAvatar', '사진 변경')}
+                                    {isUploadingAvatar ? t('profile.avatarUploading') : t('profile.changeAvatar')}
                                 </button>
 
                                 {/* Nickname & Country Edit */}
@@ -695,7 +698,7 @@ const Profile = () => {
                                 <div className={`bg-gradient-to-br ${tierColor} p-[2px] rounded-2xl shadow-lg transform hover:scale-105 transition-transform`}>
                                     <div className="bg-gray-800 w-full h-full rounded-2xl p-4 flex flex-col items-center justify-center">
                                         <TierIcon className="w-8 h-8 text-white mb-2 filter drop-shadow-md" />
-                                        <span className="text-xs text-gray-400 font-bold uppercase tracking-widest mb-1">{t('game.tier', 'TIER')}</span>
+                                        <span className="text-xs text-gray-400 font-bold uppercase tracking-widest mb-1">{t('game.tier')}</span>
                                         <span className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300">
                                             {tier}
                                         </span>
@@ -735,42 +738,42 @@ const Profile = () => {
                             {/* Skill Radar */}
                             <div className="mt-8 pt-6 border-t border-white/10">
                                 <h3 className="text-sm font-bold uppercase tracking-widest text-gray-400 mb-4 text-center">
-                                    {t('profile.statsTitle', '능력치')}
+                                    {t('profile.statsTitle')}
                                 </h3>
                                 <HexRadar
                                     values={statValues}
                                     labels={{
-                                        speed: t('profile.stats.speed', '스피드'),
-                                        memory: t('profile.stats.memory', '기억력'),
-                                        judgment: t('profile.stats.judgment', '판단력'),
-                                        calculation: t('profile.stats.calculation', '계산력'),
-                                        accuracy: t('profile.stats.accuracy', '정확성'),
-                                        observation: t('profile.stats.observation', '관찰력')
+                                        speed: t('profile.stats.speed'),
+                                        memory: t('profile.stats.memory'),
+                                        judgment: t('profile.stats.judgment'),
+                                        calculation: t('profile.stats.calculation'),
+                                        accuracy: t('profile.stats.accuracy'),
+                                        observation: t('profile.stats.observation')
                                     }}
                                 />
                                 <div className="grid grid-cols-3 gap-2 mt-4 text-xs text-gray-400">
                                     <div className="flex items-center justify-between bg-gray-800/50 rounded-lg px-2 py-1">
-                                        <span>{t('profile.stats.speed', '스피드')}</span>
+                                        <span>{t('profile.stats.speed')}</span>
                                         <span className="text-blue-300 font-bold">{statValues.speed}</span>
                                     </div>
                                     <div className="flex items-center justify-between bg-gray-800/50 rounded-lg px-2 py-1">
-                                        <span>{t('profile.stats.memory', '기억력')}</span>
+                                        <span>{t('profile.stats.memory')}</span>
                                         <span className="text-blue-300 font-bold">{statValues.memory}</span>
                                     </div>
                                     <div className="flex items-center justify-between bg-gray-800/50 rounded-lg px-2 py-1">
-                                        <span>{t('profile.stats.judgment', '판단력')}</span>
+                                        <span>{t('profile.stats.judgment')}</span>
                                         <span className="text-blue-300 font-bold">{statValues.judgment}</span>
                                     </div>
                                     <div className="flex items-center justify-between bg-gray-800/50 rounded-lg px-2 py-1">
-                                        <span>{t('profile.stats.calculation', '계산력')}</span>
+                                        <span>{t('profile.stats.calculation')}</span>
                                         <span className="text-blue-300 font-bold">{statValues.calculation}</span>
                                     </div>
                                     <div className="flex items-center justify-between bg-gray-800/50 rounded-lg px-2 py-1">
-                                        <span>{t('profile.stats.accuracy', '정확성')}</span>
+                                        <span>{t('profile.stats.accuracy')}</span>
                                         <span className="text-blue-300 font-bold">{statValues.accuracy}</span>
                                     </div>
                                     <div className="flex items-center justify-between bg-gray-800/50 rounded-lg px-2 py-1">
-                                        <span>{t('profile.stats.observation', '관찰력')}</span>
+                                        <span>{t('profile.stats.observation')}</span>
                                         <span className="text-blue-300 font-bold">{statValues.observation}</span>
                                     </div>
                                 </div>
@@ -779,7 +782,7 @@ const Profile = () => {
                             {/* Highscores */}
                             <div className="mt-8 pt-6 border-t border-white/10">
                                 <h3 className="text-sm font-bold uppercase tracking-widest text-gray-400 mb-4 text-center">
-                                    {t('profile.highscoresTitle', '하이스코어')}
+                                    {t('profile.highscoresTitle')}
                                 </h3>
                                 {isHighscoresLoading ? (
                                     <div className="text-center text-sm text-gray-500">
@@ -788,9 +791,9 @@ const Profile = () => {
                                 ) : (
                                     <div className="flex flex-col gap-2 text-xs">
                                         <div className="grid grid-cols-[1.4fr_0.8fr_0.6fr] gap-2 text-[10px] uppercase tracking-wider text-gray-500 px-2">
-                                            <span>{t('profile.highscoresColumns.game', '게임')}</span>
-                                            <span className="text-right">{t('profile.highscoresColumns.highscore', '하이스코어')}</span>
-                                            <span className="text-right">{t('profile.highscoresColumns.rankWinRate', '랭크 승률')}</span>
+                                            <span>{t('profile.highscoresColumns.game')}</span>
+                                            <span className="text-right">{t('profile.highscoresColumns.highscore')}</span>
+                                            <span className="text-right">{t('profile.highscoresColumns.rankWinRate')}</span>
                                         </div>
                                         {HIGHSCORE_GAME_TYPES.map(({ type, labelKey }) => {
                                             const stats = rankStats[type] ?? { wins: 0, losses: 0, draws: 0 };

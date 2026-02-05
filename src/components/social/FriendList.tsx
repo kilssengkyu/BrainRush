@@ -302,7 +302,7 @@ const FriendList: React.FC<FriendListProps> = ({ onChatClick, onChallengeClick, 
                                             setAvatarPreview({ src: friend.avatar_url, alt: friend.nickname });
                                         }
                                     }}
-                                    aria-label={`${friend.nickname} avatar`}
+                                    aria-label={t('profile.avatarAltWithName', { nickname: friend.nickname })}
                                 >
                                     {unreadCount > 0 && (
                                         <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-slate-700" aria-hidden="true"></span>

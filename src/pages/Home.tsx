@@ -26,14 +26,14 @@ const RechargeTimer = ({ lastRecharge }: { lastRecharge: string }) => {
             const last = new Date(lastRecharge).getTime();
             const now = new Date().getTime();
             const diff = now - last;
-            const tenMinutes = 10 * 60 * 1000;
+            const thirtyMinutes = 30 * 60 * 1000;
 
             // Time passed since last recharge
-            // If we have < 5 pencils, the next one comes at (last_recharge + 10min)
+            // If we have < 5 pencils, the next one comes at (last_recharge + 30min)
             // Wait, if multiple intervals passed but not synced? 
             // The DB syncs on load. We assume 'lastRecharge' is the start of the CURRENT 10m cycle.
 
-            const remaining = tenMinutes - diff;
+            const remaining = thirtyMinutes - diff;
 
             if (remaining <= 0) {
                 setTimeLeft('00:00'); // Ready to sync?
@@ -155,7 +155,7 @@ const Home = () => {
     const avatarUrl = profile?.avatar_url;
     const countryCode = profile?.country;
     const hasSocialNotifications = pendingRequestsCount > 0 || unreadChatCount > 0;
-    const AD_DAILY_LIMIT = 5;
+    const AD_DAILY_LIMIT = 10;
     const today = new Date().toISOString().slice(0, 10);
     const adRewardDay = profile?.ad_reward_day;
     const adRewardCount = profile?.ad_reward_count ?? 0;

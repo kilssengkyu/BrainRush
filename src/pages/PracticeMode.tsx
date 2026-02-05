@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Play, Zap, Brain, Hash, MousePointer2, Star, Ghost, Route, CircleDot, EyeOff } from 'lucide-react';
+import { ArrowLeft, Play, Zap, Brain, Hash, MousePointer2, Star, Ghost, Route, CircleDot, EyeOff, BookOpen } from 'lucide-react';
 import { useSound } from '../contexts/SoundContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useUI } from '../contexts/UIContext';
 import { supabase } from '../lib/supabaseClient';
+import AdModal from '../components/ui/AdModal';
 
 // Minigame Metadata
 const MINIGAMES = [
@@ -41,9 +42,25 @@ const PracticeMode = () => {
     const navigate = useNavigate();
     const { t } = useTranslation();
     const { playSound } = useSound();
-    const { user } = useAuth();
+    const { user, profile, refreshProfile } = useAuth();
     const { showToast } = useUI();
     const [loading, setLoading] = useState(false);
+    const [showAdModal, setShowAdModal] = useState(false);
+
+    const NOTE_MAX = 5;
+    const AD_DAILY_LIMIT = 10;
+    const today = new Date().toISOString().slice(0, 10);
+    const adRewardDay = profile?.practice_ad_reward_day;
+    const adRewardCount = profile?.practice_ad_reward_count ?? 0;
+    const adRemaining = user
+        ? (!adRewardDay || adRewardDay !== today)
+            ? AD_DAILY_LIMIT
+            : Math.max(0, AD_DAILY_LIMIT - adRewardCount)
+        : AD_DAILY_LIMIT;
+
+    useEffect(() => {
+        if (user) refreshProfile();
+    }, [user, refreshProfile]);
 
     const handleBack = () => {
         playSound('click');
@@ -53,6 +70,13 @@ const PracticeMode = () => {
     const handleGameSelect = async (gameId: string) => {
         if (!user) {
             showToast(t('auth.loginRequired'), 'error');
+            return;
+        }
+
+        const notes = profile?.practice_notes ?? 0;
+        if (notes < 1) {
+            playSound('error');
+            setShowAdModal(true);
             return;
         }
 
@@ -67,8 +91,16 @@ const PracticeMode = () => {
                     p_game_type: gameId
                 });
 
-            if (error) throw error;
+            if (error) {
+                if (error.message?.toLowerCase().includes('practice notes')) {
+                    playSound('error');
+                    setShowAdModal(true);
+                    return;
+                }
+                throw error;
+            }
 
+            await refreshProfile();
             navigate(`/game/${roomId}`, {
                 state: {
                     roomId,
@@ -83,6 +115,32 @@ const PracticeMode = () => {
             showToast(t('common.error'), 'error');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleAdReward = async (): Promise<'ok' | 'limit' | 'error'> => {
+        if (!user) return 'error';
+        if (adRemaining <= 0) {
+            showToast(t('ad.limitReached', 'Daily ad limit reached.'), 'info');
+            return 'limit';
+        }
+        try {
+            const { error } = await supabase.rpc('reward_ad_practice_notes', { user_id: user.id });
+            if (!error) {
+                await refreshProfile();
+                playSound('level_complete');
+                return 'ok';
+            }
+            if (error?.message?.toLowerCase().includes('daily ad reward limit')) {
+                showToast(t('ad.limitReached', 'Daily ad limit reached.'), 'info');
+                return 'limit';
+            }
+            showToast(t('common.error'), 'error');
+            return 'error';
+        } catch (err) {
+            console.error(err);
+            showToast(t('common.error'), 'error');
+            return 'error';
         }
     };
 
@@ -114,7 +172,30 @@ const PracticeMode = () => {
                 <h1 className="text-3xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-500 drop-shadow-lg">
                     {t('menu.practice.title', '연습 모드')}
                 </h1>
-                <div className="w-10" /> {/* Spacer */}
+                {user ? (
+                    <button
+                        onClick={() => setShowAdModal(true)}
+                        className="bg-gray-800/80 backdrop-blur-md border border-gray-700 rounded-full py-2 px-4 flex items-center gap-3 hover:bg-gray-700 transition-all shadow-lg active:scale-95"
+                    >
+                        <div className="flex flex-col items-end leading-none">
+                            <div className="flex items-center gap-1.5">
+                                <span className={`text-lg font-black ${profile?.practice_notes < 1 ? 'text-red-400' : 'text-green-300'}`}>
+                                    {profile?.practice_notes ?? NOTE_MAX}
+                                </span>
+                                <span className="text-gray-500 text-xs font-bold">/ {NOTE_MAX}</span>
+                            </div>
+                            {profile?.practice_notes < NOTE_MAX && profile?.practice_last_recharge_at && (
+                                <div className="text-[10px] text-gray-400 font-mono flex items-center gap-1.5 mt-0.5">
+                                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                                    <PracticeRechargeTimer lastRecharge={profile.practice_last_recharge_at} />
+                                </div>
+                            )}
+                        </div>
+                        <BookOpen className="w-5 h-5 text-green-300" />
+                    </button>
+                ) : (
+                    <div className="w-10" />
+                )}
             </div>
 
             {/* Content */}
@@ -162,8 +243,51 @@ const PracticeMode = () => {
                     <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin" />
                 </div>
             )}
+
+            <AdModal
+                isOpen={showAdModal}
+                onClose={() => setShowAdModal(false)}
+                onReward={handleAdReward}
+                adRemaining={adRemaining}
+                adLimit={AD_DAILY_LIMIT}
+                adsRemoved={false}
+                variant="practice_notes"
+            />
         </div>
     );
 };
 
 export default PracticeMode;
+
+const PracticeRechargeTimer = ({ lastRecharge }: { lastRecharge: string }) => {
+    const [timeLeft, setTimeLeft] = useState<string>('');
+
+    useEffect(() => {
+        const calculateTime = () => {
+            if (!lastRecharge) return;
+            const last = new Date(lastRecharge).getTime();
+            const now = new Date().getTime();
+            const diff = now - last;
+            const thirtyMinutes = 30 * 60 * 1000;
+            const remaining = thirtyMinutes - diff;
+
+            if (remaining <= 0) {
+                setTimeLeft('00:00');
+            } else {
+                const m = Math.floor(remaining / 60000);
+                const s = Math.floor((remaining % 60000) / 1000);
+                setTimeLeft(`${m}:${s.toString().padStart(2, '0')}`);
+            }
+        };
+
+        calculateTime();
+        const interval = setInterval(calculateTime, 1000);
+        return () => clearInterval(interval);
+    }, [lastRecharge]);
+
+    return (
+        <span className="ml-0 text-[10px] text-gray-400 font-mono">
+            +{timeLeft}
+        </span>
+    );
+};

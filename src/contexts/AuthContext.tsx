@@ -94,6 +94,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                             created_at: new Date().toISOString(),
                             pencils: 5,
                             last_recharge_at: new Date().toISOString(),
+                            practice_notes: 5,
+                            practice_last_recharge_at: new Date().toISOString(),
+                            practice_ad_reward_count: 0,
+                            practice_ad_reward_day: new Date().toISOString().slice(0, 10),
                             xp: 0,
                             level: 1
                         };
@@ -159,6 +163,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                             created_at: new Date().toISOString(),
                             pencils: 5,
                             last_recharge_at: new Date().toISOString(),
+                            practice_notes: 5,
+                            practice_last_recharge_at: new Date().toISOString(),
+                            practice_ad_reward_count: 0,
+                            practice_ad_reward_day: new Date().toISOString().slice(0, 10),
                             xp: 0,
                             level: 1
                         };

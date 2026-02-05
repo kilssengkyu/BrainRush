@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { useUI } from '../../contexts/UIContext';
+import { useTranslation } from 'react-i18next';
 
 const GameInviteListener = () => {
     const { user } = useAuth();
     const { confirm, showToast } = useUI();
     const navigate = useNavigate();
+    const { t } = useTranslation();
     const processedInviteIds = useRef<Set<string>>(new Set());
 
     useEffect(() => {
@@ -103,12 +105,12 @@ const GameInviteListener = () => {
                 .eq('id', senderId)
                 .single();
 
-            const senderName = senderProfile?.nickname || '친구';
+            const senderName = senderProfile?.nickname || t('social.inviteSenderFallback');
 
             // Show confirmation dialog
             const accepted = await confirm(
-                '친선전 요청',
-                `'${senderName}'님이 친선전 대결을 신청했습니다! 수락하시겠습니까?`
+                t('social.inviteTitle'),
+                t('social.inviteBody', { nickname: senderName })
             );
 
             if (accepted) {
@@ -121,7 +123,7 @@ const GameInviteListener = () => {
                         .single();
 
                     if (error || !session || session.status !== 'waiting') {
-                        showToast('게임 세션이 유효하지 않거나 이미 시작되었습니다.', 'error');
+                        showToast(t('social.inviteInvalidSession'), 'error');
                         return;
                     }
 
@@ -148,7 +150,7 @@ const GameInviteListener = () => {
 
                 } catch (err) {
                     console.error('Error joining game:', err);
-                    showToast('게임 입장에 실패했습니다.', 'error');
+                    showToast(t('social.inviteJoinFail'), 'error');
                 }
             } else {
                 const { error: responseError } = await supabase
