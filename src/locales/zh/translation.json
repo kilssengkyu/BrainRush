@@ -105,6 +105,7 @@
         "challengeConfirm": "要向该好友发起挑战吗？",
         "challengeFail": "挑战失败：",
         "challengeInGame": "对方正在游戏中，无法邀请。",
+        "challengeOffline": "只能邀请在线的好友。",
         "challengeWaiting": "邀请已发送，等待接受...",
         "challengeWaitingTitle": "好友对战等待中",
         "challengeWaitingDesc": "正在等待对方接受。",
@@ -222,6 +223,13 @@
             "game": "游戏",
             "highscore": "最高分",
             "rankWinRate": "排位胜率"
+        },
+        "highscoreLeaderboardTitle": "前10名",
+        "highscoreLeaderboardEmpty": "暂无记录。",
+        "highscoreLeaderboardColumns": {
+            "rank": "#",
+            "player": "玩家",
+            "score": "分数"
         },
         "guestTitle": "游客账号",
         "guestDesc": "游客账号在登出、卸载或更换设备时可能丢失数据。请关联 Google 账号以保留进度。",
@@ -391,5 +399,9 @@
         "memorize": "记住这些！",
         "find": "哪个变了？",
         "ready": "记住了！"
+    },
+    "timingBar": {
+        "title": "节奏条",
+        "instruction": "下落条与目标条重合时点击即可。"
     }
 }

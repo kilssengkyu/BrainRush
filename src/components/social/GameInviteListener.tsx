@@ -33,11 +33,12 @@ const GameInviteListener = () => {
                     });
             }
 
-            const roomId = msg.content.split(':')[1];
-            const senderId = msg.sender_id as string | undefined;
-            if (!roomId || !senderId) return;
+            const parts = msg.content.split(':');
+            const senderId = (msg.sender_id as string | undefined) ?? parts[1];
+            const inviteId = parts[2];
+            if (!senderId || !inviteId) return;
 
-            console.log('Received invite:', roomId, 'from', senderId);
+            console.log('Received invite:', inviteId, 'from', senderId);
 
             type ActiveSession = { room_id: string; status: string };
             const { data: activeSessionData, error: activeSessionError } = await supabase
@@ -50,13 +51,12 @@ const GameInviteListener = () => {
             }
 
             const sendBusyResponse = async () => {
-                await supabase.rpc('cancel_friendly_session', { p_room_id: roomId });
                 const { error: busyError } = await supabase
                     .from('chat_messages')
                     .insert({
                         sender_id: user.id,
                         receiver_id: senderId,
-                        content: `INVITE_BUSY:${roomId}`
+                        content: `INVITE_BUSY:${inviteId}`
                     });
 
                 if (busyError) {
@@ -64,23 +64,19 @@ const GameInviteListener = () => {
                 }
             };
 
-            if (activeSession && activeSession.room_id !== roomId) {
+            if (activeSession) {
                 await sendBusyResponse();
                 return;
             }
 
-            if (activeSession && activeSession.room_id === roomId && activeSession.status !== 'waiting') {
-                return;
-            }
-
-            const hourAgoIso = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+            const fiveMinAgoIso = new Date(Date.now() - 5 * 60 * 1000).toISOString();
             const { data: practiceSessions, error: practiceError } = await supabase
                 .from('game_sessions')
                 .select('id, status, created_at')
                 .eq('mode', 'practice')
                 .in('status', ['waiting', 'countdown', 'playing', 'round_end'])
                 .or(`player1_id.eq.${user.id},player2_id.eq.${user.id}`)
-                .gte('created_at', hourAgoIso);
+                .gte('created_at', fiveMinAgoIso);
 
             if (practiceError) {
                 console.error('Failed to check practice session:', practiceError);
@@ -90,7 +86,7 @@ const GameInviteListener = () => {
             const hasActivePractice = (practiceSessions || []).some((session: { status: string; created_at: string }) => {
                 const ageMs = now - new Date(session.created_at).getTime();
                 if (session.status === 'waiting') return ageMs <= 60000;
-                return ageMs <= 60 * 60 * 1000;
+                return ageMs <= 5 * 60 * 1000;
             });
 
             if (hasActivePractice) {
@@ -115,14 +111,10 @@ const GameInviteListener = () => {
 
             if (accepted) {
                 try {
-                    // Verify session exists
-                    const { data: session, error } = await supabase
-                        .from('game_sessions')
-                        .select('status')
-                        .eq('id', roomId)
-                        .single();
+                    const { data: roomId, error } = await supabase
+                        .rpc('create_session', { p_player1_id: user.id, p_player2_id: senderId });
 
-                    if (error || !session || session.status !== 'waiting') {
+                    if (error || !roomId) {
                         showToast(t('social.inviteInvalidSession'), 'error');
                         return;
                     }
@@ -132,7 +124,7 @@ const GameInviteListener = () => {
                         .insert({
                             sender_id: user.id,
                             receiver_id: senderId,
-                            content: `INVITE_ACCEPTED:${roomId}`
+                            content: `INVITE_ACCEPTED:${inviteId}:${roomId}`
                         });
 
                     if (responseError) {
@@ -158,7 +150,7 @@ const GameInviteListener = () => {
                     .insert({
                         sender_id: user.id,
                         receiver_id: senderId,
-                        content: `INVITE_REJECTED:${roomId}`
+                        content: `INVITE_REJECTED:${inviteId}`
                     });
 
                 if (responseError) {

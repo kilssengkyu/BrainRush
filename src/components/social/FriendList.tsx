@@ -158,7 +158,7 @@ const FriendList: React.FC<FriendListProps> = ({ onChatClick, onChallengeClick, 
             (data || []).forEach((session: { player1_id: string; player2_id: string; status: string; created_at: string }) => {
                 const createdAtMs = new Date(session.created_at).getTime();
                 if (session.status === 'waiting' && now - createdAtMs > 60000) return;
-                if (session.status !== 'waiting' && now - createdAtMs > 60 * 60 * 1000) return;
+                if (session.status !== 'waiting' && now - createdAtMs > 5 * 60 * 1000) return;
                 if (friendIdSet.has(session.player1_id)) nextInGameIds.add(session.player1_id);
                 if (friendIdSet.has(session.player2_id)) nextInGameIds.add(session.player2_id);
             });
@@ -286,6 +286,7 @@ const FriendList: React.FC<FriendListProps> = ({ onChatClick, onChallengeClick, 
                         const unreadCount = unreadByFriend[friend.id] || 0;
                         const isInGame = inGameIds.has(friend.id);
                         const isOnline = onlineUsers.has(friend.id);
+                        const canChallenge = isOnline && !isInGame;
                         return (
                         <div
                             key={friend.id}
@@ -355,15 +356,25 @@ const FriendList: React.FC<FriendListProps> = ({ onChatClick, onChallengeClick, 
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();
+                                        if (!isOnline) {
+                                            showToast(t('social.challengeOffline'), 'info');
+                                            return;
+                                        }
                                         if (isInGame) {
                                             showToast(t('social.challengeInGame'), 'info');
                                             return;
                                         }
                                         onChallengeClick(friend.id);
                                     }}
-                                    className={`p-2 rounded-full transition ${isInGame ? 'bg-red-600/10 text-red-400/50 cursor-not-allowed' : 'bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white'}`}
-                                    title={isInGame ? t('social.challengeInGame') : t('social.challenge')}
-                                    disabled={isInGame}
+                                    className={`p-2 rounded-full transition ${canChallenge ? 'bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white' : 'bg-red-600/10 text-red-400/50 cursor-not-allowed'}`}
+                                    title={
+                                        !isOnline
+                                            ? t('social.challengeOffline')
+                                            : isInGame
+                                                ? t('social.challengeInGame')
+                                                : t('social.challenge')
+                                    }
+                                    disabled={!canChallenge}
                                 >
                                     <Swords size={18} />
                                 </button>

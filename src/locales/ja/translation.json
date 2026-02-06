@@ -105,6 +105,7 @@
         "challengeConfirm": "このフレンドに挑戦しますか？",
         "challengeFail": "対戦の開始に失敗しました: ",
         "challengeInGame": "対戦中のフレンドには招待できません。",
+        "challengeOffline": "オンラインのフレンドのみ招待できます。",
         "challengeWaiting": "招待を送信しました。承諾を待っています...",
         "challengeWaitingTitle": "親善戦の待機中",
         "challengeWaitingDesc": "相手の承諾を待っています。",
@@ -223,6 +224,13 @@
             "game": "ゲーム",
             "highscore": "ハイスコア",
             "rankWinRate": "ランク勝率"
+        },
+        "highscoreLeaderboardTitle": "トップ10",
+        "highscoreLeaderboardEmpty": "記録がありません。",
+        "highscoreLeaderboardColumns": {
+            "rank": "#",
+            "player": "プレイヤー",
+            "score": "スコア"
         },
         "guestTitle": "ゲストアカウント",
         "guestDesc": "ゲストはログアウト・アプリ削除・端末変更でデータが消える可能性があります。Googleアカウントを連携してください。",
@@ -392,5 +400,9 @@
         "memorize": "覚えて！",
         "find": "変わったのは？",
         "ready": "覚えた！"
+    },
+    "timingBar": {
+        "title": "タイミングバー",
+        "instruction": "落ちてくるバーがターゲットに重なったらタップ！"
     }
 }

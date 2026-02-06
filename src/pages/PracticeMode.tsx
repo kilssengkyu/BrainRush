@@ -37,6 +37,7 @@ const MINIGAMES = [
     { id: 'MOST_COLOR', title: 'mostColor.title', icon: null, defaultIcon: <Zap className="w-8 h-8 text-yellow-500" />, type: 'speed' },
     { id: 'SORTING', title: 'sorting.title', icon: null, defaultIcon: <Star className="w-8 h-8 text-purple-500" />, type: 'brain' },
     { id: 'SPY', title: 'spy.title', icon: null, defaultIcon: <Ghost className="w-8 h-8 text-gray-500" />, type: 'brain' },
+    { id: 'TIMING_BAR', title: 'timingBar.title', icon: null, defaultIcon: <BookOpen className="w-8 h-8 text-emerald-400" />, type: 'speed' },
 ];
 
 const PracticeMode = () => {

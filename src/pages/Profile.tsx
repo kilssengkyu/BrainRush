@@ -19,6 +19,7 @@ import { getTierFromMMR, getTierColor, getTierIcon } from '../utils/rankUtils';
 import LevelBadge from '../components/ui/LevelBadge';
 import { getLevelFromXp } from '../utils/levelUtils';
 import AvatarModal from '../components/ui/AvatarModal';
+import HighscoreLeaderboardModal from '../components/ui/HighscoreLeaderboardModal';
 
 const HIGHSCORE_GAME_TYPES = [
     { type: 'RPS', labelKey: 'rps.title' },
@@ -46,7 +47,8 @@ const HIGHSCORE_GAME_TYPES = [
     { type: 'AIM', labelKey: 'aim.title' },
     { type: 'MOST_COLOR', labelKey: 'mostColor.title' },
     { type: 'SORTING', labelKey: 'sorting.title' },
-    { type: 'SPY', labelKey: 'spy.title' }
+    { type: 'SPY', labelKey: 'spy.title' },
+    { type: 'TIMING_BAR', labelKey: 'timingBar.title' }
 ] as const;
 
 const Profile = () => {
@@ -79,8 +81,9 @@ const Profile = () => {
     const [chatFriend, setChatFriend] = useState<{ id: string; nickname: string } | null>(null);
     const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
     const [unreadChatCount, setUnreadChatCount] = useState(0);
-    const [pendingInvite, setPendingInvite] = useState<{ roomId: string; friendId: string; expiresAt: number } | null>(null);
+    const [pendingInvite, setPendingInvite] = useState<{ inviteId: string; friendId: string; expiresAt: number } | null>(null);
     const [inviteTimeLeft, setInviteTimeLeft] = useState(0);
+    const [selectedHighscoreType, setSelectedHighscoreType] = useState<{ type: string; labelKey: string } | null>(null);
     const INVITE_TIMEOUT_MS = 60000;
 
     useEffect(() => {
@@ -210,7 +213,7 @@ const Profile = () => {
         };
     }, [activeTab, user]);
 
-    const cancelPendingInvite = useCallback(async (reason: 'cancel' | 'timeout', inviteOverride?: { roomId: string; friendId: string }) => {
+    const cancelPendingInvite = useCallback(async (reason: 'cancel' | 'timeout', inviteOverride?: { inviteId: string; friendId: string }) => {
         if (!user) return;
         const invite = inviteOverride ?? pendingInvite;
         if (!invite) return;
@@ -219,16 +222,12 @@ const Profile = () => {
         setInviteTimeLeft(0);
 
         try {
-            const { error: cancelError } = await supabase
-                .rpc('cancel_friendly_session', { p_room_id: invite.roomId });
-            if (cancelError) throw cancelError;
-
             const { error: msgError } = await supabase
                 .from('chat_messages')
                 .insert({
                     sender_id: user.id,
                     receiver_id: invite.friendId,
-                    content: `INVITE_CANCELLED:${invite.roomId}`
+                    content: `INVITE_CANCELLED:${invite.inviteId}`
                 });
 
             if (msgError) console.error('Failed to send invite cancel message', msgError);
@@ -269,7 +268,7 @@ const Profile = () => {
         if (!user || !pendingInvite) return;
 
         const channel = supabase
-            .channel(`invite_responses_${user.id}_${pendingInvite.roomId}`)
+            .channel(`invite_responses_${user.id}_${pendingInvite.inviteId}`)
             .on('postgres_changes', {
                 event: 'INSERT',
                 schema: 'public',
@@ -280,13 +279,17 @@ const Profile = () => {
                 if (!msg?.content || typeof msg.content !== 'string') return;
                 if (!msg.content.startsWith('INVITE_')) return;
 
-                const [type, roomId] = msg.content.split(':');
-                if (!roomId || roomId !== pendingInvite.roomId) return;
+                const parts = msg.content.split(':');
+                const type = parts[0];
+                const inviteId = parts[1];
+                const roomId = parts[2];
+                if (!inviteId || inviteId !== pendingInvite.inviteId) return;
 
                 if (type === 'INVITE_ACCEPTED') {
                     setPendingInvite(null);
                     setInviteTimeLeft(0);
                     showToast(t('social.challengeAccepted'), 'success');
+                    if (!roomId) return;
                     navigate(`/game/${roomId}`, {
                         state: { roomId, myId: user.id, opponentId: pendingInvite.friendId, mode: 'friendly' }
                     });
@@ -461,25 +464,21 @@ const Profile = () => {
 
             setIsLoading(true);
 
-            // 1. Create Session
-            const { data: roomId, error } = await supabase
-                .rpc('create_session', { p_player1_id: user.id, p_player2_id: friendId });
+            const inviteId = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
-            if (error) throw error;
-
-            // 2. Send Invite Message
+            // 1. Send Invite Message (session will be created on accept)
             const { error: msgError } = await supabase
                 .from('chat_messages')
                 .insert({
                     sender_id: user.id,
                     receiver_id: friendId,
-                    content: `INVITE:${roomId}`
+                    content: `INVITE:${user.id}:${inviteId}`
                 });
 
             if (msgError) console.error("Failed to send invite message", msgError);
 
-            // 3. Wait for acceptance before entering the room
-            setPendingInvite({ roomId, friendId, expiresAt: Date.now() + INVITE_TIMEOUT_MS });
+            // 2. Wait for acceptance before entering the room
+            setPendingInvite({ inviteId, friendId, expiresAt: Date.now() + INVITE_TIMEOUT_MS });
             setInviteTimeLeft(Math.ceil(INVITE_TIMEOUT_MS / 1000));
             showToast(t('social.challengeWaiting'), 'info');
 
@@ -803,9 +802,13 @@ const Profile = () => {
                                             return (
                                                 <div
                                                     key={type}
-                                                    className="grid grid-cols-[1.4fr_0.8fr_0.6fr] gap-2 bg-gray-800/50 rounded-lg px-2 py-1"
+                                                    onClick={() => setSelectedHighscoreType({ type, labelKey })}
+                                                    className="grid grid-cols-[1.4fr_0.8fr_0.6fr] gap-2 bg-gray-800/50 rounded-lg px-2 py-1 hover:bg-gray-700/60 active:scale-[0.99] transition-all cursor-pointer group"
                                                 >
-                                                    <span className="text-gray-300">{t(labelKey)}</span>
+                                                    <span className="text-gray-300 flex items-center gap-1">
+                                                        {t(labelKey)}
+                                                        <span className="text-gray-500 group-hover:text-gray-300 transition-colors">›</span>
+                                                    </span>
                                                     <span className="text-right text-yellow-300 font-bold tabular-nums">
                                                         {highscores[type] ?? 0}
                                                     </span>
@@ -845,6 +848,12 @@ const Profile = () => {
                 onClose={() => setShowHistoryModal(false)}
                 userId={user?.id}
                 initialMode={historyMode}
+            />
+            <HighscoreLeaderboardModal
+                isOpen={!!selectedHighscoreType}
+                onClose={() => setSelectedHighscoreType(null)}
+                gameType={selectedHighscoreType?.type ?? null}
+                title={selectedHighscoreType ? t(selectedHighscoreType.labelKey) : ''}
             />
 
             {/* Chat Overlay */}

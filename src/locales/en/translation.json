@@ -62,6 +62,7 @@
         "challengeCancelled": "Invite cancelled.",
         "challengeAlreadyPending": "You already have a pending invite.",
         "challengeInGame": "You can't invite a friend who is in a game.",
+        "challengeOffline": "You can only invite friends who are online.",
         "inviteSenderFallback": "Friend",
         "inviteTitle": "Friendly Match Request",
         "inviteBody": "'{{nickname}}' has challenged you to a friendly match. Accept?",
@@ -191,6 +192,13 @@
             "game": "Game",
             "highscore": "Highscore",
             "rankWinRate": "Rank Win Rate"
+        },
+        "highscoreLeaderboardTitle": "Top 10",
+        "highscoreLeaderboardEmpty": "No records yet.",
+        "highscoreLeaderboardColumns": {
+            "rank": "#",
+            "player": "Player",
+            "score": "Score"
         },
         "guestTitle": "Guest Account",
         "guestDesc": "Guest accounts can be lost if you sign out, delete the app, or change devices. Link a Google account to keep your progress.",
@@ -394,5 +402,9 @@
         "memorize": "Memorize these!",
         "find": "Who is new?",
         "ready": "Ready!"
+    },
+    "timingBar": {
+        "title": "Timing Bar",
+        "instruction": "Tap when the falling bar overlaps the target bar."
     }
 }

@@ -8,6 +8,10 @@ interface HexRadarProps {
     max?: number;
     size?: number;
     className?: string;
+    compareValues?: Record<StatKey, number>;
+    primaryColor?: { fill: string; stroke: string };
+    compareColor?: { fill: string; stroke: string };
+    showLabels?: boolean;
 }
 
 const STAT_ORDER: StatKey[] = ['speed', 'memory', 'judgment', 'calculation', 'accuracy', 'observation'];
@@ -20,11 +24,30 @@ const polarPoint = (cx: number, cy: number, radius: number, angleDeg: number) =>
     };
 };
 
-const HexRadar: React.FC<HexRadarProps> = ({ values, labels, max = 999, size = 240, className }) => {
+const HexRadar: React.FC<HexRadarProps> = ({
+    values,
+    labels,
+    max,
+    size = 240,
+    className,
+    compareValues,
+    primaryColor = { fill: 'rgba(59,130,246,0.25)', stroke: 'rgba(59,130,246,0.9)' },
+    compareColor = { fill: 'rgba(239,68,68,0.22)', stroke: 'rgba(239,68,68,0.9)' },
+    showLabels = true
+}) => {
     const padding = 40;
     const radius = size / 2 - padding;
     const center = size / 2;
     const angles = STAT_ORDER.map((_, idx) => -90 + idx * 60);
+    const step = 50;
+    const rawMax = Math.max(
+        step,
+        ...STAT_ORDER.map((key) => values[key] || 0),
+        ...STAT_ORDER.map((key) => compareValues?.[key] || 0)
+    );
+    const effectiveMax = typeof max === 'number'
+        ? Math.max(1, max)
+        : Math.ceil(rawMax / step) * step;
 
     const gridLevels = [0.2, 0.4, 0.6, 0.8, 1];
 
@@ -38,11 +61,20 @@ const HexRadar: React.FC<HexRadarProps> = ({ values, labels, max = 999, size = 2
 
     const valuePolygon = angles.map((angle, idx) => {
         const key = STAT_ORDER[idx];
-        const clamped = Math.max(0, Math.min(values[key] || 0, max));
-        const level = clamped / max;
+        const clamped = Math.max(0, Math.min(values[key] || 0, effectiveMax));
+        const level = clamped / effectiveMax;
         const pt = polarPoint(center, center, radius * level, angle);
         return `${pt.x},${pt.y}`;
     }).join(' ');
+    const comparePolygon = compareValues
+        ? angles.map((angle, idx) => {
+            const key = STAT_ORDER[idx];
+            const clamped = Math.max(0, Math.min(compareValues[key] || 0, effectiveMax));
+            const level = clamped / effectiveMax;
+            const pt = polarPoint(center, center, radius * level, angle);
+            return `${pt.x},${pt.y}`;
+        }).join(' ')
+        : null;
 
     return (
         <div className={className}>
@@ -74,16 +106,24 @@ const HexRadar: React.FC<HexRadarProps> = ({ values, labels, max = 999, size = 2
                     );
                 })}
 
-                {/* Data polygon */}
+                {/* Data polygons */}
+                {comparePolygon && (
+                    <polygon
+                        points={comparePolygon}
+                        fill={compareColor.fill}
+                        stroke={compareColor.stroke}
+                        strokeWidth="2"
+                    />
+                )}
                 <polygon
                     points={valuePolygon}
-                    fill="rgba(59,130,246,0.25)"
-                    stroke="rgba(59,130,246,0.9)"
+                    fill={primaryColor.fill}
+                    stroke={primaryColor.stroke}
                     strokeWidth="2"
                 />
 
                 {/* Labels */}
-                {angles.map((angle, idx) => {
+                {showLabels && angles.map((angle, idx) => {
                     const key = STAT_ORDER[idx];
                     const labelPt = polarPoint(center, center, radius + 12, angle);
                     const anchor = Math.abs(angle) === 90 ? 'middle' : angle > 90 || angle < -90 ? 'end' : 'start';

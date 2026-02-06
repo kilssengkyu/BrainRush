@@ -136,7 +136,6 @@ export const useMatchmaking = (
                     }
 
                     setStatus('matched');
-
                     // Add delay to show "Matched!" modal
                     setTimeout(() => {
                         onMatchFound(passiveMatch.room_id, passiveMatch.opponent_id);

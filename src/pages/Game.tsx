@@ -29,8 +29,10 @@ import PathRunner from '../components/minigames/PathRunner';
 import BallCounter from '../components/minigames/BallCounter';
 import BlindPathRunner from '../components/minigames/BlindPathRunner';
 import CatchColor from '../components/minigames/CatchColor';
+import TimingBar from '../components/minigames/TimingBar';
 import ScoreProgressBar from '../components/ui/ScoreProgressBar';
 import Flag from '../components/ui/Flag';
+import HexRadar from '../components/ui/HexRadar';
 import { isBotId } from '../constants/bot';
 
 const BOT_EMOJI_POOL = ['🙂', '😭', '😂', '☹️', '❤️', '💔', '👍', '👎'];
@@ -76,9 +78,42 @@ const Game: React.FC = () => {
     const warmupStart = gameState.startAt ? new Date(gameState.startAt).getTime() : 0;
     const warmupDiff = (warmupStart - now) / 1000;
     const isWarmup = warmupDiff > 0;
-    const showWarmupOverlay = isWarmup || isCountdown;
+    const [roundFinishedUntil, setRoundFinishedUntil] = useState(0);
+    const wasTimeUpRef = useRef(false);
+    useEffect(() => {
+        if (isTimeUp && !wasTimeUpRef.current) {
+            setRoundFinishedUntil(Date.now() + serverOffset + 1500);
+        }
+        wasTimeUpRef.current = isTimeUp;
+    }, [isTimeUp, serverOffset]);
+    const showRoundFinished = roundFinishedUntil > now;
+    const showWarmupOverlay = (isWarmup || isCountdown) && !showRoundFinished;
     const showEmojiBar = isWarmup || isTimeUp || isWaiting;
     const showEmojiOverlay = showEmojiBar || isFinished;
+    const radarLabels = {
+        speed: t('profile.stats.speed'),
+        memory: t('profile.stats.memory'),
+        judgment: t('profile.stats.judgment'),
+        calculation: t('profile.stats.calculation'),
+        accuracy: t('profile.stats.accuracy'),
+        observation: t('profile.stats.observation')
+    };
+    const myRadarStats = {
+        speed: myProfile?.speed || 0,
+        memory: myProfile?.memory || 0,
+        judgment: myProfile?.judgment || 0,
+        calculation: myProfile?.calculation || 0,
+        accuracy: myProfile?.accuracy || 0,
+        observation: myProfile?.observation || 0
+    };
+    const opRadarStats = {
+        speed: opponentProfile?.speed || 0,
+        memory: opponentProfile?.memory || 0,
+        judgment: opponentProfile?.judgment || 0,
+        calculation: opponentProfile?.calculation || 0,
+        accuracy: opponentProfile?.accuracy || 0,
+        observation: opponentProfile?.observation || 0
+    };
 
     const showEmojiOverlayRef = useRef(false);
     useEffect(() => {
@@ -476,8 +511,16 @@ const Game: React.FC = () => {
                         </div>
 
                         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-                            <div className="w-16 h-16 rounded-full bg-gray-900 border-2 border-white/20 flex items-center justify-center text-xl font-black text-white shadow-lg">
-                                VS
+                            <div className="relative bg-gray-900/70 border border-white/10 rounded-3xl p-3 shadow-2xl">
+                                <HexRadar
+                                    values={myRadarStats}
+                                    compareValues={opRadarStats}
+                                    labels={radarLabels}
+                                    size={200}
+                                    showLabels={false}
+                                    primaryColor={{ fill: 'rgba(59,130,246,0.28)', stroke: 'rgba(59,130,246,0.95)' }}
+                                    compareColor={{ fill: 'rgba(239,68,68,0.25)', stroke: 'rgba(239,68,68,0.95)' }}
+                                />
                             </div>
                         </div>
                     </div>
@@ -529,6 +572,7 @@ const Game: React.FC = () => {
                                         {gameState.gameType === 'BALLS' && t('balls.title')}
                                         {gameState.gameType === 'BLIND_PATH' && t('blindPath.title')}
                                         {gameState.gameType === 'CATCH_COLOR' && t('catchColor.title')}
+                                        {gameState.gameType === 'TIMING_BAR' && t('timingBar.title')}
                                     </h2>
                                     <p className="text-2xl text-white mb-12 font-bold max-w-2xl">
                                         {gameState.gameType === 'RPS' && t('rps.instruction')}
@@ -557,6 +601,7 @@ const Game: React.FC = () => {
                                         {gameState.gameType === 'BALLS' && t('balls.instruction')}
                                         {gameState.gameType === 'BLIND_PATH' && t('blindPath.instruction')}
                                         {gameState.gameType === 'CATCH_COLOR' && t('catchColor.instruction')}
+                                        {gameState.gameType === 'TIMING_BAR' && t('timingBar.instruction')}
                                     </p>
 
                                 </motion.div>
@@ -564,8 +609,8 @@ const Game: React.FC = () => {
                         )}
 
                         {/* Round Finished Overlay (Grace Period) */}
-                        {isTimeUp && (
-                            <div className="absolute inset-0 bg-black/40 z-40 flex flex-col items-center justify-center p-8 text-center backdrop-blur-sm">
+                        {showRoundFinished && (
+                            <div className="absolute inset-0 bg-black/40 z-[60] flex flex-col items-center justify-center p-8 text-center backdrop-blur-sm">
                                 <motion.div
                                     initial={{ scale: 0.8, opacity: 0 }}
                                     animate={{ scale: 1, opacity: 1 }}
@@ -666,6 +711,13 @@ const Game: React.FC = () => {
                                     )}
                                     {gameState.gameType === 'CATCH_COLOR' && (
                                         <CatchColor seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
+                                    )}
+                                    {gameState.gameType === 'TIMING_BAR' && (
+                                        <TimingBar
+                                            onScore={incrementScore}
+                                            isPlaying={isGameplayActive}
+                                            remainingTime={gameState.remainingTime}
+                                        />
                                     )}
                                 </>
                             )}
