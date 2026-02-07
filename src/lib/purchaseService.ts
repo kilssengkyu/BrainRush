@@ -90,6 +90,16 @@ export const getTransactionId = (transaction: any): string | null => {
         ?? null;
 };
 
+export const getPurchaseToken = (transaction: any): string | null => {
+    if (!transaction) return null;
+    // Android specific: purchaseToken is usually at the top level or inside a transaction object
+    // @capgo/native-purchases structure might vary, but usually it's just 'purchaseToken'
+    return transaction.purchaseToken
+        ?? transaction.purchase_token
+        ?? transaction?.transaction?.purchaseToken
+        ?? null;
+};
+
 export const consumePurchaseToken = async (purchaseToken: string) => {
     if (!purchaseToken) return;
     if (!Capacitor.isNativePlatform() || Capacitor.getPlatform() !== 'android') return;

@@ -84,53 +84,71 @@ const verifyAppleTransaction = async (transactionId: string): Promise<VerifyResu
 };
 
 const verifyGooglePlay = async (packageName: string, productId: string, purchaseToken: string): Promise<VerifyResult> => {
-  const serviceAccountJson = JSON.parse(requireEnv('GOOGLE_SERVICE_ACCOUNT_KEY'));
-  const clientEmail = serviceAccountJson.client_email as string;
-  const privateKey = (serviceAccountJson.private_key as string).replace(/\\n/g, '\n');
+  console.log(`[Google Play] Verifying ${productId} with token length: ${purchaseToken?.length}`);
+  try {
+    const serviceAccountJson = JSON.parse(requireEnv('GOOGLE_SERVICE_ACCOUNT_KEY'));
+    const clientEmail = serviceAccountJson.client_email as string;
+    const privateKey = (serviceAccountJson.private_key as string).replace(/\\n/g, '\n');
 
-  const key = await importPKCS8(privateKey, 'RS256');
-  const jwt = await new SignJWT({
-    scope: 'https://www.googleapis.com/auth/androidpublisher',
-  })
-    .setProtectedHeader({ alg: 'RS256', typ: 'JWT' })
-    .setIssuer(clientEmail)
-    .setSubject(clientEmail)
-    .setAudience('https://oauth2.googleapis.com/token')
-    .setIssuedAt()
-    .setExpirationTime('5m')
-    .sign(key);
+    const key = await importPKCS8(privateKey, 'RS256');
+    const jwt = await new SignJWT({
+      scope: 'https://www.googleapis.com/auth/androidpublisher',
+    })
+      .setProtectedHeader({ alg: 'RS256', typ: 'JWT' })
+      .setIssuer(clientEmail)
+      .setSubject(clientEmail)
+      .setAudience('https://oauth2.googleapis.com/token')
+      .setIssuedAt()
+      .setExpirationTime('5m')
+      .sign(key);
 
-  const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-      assertion: jwt,
-    }),
-  });
-  if (!tokenRes.ok) {
-    return { ok: false };
+    const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+        assertion: jwt,
+      }),
+    });
+    if (!tokenRes.ok) {
+      console.error('[Google Play] Auth Token fetch failed:', await tokenRes.text());
+      return { ok: false };
+    }
+    const tokenData = await tokenRes.json();
+    const accessToken = tokenData.access_token as string | undefined;
+    if (!accessToken) return { ok: false };
+
+    const url = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${packageName}/purchases/products/${productId}/tokens/${purchaseToken}`;
+    console.log('[Google Play] Calling API...');
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    // Log response
+    if (!res.ok) {
+      console.error('[Google Play] API returned error:', res.status, await res.text());
+      return { ok: false };
+    }
+
+    const data = await res.json();
+    console.log('[Google Play] Response:', JSON.stringify(data));
+
+    const purchaseState = data?.purchaseState;
+    if (purchaseState !== 0) {
+      console.error('[Google Play] Invalid purchaseState:', purchaseState);
+      return { ok: false };
+    }
+
+    return {
+      ok: true,
+      environment: 'production',
+      originalTransactionId: data?.orderId,
+      storePayload: data,
+    };
+  } catch (error) {
+    console.error('[Google Play] Exception:', error);
+    throw error;
   }
-  const tokenData = await tokenRes.json();
-  const accessToken = tokenData.access_token as string | undefined;
-  if (!accessToken) return { ok: false };
-
-  const url = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${packageName}/purchases/products/${productId}/tokens/${purchaseToken}`;
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-  if (!res.ok) return { ok: false };
-
-  const data = await res.json();
-  const purchaseState = data?.purchaseState;
-  if (purchaseState !== 0) return { ok: false };
-
-  return {
-    ok: true,
-    environment: 'production',
-    originalTransactionId: data?.orderId,
-    storePayload: data,
-  };
 };
 
 const grantEntitlement = async (
@@ -205,13 +223,29 @@ Deno.serve(async (req) => {
       return jsonResponse(400, { error: 'Verification failed' });
     }
 
+    // Use the Order ID (GPA...) verified by Google/Apple, not the token passed in request
+    const confirmedTransactionId = result.originalTransactionId || transactionId;
+
+    if (!confirmedTransactionId) {
+      console.error('[Verify Purchase] No transaction ID obtained from verification');
+      return jsonResponse(500, { error: 'Failed to obtain transaction ID' });
+    }
+
+    console.log(`[Verify Purchase] Recording purchase for ${user.id}, Product: ${productId}, ID: ${confirmedTransactionId}`);
+
     const { data: recorded, error: recordError } = await supabase.rpc('record_purchase', {
-      user_id: user.id,
-      product_id: productId,
-      platform,
-      transaction_id: transactionId,
+      p_user_id: user.id,
+      p_product_id: productId,
+      p_platform: platform,
+      p_transaction_id: confirmedTransactionId,
     });
-    if (recordError) throw recordError;
+
+    if (recordError) {
+      console.error('[Verify Purchase] record_purchase RPC failed:', recordError);
+      throw recordError;
+    }
+
+    console.log(`[Verify Purchase] Recorded: ${recorded}`);
 
     if (recorded) {
       const { error: updateError } = await supabase
@@ -225,14 +259,27 @@ Deno.serve(async (req) => {
         })
         .eq('user_id', user.id)
         .eq('platform', platform)
-        .eq('transaction_id', transactionId);
-      if (updateError) throw updateError;
+        .eq('transaction_id', confirmedTransactionId);
+      if (updateError) {
+        console.error('[Verify Purchase] Update transaction failed:', updateError);
+        throw updateError;
+      }
 
+      await grantEntitlement(supabase, user.id, productId);
+    }
+
+    // Check if we need to grant entitlement even if duplicate? 
+    // Usually if record_purchase returns false (duplicate), it implies we already handled it. 
+    // BUT user might have not received entitlement if previous grant failed.
+    // For safety, let's always ensure entitlement if verification passed.
+    if (!recorded) {
+      console.log('[Verify Purchase] Duplicate transaction, ensuring entitlement anyway...');
       await grantEntitlement(supabase, user.id, productId);
     }
 
     return jsonResponse(200, { ok: true, duplicate: !recorded });
   } catch (err) {
+    console.error('[Verify Purchase] Internal Server Error:', err);
     return jsonResponse(500, { error: 'Server error', detail: String(err?.message ?? err) });
   }
 });

@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ShoppingBag, Pencil, Ban, Sparkles } from 'lucide-react';
 import { useSound } from '../contexts/SoundContext';
 import { useUI } from '../contexts/UIContext';
-import { consumePurchaseToken, getTransactionId, loadProducts, PRODUCT_IDS, purchaseProduct, type ShopProductId } from '../lib/purchaseService';
+import { consumePurchaseToken, getPurchaseToken, getTransactionId, loadProducts, PRODUCT_IDS, purchaseProduct, type ShopProductId } from '../lib/purchaseService';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { Capacitor } from '@capacitor/core';
@@ -126,6 +126,15 @@ const Shop = () => {
         try {
             const transaction = await purchaseProduct(item.productId);
             const transactionId = getTransactionId(transaction);
+            let purchaseToken = getPurchaseToken(transaction);
+
+            if (Capacitor.getPlatform() === 'android' && !purchaseToken && transactionId) {
+                // Heuristic: If we don't have an explicit purchaseToken, and we have a transactionId
+                // (which for Android tokens is a very long string, not starting with GPA usually in raw form before verification),
+                // we treat transactionId as the token.
+                purchaseToken = transactionId;
+            }
+
             if (!transactionId) {
                 throw new Error('Missing transaction id');
             }
@@ -134,19 +143,24 @@ const Shop = () => {
                 body: {
                     platform: Capacitor.getPlatform(),
                     productId: item.productId,
-                    transactionId
+                    transactionId,
+                    purchaseToken
                 }
             });
             if (verifyError || !data?.ok) {
+                // If verification response failed, but we got a response, it might be due to duplicate.
+                // However, if we fail here, we should NOT consume the purchase.
                 throw new Error(verifyError?.message || data?.error || 'Verification failed');
             }
 
             if (item.isConsumable) {
-                await consumePurchaseToken(transactionId);
+                // For Android, we MUST consume the item to allow repurchase.
+                // Use the purchaseToken we resolved (could be transactionId on Android)
+                const tokenToConsume = purchaseToken || transactionId;
+                await consumePurchaseToken(tokenToConsume);
             }
             await refreshProfile();
             showToast(t('shop.purchaseSuccess', 'Purchase completed.'), 'success');
-            console.log('Purchase success:', item.productId);
         } catch (err: any) {
             console.error('Purchase failed:', err);
             const message = err?.message?.includes('Billing not supported')

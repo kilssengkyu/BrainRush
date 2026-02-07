@@ -60,10 +60,10 @@ BEGIN
 END $$;
 
 CREATE OR REPLACE FUNCTION public.record_purchase(
-    user_id UUID,
-    product_id TEXT,
-    platform TEXT,
-    transaction_id TEXT
+    p_user_id UUID,
+    p_product_id TEXT,
+    p_platform TEXT,
+    p_transaction_id TEXT
 ) RETURNS BOOLEAN
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -71,12 +71,12 @@ AS $$
 DECLARE
     inserted BOOLEAN := FALSE;
 BEGIN
-    IF user_id != auth.uid() THEN
+    IF p_user_id != auth.uid() THEN
         RAISE EXCEPTION 'Cannot record purchase for another user';
     END IF;
 
     INSERT INTO public.purchase_transactions (user_id, product_id, platform, transaction_id)
-    VALUES (user_id, product_id, platform, transaction_id)
+    VALUES (p_user_id, p_product_id, p_platform, p_transaction_id)
     ON CONFLICT (platform, transaction_id) DO NOTHING;
 
     GET DIAGNOSTICS inserted = ROW_COUNT;
