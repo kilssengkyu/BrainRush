@@ -1,11 +1,12 @@
 diff --git a/node_modules/@capgo/native-purchases/android/src/main/java/ee/forgr/nativepurchases/NativePurchasesPlugin.java b/node_modules/@capgo/native-purchases/android/src/main/java/ee/forgr/nativepurchases/NativePurchasesPlugin.java
-index e6dbbd0..e7b54dd 100644
+index e6dbbd0..f380e92 100644
 --- a/node_modules/@capgo/native-purchases/android/src/main/java/ee/forgr/nativepurchases/NativePurchasesPlugin.java
 +++ b/node_modules/@capgo/native-purchases/android/src/main/java/ee/forgr/nativepurchases/NativePurchasesPlugin.java
-@@ -421,6 +421,42 @@ public class NativePurchasesPlugin extends Plugin {
-     call.resolve();
+@@ -227,6 +227,43 @@ public class NativePurchasesPlugin extends Plugin {
+     }
    }
  
++
 +  @PluginMethod
 +  public void consumePurchase(PluginCall call) {
 +    String purchaseToken = call.getString("purchaseToken");
@@ -42,9 +43,9 @@ index e6dbbd0..e7b54dd 100644
 +    );
 +  }
 +
-   private void queryProductDetails(
-     List<String> productIdentifiers,
-     String productType,
+   @PluginMethod
+   public void getPluginVersion(final PluginCall call) {
+     try {
 diff --git a/node_modules/@capgo/native-purchases/dist/esm/definitions.d.ts b/node_modules/@capgo/native-purchases/dist/esm/definitions.d.ts
 index 02ab7bc..7c15802 100644
 --- a/node_modules/@capgo/native-purchases/dist/esm/definitions.d.ts
@@ -75,15 +76,16 @@ index f974f09..288fd42 100644
 +    }): Promise<void>;
  }
 diff --git a/node_modules/@capgo/native-purchases/dist/esm/web.js b/node_modules/@capgo/native-purchases/dist/esm/web.js
-index 5ce4a4b..1528935 100644
+index 72842fa..376f9ca 100644
 --- a/node_modules/@capgo/native-purchases/dist/esm/web.js
 +++ b/node_modules/@capgo/native-purchases/dist/esm/web.js
 @@ -36,5 +36,8 @@ export class NativePurchasesWeb extends WebPlugin {
-     console.warn("Cannot get plugin version in web");
-     return { version: "default" };
-   }
-+  async consumePurchase(options) {
-+    console.warn("consumePurchase only mocked in web " + options);
-+  }
+         console.warn("Cannot get plugin version in web");
+         return { version: "default" };
+     }
++    async consumePurchase(options) {
++        console.warn("consumePurchase only mocked in web " + options);
++    }
  }
  //# sourceMappingURL=web.js.map
+\ No newline at end of file
