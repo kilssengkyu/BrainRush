@@ -159,8 +159,15 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
         // Native AdMob Mode
         try {
             setAdState('loading');
-            // Test ID for Android Rewarded Video
-            const adId = 'ca-app-pub-3940256099942544/5224354917';
+            const platform = Capacitor.getPlatform();
+            const isProd = import.meta.env.PROD || String(import.meta.env.VITE_APP_ENV || '').toLowerCase() === 'prod' || String(import.meta.env.VITE_APP_ENV || '').toLowerCase() === 'production';
+            const adId = isProd
+                ? (platform === 'ios'
+                    ? 'ca-app-pub-4893861547827379/8300296145'
+                    : 'ca-app-pub-4893861547827379/1519157571')
+                : (platform === 'ios'
+                    ? 'ca-app-pub-3940256099942544/1712485313'
+                    : 'ca-app-pub-3940256099942544/5224354917');
 
             await AdMob.prepareRewardVideoAd({ adId });
             await AdMob.showRewardVideoAd();

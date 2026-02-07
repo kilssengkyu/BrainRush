@@ -6,9 +6,10 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ShoppingBag, Pencil, Ban, Sparkles } from 'lucide-react';
 import { useSound } from '../contexts/SoundContext';
 import { useUI } from '../contexts/UIContext';
-import { loadProducts, PRODUCT_IDS, purchaseProduct, type ShopProductId } from '../lib/purchaseService';
+import { getTransactionId, loadProducts, PRODUCT_IDS, purchaseProduct, type ShopProductId } from '../lib/purchaseService';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabaseClient';
+import { Capacitor } from '@capacitor/core';
 
 type ShopItem = {
     id: string;
@@ -123,24 +124,24 @@ const Shop = () => {
             return;
         }
         try {
-            await purchaseProduct(item.productId);
-            if (item.productId === PRODUCT_IDS.removeAds) {
-                const { error } = await supabase.rpc('grant_ads_removal', { user_id: user.id });
-                if (error) throw error;
-                await refreshProfile();
-            } else if (item.productId === PRODUCT_IDS.pencils5) {
-                const { error } = await supabase.rpc('grant_pencils', { user_id: user.id, amount: 5 });
-                if (error) throw error;
-                await refreshProfile();
-            } else if (item.productId === PRODUCT_IDS.pencils20) {
-                const { error } = await supabase.rpc('grant_pencils', { user_id: user.id, amount: 20 });
-                if (error) throw error;
-                await refreshProfile();
-            } else if (item.productId === PRODUCT_IDS.pencils100) {
-                const { error } = await supabase.rpc('grant_pencils', { user_id: user.id, amount: 100 });
-                if (error) throw error;
-                await refreshProfile();
+            const transaction = await purchaseProduct(item.productId);
+            const transactionId = getTransactionId(transaction);
+            if (!transactionId) {
+                throw new Error('Missing transaction id');
             }
+
+            const { data, error: verifyError } = await supabase.functions.invoke('verify-purchase', {
+                body: {
+                    platform: Capacitor.getPlatform(),
+                    productId: item.productId,
+                    transactionId
+                }
+            });
+            if (verifyError || !data?.ok) {
+                throw new Error(verifyError?.message || data?.error || 'Verification failed');
+            }
+
+            await refreshProfile();
             showToast(t('shop.purchaseSuccess', 'Purchase completed.'), 'success');
             console.log('Purchase success:', item.productId);
         } catch (err: any) {

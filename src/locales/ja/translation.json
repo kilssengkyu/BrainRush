@@ -175,7 +175,11 @@
         "restorePurchasesDesc": "広告削除などの非消耗型購入を復元します。",
         "restorePurchasesSuccess": "購入の復元が完了しました。",
         "restorePurchasesFail": "購入の復元に失敗しました。",
-        "restorePurchasesUnavailable": "この端末では購入をサポートしていません。"
+        "restorePurchasesUnavailable": "この端末では購入をサポートしていません。",
+        "restorePurchasesEmpty": "復元できる購入がありません。",
+        "privacyPolicy": "プライバシーポリシー",
+        "privacyPolicyDesc": "サービスにおける個人情報の取り扱いを確認できます。",
+        "viewPrivacyPolicy": "プライバシーポリシーを見る"
     },
     "game": {
         "waiting": "ゲーム待機中...",
@@ -404,5 +408,19 @@
     "timingBar": {
         "title": "タイミングバー",
         "instruction": "落ちてくるバーがターゲットに重なったらタップ！"
+    },
+    "tutorial": {
+        "normal": "🌍 世界中のプレイヤーとミニゲーム対戦を楽しもう！",
+        "rank": "🏆 同じ実力のプレイヤーとランク戦！",
+        "practice": "💪 好きなゲームを自由に練習できます！",
+        "ranking": "👑 世界で一番賢いプレイヤーをチェック！",
+        "shop": "🛒 鉛筆購入や広告削除ができます！",
+        "settings": "⚙️ 音量や言語などの設定を変更できます！",
+        "login": "👤 アカウント連携で安全にプレイ！",
+        "profile": "📊 実力・能力値・スコアを確認！",
+        "next": "次へ",
+        "done": "完了",
+        "skip": "スキップ",
+        "loginNow": "今すぐログイン"
     }
 }

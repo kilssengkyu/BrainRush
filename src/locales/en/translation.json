@@ -181,7 +181,11 @@
         "restorePurchasesDesc": "Restore non-consumable purchases such as ad removal.",
         "restorePurchasesSuccess": "Purchases restored.",
         "restorePurchasesFail": "Failed to restore purchases.",
-        "restorePurchasesUnavailable": "Billing not supported on this device."
+        "restorePurchasesUnavailable": "Billing not supported on this device.",
+        "restorePurchasesEmpty": "No purchases to restore.",
+        "privacyPolicy": "Privacy Policy",
+        "privacyPolicyDesc": "Review how we handle personal data for the service.",
+        "viewPrivacyPolicy": "View Privacy Policy"
     },
     "profile": {
         "nicknamePlaceholder": "Enter nickname",

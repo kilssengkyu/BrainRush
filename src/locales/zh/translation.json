@@ -175,7 +175,11 @@
         "restorePurchasesDesc": "恢复去广告等非消耗型购买。",
         "restorePurchasesSuccess": "购买已恢复。",
         "restorePurchasesFail": "恢复购买失败。",
-        "restorePurchasesUnavailable": "此设备不支持购买。"
+        "restorePurchasesUnavailable": "此设备不支持购买。",
+        "restorePurchasesEmpty": "没有可恢复的购买。",
+        "privacyPolicy": "隐私政策",
+        "privacyPolicyDesc": "查看我们如何处理服务所需的个人数据。",
+        "viewPrivacyPolicy": "查看隐私政策"
     },
     "game": {
         "waiting": "等待游戏...",
@@ -403,5 +407,19 @@
     "timingBar": {
         "title": "节奏条",
         "instruction": "下落条与目标条重合时点击即可。"
+    },
+    "tutorial": {
+        "normal": "🌍 和全球玩家一起玩迷你游戏对战！",
+        "rank": "🏆 与实力相近的玩家进行排位赛！",
+        "practice": "💪 随时练习你喜欢的游戏！",
+        "ranking": "👑 查看世界上最聪明的玩家！",
+        "shop": "🛒 购买铅笔或移除广告！",
+        "settings": "⚙️ 修改声音、语言等设置！",
+        "login": "👤 绑定账号，安全游玩！",
+        "profile": "📊 查看实力、能力值和高分记录！",
+        "next": "下一步",
+        "done": "完成",
+        "skip": "跳过",
+        "loginNow": "立即登录"
     }
 }

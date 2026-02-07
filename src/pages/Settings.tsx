@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Globe, Volume2, VolumeX, RefreshCcw, BookOpen } from 'lucide-react';
+import { ChevronLeft, Globe, Volume2, VolumeX, RefreshCcw, BookOpen, Shield } from 'lucide-react';
 import { useSound } from '../contexts/SoundContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useUI } from '../contexts/UIContext';
-import { restorePurchases } from '../lib/purchaseService';
+import { getPurchasedProductIds, PRODUCT_IDS, restorePurchases } from '../lib/purchaseService';
 import { useTutorial } from '../contexts/TutorialContext';
+import { supabase } from '../lib/supabaseClient';
 
 const Settings = () => {
     const { t, i18n } = useTranslation();
@@ -37,9 +38,20 @@ const Settings = () => {
         }
         setIsRestoring(true);
         try {
-            await restorePurchases();
-            await refreshProfile();
-            showToast(t('settings.restorePurchasesSuccess', 'Purchases restored.'), 'success');
+            const customerInfo = await restorePurchases();
+            const purchasedIds = new Set(getPurchasedProductIds(customerInfo));
+            if (purchasedIds.size === 0) {
+                showToast(t('settings.restorePurchasesEmpty', 'No purchases to restore.'), 'info');
+                return;
+            }
+            if (purchasedIds.has(PRODUCT_IDS.removeAds)) {
+                const { error } = await supabase.rpc('grant_ads_removal', { user_id: user.id });
+                if (error) throw error;
+                await refreshProfile();
+                showToast(t('settings.restorePurchasesSuccess', 'Purchases restored.'), 'success');
+                return;
+            }
+            showToast(t('settings.restorePurchasesEmpty', 'No purchases to restore.'), 'info');
         } catch (err: any) {
             const message = err?.message?.includes('Billing not supported')
                 ? t('settings.restorePurchasesUnavailable', 'Billing not supported on this device.')
@@ -166,6 +178,25 @@ const Settings = () => {
                             className="w-full px-5 py-3 rounded-xl bg-amber-600/80 hover:bg-amber-600 text-white font-bold transition-colors"
                         >
                             {t('settings.viewTutorial', '튜토리얼 다시 보기')}
+                        </button>
+                    </div>
+                </section>
+
+                {/* Privacy Policy Section */}
+                <section className="space-y-4">
+                    <div className="flex items-center gap-3 text-sky-400 mb-2">
+                        <Shield size={24} />
+                        <h2 className="text-xl font-semibold">{t('settings.privacyPolicy', '개인정보 처리방침')}</h2>
+                    </div>
+                    <div className="bg-white/5 p-6 rounded-xl border border-white/10 space-y-4 backdrop-blur-md">
+                        <p className="text-sm text-gray-400">
+                            {t('settings.privacyPolicyDesc', '서비스 이용에 필요한 개인정보 처리 내용을 확인할 수 있습니다.')}
+                        </p>
+                        <button
+                            onClick={() => { playSound('click'); navigate('/privacy'); }}
+                            className="w-full px-5 py-3 rounded-xl bg-sky-600/80 hover:bg-sky-600 text-white font-bold transition-colors"
+                        >
+                            {t('settings.viewPrivacyPolicy', '개인정보 처리방침 보기')}
                         </button>
                     </div>
                 </section>
