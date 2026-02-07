@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Trophy } from 'lucide-react';
 import { useGameState } from '../hooks/useGameState';
+import { useSound } from '../contexts/SoundContext';
 import { supabase } from '../lib/supabaseClient';
 import RockPaperScissors from '../components/minigames/RockPaperScissors';
 import NumberSortGame from '../components/minigames/NumberSortGame';
@@ -60,6 +61,16 @@ const Game: React.FC = () => {
 
     // Game Hook
     const { gameState, incrementScore, serverOffset, isWaitingTimeout, isTimeUp, onlineUsers, connectionStatus } = useGameState(roomId!, myId, opponentId);
+    const { playBGM, stopBGM } = useSound();
+
+    // BGM Control for TimingBar
+    useEffect(() => {
+        if (gameState.gameType === 'TIMING_BAR') {
+            stopBGM();
+        } else if (gameState.gameType) {
+            playBGM('bgm_game');
+        }
+    }, [gameState.gameType, playBGM, stopBGM]);
 
     const isOpponentOnline = !opponentId || opponentId.startsWith('practice') || isBotId(opponentId) || onlineUsers.includes(opponentId);
 
@@ -748,7 +759,7 @@ const Game: React.FC = () => {
                                             initial={{ opacity: 0, y: 20 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: 0.5 }}
-                                            onClick={() => navigate('/')}
+                                            onClick={() => navigate('/practice')}
                                             className="px-8 py-4 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold text-xl transition-all shadow-lg hover:shadow-green-500/50"
                                         >
                                             {t('game.returnMenu')}

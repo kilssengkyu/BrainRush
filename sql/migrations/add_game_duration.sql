@@ -9,7 +9,6 @@ BEGIN
         WHEN 'RPS' THEN 30
         WHEN 'ARROW' THEN 30
         WHEN 'TAP_COLOR' THEN 30
-        WHEN 'TIMING_BAR' THEN 30
         WHEN 'SLIDER' THEN 30
         WHEN 'UPDOWN' THEN 30
         WHEN 'CATCH_COLOR' THEN 30
@@ -33,6 +32,7 @@ BEGIN
         WHEN 'BALLS' THEN 40
         WHEN 'MEMORY' THEN 40
         WHEN 'SPY' THEN 40
+        WHEN 'TIMING_BAR' THEN 40
         
         -- 45초 게임
         WHEN 'PATH' THEN 45
