@@ -45,6 +45,7 @@ import { SoundProvider } from './contexts/SoundContext';
 
 import { AuthProvider } from './contexts/AuthContext';
 import { UIProvider } from './contexts/UIContext';
+import { TutorialProvider } from './contexts/TutorialContext';
 // Pages
 import Login from './pages/Login';
 import Profile from './pages/Profile';
@@ -69,22 +70,24 @@ function App() {
     <SoundProvider>
       <AuthProvider>
         <UIProvider>
-          <BrowserRouter>
-            <BackButtonHandler />
-            <BGMManager />
-            <GameInviteListener />
-            <ChatNotificationListener />
-            <LocalNotificationScheduler />
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/game/:roomId" element={<Game />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/practice" element={<PracticeMode />} />
-              <Route path="/shop" element={<Shop />} />
-            </Routes>
-          </BrowserRouter>
+          <TutorialProvider>
+            <BrowserRouter>
+              <BackButtonHandler />
+              <BGMManager />
+              <GameInviteListener />
+              <ChatNotificationListener />
+              <LocalNotificationScheduler />
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/game/:roomId" element={<Game />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/practice" element={<PracticeMode />} />
+                <Route path="/shop" element={<Shop />} />
+              </Routes>
+            </BrowserRouter>
+          </TutorialProvider>
         </UIProvider>
       </AuthProvider>
     </SoundProvider>

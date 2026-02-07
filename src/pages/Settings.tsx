@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Globe, Volume2, VolumeX, RefreshCcw } from 'lucide-react';
+import { ChevronLeft, Globe, Volume2, VolumeX, RefreshCcw, BookOpen } from 'lucide-react';
 import { useSound } from '../contexts/SoundContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useUI } from '../contexts/UIContext';
 import { restorePurchases } from '../lib/purchaseService';
+import { useTutorial } from '../contexts/TutorialContext';
 
 const Settings = () => {
     const { t, i18n } = useTranslation();
@@ -14,6 +15,7 @@ const Settings = () => {
     const { isMuted, toggleMute, playSound } = useSound();
     const { user, refreshProfile } = useAuth();
     const { showToast } = useUI();
+    const { resetHomeTutorial } = useTutorial();
     const [isRestoring, setIsRestoring] = useState(false);
 
     const languages = [
@@ -141,6 +143,29 @@ const Settings = () => {
                             className="w-full px-5 py-3 rounded-xl bg-emerald-600/80 hover:bg-emerald-600 text-white font-bold transition-colors disabled:opacity-50"
                         >
                             {isRestoring ? t('common.loading') : t('settings.restorePurchases', 'Restore Purchases')}
+                        </button>
+                    </div>
+                </section>
+
+                {/* Tutorial Section */}
+                <section className="space-y-4">
+                    <div className="flex items-center gap-3 text-amber-400 mb-2">
+                        <BookOpen size={24} />
+                        <h2 className="text-xl font-semibold">{t('settings.tutorial', '튜토리얼')}</h2>
+                    </div>
+                    <div className="bg-white/5 p-6 rounded-xl border border-white/10 space-y-4 backdrop-blur-md">
+                        <p className="text-sm text-gray-400">
+                            {t('settings.tutorialDesc', '앱 사용 방법을 다시 확인하고 싶다면 튜토리얼을 다시 보세요.')}
+                        </p>
+                        <button
+                            onClick={() => {
+                                playSound('click');
+                                resetHomeTutorial();
+                                navigate('/');
+                            }}
+                            className="w-full px-5 py-3 rounded-xl bg-amber-600/80 hover:bg-amber-600 text-white font-bold transition-colors"
+                        >
+                            {t('settings.viewTutorial', '튜토리얼 다시 보기')}
                         </button>
                     </div>
                 </section>

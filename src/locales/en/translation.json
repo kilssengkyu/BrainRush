@@ -406,5 +406,19 @@
     "timingBar": {
         "title": "Timing Bar",
         "instruction": "Tap when the falling bar overlaps the target bar."
+    },
+    "tutorial": {
+        "normal": "🌍 Battle players worldwide in fun minigames!",
+        "rank": "🏆 Compete with players of similar skill in ranked matches!",
+        "practice": "💪 Practice any game you want!",
+        "ranking": "👑 Check out the smartest players in the world!",
+        "shop": "🛒 Buy pencils or remove ads!",
+        "settings": "⚙️ Change sound, language and other settings!",
+        "login": "👤 Link your account for safe play!",
+        "profile": "📊 Check your skills, stats and high scores!",
+        "next": "Next",
+        "done": "Done",
+        "skip": "Skip",
+        "loginNow": "Login Now"
     }
 }

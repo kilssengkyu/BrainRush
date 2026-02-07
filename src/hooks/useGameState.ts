@@ -139,9 +139,9 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
                 const start = record.start_at ? new Date(record.start_at).getTime() : 0;
                 const end = new Date(record.end_at).getTime();
 
-                // If Warm-up phase (Now < Start): Keep remaining at 30 (or duration)
+                // If Warm-up phase (Now < Start): Show countdown to start
                 if (now < start) {
-                    remaining = 30; // Fixed duration
+                    remaining = Math.max(0, (start - now) / 1000);
                 } else {
                     remaining = Math.max(0, (end - now) / 1000);
                 }
@@ -245,10 +245,10 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
             const start = gameState.startAt ? new Date(gameState.startAt).getTime() : 0;
             const end = new Date(gameState.endAt!).getTime();
 
-            // Warm-up check (Only relevant if startAt is in future, usually startAt is phase_start_at)
-            // In our schema, phase_start_at is "NOW" when state changes.
+            // Warm-up check: Show countdown to start
             if (now < start) {
-                setGameState(prev => ({ ...prev, remainingTime: 30 }));
+                const countdownToStart = Math.max(0, (start - now) / 1000);
+                setGameState(prev => ({ ...prev, remainingTime: countdownToStart }));
                 return;
             }
 

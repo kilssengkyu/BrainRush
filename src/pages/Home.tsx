@@ -15,6 +15,8 @@ import { supabase } from '../lib/supabaseClient';
 import { getTierFromMMR, getTierColor, getTierIcon } from '../utils/rankUtils';
 import LevelBadge from '../components/ui/LevelBadge';
 import { getLevelFromXp } from '../utils/levelUtils';
+import { useTutorial } from '../contexts/TutorialContext';
+import SpotlightOverlay from '../components/ui/SpotlightOverlay';
 
 // Simple Timer Component
 const RechargeTimer = ({ lastRecharge }: { lastRecharge: string }) => {
@@ -194,6 +196,34 @@ const Home = () => {
     const [showAdModal, setShowAdModal] = useState(false);
     const [showLeaderboard, setShowLeaderboard] = useState(false);
 
+    // Tutorial refs
+    const normalModeRef = useRef<HTMLButtonElement>(null);
+    const rankModeRef = useRef<HTMLButtonElement>(null);
+    const practiceModeRef = useRef<HTMLButtonElement>(null);
+    const rankingBtnRef = useRef<HTMLButtonElement>(null);
+    const shopBtnRef = useRef<HTMLButtonElement>(null);
+    const settingsBtnRef = useRef<HTMLButtonElement>(null);
+    const loginProfileBtnRef = useRef<HTMLButtonElement>(null);
+
+    const {
+        isHomeTutorialActive,
+        homeTutorialStep,
+        homeTutorialSteps,
+        nextHomeTutorialStep,
+        skipHomeTutorial,
+    } = useTutorial();
+
+    // Map step id to ref
+    const tutorialRefs: Record<string, React.RefObject<HTMLButtonElement | null>> = {
+        normal: normalModeRef,
+        rank: rankModeRef,
+        practice: practiceModeRef,
+        ranking: rankingBtnRef,
+        shop: shopBtnRef,
+        settings: settingsBtnRef,
+        login: loginProfileBtnRef,
+    };
+
     const handleAdReward = async (): Promise<'ok' | 'limit' | 'error'> => {
         if (!user) return 'error';
         if (adRemaining <= 0) {
@@ -287,69 +317,69 @@ const Home = () => {
             {user && (
                 <>
                     <motion.div
-                    initial={{ opacity: 0, y: -50 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="absolute top-[calc(env(safe-area-inset-top)+1rem+var(--home-top-offset))] left-4 z-50 flex items-center"
-                >
-                    <div className="flex items-center gap-4 bg-gray-800/80 backdrop-blur-md p-2 pr-6 rounded-full border border-gray-700 shadow-lg cursor-pointer hover:bg-gray-800 transition-colors" onClick={() => navigate('/profile')}>
-                        <div className="relative w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 p-[2px]">
-                            <div className="w-full h-full rounded-full bg-gray-900 flex items-center justify-center overflow-hidden">
-                                {avatarUrl ? (
-                                    <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-                                ) : (
-                                    <User className="w-7 h-7 text-gray-400" />
+                        initial={{ opacity: 0, y: -50 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="absolute top-[calc(env(safe-area-inset-top)+1rem+var(--home-top-offset))] left-4 z-50 flex items-center"
+                    >
+                        <div className="flex items-center gap-4 bg-gray-800/80 backdrop-blur-md p-2 pr-6 rounded-full border border-gray-700 shadow-lg cursor-pointer hover:bg-gray-800 transition-colors" onClick={() => navigate('/profile')}>
+                            <div className="relative w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 p-[2px]">
+                                <div className="w-full h-full rounded-full bg-gray-900 flex items-center justify-center overflow-hidden">
+                                    {avatarUrl ? (
+                                        <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <User className="w-7 h-7 text-gray-400" />
+                                    )}
+                                </div>
+                                <LevelBadge level={level} size="sm" className="absolute -bottom-1 -right-1 ring-2 ring-gray-900" />
+                                {hasSocialNotifications && (
+                                    <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-gray-900" aria-hidden="true"></span>
                                 )}
                             </div>
-                            <LevelBadge level={level} size="sm" className="absolute -bottom-1 -right-1 ring-2 ring-gray-900" />
-                            {hasSocialNotifications && (
-                                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-gray-900" aria-hidden="true"></span>
-                            )}
-                        </div>
-                        <div>
-                            <div className="font-bold text-white text-lg leading-none flex items-center gap-2">
-                                <Flag code={countryCode} />
-                                {nickname}
-                            </div>
-                            <div className="mt-1.5 flex gap-3 items-center">
-                                {/* Tier Badge - Larger Size */}
-                                <div className={`px-2.5 py-1 rounded-lg text-sm font-black bg-gradient-to-r ${tierColor} text-black flex items-center gap-1.5 shadow-md transform hover:scale-105 transition-transform`}>
-                                    <TierIcon className="w-4 h-4" />
-                                    <span>{tier}</span>
-                                    <span className="opacity-60">|</span>
-                                    <span className="font-mono">{rank}</span>
+                            <div>
+                                <div className="font-bold text-white text-lg leading-none flex items-center gap-2">
+                                    <Flag code={countryCode} />
+                                    {nickname}
+                                </div>
+                                <div className="mt-1.5 flex gap-3 items-center">
+                                    {/* Tier Badge - Larger Size */}
+                                    <div className={`px-2.5 py-1 rounded-lg text-sm font-black bg-gradient-to-r ${tierColor} text-black flex items-center gap-1.5 shadow-md transform hover:scale-105 transition-transform`}>
+                                        <TierIcon className="w-4 h-4" />
+                                        <span>{tier}</span>
+                                        <span className="opacity-60">|</span>
+                                        <span className="font-mono">{rank}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </motion.div>
+                    </motion.div>
 
-                {/* Pencil Display (Top Right) */}
-                <div className="absolute top-[calc(env(safe-area-inset-top)+1rem+var(--home-top-offset))] right-4 z-50">
-                    <button
-                        onClick={() => setShowAdModal(true)}
-                        className="bg-gray-800/80 backdrop-blur-md border border-gray-700 rounded-full py-2 px-5 flex items-center gap-3 hover:bg-gray-700 transition-all shadow-lg active:scale-95"
-                    >
-                        <div className="flex flex-col items-end leading-none">
-                            <div className="flex items-center gap-1.5">
-                                <span className={`text-xl font-black ${profile?.pencils < 1 ? "text-red-400" : "text-yellow-400"}`}>
-                                    {profile?.pencils ?? 5}
-                                </span>
-                                <span className="text-gray-500 text-sm font-bold">/ 5</span>
-                            </div>
-                            {profile?.pencils < 5 && (
-                                <div className="text-xs text-gray-400 font-mono flex items-center gap-1.5 mt-0.5">
-                                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                                    <RechargeTimer lastRecharge={profile?.last_recharge_at} />
+                    {/* Pencil Display (Top Right) */}
+                    <div className="absolute top-[calc(env(safe-area-inset-top)+1rem+var(--home-top-offset))] right-4 z-50">
+                        <button
+                            onClick={() => setShowAdModal(true)}
+                            className="bg-gray-800/80 backdrop-blur-md border border-gray-700 rounded-full py-2 px-5 flex items-center gap-3 hover:bg-gray-700 transition-all shadow-lg active:scale-95"
+                        >
+                            <div className="flex flex-col items-end leading-none">
+                                <div className="flex items-center gap-1.5">
+                                    <span className={`text-xl font-black ${profile?.pencils < 1 ? "text-red-400" : "text-yellow-400"}`}>
+                                        {profile?.pencils ?? 5}
+                                    </span>
+                                    <span className="text-gray-500 text-sm font-bold">/ 5</span>
                                 </div>
-                            )}
-                        </div>
-                        <img
-                            src="/images/icon/icon_pen.png"
-                            alt="Pencil"
-                            className="w-6 h-6 object-contain"
-                        />
-                    </button>
-                </div>
+                                {profile?.pencils < 5 && (
+                                    <div className="text-xs text-gray-400 font-mono flex items-center gap-1.5 mt-0.5">
+                                        <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                                        <RechargeTimer lastRecharge={profile?.last_recharge_at} />
+                                    </div>
+                                )}
+                            </div>
+                            <img
+                                src="/images/icon/icon_pen.png"
+                                alt="Pencil"
+                                className="w-6 h-6 object-contain"
+                            />
+                        </button>
+                    </div>
                 </>
             )}
 
@@ -390,7 +420,7 @@ const Home = () => {
                         <motion.div
                             initial={{ scale: 0.8 }}
                             animate={{ scale: 1 }}
-                        className="bg-gray-800 p-8 rounded-3xl border border-blue-500/50 flex flex-col items-center text-center shadow-2xl min-w-[300px]"
+                            className="bg-gray-800 p-8 rounded-3xl border border-blue-500/50 flex flex-col items-center text-center shadow-2xl min-w-[300px]"
                         >
                             {status === 'searching' ? (
                                 <>
@@ -459,6 +489,7 @@ const Home = () => {
 
                     {/* Normal Mode */}
                     <button
+                        ref={normalModeRef}
                         onMouseEnter={() => playSound('hover')}
                         onClick={() => handleModeSelect('normal')}
                         className={`group relative w-full p-6 bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-300 hover:border-blue-500 hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] active:scale-95 cursor-pointer flex items-center gap-4 text-left`}
@@ -475,6 +506,7 @@ const Home = () => {
 
                     {/* Rank Mode */}
                     <button
+                        ref={rankModeRef}
                         onMouseEnter={() => playSound('hover')}
                         onClick={() => handleModeSelect('rank')}
                         className={`group relative w-full p-6 bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-300 ${canPlayRank ? 'hover:border-purple-500 hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] active:scale-95 cursor-pointer' : 'opacity-50 grayscale cursor-not-allowed'} flex items-center gap-4 text-left`}
@@ -497,6 +529,7 @@ const Home = () => {
 
                     {/* Practice Mode */}
                     <button
+                        ref={practiceModeRef}
                         onMouseEnter={() => playSound('hover')}
                         onClick={() => { playSound('click'); navigate('/practice'); }}
                         className={`group relative w-full p-6 bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-300 hover:border-green-500 hover:shadow-[0_0_20px_rgba(34,197,94,0.5)] active:scale-95 cursor-pointer flex items-center gap-4 text-left`}
@@ -515,6 +548,7 @@ const Home = () => {
                 {/* Footer Buttons */}
                 <motion.div variants={itemVariants} className="grid grid-cols-2 gap-4 w-full mt-4">
                     <button
+                        ref={rankingBtnRef}
                         onMouseEnter={() => playSound('hover')}
                         onClick={() => { playSound('click'); setShowLeaderboard(true); }}
                         className="p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 group cursor-pointer"
@@ -523,6 +557,7 @@ const Home = () => {
                         <span className="text-gray-300 group-hover:text-white transition-colors">{t('leaderboard.button', 'Ranking')}</span>
                     </button>
                     <button
+                        ref={shopBtnRef}
                         onMouseEnter={() => playSound('hover')}
                         onClick={() => { playSound('click'); navigate('/shop'); }}
                         className="p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 group cursor-pointer"
@@ -531,6 +566,7 @@ const Home = () => {
                         <span className="text-gray-300 group-hover:text-white transition-colors">{t('menu.shop', 'Shop')}</span>
                     </button>
                     <button
+                        ref={settingsBtnRef}
                         onMouseEnter={() => playSound('hover')}
                         onClick={() => { playSound('click'); navigate('/settings'); }}
                         className="p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 group cursor-pointer"
@@ -540,6 +576,7 @@ const Home = () => {
                     </button>
                     {user ? (
                         <button
+                            ref={loginProfileBtnRef}
                             onMouseEnter={() => playSound('hover')}
                             onClick={() => { playSound('click'); navigate('/profile'); }}
                             className="p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 group cursor-pointer"
@@ -554,6 +591,7 @@ const Home = () => {
                         </button>
                     ) : (
                         <button
+                            ref={loginProfileBtnRef}
                             onMouseEnter={() => playSound('hover')}
                             onClick={() => { playSound('click'); navigate('/login'); }}
                             className="p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 group cursor-pointer"
@@ -565,6 +603,24 @@ const Home = () => {
                 </motion.div>
 
             </motion.div>
+
+            {/* Tutorial Spotlight Overlay */}
+            {isHomeTutorialActive && homeTutorialSteps[homeTutorialStep] && (
+                <SpotlightOverlay
+                    targetRef={tutorialRefs[homeTutorialSteps[homeTutorialStep].id]}
+                    message={t(homeTutorialSteps[homeTutorialStep].messageKey)}
+                    onNext={nextHomeTutorialStep}
+                    onSkip={skipHomeTutorial}
+                    isLast={homeTutorialStep === homeTutorialSteps.length - 1}
+                    stepNumber={homeTutorialStep}
+                    totalSteps={homeTutorialSteps.length}
+                    onAction={homeTutorialSteps[homeTutorialStep].id === 'login' && !user ? () => {
+                        skipHomeTutorial();
+                        navigate('/login');
+                    } : undefined}
+                    actionLabel={homeTutorialSteps[homeTutorialStep].id === 'login' && !user ? t('tutorial.loginNow', '바로 로그인') : undefined}
+                />
+            )}
         </div >
     );
 };

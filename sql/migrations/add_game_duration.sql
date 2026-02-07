@@ -1,100 +1,57 @@
--- Add TIMING_BAR to rotation and stats
-ALTER TABLE game_sessions DROP CONSTRAINT IF EXISTS game_sessions_game_type_check;
+-- Add per-game duration support
+-- 4초 카운트다운은 동일, 게임 플레이 시간만 게임별로 다르게 설정
 
-ALTER TABLE game_sessions
-ADD CONSTRAINT game_sessions_game_type_check
-CHECK (game_type IN (
-    'RPS',
-    'NUMBER',
-    'MATH',
-    'TEN',
-    'COLOR',
-    'MEMORY',
-    'SEQUENCE',
-    'SEQUENCE_NORMAL',
-    'LARGEST',
-    'PAIR',
-    'UPDOWN',
-    'SLIDER',
-    'ARROW',
-    'NUMBER_DESC',
-    'BLANK',
-    'OPERATOR',
-    'LADDER',
-    'TAP_COLOR',
-    'AIM',
-    'MOST_COLOR',
-    'SORTING',
-    'SPY',
-    'PATH',
-    'BLIND_PATH',
-    'BALLS',
-    'CATCH_COLOR',
-    'TIMING_BAR'
-));
-
--- Update stat increments mapping
-CREATE OR REPLACE FUNCTION stat_increments(p_game_type text)
-RETURNS TABLE (
-    speed int,
-    memory int,
-    judgment int,
-    calculation int,
-    accuracy int,
-    observation int
-) AS $$
-DECLARE
-    v_speed int := 0;
-    v_memory int := 0;
-    v_judgment int := 0;
-    v_calculation int := 0;
-    v_accuracy int := 0;
-    v_observation int := 0;
+CREATE OR REPLACE FUNCTION get_game_duration(p_game_type text)
+RETURNS int AS $$
 BEGIN
-    CASE p_game_type
-        WHEN 'AIM' THEN v_speed := 2; v_accuracy := 1;
-        WHEN 'RPS' THEN v_speed := 2; v_judgment := 1;
-        WHEN 'UPDOWN' THEN v_judgment := 2; v_speed := 1;
-        WHEN 'ARROW' THEN v_speed := 2; v_judgment := 1;
-        WHEN 'SLIDER' THEN v_accuracy := 2; v_speed := 1;
-        WHEN 'MEMORY' THEN v_memory := 2; v_accuracy := 1;
-        WHEN 'SEQUENCE' THEN v_memory := 2; v_accuracy := 1;
-        WHEN 'SEQUENCE_NORMAL' THEN v_memory := 2; v_accuracy := 1;
-        WHEN 'SPY' THEN v_memory := 2; v_observation := 1;
-        WHEN 'PAIR' THEN v_memory := 2; v_observation := 1;
-        WHEN 'COLOR' THEN v_observation := 2; v_accuracy := 1;
-        WHEN 'MOST_COLOR' THEN v_observation := 2; v_judgment := 1;
-        WHEN 'TAP_COLOR' THEN v_observation := 2; v_speed := 1;
-        WHEN 'MATH' THEN v_calculation := 2; v_accuracy := 1;
-        WHEN 'TEN' THEN v_calculation := 2; v_judgment := 1;
-        WHEN 'BLANK' THEN v_calculation := 2; v_accuracy := 1;
-        WHEN 'OPERATOR' THEN v_calculation := 2; v_judgment := 1;
-        WHEN 'LARGEST' THEN v_calculation := 2; v_judgment := 1;
-        WHEN 'NUMBER' THEN v_accuracy := 2; v_judgment := 1;
-        WHEN 'NUMBER_DESC' THEN v_accuracy := 2; v_judgment := 1;
-        WHEN 'NUMBER_ASC' THEN v_accuracy := 2; v_judgment := 1;
-        WHEN 'SORTING' THEN v_accuracy := 2; v_judgment := 1;
-        WHEN 'LADDER' THEN v_judgment := 2; v_accuracy := 1;
-        WHEN 'PATH' THEN v_speed := 2; v_judgment := 1;
-        WHEN 'BALLS' THEN v_observation := 2; v_accuracy := 1;
-        WHEN 'BLIND_PATH' THEN v_observation := 2; v_accuracy := 1;
-        WHEN 'CATCH_COLOR' THEN v_speed := 2; v_accuracy := 1;
-        WHEN 'TIMING_BAR' THEN v_speed := 2; v_accuracy := 1;
-        ELSE
-            -- no-op
-    END CASE;
-
-    RETURN QUERY SELECT v_speed, v_memory, v_judgment, v_calculation, v_accuracy, v_observation;
+    RETURN CASE p_game_type
+        -- 30초 게임
+        WHEN 'RPS' THEN 30
+        WHEN 'ARROW' THEN 30
+        WHEN 'TAP_COLOR' THEN 30
+        WHEN 'TIMING_BAR' THEN 30
+        WHEN 'SLIDER' THEN 30
+        WHEN 'UPDOWN' THEN 30
+        WHEN 'CATCH_COLOR' THEN 30
+        WHEN 'MATH' THEN 30
+        WHEN 'TEN' THEN 30
+        WHEN 'BLANK' THEN 30
+        WHEN 'OPERATOR' THEN 30
+        WHEN 'LARGEST' THEN 30
+        WHEN 'NUMBER' THEN 30
+        WHEN 'NUMBER_DESC' THEN 30
+        WHEN 'SORTING' THEN 30
+        WHEN 'LADDER' THEN 30
+        WHEN 'MOST_COLOR' THEN 30
+        WHEN 'COLOR' THEN 30
+        WHEN 'SEQUENCE' THEN 30
+        WHEN 'SEQUENCE_NORMAL' THEN 30
+        WHEN 'PAIR' THEN 30
+        
+        -- 40초 게임
+        WHEN 'AIM' THEN 40
+        WHEN 'BALLS' THEN 40
+        WHEN 'MEMORY' THEN 40
+        WHEN 'SPY' THEN 40
+        
+        -- 45초 게임
+        WHEN 'PATH' THEN 45
+        WHEN 'BLIND_PATH' THEN 45
+        
+        ELSE 30
+    END;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+$$ LANGUAGE plpgsql IMMUTABLE;
 
--- Update start_game and start_next_round pools
+
+-- Update start_game to use dynamic duration
 CREATE OR REPLACE FUNCTION start_game(p_room_id uuid)
 RETURNS void AS $$
 DECLARE
     v_seed text;
     v_mode text;
     v_current_type text;
+    v_duration int;
     v_all_types text[] := ARRAY[
         'RPS', 'NUMBER', 'MATH', 'TEN', 'COLOR',
         'MEMORY', 'SEQUENCE', 'LARGEST', 'PAIR',
@@ -109,6 +66,9 @@ BEGIN
     v_seed := md5(random()::text);
 
     IF v_mode = 'practice' THEN
+        -- Get duration for practice game type
+        v_duration := get_game_duration(v_current_type);
+        
         -- PRACTICE: Start immediately
         UPDATE game_sessions
         SET status = 'playing',
@@ -116,8 +76,10 @@ BEGIN
             current_round_index = 0,
             current_round = 1,
             seed = v_seed,
+            phase_start_at = now(),
+            phase_end_at = now() + interval '4 seconds',
             start_at = now() + interval '4 seconds',
-            end_at = now() + interval '34 seconds',
+            end_at = now() + interval '4 seconds' + (v_duration || ' seconds')::interval,
             round_scores = '[]'::jsonb
         WHERE id = p_room_id;
     ELSE
@@ -130,6 +92,7 @@ BEGIN
         ) INTO v_selected_types;
 
         v_first_type := v_selected_types[1];
+        v_duration := get_game_duration(v_first_type);
 
         UPDATE game_sessions
         SET status = 'playing',
@@ -138,8 +101,10 @@ BEGIN
             current_round = 1,
             game_type = v_first_type,
             seed = v_seed,
+            phase_start_at = now(),
+            phase_end_at = now() + interval '4 seconds',
             start_at = now() + interval '4 seconds',
-            end_at = now() + interval '34 seconds',
+            end_at = now() + interval '4 seconds' + (v_duration || ' seconds')::interval,
             round_scores = '[]'::jsonb
         WHERE id = p_room_id AND status = 'waiting';
     END IF;
@@ -147,6 +112,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 
+-- Update start_next_round to use dynamic duration
 CREATE OR REPLACE FUNCTION start_next_round(p_room_id uuid)
 RETURNS void AS $$
 DECLARE
@@ -156,6 +122,7 @@ DECLARE
   v_current_round int;
   v_next_round int;
   v_next_round_index int;
+  v_duration int;
   
   -- Scores (Wins)
   v_p1_wins int;
@@ -238,6 +205,9 @@ BEGIN
   -- 3. Pick Next Game Type (Random)
   v_next_type := v_types[floor(random()*array_length(v_types, 1) + 1)];
   
+  -- Get duration for next game type
+  v_duration := get_game_duration(v_next_type);
+  
   -- 4. Setup Game Data
   IF v_next_type = 'RPS' THEN
       v_target := v_opts[floor(random()*3 + 1)];
@@ -262,7 +232,7 @@ BEGIN
       phase_start_at = now(),
       phase_end_at = now() + interval '4 seconds',
       start_at = now() + interval '4 seconds',
-      end_at = now() + interval '34 seconds',
+      end_at = now() + interval '4 seconds' + (v_duration || ' seconds')::interval,
       player1_ready = false,
       player2_ready = false
   WHERE id = p_room_id;
