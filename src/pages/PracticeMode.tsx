@@ -252,7 +252,7 @@ const PracticeMode = () => {
                 onReward={handleAdReward}
                 adRemaining={adRemaining}
                 adLimit={AD_DAILY_LIMIT}
-                adsRemoved={false}
+                adsRemoved={!!profile?.ads_removed}
                 variant="practice_notes"
             />
         </div>

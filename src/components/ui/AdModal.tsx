@@ -160,8 +160,9 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
         try {
             setAdState('loading');
             const platform = Capacitor.getPlatform();
-            const isProd = import.meta.env.PROD || String(import.meta.env.VITE_APP_ENV || '').toLowerCase() === 'prod' || String(import.meta.env.VITE_APP_ENV || '').toLowerCase() === 'production';
-            const adId = isProd
+            const adsMode = String(import.meta.env.VITE_ADS_MODE ?? import.meta.env.VITE_APP_ENV ?? '').toLowerCase();
+            const isProdAds = adsMode === 'prod' || adsMode === 'production';
+            const adId = isProdAds
                 ? (platform === 'ios'
                     ? 'ca-app-pub-4893861547827379/8300296145'
                     : 'ca-app-pub-4893861547827379/1519157571')
