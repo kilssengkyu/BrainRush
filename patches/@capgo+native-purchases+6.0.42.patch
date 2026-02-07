@@ -1,0 +1,89 @@
+diff --git a/node_modules/@capgo/native-purchases/android/src/main/java/ee/forgr/nativepurchases/NativePurchasesPlugin.java b/node_modules/@capgo/native-purchases/android/src/main/java/ee/forgr/nativepurchases/NativePurchasesPlugin.java
+index e6dbbd0..e7b54dd 100644
+--- a/node_modules/@capgo/native-purchases/android/src/main/java/ee/forgr/nativepurchases/NativePurchasesPlugin.java
++++ b/node_modules/@capgo/native-purchases/android/src/main/java/ee/forgr/nativepurchases/NativePurchasesPlugin.java
+@@ -421,6 +421,42 @@ public class NativePurchasesPlugin extends Plugin {
+     call.resolve();
+   }
+ 
++  @PluginMethod
++  public void consumePurchase(PluginCall call) {
++    String purchaseToken = call.getString("purchaseToken");
++    if (purchaseToken == null || purchaseToken.isEmpty()) {
++      call.reject("purchaseToken is empty");
++      return;
++    }
++    this.initBillingClient(null);
++    ConsumeParams consumeParams = ConsumeParams.newBuilder()
++      .setPurchaseToken(purchaseToken)
++      .build();
++    billingClient.consumeAsync(
++      consumeParams,
++      (billingResult, token) -> {
++        if (
++          billingResult.getResponseCode() ==
++          BillingClient.BillingResponseCode.OK
++        ) {
++          Log.i(
++            NativePurchasesPlugin.TAG,
++            "consumePurchase OK " + billingResult + token
++          );
++          closeBillingClient();
++          call.resolve();
++        } else {
++          Log.i(
++            NativePurchasesPlugin.TAG,
++            "consumePurchase FAILED " + billingResult + token
++          );
++          closeBillingClient();
++          call.reject("Consume failed");
++        }
++      }
++    );
++  }
++
+   private void queryProductDetails(
+     List<String> productIdentifiers,
+     String productType,
+diff --git a/node_modules/@capgo/native-purchases/dist/esm/definitions.d.ts b/node_modules/@capgo/native-purchases/dist/esm/definitions.d.ts
+index 02ab7bc..7c15802 100644
+--- a/node_modules/@capgo/native-purchases/dist/esm/definitions.d.ts
++++ b/node_modules/@capgo/native-purchases/dist/esm/definitions.d.ts
+@@ -343,4 +343,12 @@ export interface NativePurchasesPlugin {
+     getPluginVersion(): Promise<{
+         version: string;
+     }>;
++    /**
++     * Consume a purchase token (Android only).
++     *
++     * @param options - The purchase token to consume
++     */
++    consumePurchase(options: {
++        purchaseToken: string;
++    }): Promise<void>;
+ }
+diff --git a/node_modules/@capgo/native-purchases/dist/esm/web.d.ts b/node_modules/@capgo/native-purchases/dist/esm/web.d.ts
+index f974f09..288fd42 100644
+--- a/node_modules/@capgo/native-purchases/dist/esm/web.d.ts
++++ b/node_modules/@capgo/native-purchases/dist/esm/web.d.ts
+@@ -28,4 +28,7 @@ export declare class NativePurchasesWeb extends WebPlugin implements NativePurch
+     getPluginVersion(): Promise<{
+         version: string;
+     }>;
++    consumePurchase(options: {
++        purchaseToken: string;
++    }): Promise<void>;
+ }
+diff --git a/node_modules/@capgo/native-purchases/dist/esm/web.js b/node_modules/@capgo/native-purchases/dist/esm/web.js
+index 5ce4a4b..1528935 100644
+--- a/node_modules/@capgo/native-purchases/dist/esm/web.js
++++ b/node_modules/@capgo/native-purchases/dist/esm/web.js
+@@ -36,5 +36,8 @@ export class NativePurchasesWeb extends WebPlugin {
+     console.warn("Cannot get plugin version in web");
+     return { version: "default" };
+   }
++  async consumePurchase(options) {
++    console.warn("consumePurchase only mocked in web " + options);
++  }
+ }
+ //# sourceMappingURL=web.js.map

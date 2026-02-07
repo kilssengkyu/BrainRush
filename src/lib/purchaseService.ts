@@ -69,7 +69,8 @@ export const restorePurchases = async () => {
     if (!ready) {
         throw new Error('Billing not supported');
     }
-    const { customerInfo } = await NativePurchases.restorePurchases();
+    const result = await NativePurchases.restorePurchases();
+    const customerInfo = (result as any)?.customerInfo ?? null;
     return customerInfo;
 };
 
@@ -87,4 +88,14 @@ export const getTransactionId = (transaction: any): string | null => {
         ?? transaction.transaction_id
         ?? transaction?.transaction?.transactionId
         ?? null;
+};
+
+export const consumePurchaseToken = async (purchaseToken: string) => {
+    if (!purchaseToken) return;
+    if (!Capacitor.isNativePlatform() || Capacitor.getPlatform() !== 'android') return;
+    try {
+        await (NativePurchases as any).consumePurchase({ purchaseToken });
+    } catch (err) {
+        console.error('consumePurchase failed:', err);
+    }
 };

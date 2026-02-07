@@ -39,6 +39,11 @@ const Settings = () => {
         setIsRestoring(true);
         try {
             const customerInfo = await restorePurchases();
+            console.log('[restorePurchases] customerInfo:', customerInfo);
+            if (!customerInfo) {
+                showToast(t('settings.restorePurchasesEmpty', 'No purchases to restore.'), 'info');
+                return;
+            }
             const purchasedIds = new Set(getPurchasedProductIds(customerInfo));
             if (purchasedIds.size === 0) {
                 showToast(t('settings.restorePurchasesEmpty', 'No purchases to restore.'), 'info');
@@ -53,6 +58,7 @@ const Settings = () => {
             }
             showToast(t('settings.restorePurchasesEmpty', 'No purchases to restore.'), 'info');
         } catch (err: any) {
+            console.error('[restorePurchases] failed:', err);
             const message = err?.message?.includes('Billing not supported')
                 ? t('settings.restorePurchasesUnavailable', 'Billing not supported on this device.')
                 : t('settings.restorePurchasesFail', 'Failed to restore purchases.');

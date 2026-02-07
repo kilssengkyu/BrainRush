@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ShoppingBag, Pencil, Ban, Sparkles } from 'lucide-react';
 import { useSound } from '../contexts/SoundContext';
 import { useUI } from '../contexts/UIContext';
-import { getTransactionId, loadProducts, PRODUCT_IDS, purchaseProduct, type ShopProductId } from '../lib/purchaseService';
+import { consumePurchaseToken, getTransactionId, loadProducts, PRODUCT_IDS, purchaseProduct, type ShopProductId } from '../lib/purchaseService';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { Capacitor } from '@capacitor/core';
@@ -141,6 +141,9 @@ const Shop = () => {
                 throw new Error(verifyError?.message || data?.error || 'Verification failed');
             }
 
+            if (item.isConsumable) {
+                await consumePurchaseToken(transactionId);
+            }
             await refreshProfile();
             showToast(t('shop.purchaseSuccess', 'Purchase completed.'), 'success');
             console.log('Purchase success:', item.productId);
