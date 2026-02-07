@@ -6,7 +6,7 @@ import { ChevronLeft, Globe, Volume2, VolumeX, RefreshCcw, BookOpen, Shield } fr
 import { useSound } from '../contexts/SoundContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useUI } from '../contexts/UIContext';
-import { getPurchasedProductIds, PRODUCT_IDS, restorePurchases } from '../lib/purchaseService';
+import { PRODUCT_IDS, restorePurchases } from '../lib/purchaseService';
 import { useTutorial } from '../contexts/TutorialContext';
 import { supabase } from '../lib/supabaseClient';
 
@@ -38,25 +38,29 @@ const Settings = () => {
         }
         setIsRestoring(true);
         try {
-            const customerInfo = await restorePurchases();
-            console.log('[restorePurchases] customerInfo:', customerInfo);
-            if (!customerInfo) {
+            await restorePurchases();
+
+            // Restore is based on server-verified purchase records only.
+            const { data: rows, error: fetchError } = await supabase
+                .from('purchase_transactions')
+                .select('product_id')
+                .eq('product_id', PRODUCT_IDS.removeAds)
+                .eq('verified', true)
+                .limit(1);
+
+            if (fetchError) throw fetchError;
+
+            if (!rows || rows.length === 0) {
                 showToast(t('settings.restorePurchasesEmpty', 'No purchases to restore.'), 'info');
                 return;
             }
-            const purchasedIds = new Set(getPurchasedProductIds(customerInfo));
-            if (purchasedIds.size === 0) {
-                showToast(t('settings.restorePurchasesEmpty', 'No purchases to restore.'), 'info');
-                return;
-            }
-            if (purchasedIds.has(PRODUCT_IDS.removeAds)) {
-                const { error } = await supabase.rpc('grant_ads_removal', { user_id: user.id });
-                if (error) throw error;
-                await refreshProfile();
-                showToast(t('settings.restorePurchasesSuccess', 'Purchases restored.'), 'success');
-                return;
-            }
-            showToast(t('settings.restorePurchasesEmpty', 'No purchases to restore.'), 'info');
+
+            const { error } = await supabase.rpc('grant_ads_removal', { user_id: user.id });
+            if (error) throw error;
+
+            await refreshProfile();
+            showToast(t('settings.restorePurchasesSuccess', 'Purchases restored.'), 'success');
+
         } catch (err: any) {
             console.error('[restorePurchases] failed:', err);
             const message = err?.message?.includes('Billing not supported')

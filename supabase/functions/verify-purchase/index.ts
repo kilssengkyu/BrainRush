@@ -5,7 +5,8 @@ import { corsHeaders } from '../_shared/cors.ts';
 type VerifyRequest = {
   platform: 'ios' | 'android';
   productId: string;
-  transactionId: string;
+  transactionId?: string;
+  purchaseToken?: string;
 };
 
 type VerifyResult = {
@@ -175,9 +176,18 @@ Deno.serve(async (req) => {
     }
 
     const body = (await req.json()) as VerifyRequest;
-    const { platform, productId, transactionId } = body ?? {};
-    if (!platform || !productId || !transactionId) {
+    const { platform, productId, transactionId, purchaseToken } = body ?? {};
+
+    if (!platform || !productId) {
       return jsonResponse(400, { error: 'Missing required fields' });
+    }
+
+    // Validate platform-specific required fields
+    if (platform === 'ios' && !transactionId) {
+      return jsonResponse(400, { error: 'Missing transactionId for iOS' });
+    }
+    if (platform === 'android' && !purchaseToken) {
+      return jsonResponse(400, { error: 'Missing purchaseToken for Android' });
     }
 
     let result: VerifyResult = { ok: false };
@@ -185,7 +195,8 @@ Deno.serve(async (req) => {
       result = await verifyAppleTransaction(transactionId);
     } else if (platform === 'android') {
       const packageName = requireEnv('GOOGLE_PLAY_PACKAGE_NAME');
-      result = await verifyGooglePlay(packageName, productId, transactionId);
+      // transactionId is used as orderId for Android if available, but purchaseToken is key for verification
+      result = await verifyGooglePlay(packageName, productId, purchaseToken!);
     } else {
       return jsonResponse(400, { error: 'Invalid platform' });
     }
