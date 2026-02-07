@@ -19,7 +19,9 @@ i18n
     .use(initReactI18next)
     .init({
         resources,
-        fallbackLng: 'ko', // Default language
+        fallbackLng: 'en', // Default to English if unsupported
+        supportedLngs: ['ko', 'en', 'zh', 'ja'],
+        nonExplicitSupportedLngs: true,
         interpolation: {
             escapeValue: false, // React already escapes values
         },

@@ -62,6 +62,12 @@
     "challengeCancelled": "친선전 요청을 취소했습니다.",
     "challengeAlreadyPending": "이미 대기 중인 친선전이 있습니다.",
     "challengeInGame": "게임 중인 친구는 대결을 신청할 수 없습니다.",
+    "challengeOffline": "온라인인 친구에게만 신청할 수 있습니다.",
+    "inviteSenderFallback": "친구",
+    "inviteTitle": "친선전 요청",
+    "inviteBody": "'{{nickname}}'님이 친선전 대결을 신청했습니다! 수락하시겠습니까?",
+    "inviteInvalidSession": "게임 세션이 유효하지 않거나 이미 시작되었습니다.",
+    "inviteJoinFail": "게임 입장에 실패했습니다.",
     "typeMessage": "메시지 입력...",
     "sendFail": "메시지 전송 실패",
     "chat": "채팅",
@@ -133,11 +139,24 @@
     "remaining": "오늘 남은 광고: {{count}}/{{limit}}",
     "limitReached": "오늘 광고 한도를 모두 사용했어요.",
     "limitReachedDesc": "내일 다시 시청할 수 있어요.",
-    "adFreeDesc": "광고 없이 바로 연필을 받습니다.",
+    "adFreeDesc": "광고 없이 바로 연필 1개를 받습니다.",
+    "adFreeDescPracticeNotes": "광고 없이 바로 연습노트를 받습니다.",
     "claimBtn": "연필 받기",
+    "claimBtnPracticeNotes": "연습노트 받기",
     "granting": "보상 지급 중...",
     "rewardFailed": "보상 지급 실패",
-    "rewardFailedDesc": "잠시 후 다시 시도해 주세요."
+    "rewardFailedDesc": "잠시 후 다시 시도해 주세요.",
+    "title": "연필 받기",
+    "titlePracticeNotes": "연습노트 받기",
+    "loading": "광고 불러오는 중...",
+    "watchDesc": "짧은 광고를 보고 연필 1개를 받으세요!",
+    "watchDescPracticeNotes": "짧은 광고를 보고 연습노트 2개를 받으세요!",
+    "watchBtn": "광고 보기",
+    "watching": "광고 시청 중...",
+    "playing": "광고 재생 중...",
+    "pencils": "연필",
+    "practiceNotes": "연습노트",
+    "success": "보상을 획득했어요."
   },
   "notifications": {
     "fullTitle": "연필 가득!",
@@ -161,7 +180,11 @@
     "restorePurchasesDesc": "광고 제거와 같은 비소모성 구매를 복구합니다.",
     "restorePurchasesSuccess": "구매 복구를 완료했습니다.",
     "restorePurchasesFail": "구매 복구에 실패했습니다.",
-    "restorePurchasesUnavailable": "이 기기에서는 결제를 지원하지 않습니다."
+    "restorePurchasesUnavailable": "이 기기에서는 결제를 지원하지 않습니다.",
+    "restorePurchasesEmpty": "복구할 구매 내역이 없습니다.",
+    "privacyPolicy": "개인정보 처리방침",
+    "privacyPolicyDesc": "서비스 이용에 필요한 개인정보 처리 내용을 확인할 수 있습니다.",
+    "viewPrivacyPolicy": "개인정보 처리방침 보기"
   },
   "profile": {
     "nicknamePlaceholder": "닉네임을 입력하세요",
@@ -172,6 +195,13 @@
       "game": "게임",
       "highscore": "하이스코어",
       "rankWinRate": "랭크 승률"
+    },
+    "highscoreLeaderboardTitle": "TOP 10",
+    "highscoreLeaderboardEmpty": "기록이 없습니다.",
+    "highscoreLeaderboardColumns": {
+      "rank": "#",
+      "player": "플레이어",
+      "score": "점수"
     },
     "guestTitle": "게스트 계정",
     "guestDesc": "게스트 계정은 로그아웃/앱 삭제/기기 변경 시 데이터가 사라질 수 있어요. 구글 계정으로 연동해 주세요.",
@@ -329,6 +359,27 @@
     "title": "사다리 타기",
     "instruction": "길을 따라 정확한 도착점을 찾으세요!"
   },
+  "path": {
+    "title": "패스 러너",
+    "instruction": "초록색을 파란 목표까지 이동하세요. 버튼 배치가 바뀔 수 있어요.",
+    "shuffle": "셔플"
+  },
+  "blindPath": {
+    "title": "블라인드 패스",
+    "instruction": "보이지 않는 길을 찾아가세요.",
+    "memorizeHint": "길을 외우세요!",
+    "runHint": "길을 따라가세요!",
+    "memorized": "기억함!"
+  },
+  "balls": {
+    "title": "볼 카운트",
+    "instruction": "움직이는 공 개수를 세고 정답을 눌러주세요."
+  },
+  "catchColor": {
+    "title": "컬러 캐치",
+    "instruction": "같은 색 공을 받아 점수를 올리세요. 다른 색은 -10점.",
+    "switchSoon": "곧 색이 바뀝니다"
+  },
   "tapTheColor": {
     "title": "색깔 터치",
     "memorize": "색깔의 위치를 기억하세요!",
@@ -353,5 +404,23 @@
     "memorize": "기호를 기억하세요!",
     "find": "달라진 것은?",
     "ready": "기억함!"
+  },
+  "timingBar": {
+    "title": "타이밍바",
+    "instruction": "떨어지는 바가 타겟 바와 겹칠 때 아무 곳이나 탭하세요."
+  },
+  "tutorial": {
+    "normal": "🌍 전 세계 사람들과 간단한 미니게임 대결을 즐겨보세요!",
+    "rank": "🏆 비슷한 실력의 플레이어들과 랭킹전을 즐기세요!",
+    "practice": "💪 원하는 게임을 자유롭게 연습할 수 있어요!",
+    "ranking": "👑 세상에서 가장 똑똑한 플레이어들을 확인해보세요!",
+    "shop": "🛒 연필을 구매하거나 광고를 제거할 수 있어요!",
+    "settings": "⚙️ 소리, 언어 등 게임 설정을 변경할 수 있어요!",
+    "login": "👤 계정을 연동해서 안전하게 게임을 즐기세요!",
+    "profile": "📊 나의 실력, 능력치, 게임별 점수를 확인할 수 있어요!",
+    "next": "다음",
+    "done": "완료",
+    "skip": "건너뛰기",
+    "loginNow": "바로 로그인"
   }
 }

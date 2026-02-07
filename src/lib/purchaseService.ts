@@ -69,5 +69,43 @@ export const restorePurchases = async () => {
     if (!ready) {
         throw new Error('Billing not supported');
     }
-    await NativePurchases.restorePurchases();
+    const result = await NativePurchases.restorePurchases();
+    const customerInfo = (result as any)?.customerInfo ?? null;
+    return customerInfo;
+};
+
+export const getPurchasedProductIds = (customerInfo: any): string[] => {
+    if (!customerInfo) return [];
+    const ids = customerInfo.allPurchasedProductIdentifiers;
+    if (Array.isArray(ids)) return ids;
+    if (ids && typeof ids === 'object') return Object.keys(ids);
+    return [];
+};
+
+export const getTransactionId = (transaction: any): string | null => {
+    if (!transaction) return null;
+    return transaction.transactionId
+        ?? transaction.transaction_id
+        ?? transaction?.transaction?.transactionId
+        ?? null;
+};
+
+export const getPurchaseToken = (transaction: any): string | null => {
+    if (!transaction) return null;
+    // Android specific: purchaseToken is usually at the top level or inside a transaction object
+    // @capgo/native-purchases structure might vary, but usually it's just 'purchaseToken'
+    return transaction.purchaseToken
+        ?? transaction.purchase_token
+        ?? transaction?.transaction?.purchaseToken
+        ?? null;
+};
+
+export const consumePurchaseToken = async (purchaseToken: string) => {
+    if (!purchaseToken) return;
+    if (!Capacitor.isNativePlatform() || Capacitor.getPlatform() !== 'android') return;
+    try {
+        await (NativePurchases as any).consumePurchase({ purchaseToken });
+    } catch (err) {
+        console.error('consumePurchase failed:', err);
+    }
 };

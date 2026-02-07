@@ -80,8 +80,32 @@
         "billingUnavailable": "此设备不支持购买。"
     },
     "social": {
+        "friends": "好友",
+        "friendList": "好友列表",
+        "friendRequests": "好友请求",
+        "addFriend": "添加好友",
+        "searchNickname": "搜索昵称",
+        "searchError": "搜索时发生错误。",
+        "userNotFound": "未找到用户。",
+        "cannotAddSelf": "不能添加自己。",
+        "alreadyFriends": "你们已经是好友了。",
+        "requestPending": "请求已发送或正在等待处理。",
+        "blocked": "对方已屏蔽你或你已屏蔽对方。",
+        "requestSent": "好友请求已发送！",
+        "requestFail": "好友请求发送失败。",
+        "loadingFriends": "正在加载好友列表...",
+        "noFriends": "暂无好友。",
+        "deleteFriend": "删除好友",
+        "deleteFriendConfirm": "确定要移除 '{{nickname}}' 吗？",
+        "deleteFriendFail": "删除好友失败",
+        "online": "在线",
         "ingame": "游戏中",
+        "offline": "离线",
+        "challengeTitle": "挑战好友",
+        "challengeConfirm": "要向该好友发起挑战吗？",
+        "challengeFail": "挑战失败：",
         "challengeInGame": "对方正在游戏中，无法邀请。",
+        "challengeOffline": "只能邀请在线的好友。",
         "challengeWaiting": "邀请已发送，等待接受...",
         "challengeWaitingTitle": "好友对战等待中",
         "challengeWaitingDesc": "正在等待对方接受。",
@@ -91,6 +115,17 @@
         "challengeTimeout": "邀请已超时。",
         "challengeCancelled": "邀请已取消。",
         "challengeAlreadyPending": "已有待处理的邀请。",
+        "inviteSenderFallback": "好友",
+        "inviteTitle": "好友对战邀请",
+        "inviteBody": "'{{nickname}}' 向你发起好友对战邀请，是否接受？",
+        "inviteInvalidSession": "游戏会话无效或已开始。",
+        "inviteJoinFail": "进入游戏失败。",
+        "typeMessage": "输入消息...",
+        "sendFail": "发送消息失败",
+        "chat": "聊天",
+        "challenge": "挑战",
+        "accept": "接受",
+        "reject": "拒绝",
         "newMessage": "{{nickname}} 给你发来消息"
     },
     "leaderboard": {
@@ -101,11 +136,24 @@
         "remaining": "今日剩余：{{count}}/{{limit}}",
         "limitReached": "今日广告次数已用完。",
         "limitReachedDesc": "请明天再来观看。",
-        "adFreeDesc": "无需广告，立刻获得铅笔。",
+        "adFreeDesc": "无需广告，立刻获得 1 支铅笔。",
+        "adFreeDescPracticeNotes": "无需广告，立刻获得练习笔记。",
         "claimBtn": "领取铅笔",
+        "claimBtnPracticeNotes": "领取练习笔记",
         "granting": "正在发放奖励...",
         "rewardFailed": "奖励发放失败。",
-        "rewardFailedDesc": "请稍后再试。"
+        "rewardFailedDesc": "请稍后再试。",
+        "title": "领取铅笔",
+        "titlePracticeNotes": "领取练习笔记",
+        "loading": "正在加载广告...",
+        "watchDesc": "观看短广告即可获得 1 支铅笔！",
+        "watchDescPracticeNotes": "观看短广告即可获得 2 本练习笔记！",
+        "watchBtn": "观看广告",
+        "watching": "正在观看广告...",
+        "playing": "广告播放中...",
+        "pencils": "铅笔",
+        "practiceNotes": "练习笔记",
+        "success": "奖励领取成功。"
     },
     "notifications": {
         "fullTitle": "铅笔已满",
@@ -127,7 +175,11 @@
         "restorePurchasesDesc": "恢复去广告等非消耗型购买。",
         "restorePurchasesSuccess": "购买已恢复。",
         "restorePurchasesFail": "恢复购买失败。",
-        "restorePurchasesUnavailable": "此设备不支持购买。"
+        "restorePurchasesUnavailable": "此设备不支持购买。",
+        "restorePurchasesEmpty": "没有可恢复的购买。",
+        "privacyPolicy": "隐私政策",
+        "privacyPolicyDesc": "查看我们如何处理服务所需的个人数据。",
+        "viewPrivacyPolicy": "查看隐私政策"
     },
     "game": {
         "waiting": "等待游戏...",
@@ -175,6 +227,13 @@
             "game": "游戏",
             "highscore": "最高分",
             "rankWinRate": "排位胜率"
+        },
+        "highscoreLeaderboardTitle": "前10名",
+        "highscoreLeaderboardEmpty": "暂无记录。",
+        "highscoreLeaderboardColumns": {
+            "rank": "#",
+            "player": "玩家",
+            "score": "分数"
         },
         "guestTitle": "游客账号",
         "guestDesc": "游客账号在登出、卸载或更换设备时可能丢失数据。请关联 Google 账号以保留进度。",
@@ -299,6 +358,27 @@
         "title": "爬梯子",
         "instruction": "沿着路线找到正确的终点!"
     },
+    "path": {
+        "title": "路径冲刺",
+        "instruction": "把绿色移动到蓝色目标，按钮布局可能会变。",
+        "shuffle": "打乱"
+    },
+    "blindPath": {
+        "title": "盲行路径",
+        "instruction": "找到看不见的道路并前进。",
+        "memorizeHint": "记住路线！",
+        "runHint": "沿路前进！",
+        "memorized": "记住了！"
+    },
+    "balls": {
+        "title": "数球",
+        "instruction": "数清移动的球并点击正确数字。"
+    },
+    "catchColor": {
+        "title": "颜色接球",
+        "instruction": "接住同色小球得分，接错颜色 -10 分。",
+        "switchSoon": "颜色即将切换"
+    },
     "tapTheColor": {
         "title": "点击颜色",
         "memorize": "记住颜色的位置!",
@@ -323,5 +403,23 @@
         "memorize": "记住这些！",
         "find": "哪个变了？",
         "ready": "记住了！"
+    },
+    "timingBar": {
+        "title": "节奏条",
+        "instruction": "下落条与目标条重合时点击即可。"
+    },
+    "tutorial": {
+        "normal": "🌍 和全球玩家一起玩迷你游戏对战！",
+        "rank": "🏆 与实力相近的玩家进行排位赛！",
+        "practice": "💪 随时练习你喜欢的游戏！",
+        "ranking": "👑 查看世界上最聪明的玩家！",
+        "shop": "🛒 购买铅笔或移除广告！",
+        "settings": "⚙️ 修改声音、语言等设置！",
+        "login": "👤 绑定账号，安全游玩！",
+        "profile": "📊 查看实力、能力值和高分记录！",
+        "next": "下一步",
+        "done": "完成",
+        "skip": "跳过",
+        "loginNow": "立即登录"
     }
 }

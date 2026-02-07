@@ -31,7 +31,15 @@ const ChatNotificationListener = () => {
                 const msg = payload.new;
                 if (!msg) return;
                 if (typeof msg.content === 'string') {
-                    if (msg.content.startsWith('INVITE:') || msg.content.startsWith('INVITE_')) return;
+                    if (
+                        msg.content.startsWith('INVITE:') ||
+                        msg.content.startsWith('INVITE_ACCEPTED:') ||
+                        msg.content.startsWith('INVITE_REJECTED:') ||
+                        msg.content.startsWith('INVITE_BUSY:') ||
+                        msg.content.startsWith('INVITE_CANCELLED:')
+                    ) {
+                        return;
+                    }
                 }
                 const senderId = typeof msg.sender_id === 'string' ? msg.sender_id : '';
                 if (!senderId) return;

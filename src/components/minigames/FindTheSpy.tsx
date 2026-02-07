@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { Haptics, NotificationType } from '@capacitor/haptics';
 import {
     Star, Heart, Circle, Square, Triangle, Hexagon,
     Diamond, Cloud, Moon, Sun, Zap, Anchor,
@@ -46,8 +47,9 @@ const FindTheSpy: React.FC<FindTheSpyProps> = ({ seed, onScore, isPlaying }) => 
     // Current Tiles: Array of symbol IDs
     const [tiles, setTiles] = useState<any[]>([]);
 
-    // The "Spy" (The new symbol introduced)
-    const [targetSymbolId, setTargetSymbolId] = useState<string | null>(null);
+    // The "Spy" symbols (new symbols introduced)
+    const [targetSymbolIds, setTargetSymbolIds] = useState<string[]>([]);
+    const [foundSpyIds, setFoundSpyIds] = useState<string[]>([]);
 
     const rng = useRef<SeededRandom | null>(null);
 
@@ -65,10 +67,9 @@ const FindTheSpy: React.FC<FindTheSpyProps> = ({ seed, onScore, isPlaying }) => 
 
         // Determine Level
         let rows = 2, cols = 2;
-        if (currentStreak >= 10) { rows = 3; cols = 3; }      // Level 4
-        else if (currentStreak >= 6) { rows = 2; cols = 4; }  // Level 3
-        else if (currentStreak >= 3) { rows = 2; cols = 3; }  // Level 2
-        else { rows = 2; cols = 2; }                          // Level 1
+        if (currentStreak >= 6) { rows = 3; cols = 3; }       // 9 tiles
+        else if (currentStreak >= 3) { rows = 2; cols = 3; }  // 6 tiles
+        else { rows = 2; cols = 2; }                          // 4 tiles
 
         setGridSize({ rows, cols });
 
@@ -79,7 +80,8 @@ const FindTheSpy: React.FC<FindTheSpyProps> = ({ seed, onScore, isPlaying }) => 
 
         setTiles(selected);
         setPhase('memorize');
-        setTargetSymbolId(null);
+        setTargetSymbolIds([]);
+        setFoundSpyIds([]);
     };
 
     const handleReady = () => {
@@ -95,31 +97,35 @@ const FindTheSpy: React.FC<FindTheSpyProps> = ({ seed, onScore, isPlaying }) => 
     const prepareShuffleLogic = () => {
         if (!rng.current) return;
 
-        // 1. Pick one existing tile index to change
-        const changeIndex = Math.floor(rng.current.next() * tiles.length);
+        const changeCount = tiles.length >= 9 ? 3 : tiles.length >= 6 ? 2 : 1;
 
-        // 2. Pick a NEW symbol that is NOT currently in use
+        // 1. Pick indices to change (keep order, only replace symbols)
+        const indices = Array.from({ length: tiles.length }, (_, i) => i);
+        for (let i = indices.length - 1; i > 0; i--) {
+            const j = Math.floor(rng.current.next() * (i + 1));
+            [indices[i], indices[j]] = [indices[j], indices[i]];
+        }
+        const changeIndices = indices.slice(0, changeCount);
+
+        // 2. Pick NEW symbols that are NOT currently in use
         const currentIds = new Set(tiles.map(t => t.id));
         const availableSymbols = SYMBOLS.filter(s => !currentIds.has(s.id));
 
-        // Fallback safety
-        const newSymbolBase = availableSymbols.length > 0
-            ? availableSymbols[Math.floor(rng.current.next() * availableSymbols.length)]
-            : SYMBOLS[0];
-
-        const newSymbol = { ...newSymbolBase, key: Math.random() };
-
-        setTargetSymbolId(newSymbol.id);
-
-        // 3. Create new tile list with replacement
-        const newTiles = [...tiles];
-        newTiles[changeIndex] = newSymbol;
-
-        // 4. Shuffle positions
-        for (let i = newTiles.length - 1; i > 0; i--) {
-            const j = Math.floor(rng.current.next() * (i + 1));
-            [newTiles[i], newTiles[j]] = [newTiles[j], newTiles[i]];
+        const pickedNewSymbols: any[] = [];
+        for (let i = 0; i < changeCount; i++) {
+            const idx = Math.floor(rng.current.next() * availableSymbols.length);
+            const base = availableSymbols.splice(idx, 1)[0] || SYMBOLS[0];
+            pickedNewSymbols.push({ ...base, key: Math.random() });
         }
+
+        setTargetSymbolIds(pickedNewSymbols.map(s => s.id));
+        setFoundSpyIds([]);
+
+        // 3. Create new tile list with replacement (no shuffle)
+        const newTiles = [...tiles];
+        changeIndices.forEach((changeIndex, i) => {
+            newTiles[changeIndex] = pickedNewSymbols[i];
+        });
 
         setTiles(newTiles);
 
@@ -132,15 +138,27 @@ const FindTheSpy: React.FC<FindTheSpyProps> = ({ seed, onScore, isPlaying }) => 
     const handleTileClick = (symbolId: string) => {
         if (phase !== 'guessing' || !isPlaying) return;
 
-        if (symbolId === targetSymbolId) {
+        if (foundSpyIds.includes(symbolId)) return;
+
+        if (targetSymbolIds.includes(symbolId)) {
             // Correct
             playSound('correct');
-            onScore(20 + Math.min(streak, 10) * 2);
-            setStreak(prev => prev + 1);
-            startRound(streak + 1);
+            Haptics.notification({ type: NotificationType.Success }).catch(() => {});
+            const nextFound = [...foundSpyIds, symbolId];
+            setFoundSpyIds(nextFound);
+
+            if (nextFound.length >= targetSymbolIds.length) {
+                const baseScore = 120;
+                const streakBonus = Math.min(streak, 10) * 2;
+                const multiplier = targetSymbolIds.length >= 2 ? 2 : 1;
+                onScore((baseScore + streakBonus) * multiplier);
+                setStreak(prev => prev + 1);
+                startRound(streak + 1);
+            }
         } else {
             // Wrong
             playSound('error');
+            Haptics.notification({ type: NotificationType.Error }).catch(() => {});
             onScore(-10);
             // Visual feedback could be added here (shake etc), 
             // but for fast pace we might just deduct score.
@@ -182,6 +200,8 @@ const FindTheSpy: React.FC<FindTheSpyProps> = ({ seed, onScore, isPlaying }) => 
                         >
                             {tiles.map((tile) => {
                                 const Icon = tile.icon;
+                                const isFound = foundSpyIds.includes(tile.id);
+                                const hideFound = targetSymbolIds.length >= 2 && isFound;
                                 return (
                                     <motion.div
                                         key={tile.key} // Using unique key for each instance
@@ -199,7 +219,7 @@ const FindTheSpy: React.FC<FindTheSpyProps> = ({ seed, onScore, isPlaying }) => 
                                             }
                                             handleTileClick(tile.id);
                                         }}
-                                        className={`${tileWidth} bg-white/10 rounded-xl border-2 border-white/20 flex items-center justify-center cursor-pointer hover:bg-white/20 active:scale-95 transition-colors shadow-lg`}
+                                        className={`${tileWidth} ${hideFound ? 'opacity-0 pointer-events-none scale-0' : 'bg-white/10'} rounded-xl border-2 border-white/20 flex items-center justify-center cursor-pointer hover:bg-white/20 active:scale-95 transition-colors shadow-lg`}
                                     >
                                         <Icon size={32} className={tile.color} />
                                     </motion.div>

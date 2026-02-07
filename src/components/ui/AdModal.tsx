@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { X, Loader2, Gift } from 'lucide-react';
+import { X, Loader2, Gift, BookOpen } from 'lucide-react';
 import { useSound } from '../../contexts/SoundContext';
 import { Capacitor } from '@capacitor/core';
 import { AdMob, RewardAdPluginEvents } from '@capacitor-community/admob';
@@ -13,15 +13,50 @@ interface AdModalProps {
     adRemaining?: number;
     adLimit?: number;
     adsRemoved?: boolean;
+    variant?: 'pencils' | 'practice_notes';
 }
 
-const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemaining, adLimit, adsRemoved }) => {
+const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemaining, adLimit, adsRemoved, variant = 'pencils' }) => {
     const { t } = useTranslation();
     const { playSound } = useSound();
     const [adState, setAdState] = useState<'idle' | 'loading' | 'playing' | 'rewarded' | 'limit' | 'error'>('idle');
     const [timeLeft, setTimeLeft] = useState(5);
     const hasLimit = typeof adRemaining === 'number' && typeof adLimit === 'number';
     const isLimitReached = hasLimit && adRemaining <= 0;
+    const rewardAmount = variant === 'practice_notes' ? 2 : 1;
+    const copy = variant === 'practice_notes'
+        ? {
+            titleKey: 'ad.titlePracticeNotes',
+            titleFallback: 'Get Practice Notes',
+            watchDescKey: 'ad.watchDescPracticeNotes',
+            watchDescFallback: 'Watch a short ad to get 2 Practice Notes!',
+            adFreeDescKey: 'ad.adFreeDescPracticeNotes',
+            adFreeDescFallback: 'Ad-free reward. Get 2 Practice Notes instantly.',
+            claimBtnKey: 'ad.claimBtnPracticeNotes',
+            claimBtnFallback: 'Get Practice Notes',
+            rewardLabelKey: 'ad.practiceNotes',
+            rewardLabelFallback: 'Practice Notes',
+            rewardIcon: <BookOpen className="w-10 h-10 text-green-400" />
+        }
+        : {
+            titleKey: 'ad.title',
+            titleFallback: 'Get Pencils',
+            watchDescKey: 'ad.watchDesc',
+            watchDescFallback: 'Watch a short ad to get 2 Pencils!',
+            adFreeDescKey: 'ad.adFreeDesc',
+            adFreeDescFallback: 'Ad-free reward. Get 2 Pencils instantly.',
+            claimBtnKey: 'ad.claimBtn',
+            claimBtnFallback: 'Get Pencils',
+            rewardLabelKey: 'ad.pencils',
+            rewardLabelFallback: 'Pencils',
+            rewardIcon: (
+                <img
+                    src="/images/icon/icon_pen.png"
+                    alt="Pencil"
+                    className="w-10 h-10 object-contain"
+                />
+            )
+        };
 
     const grantReward = useCallback(async () => {
         try {
@@ -124,8 +159,16 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
         // Native AdMob Mode
         try {
             setAdState('loading');
-            // Test ID for Android Rewarded Video
-            const adId = 'ca-app-pub-3940256099942544/5224354917';
+            const platform = Capacitor.getPlatform();
+            const adsMode = String(import.meta.env.VITE_ADS_MODE ?? import.meta.env.VITE_APP_ENV ?? '').toLowerCase();
+            const isProdAds = adsMode === 'prod' || adsMode === 'production';
+            const adId = isProdAds
+                ? (platform === 'ios'
+                    ? 'ca-app-pub-4893861547827379/8300296145'
+                    : 'ca-app-pub-4893861547827379/1519157571')
+                : (platform === 'ios'
+                    ? 'ca-app-pub-3940256099942544/1712485313'
+                    : 'ca-app-pub-3940256099942544/5224354917');
 
             await AdMob.prepareRewardVideoAd({ adId });
             await AdMob.showRewardVideoAd();
@@ -158,7 +201,7 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
                         <div className="flex justify-between items-center p-4 border-b border-gray-700">
                             <h3 className="text-xl font-bold text-white flex items-center gap-2">
                                 <Gift className="text-yellow-400" />
-                                {t('ad.title', 'Get Pencils')}
+                                {t(copy.titleKey, copy.titleFallback)}
                             </h3>
                             <button
                                 onClick={onClose}
@@ -189,8 +232,8 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
                                                 ? t('ad.granting', 'Granting reward...')
                                                 : t('ad.loading', 'Loading Ad...')
                                             : adsRemoved
-                                                ? t('ad.adFreeDesc', 'Ad-free reward. Get 2 Pencils instantly.')
-                                                : t('ad.watchDesc', 'Watch a short ad to get 2 Pencils!')}
+                                                ? t(copy.adFreeDescKey, copy.adFreeDescFallback)
+                                                : t(copy.watchDescKey, copy.watchDescFallback)}
                                     </p>
                                     {hasLimit && (
                                         <p className={`text-xs font-mono mb-4 ${isLimitReached ? 'text-red-400' : 'text-gray-400'}`}>
@@ -212,7 +255,7 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
                                             : isLimitReached
                                                 ? t('ad.limitReached', 'Daily ad limit reached.')
                                                 : adsRemoved
-                                                    ? t('ad.claimBtn', 'Get Pencils')
+                                                    ? t(copy.claimBtnKey, copy.claimBtnFallback)
                                                     : t('ad.watchBtn', 'Watch Ad')}
                                     </button>
                                 </>
@@ -252,14 +295,10 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
                             {adState === 'rewarded' && (
                                 <>
                                     <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mb-4 animate-bounce">
-                                        <img
-                                            src="/images/icon/icon_pen.png"
-                                            alt="Pencil"
-                                            className="w-10 h-10 object-contain"
-                                        />
+                                        {copy.rewardIcon}
                                     </div>
                                     <h4 className="text-2xl font-bold text-white mb-2">
-                                        +2 {t('ad.pencils', 'Pencils')}!
+                                        +{rewardAmount} {t(copy.rewardLabelKey, copy.rewardLabelFallback)}!
                                     </h4>
                                     <p className="text-gray-400 mb-6">
                                         {t('ad.success', 'Reward earned successfully.')}

@@ -147,12 +147,12 @@ const MemoryMatch: React.FC<MemoryMatchProps> = ({ seed, onScore, isPlaying }) =
     };
 
     return (
-        <div className="w-full h-full flex flex-col items-center justify-center p-4">
-            <h2 className="text-3xl font-black text-white mb-6 drop-shadow-lg">
+        <div className="w-full h-full flex flex-col items-center p-4">
+            <h2 className="text-3xl font-black text-white mb-4 drop-shadow-lg">
                 MEMORY MATCH (Lv. {stage})
             </h2>
 
-            <div className="mb-4 min-h-[28px]">
+            <div className="mb-2 min-h-[28px]">
                 {gameState === 'MEMORIZING' && (
                     <div className="text-yellow-300 font-bold text-xl animate-bounce">
                         {t('memory.memorize_hint')}
@@ -165,79 +165,82 @@ const MemoryMatch: React.FC<MemoryMatchProps> = ({ seed, onScore, isPlaying }) =
                 )}
             </div>
 
-            <div
-                className="grid gap-4 w-full max-w-2xl mx-auto transition-all duration-500"
-                style={{
-                    gridTemplateColumns: `repeat(${Math.ceil(Math.sqrt(cardCount))}, minmax(0, 1fr))`
-                }}
-            >
-                <AnimatePresence>
-                    {cards.map((card, index) => {
-                        return (
-                            <motion.div
-                                key={card.id}
-                                layout
-                                initial={{ scale: 0.8, opacity: 0 }}
-                                animate={{
-                                    scale: card.isMatched ? 0 : 1,
-                                    opacity: card.isMatched ? 0 : 1
-                                }}
-                                transition={{ duration: card.isMatched ? 0.25 : 0.15 }}
-                                exit={{ scale: 0, opacity: 0, transition: { duration: 0.2 } }}
-                                className={`aspect-square relative perspective-1000 ${card.isMatched ? 'pointer-events-none' : 'cursor-pointer'}`}
-                                onPointerDown={(e) => {
-                                    e.preventDefault();
-                                    if (e.currentTarget.setPointerCapture) {
-                                        try {
-                                            e.currentTarget.setPointerCapture(e.pointerId);
-                                        } catch {
-                                            // Ignore capture errors on unsupported pointer types
-                                        }
-                                    }
-                                    handleCardClick(index);
-                                }}
-                            >
+            <div className="flex-1 w-full min-h-0 flex items-center justify-center">
+                <div
+                    className="grid gap-3 w-full mx-auto transition-all duration-500"
+                    style={{
+                        width: 'min(92vw, 60vh)',
+                        gridTemplateColumns: `repeat(${Math.ceil(Math.sqrt(cardCount))}, minmax(0, 1fr))`
+                    }}
+                >
+                    <AnimatePresence>
+                        {cards.map((card, index) => {
+                            return (
                                 <motion.div
-                                    className={`w-full h-full rounded-xl shadow-xl flex items-center justify-center border-4 transform-style-3d ${card.isFlipped
-                                        ? 'bg-white border-blue-400 rotate-y-0'
-                                        : 'bg-indigo-600 border-indigo-400 rotate-y-180 hover:bg-indigo-500'
-                                        }`}
-                                    animate={{ rotateY: card.isFlipped ? 0 : 180 }}
-                                    transition={{ duration: 0.3 }}
+                                    key={card.id}
+                                    layout
+                                    initial={{ scale: 0.8, opacity: 0 }}
+                                    animate={{
+                                        scale: card.isMatched ? 0 : 1,
+                                        opacity: card.isMatched ? 0 : 1
+                                    }}
+                                    transition={{ duration: card.isMatched ? 0.25 : 0.15 }}
+                                    exit={{ scale: 0, opacity: 0, transition: { duration: 0.2 } }}
+                                    className={`aspect-square relative perspective-1000 ${card.isMatched ? 'pointer-events-none' : 'cursor-pointer'}`}
+                                    onPointerDown={(e) => {
+                                        e.preventDefault();
+                                        if (e.currentTarget.setPointerCapture) {
+                                            try {
+                                                e.currentTarget.setPointerCapture(e.pointerId);
+                                            } catch {
+                                                // Ignore capture errors on unsupported pointer types
+                                            }
+                                        }
+                                        handleCardClick(index);
+                                    }}
                                 >
-                                    <div
-                                        className="absolute inset-0 flex items-center justify-center bg-white rounded-xl backface-hidden"
-                                        style={{
-                                            opacity: card.isFlipped ? 1 : 0,
-                                            transition: 'opacity 0.1s',
-                                            backfaceVisibility: 'hidden',
-                                            WebkitBackfaceVisibility: 'hidden'
-                                        }}
+                                    <motion.div
+                                        className={`w-full h-full rounded-xl shadow-xl flex items-center justify-center border-4 transform-style-3d ${card.isFlipped
+                                            ? 'bg-white border-blue-400 rotate-y-0'
+                                            : 'bg-indigo-600 border-indigo-400 rotate-y-180 hover:bg-indigo-500'
+                                            }`}
+                                        animate={{ rotateY: card.isFlipped ? 0 : 180 }}
+                                        transition={{ duration: 0.3 }}
                                     >
-                                        {React.createElement(ICONS[card.iconIndex], {
-                                            size: 40,
-                                            className: "text-gray-800"
-                                        })}
-                                    </div>
+                                        <div
+                                            className="absolute inset-0 flex items-center justify-center bg-white rounded-xl backface-hidden"
+                                            style={{
+                                                opacity: card.isFlipped ? 1 : 0,
+                                                transition: 'opacity 0.1s',
+                                                backfaceVisibility: 'hidden',
+                                                WebkitBackfaceVisibility: 'hidden'
+                                            }}
+                                        >
+                                            {React.createElement(ICONS[card.iconIndex], {
+                                                size: 40,
+                                                className: "text-gray-800"
+                                            })}
+                                        </div>
 
-                                    <div
-                                        className="absolute inset-0 bg-indigo-600 rounded-xl flex items-center justify-center backface-hidden"
-                                        style={{
-                                            transform: 'rotateY(180deg)',
-                                            backfaceVisibility: 'hidden',
-                                            WebkitBackfaceVisibility: 'hidden'
-                                        }}
-                                    >
-                                        <div className="w-8 h-8 rounded-full bg-indigo-400/30" />
-                                    </div>
+                                        <div
+                                            className="absolute inset-0 bg-indigo-600 rounded-xl flex items-center justify-center backface-hidden"
+                                            style={{
+                                                transform: 'rotateY(180deg)',
+                                                backfaceVisibility: 'hidden',
+                                                WebkitBackfaceVisibility: 'hidden'
+                                            }}
+                                        >
+                                            <div className="w-8 h-8 rounded-full bg-indigo-400/30" />
+                                        </div>
+                                    </motion.div>
                                 </motion.div>
-                            </motion.div>
-                        );
-                    })}
-                </AnimatePresence>
+                            );
+                        })}
+                    </AnimatePresence>
+                </div>
             </div>
 
-            <div className="mt-8 min-h-[64px]">
+            <div className="mt-6 min-h-[64px]">
                 <button
                     onPointerDown={(e) => {
                         e.preventDefault();
@@ -251,7 +254,7 @@ const MemoryMatch: React.FC<MemoryMatchProps> = ({ seed, onScore, isPlaying }) =
                         handleMemorizeDone();
                     }}
                     disabled={gameState !== 'MEMORIZING'}
-                    className={`px-8 py-4 bg-green-500 text-white font-black text-2xl rounded-2xl shadow-[0_4px_0_rgb(21,128,61)] transition-all ${gameState === 'MEMORIZING'
+                    className={`px-7 py-3.5 bg-green-500 text-white font-black text-2xl rounded-2xl shadow-[0_4px_0_rgb(21,128,61)] transition-all ${gameState === 'MEMORIZING'
                         ? 'hover:bg-green-600 hover:shadow-[0_2px_0_rgb(21,128,61)] hover:translate-y-[2px]'
                         : 'opacity-0 pointer-events-none'
                         }`}

@@ -67,13 +67,15 @@ export const useMatchmaking = (
                 : typeof profile?.xp === 'number'
                     ? getLevelFromXp(profile.xp)
                     : 1;
-            const isBotEligible = mode === 'normal' && playerLevel <= 5;
+            const isBotEligible = mode === 'normal' && (playerLevel <= 5 || elapsedMs >= 15000);
+            const botDelayMs = playerLevel <= 5 ? 10000 : 15000;
+            const forceBot = playerLevel > 5 && elapsedMs >= 15000;
 
-            if (isBotEligible && !botMatchTriggered.current && elapsedMs >= 10000) {
+            if (isBotEligible && !botMatchTriggered.current && elapsedMs >= botDelayMs) {
                 botMatchTriggered.current = true;
                 try {
                     const { data, error } = await supabase
-                        .rpc('create_bot_session', { p_player_id: playerId })
+                        .rpc('create_bot_session', { p_player_id: playerId, p_force: forceBot })
                         .maybeSingle() as { data: { room_id: string, opponent_id: string } | null, error: any };
 
                     if (error) throw error;
@@ -109,13 +111,14 @@ export const useMatchmaking = (
 
             if (passiveMatch) {
                 // Smart Filter:
-                // 1. If status is 'waiting' and it's old (> 5 mins), it's a ghost room. Ignore it.
-                // 2. If status is 'playing' (or others), it's an active game. Reconnect even if > 1 min.
-                const isStaleWaitingRoom = passiveMatch.status === 'waiting' &&
-                    (Date.now() - new Date(passiveMatch.created_at).getTime() > 60 * 1000);
+                // 1. waiting: older than 60s is ghost
+                // 2. active (non-waiting): older than 5 min is stale
+                const sessionAgeMs = Date.now() - new Date(passiveMatch.created_at).getTime();
+                const isStaleWaitingRoom = passiveMatch.status === 'waiting' && sessionAgeMs > 60 * 1000;
+                const isStaleActiveRoom = passiveMatch.status !== 'waiting' && sessionAgeMs > 5 * 60 * 1000;
 
-                if (isStaleWaitingRoom) {
-                    console.log('Ignoring stale waiting session:', passiveMatch.room_id);
+                if (isStaleWaitingRoom || isStaleActiveRoom) {
+                    console.log('Ignoring stale session:', passiveMatch.room_id);
                 } else {
                     console.log('Passive Match Detected! Reconnecting/Matching:', passiveMatch.room_id);
                     if (searchInterval.current) clearInterval(searchInterval.current);
@@ -133,7 +136,6 @@ export const useMatchmaking = (
                     }
 
                     setStatus('matched');
-
                     // Add delay to show "Matched!" modal
                     setTimeout(() => {
                         onMatchFound(passiveMatch.room_id, passiveMatch.opponent_id);

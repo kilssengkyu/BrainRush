@@ -6,9 +6,10 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ShoppingBag, Pencil, Ban, Sparkles } from 'lucide-react';
 import { useSound } from '../contexts/SoundContext';
 import { useUI } from '../contexts/UIContext';
-import { loadProducts, PRODUCT_IDS, purchaseProduct, type ShopProductId } from '../lib/purchaseService';
+import { consumePurchaseToken, getPurchaseToken, getTransactionId, loadProducts, PRODUCT_IDS, purchaseProduct, type ShopProductId } from '../lib/purchaseService';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabaseClient';
+import { Capacitor } from '@capacitor/core';
 
 type ShopItem = {
     id: string;
@@ -123,26 +124,43 @@ const Shop = () => {
             return;
         }
         try {
-            await purchaseProduct(item.productId);
-            if (item.productId === PRODUCT_IDS.removeAds) {
-                const { error } = await supabase.rpc('grant_ads_removal', { user_id: user.id });
-                if (error) throw error;
-                await refreshProfile();
-            } else if (item.productId === PRODUCT_IDS.pencils5) {
-                const { error } = await supabase.rpc('grant_pencils', { user_id: user.id, amount: 5 });
-                if (error) throw error;
-                await refreshProfile();
-            } else if (item.productId === PRODUCT_IDS.pencils20) {
-                const { error } = await supabase.rpc('grant_pencils', { user_id: user.id, amount: 20 });
-                if (error) throw error;
-                await refreshProfile();
-            } else if (item.productId === PRODUCT_IDS.pencils100) {
-                const { error } = await supabase.rpc('grant_pencils', { user_id: user.id, amount: 100 });
-                if (error) throw error;
-                await refreshProfile();
+            const transaction = await purchaseProduct(item.productId);
+            const transactionId = getTransactionId(transaction);
+            let purchaseToken = getPurchaseToken(transaction);
+
+            if (Capacitor.getPlatform() === 'android' && !purchaseToken && transactionId) {
+                // Heuristic: If we don't have an explicit purchaseToken, and we have a transactionId
+                // (which for Android tokens is a very long string, not starting with GPA usually in raw form before verification),
+                // we treat transactionId as the token.
+                purchaseToken = transactionId;
             }
+
+            if (!transactionId) {
+                throw new Error('Missing transaction id');
+            }
+
+            const { data, error: verifyError } = await supabase.functions.invoke('verify-purchase', {
+                body: {
+                    platform: Capacitor.getPlatform(),
+                    productId: item.productId,
+                    transactionId,
+                    purchaseToken
+                }
+            });
+            if (verifyError || !data?.ok) {
+                // If verification response failed, but we got a response, it might be due to duplicate.
+                // However, if we fail here, we should NOT consume the purchase.
+                throw new Error(verifyError?.message || data?.error || 'Verification failed');
+            }
+
+            if (item.isConsumable) {
+                // For Android, we MUST consume the item to allow repurchase.
+                // Use the purchaseToken we resolved (could be transactionId on Android)
+                const tokenToConsume = purchaseToken || transactionId;
+                await consumePurchaseToken(tokenToConsume);
+            }
+            await refreshProfile();
             showToast(t('shop.purchaseSuccess', 'Purchase completed.'), 'success');
-            console.log('Purchase success:', item.productId);
         } catch (err: any) {
             console.error('Purchase failed:', err);
             const message = err?.message?.includes('Billing not supported')

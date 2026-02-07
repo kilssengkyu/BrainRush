@@ -1486,7 +1486,7 @@ BEGIN
       AND (
           (gs.status = 'waiting' AND gs.created_at > (now() - interval '60 seconds'))
           OR
-          (gs.status != 'waiting' AND gs.created_at > (now() - interval '1 hour'))
+          (gs.status != 'waiting' AND gs.created_at > (now() - interval '5 minutes'))
       )
     ORDER BY gs.created_at DESC
     LIMIT 1;
@@ -6559,6 +6559,551 @@ BEGIN
         gs.created_at DESC
     LIMIT p_limit
     OFFSET p_offset;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+
+-- Migration: add_blind_path_game.sql
+-- Add BLIND_PATH to normal/rank rotation
+ALTER TABLE game_sessions DROP CONSTRAINT IF EXISTS game_sessions_game_type_check;
+
+ALTER TABLE game_sessions
+ADD CONSTRAINT game_sessions_game_type_check
+CHECK (game_type IN (
+    'RPS',
+    'NUMBER',
+    'MATH',
+    'TEN',
+    'COLOR',
+    'MEMORY',
+    'SEQUENCE',
+    'SEQUENCE_NORMAL',
+    'LARGEST',
+    'PAIR',
+    'UPDOWN',
+    'SLIDER',
+    'ARROW',
+    'NUMBER_DESC',
+    'BLANK',
+    'OPERATOR',
+    'LADDER',
+    'TAP_COLOR',
+    'AIM',
+    'MOST_COLOR',
+    'SORTING',
+    'SPY',
+    'PATH',
+    'BLIND_PATH',
+    'BALLS'
+));
+
+CREATE OR REPLACE FUNCTION start_game(p_room_id uuid)
+RETURNS void AS $$
+DECLARE
+    v_seed text;
+    v_mode text;
+    v_current_type text;
+    v_all_types text[] := ARRAY[
+        'RPS', 'NUMBER', 'MATH', 'TEN', 'COLOR',
+        'MEMORY', 'SEQUENCE', 'LARGEST', 'PAIR',
+        'UPDOWN', 'SEQUENCE_NORMAL', 'NUMBER_DESC',
+        'SLIDER', 'ARROW', 'BLANK', 'OPERATOR', 'LADDER', 'TAP_COLOR',
+        'AIM', 'MOST_COLOR', 'SORTING', 'SPY', 'PATH', 'BLIND_PATH', 'BALLS'
+    ];
+    v_selected_types text[];
+    v_first_type text;
+BEGIN
+    SELECT mode, game_type INTO v_mode, v_current_type FROM game_sessions WHERE id = p_room_id;
+    v_seed := md5(random()::text);
+
+    IF v_mode = 'practice' THEN
+        -- PRACTICE: Start immediately
+        UPDATE game_sessions
+        SET status = 'playing',
+            game_types = ARRAY[v_current_type],
+            current_round_index = 0,
+            current_round = 1,
+            seed = v_seed,
+            start_at = now() + interval '4 seconds',
+            end_at = now() + interval '34 seconds',
+            round_scores = '[]'::jsonb
+        WHERE id = p_room_id;
+    ELSE
+        -- NORMAL/RANK: Random 3 games
+        SELECT ARRAY(
+            SELECT x
+            FROM unnest(v_all_types) AS x
+            ORDER BY random()
+            LIMIT 3
+        ) INTO v_selected_types;
+
+        v_first_type := v_selected_types[1];
+
+        UPDATE game_sessions
+        SET status = 'playing',
+            game_types = v_selected_types,
+            current_round_index = 0,
+            current_round = 1,
+            game_type = v_first_type,
+            seed = v_seed,
+            start_at = now() + interval '4 seconds',
+            end_at = now() + interval '34 seconds',
+            round_scores = '[]'::jsonb
+        WHERE id = p_room_id AND status = 'waiting';
+    END IF;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+
+CREATE OR REPLACE FUNCTION start_next_round(p_room_id uuid)
+RETURNS void AS $$
+DECLARE
+  v_next_type text;
+  v_current_type text;
+  v_status text;
+  v_current_round int;
+  v_next_round int;
+  v_next_round_index int;
+  
+  -- Scores (Wins)
+  v_p1_wins int;
+  v_p2_wins int;
+  
+  -- Current Points
+  v_p1_points int;
+  v_p2_points int;
+  
+  v_game_data jsonb;
+  v_target text;
+  v_types text[] := ARRAY['RPS', 'NUMBER', 'MATH', 'TEN', 'COLOR', 'MEMORY', 'SEQUENCE', 'SEQUENCE_NORMAL', 'LARGEST', 'PAIR', 'UPDOWN', 'SLIDER', 'ARROW', 'NUMBER_DESC', 'BLANK', 'OPERATOR', 'LADDER', 'TAP_COLOR', 'AIM', 'MOST_COLOR', 'SORTING', 'SPY', 'PATH', 'BLIND_PATH', 'BALLS'];
+  v_opts text[] := ARRAY['rock','paper','scissors'];
+  
+  v_round_snapshot jsonb;
+  v_mode text;
+  v_p1_id text;
+  v_p2_id text;
+BEGIN
+  -- Get current state
+  SELECT game_type, status, COALESCE(current_round, 0), player1_score, player2_score, COALESCE(p1_current_score, 0), COALESCE(p2_current_score, 0), mode, player1_id, player2_id
+  INTO v_current_type, v_status, v_current_round, v_p1_wins, v_p2_wins, v_p1_points, v_p2_points, v_mode, v_p1_id, v_p2_id
+  FROM game_sessions WHERE id = p_room_id
+  FOR UPDATE;
+
+  -- Graceful Exit if Room Not Found
+  IF v_status IS NULL THEN
+      RETURN;
+  END IF;
+
+  IF v_status = 'finished' THEN
+      RETURN;
+  END IF;
+
+  -- Race Condition Fix: If already in countdown, do not advance round again.
+  IF v_status = 'countdown' THEN
+      RETURN;
+  END IF;
+
+  -- 1. Snapshot Previous Round (if not first round)
+  IF v_current_round > 0 THEN
+      -- Determine Round Winner based on POINTS
+      IF v_p1_points > v_p2_points THEN
+          v_p1_wins := v_p1_wins + 1;
+      ELSIF v_p2_points > v_p1_points THEN
+          v_p2_wins := v_p2_wins + 1;
+      END IF;
+
+      -- Create Snapshot Object
+      v_round_snapshot := jsonb_build_object(
+          'round', v_current_round,
+          'game_type', v_current_type,
+          'p1_score', v_p1_points,
+          'p2_score', v_p2_points,
+          'winner', CASE WHEN v_p1_points > v_p2_points THEN 'p1' WHEN v_p2_points > v_p1_points THEN 'p2' ELSE 'draw' END
+      );
+
+      -- Update Session: Add Snapshot, Update Wins, RESET Current Points
+      UPDATE game_sessions
+      SET round_scores = COALESCE(round_scores, '[]'::jsonb) || jsonb_build_array(v_round_snapshot),
+          player1_score = v_p1_wins,
+          player2_score = v_p2_wins,
+          p1_current_score = 0,
+          p2_current_score = 0
+      WHERE id = p_room_id;
+
+      -- Update highscores (per minigame)
+      IF v_current_type IS NOT NULL THEN
+          IF v_p1_id ~ '^[0-9a-fA-F-]{36}$' THEN
+              INSERT INTO player_highscores (user_id, game_type, best_score, updated_at)
+              VALUES (v_p1_id::uuid, v_current_type, v_p1_points, now())
+              ON CONFLICT (user_id, game_type)
+              DO UPDATE SET best_score = GREATEST(player_highscores.best_score, EXCLUDED.best_score),
+                            updated_at = now();
+          END IF;
+
+          IF v_p2_id ~ '^[0-9a-fA-F-]{36}$' THEN
+              INSERT INTO player_highscores (user_id, game_type, best_score, updated_at)
+              VALUES (v_p2_id::uuid, v_current_type, v_p2_points, now())
+              ON CONFLICT (user_id, game_type)
+              DO UPDATE SET best_score = GREATEST(player_highscores.best_score, EXCLUDED.best_score),
+                            updated_at = now();
+          END IF;
+      END IF;
+
+      -- Update per-minigame stats (normal/rank)
+      IF v_current_type IS NOT NULL AND v_mode IN ('rank', 'normal') THEN
+          IF v_p1_id ~ '^[0-9a-fA-F-]{36}$' THEN
+              INSERT INTO player_game_stats (
+                  user_id,
+                  game_type,
+                  normal_wins,
+                  normal_losses,
+                  normal_draws,
+                  rank_wins,
+                  rank_losses,
+                  rank_draws,
+                  updated_at
+              )
+              VALUES (
+                  v_p1_id::uuid,
+                  v_current_type,
+                  CASE WHEN v_mode = 'normal' AND v_p1_points > v_p2_points THEN 1 ELSE 0 END,
+                  CASE WHEN v_mode = 'normal' AND v_p1_points < v_p2_points THEN 1 ELSE 0 END,
+                  CASE WHEN v_mode = 'normal' AND v_p1_points = v_p2_points THEN 1 ELSE 0 END,
+                  CASE WHEN v_mode = 'rank' AND v_p1_points > v_p2_points THEN 1 ELSE 0 END,
+                  CASE WHEN v_mode = 'rank' AND v_p1_points < v_p2_points THEN 1 ELSE 0 END,
+                  CASE WHEN v_mode = 'rank' AND v_p1_points = v_p2_points THEN 1 ELSE 0 END,
+                  now()
+              )
+              ON CONFLICT (user_id, game_type)
+              DO UPDATE SET
+                  normal_wins = player_game_stats.normal_wins + EXCLUDED.normal_wins,
+                  normal_losses = player_game_stats.normal_losses + EXCLUDED.normal_losses,
+                  normal_draws = player_game_stats.normal_draws + EXCLUDED.normal_draws,
+                  rank_wins = player_game_stats.rank_wins + EXCLUDED.rank_wins,
+                  rank_losses = player_game_stats.rank_losses + EXCLUDED.rank_losses,
+                  rank_draws = player_game_stats.rank_draws + EXCLUDED.rank_draws,
+                  updated_at = now();
+          END IF;
+
+          IF v_p2_id ~ '^[0-9a-fA-F-]{36}$' THEN
+              INSERT INTO player_game_stats (
+                  user_id,
+                  game_type,
+                  normal_wins,
+                  normal_losses,
+                  normal_draws,
+                  rank_wins,
+                  rank_losses,
+                  rank_draws,
+                  updated_at
+              )
+              VALUES (
+                  v_p2_id::uuid,
+                  v_current_type,
+                  CASE WHEN v_mode = 'normal' AND v_p2_points > v_p1_points THEN 1 ELSE 0 END,
+                  CASE WHEN v_mode = 'normal' AND v_p2_points < v_p1_points THEN 1 ELSE 0 END,
+                  CASE WHEN v_mode = 'normal' AND v_p2_points = v_p1_points THEN 1 ELSE 0 END,
+                  CASE WHEN v_mode = 'rank' AND v_p2_points > v_p1_points THEN 1 ELSE 0 END,
+                  CASE WHEN v_mode = 'rank' AND v_p2_points < v_p1_points THEN 1 ELSE 0 END,
+                  CASE WHEN v_mode = 'rank' AND v_p2_points = v_p1_points THEN 1 ELSE 0 END,
+                  now()
+              )
+              ON CONFLICT (user_id, game_type)
+              DO UPDATE SET
+                  normal_wins = player_game_stats.normal_wins + EXCLUDED.normal_wins,
+                  normal_losses = player_game_stats.normal_losses + EXCLUDED.normal_losses,
+                  normal_draws = player_game_stats.normal_draws + EXCLUDED.normal_draws,
+                  rank_wins = player_game_stats.rank_wins + EXCLUDED.rank_wins,
+                  rank_losses = player_game_stats.rank_losses + EXCLUDED.rank_losses,
+                  rank_draws = player_game_stats.rank_draws + EXCLUDED.rank_draws,
+                  updated_at = now();
+          END IF;
+      END IF;
+  END IF;
+
+  -- Practice: End after 1 round
+  IF v_mode = 'practice' THEN
+      UPDATE game_sessions SET status = 'finished', phase_end_at = now(), end_at = now() WHERE id = p_room_id;
+      RETURN;
+  END IF;
+
+  -- 2. Check Victory Condition (3 rounds fixed)
+  IF v_current_round >= 3 THEN
+      PERFORM finish_game(p_room_id);
+      RETURN;
+  END IF;
+
+  -- 3. Pick Next Game Type (Random)
+  v_next_type := v_types[floor(random()*array_length(v_types, 1) + 1)];
+  
+  -- 4. Setup Game Data
+  IF v_next_type = 'RPS' THEN
+      v_target := v_opts[floor(random()*3 + 1)];
+      v_game_data := '{}';
+  ELSE
+      v_target := null;
+      v_game_data := jsonb_build_object('seed', floor(random()*10000));
+  END IF;
+
+  -- 5. Calculate Next Round
+  v_next_round := v_current_round + 1;
+  v_next_round_index := GREATEST(v_next_round - 1, 0);
+
+  -- 6. Update Session -> COUNTDOWN State
+  UPDATE game_sessions
+  SET status = 'countdown',
+      current_round = v_next_round,
+      current_round_index = v_next_round_index,
+      game_type = v_next_type,
+      game_data = v_game_data,
+      target_move = v_target,
+      phase_start_at = now(),
+      phase_end_at = now() + interval '4 seconds',
+      start_at = now(),
+      end_at = now() + interval '4 seconds',
+      player1_ready = false,
+      player2_ready = false
+  WHERE id = p_room_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- Migration: update_stat_increments_blind_path.sql
+-- Add BLIND_PATH mapping to stat_increments.
+
+CREATE OR REPLACE FUNCTION stat_increments(p_game_type text)
+RETURNS TABLE (
+    speed int,
+    memory int,
+    judgment int,
+    calculation int,
+    accuracy int,
+    observation int
+) AS $$
+DECLARE
+    v_speed int := 0;
+    v_memory int := 0;
+    v_judgment int := 0;
+    v_calculation int := 0;
+    v_accuracy int := 0;
+    v_observation int := 0;
+BEGIN
+    CASE p_game_type
+        WHEN 'AIM' THEN v_speed := 2; v_accuracy := 1;
+        WHEN 'RPS' THEN v_speed := 2; v_judgment := 1;
+        WHEN 'UPDOWN' THEN v_judgment := 2; v_speed := 1;
+        WHEN 'ARROW' THEN v_speed := 2; v_judgment := 1;
+        WHEN 'SLIDER' THEN v_accuracy := 2; v_speed := 1;
+        WHEN 'MEMORY' THEN v_memory := 2; v_accuracy := 1;
+        WHEN 'SEQUENCE' THEN v_memory := 2; v_accuracy := 1;
+        WHEN 'SEQUENCE_NORMAL' THEN v_memory := 2; v_accuracy := 1;
+        WHEN 'SPY' THEN v_memory := 2; v_observation := 1;
+        WHEN 'PAIR' THEN v_memory := 2; v_observation := 1;
+        WHEN 'COLOR' THEN v_observation := 2; v_accuracy := 1;
+        WHEN 'MOST_COLOR' THEN v_observation := 2; v_judgment := 1;
+        WHEN 'TAP_COLOR' THEN v_observation := 2; v_speed := 1;
+        WHEN 'MATH' THEN v_calculation := 2; v_accuracy := 1;
+        WHEN 'TEN' THEN v_calculation := 2; v_judgment := 1;
+        WHEN 'BLANK' THEN v_calculation := 2; v_accuracy := 1;
+        WHEN 'OPERATOR' THEN v_calculation := 2; v_judgment := 1;
+        WHEN 'LARGEST' THEN v_calculation := 2; v_judgment := 1;
+        WHEN 'NUMBER' THEN v_accuracy := 2; v_judgment := 1;
+        WHEN 'NUMBER_DESC' THEN v_accuracy := 2; v_judgment := 1;
+        WHEN 'NUMBER_ASC' THEN v_accuracy := 2; v_judgment := 1;
+        WHEN 'SORTING' THEN v_accuracy := 2; v_judgment := 1;
+        WHEN 'LADDER' THEN v_judgment := 2; v_accuracy := 1;
+        WHEN 'PATH' THEN v_speed := 2; v_judgment := 1;
+        WHEN 'BLIND_PATH' THEN v_memory := 2; v_judgment := 1;
+        WHEN 'BALLS' THEN v_observation := 2; v_accuracy := 1;
+        ELSE
+            -- no-op
+    END CASE;
+
+    RETURN QUERY SELECT v_speed, v_memory, v_judgment, v_calculation, v_accuracy, v_observation;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+
+-- Migration: fix_skill_stats_finish_game.sql
+-- Restore per-round skill stat gains (+2 primary, +1 secondary) in finish_game.
+
+CREATE OR REPLACE FUNCTION finish_game(p_room_id uuid)
+RETURNS void AS $$
+DECLARE
+    v_session record;
+    v_winner text;
+    v_loser text;
+    v_is_draw boolean := false;
+    v_k_factor int := 32;
+    v_p1_mmr int;
+    v_p2_mmr int;
+    v_p1_exp float;
+    v_p2_exp float;
+    v_new_p1_mmr int;
+    v_new_p2_mmr int;
+
+    v_p1_total int := 0;
+    v_p2_total int := 0;
+    v_round jsonb;
+
+    v_round_winner text;
+    v_round_type text;
+    v_inc record;
+
+    v_p1_speed int := 0;
+    v_p1_memory int := 0;
+    v_p1_judgment int := 0;
+    v_p1_calculation int := 0;
+    v_p1_accuracy int := 0;
+    v_p1_observation int := 0;
+
+    v_p2_speed int := 0;
+    v_p2_memory int := 0;
+    v_p2_judgment int := 0;
+    v_p2_calculation int := 0;
+    v_p2_accuracy int := 0;
+    v_p2_observation int := 0;
+BEGIN
+    -- [SECURE] Caller Check
+    IF NOT EXISTS (SELECT 1 FROM game_sessions WHERE id = p_room_id
+        AND (player1_id = auth.uid()::text OR player2_id = auth.uid()::text)) THEN
+       RAISE EXCEPTION 'Not authorized';
+    END IF;
+
+    SELECT * INTO v_session FROM game_sessions WHERE id = p_room_id;
+
+    -- Status check
+    IF v_session.status = 'finished' THEN RETURN; END IF;
+
+    -- Calculate Totals and Per-Round Stat Gains
+    SELECT round_scores INTO v_session.round_scores FROM game_sessions WHERE id = p_room_id;
+
+    FOR v_round IN SELECT * FROM jsonb_array_elements(v_session.round_scores)
+    LOOP
+        v_p1_total := v_p1_total + (v_round->>'p1_score')::int;
+        v_p2_total := v_p2_total + (v_round->>'p2_score')::int;
+
+        v_round_winner := v_round->>'winner';
+        v_round_type := v_round->>'game_type';
+
+        IF v_round_winner = 'p1' THEN
+            SELECT * INTO v_inc FROM stat_increments(v_round_type);
+            v_p1_speed := v_p1_speed + v_inc.speed;
+            v_p1_memory := v_p1_memory + v_inc.memory;
+            v_p1_judgment := v_p1_judgment + v_inc.judgment;
+            v_p1_calculation := v_p1_calculation + v_inc.calculation;
+            v_p1_accuracy := v_p1_accuracy + v_inc.accuracy;
+            v_p1_observation := v_p1_observation + v_inc.observation;
+        ELSIF v_round_winner = 'p2' THEN
+            SELECT * INTO v_inc FROM stat_increments(v_round_type);
+            v_p2_speed := v_p2_speed + v_inc.speed;
+            v_p2_memory := v_p2_memory + v_inc.memory;
+            v_p2_judgment := v_p2_judgment + v_inc.judgment;
+            v_p2_calculation := v_p2_calculation + v_inc.calculation;
+            v_p2_accuracy := v_p2_accuracy + v_inc.accuracy;
+            v_p2_observation := v_p2_observation + v_inc.observation;
+        END IF;
+    END LOOP;
+
+    -- Determine Winner
+    IF v_p1_total > v_p2_total THEN
+        v_winner := v_session.player1_id;
+        v_loser := v_session.player2_id;
+    ELSIF v_p2_total > v_p1_total THEN
+        v_winner := v_session.player2_id;
+        v_loser := v_session.player1_id;
+    ELSE
+        v_is_draw := true;
+    END IF;
+
+    -- Update Session
+    UPDATE game_sessions
+    SET status = 'finished',
+        winner_id = v_winner,
+        end_at = now(),
+        player1_score = v_p1_total,
+        player2_score = v_p2_total
+    WHERE id = p_room_id;
+
+    -- STATS UPDATE LOGIC
+    IF v_winner IS NOT NULL AND NOT v_is_draw THEN
+        IF v_session.mode = 'rank' THEN
+             -- RANK MODE: Update MMR + Standard Wins/Losses (only for real users)
+             IF v_session.player1_id ~ '^[0-9a-fA-F-]{36}$' AND v_session.player2_id ~ '^[0-9a-fA-F-]{36}$' THEN
+                 SELECT mmr INTO v_p1_mmr FROM profiles WHERE id = v_session.player1_id::uuid;
+                 SELECT mmr INTO v_p2_mmr FROM profiles WHERE id = v_session.player2_id::uuid;
+
+                 v_p1_exp := 1.0 / (1.0 + power(10.0, (v_p2_mmr - v_p1_mmr)::numeric / 400.0));
+                 v_p2_exp := 1.0 / (1.0 + power(10.0, (v_p1_mmr - v_p2_mmr)::numeric / 400.0));
+
+                 IF v_winner = v_session.player1_id::text THEN
+                    v_new_p1_mmr := round(v_p1_mmr + v_k_factor * (1 - v_p1_exp));
+                    v_new_p2_mmr := round(v_p2_mmr + v_k_factor * (0 - v_p2_exp));
+
+                    UPDATE profiles SET mmr = v_new_p1_mmr, wins = wins + 1 WHERE id = v_session.player1_id::uuid;
+                    UPDATE profiles SET mmr = v_new_p2_mmr, losses = losses + 1 WHERE id = v_session.player2_id::uuid;
+                 ELSE
+                    v_new_p1_mmr := round(v_p1_mmr + v_k_factor * (0 - v_p1_exp));
+                    v_new_p2_mmr := round(v_p2_mmr + v_k_factor * (1 - v_p2_exp));
+
+                    UPDATE profiles SET mmr = v_new_p1_mmr, losses = losses + 1 WHERE id = v_session.player1_id::uuid;
+                    UPDATE profiles SET mmr = v_new_p2_mmr, wins = wins + 1 WHERE id = v_session.player2_id::uuid;
+                 END IF;
+             END IF;
+        ELSIF v_session.mode = 'normal' THEN
+             -- NORMAL MODE: Update Casual Wins/Losses (No MMR)
+             IF v_winner ~ '^[0-9a-fA-F-]{36}$' THEN
+                 UPDATE profiles SET casual_wins = casual_wins + 1 WHERE id = v_winner::uuid;
+             END IF;
+             IF v_loser ~ '^[0-9a-fA-F-]{36}$' THEN
+                 UPDATE profiles SET casual_losses = casual_losses + 1 WHERE id = v_loser::uuid;
+             END IF;
+        ELSE
+            -- FRIENDLY or PRACTICE MODE: Do NOT update any stats
+            -- Just finish the session (already done above)
+        END IF;
+    END IF;
+
+    -- XP/Level Update (Rank + Normal only)
+    IF v_session.mode IN ('rank', 'normal') THEN
+        IF v_session.player1_id ~ '^[0-9a-fA-F-]{36}$' THEN
+            UPDATE profiles
+            SET xp = COALESCE(xp, 0) + (10 + CASE WHEN v_winner = v_session.player1_id THEN 5 ELSE 0 END),
+                level = floor((-(45)::numeric + sqrt((45 * 45) + (40 * (COALESCE(xp, 0) + (10 + CASE WHEN v_winner = v_session.player1_id THEN 5 ELSE 0 END))))) / 10) + 1
+            WHERE id = v_session.player1_id::uuid;
+        END IF;
+
+        IF v_session.player2_id ~ '^[0-9a-fA-F-]{36}$' THEN
+            UPDATE profiles
+            SET xp = COALESCE(xp, 0) + (10 + CASE WHEN v_winner = v_session.player2_id THEN 5 ELSE 0 END),
+                level = floor((-(45)::numeric + sqrt((45 * 45) + (40 * (COALESCE(xp, 0) + (10 + CASE WHEN v_winner = v_session.player2_id THEN 5 ELSE 0 END))))) / 10) + 1
+            WHERE id = v_session.player2_id::uuid;
+        END IF;
+    END IF;
+
+    -- Skill stats: per-round winner gains (rank/normal only, exclude guests/bots)
+    IF v_session.mode IN ('rank', 'normal') THEN
+        IF v_session.player1_id ~ '^[0-9a-fA-F-]{36}$' THEN
+            UPDATE profiles
+            SET speed = LEAST(999, COALESCE(speed, 0) + v_p1_speed),
+                memory = LEAST(999, COALESCE(memory, 0) + v_p1_memory),
+                judgment = LEAST(999, COALESCE(judgment, 0) + v_p1_judgment),
+                calculation = LEAST(999, COALESCE(calculation, 0) + v_p1_calculation),
+                accuracy = LEAST(999, COALESCE(accuracy, 0) + v_p1_accuracy),
+                observation = LEAST(999, COALESCE(observation, 0) + v_p1_observation)
+            WHERE id = v_session.player1_id::uuid;
+        END IF;
+
+        IF v_session.player2_id ~ '^[0-9a-fA-F-]{36}$' THEN
+            UPDATE profiles
+            SET speed = LEAST(999, COALESCE(speed, 0) + v_p2_speed),
+                memory = LEAST(999, COALESCE(memory, 0) + v_p2_memory),
+                judgment = LEAST(999, COALESCE(judgment, 0) + v_p2_judgment),
+                calculation = LEAST(999, COALESCE(calculation, 0) + v_p2_calculation),
+                accuracy = LEAST(999, COALESCE(accuracy, 0) + v_p2_accuracy),
+                observation = LEAST(999, COALESCE(observation, 0) + v_p2_observation)
+            WHERE id = v_session.player2_id::uuid;
+        END IF;
+    END IF;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 

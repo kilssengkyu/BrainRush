@@ -1,13 +1,15 @@
 import { useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { LocalNotifications } from '@capacitor/local-notifications';
+import { App } from '@capacitor/app';
+import type { PluginListenerHandle } from '@capacitor/core';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 
 const FULL_PENCILS_ID = 2001;
 const REMINDER_24H_ID = 2002;
 const MAX_PENCILS = 5;
-const RECHARGE_MINUTES = 10;
+const RECHARGE_MINUTES = 30;
 
 const scheduleNotification = async (id: number, title: string, body: string, at: Date) => {
     await LocalNotifications.schedule({
@@ -29,6 +31,13 @@ const LocalNotificationScheduler = () => {
 
     useEffect(() => {
         if (!Capacitor.isNativePlatform()) return;
+
+        const clearNotifications = async () => {
+            await LocalNotifications.cancel({
+                notifications: [{ id: FULL_PENCILS_ID }, { id: REMINDER_24H_ID }],
+            });
+            await LocalNotifications.removeAllDeliveredNotifications();
+        };
 
         const setup = async () => {
             const permission = await LocalNotifications.requestPermissions();
@@ -69,7 +78,31 @@ const LocalNotificationScheduler = () => {
             }
         };
 
-        setup().catch((err) => console.error('Local notification setup failed:', err));
+        const init = async () => {
+            const state = await App.getState();
+            if (state.isActive) {
+                await clearNotifications();
+            } else {
+                await setup();
+            }
+        };
+
+        init().catch((err) => console.error('Local notification setup failed:', err));
+
+        let sub: PluginListenerHandle | null = null;
+        void App.addListener('appStateChange', ({ isActive }) => {
+            if (isActive) {
+                clearNotifications().catch((err) => console.error('Notification clear failed:', err));
+            } else {
+                setup().catch((err) => console.error('Local notification setup failed:', err));
+            }
+        }).then((handle) => {
+            sub = handle;
+        });
+
+        return () => {
+            sub?.remove();
+        };
     }, [profile?.pencils, profile?.last_recharge_at, t]);
 
     return null;

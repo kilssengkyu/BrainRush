@@ -19,6 +19,18 @@ interface Message {
     is_read: boolean;
 }
 
+const SYSTEM_INVITE_PREFIXES = [
+    'INVITE:',
+    'INVITE_ACCEPTED:',
+    'INVITE_REJECTED:',
+    'INVITE_BUSY:',
+    'INVITE_CANCELLED:'
+];
+
+const isSystemInviteMessage = (content?: string | null) =>
+    typeof content === 'string' &&
+    SYSTEM_INVITE_PREFIXES.some((prefix) => content.startsWith(prefix));
+
 const ChatWindow: React.FC<ChatWindowProps> = ({ friendId, friendNickname, onClose }) => {
     const { user } = useAuth();
     const { t } = useTranslation();
@@ -44,6 +56,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ friendId, friendNickname, onClo
                     filter: `receiver_id=eq.${user.id}`
                 }, (payload: any) => {
                     const newMsg = payload.new as Message;
+                    if (isSystemInviteMessage(newMsg.content)) return;
                     // Only process messages from the current chat friend
                     if (newMsg.sender_id === friendId) {
                         setMessages(prev => [...prev, newMsg]);
@@ -57,6 +70,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ friendId, friendNickname, onClo
                     filter: `sender_id=eq.${user.id}`
                 }, (payload: any) => {
                     const newMsg = payload.new as Message;
+                    if (isSystemInviteMessage(newMsg.content)) return;
                     // Only process messages sent to the current chat friend (sync across devices/tabs)
                     if (newMsg.receiver_id === friendId) {
                         setMessages(prev => {
@@ -90,14 +104,20 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ friendId, friendNickname, onClo
                 .from('chat_messages')
                 .select('*')
                 .or(`and(sender_id.eq.${user.id},receiver_id.eq.${friendId}),and(sender_id.eq.${friendId},receiver_id.eq.${user.id})`)
+                .not('content', 'like', 'INVITE:%')
+                .not('content', 'like', 'INVITE_ACCEPTED:%')
+                .not('content', 'like', 'INVITE_REJECTED:%')
+                .not('content', 'like', 'INVITE_BUSY:%')
+                .not('content', 'like', 'INVITE_CANCELLED:%')
                 .order('created_at', { ascending: true })
                 .limit(50); // Pagination later
 
             if (error) throw error;
-            setMessages(data || []);
+            const filteredMessages = (data || []).filter((msg) => !isSystemInviteMessage(msg.content));
+            setMessages(filteredMessages);
 
             // Mark unread messages from friend as read
-            const unreadIds = data?.filter(m => m.sender_id === friendId && !m.is_read).map(m => m.id) || [];
+            const unreadIds = filteredMessages.filter(m => m.sender_id === friendId && !m.is_read).map(m => m.id);
             if (unreadIds.length > 0) {
                 markAsRead(unreadIds);
             }

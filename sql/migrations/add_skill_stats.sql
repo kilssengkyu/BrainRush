@@ -66,6 +66,8 @@ BEGIN
         WHEN 'NUMBER_ASC' THEN v_accuracy := 2; v_judgment := 1;
         WHEN 'SORTING' THEN v_accuracy := 2; v_judgment := 1;
         WHEN 'LADDER' THEN v_judgment := 2; v_accuracy := 1;
+        WHEN 'PATH' THEN v_speed := 2; v_judgment := 1;
+        WHEN 'BALLS' THEN v_observation := 2; v_accuracy := 1;
         ELSE
             -- no-op
     END CASE;
