@@ -118,6 +118,18 @@
       "title": "연필 100개",
       "desc": "오래 즐길 때 좋은 대용량 패키지."
     },
+    "practiceNotes5": {
+      "title": "연습노트 5개",
+      "desc": "연습 모드 짧게 즐기기 좋아요."
+    },
+    "practiceNotes20": {
+      "title": "연습노트 20개",
+      "desc": "꾸준히 연습하기 좋은 구성."
+    },
+    "practiceNotes100": {
+      "title": "연습노트 100개",
+      "desc": "많이 연습하는 분께 추천."
+    },
     "buy": "구매",
     "premium": "프리미엄",
     "popular": "인기",

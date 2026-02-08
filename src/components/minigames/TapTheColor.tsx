@@ -84,6 +84,16 @@ const TapTheColor: React.FC<TapTheColorProps> = ({ seed, onScore, isPlaying }) =
     const handleTileClick = (index: number) => {
         if (phase !== 'input' || !gameState || !isPlaying) return;
 
+        // Bug fix: prevent clicking the same button twice (even if color matches)
+        if (revealedIndices.includes(index)) {
+            // Already used this tile - show error feedback
+            onScore(-10);
+            playSound('error');
+            setShakeId(index);
+            setTimeout(() => setShakeId(null), 500);
+            return;
+        }
+
         const targetColor = gameState.sequenceColors[currentStep];
         const clickedColor = gameState.tileColors[index];
 
@@ -163,18 +173,22 @@ const TapTheColor: React.FC<TapTheColorProps> = ({ seed, onScore, isPlaying }) =
                 }}
             >
                 {gameState.tileColors.map((color, index) => {
-                    const isVisible = phase === 'memorize' || revealedIndices.includes(index) || phase === 'result';
+                    const isRevealed = revealedIndices.includes(index);
+                    const isVisible = phase === 'memorize' || isRevealed || phase === 'result';
                     const isShake = shakeId === index;
+                    const isUsed = phase === 'input' && isRevealed;
 
                     return (
                         <motion.button
                             key={`tile-${index}`}
                             animate={isShake ? { x: [-5, 5, -5, 5, 0] } : {}}
-                            className={`w-24 h-24 rounded-xl shadow-lg transition-transform active:scale-95
+                            className={`relative w-24 h-24 rounded-xl shadow-lg transition-all active:scale-95
                                 ${!isVisible && phase === 'input' ? 'bg-gray-700 hover:bg-gray-600' : ''}
+                                ${isUsed ? 'opacity-50 cursor-not-allowed ring-2 ring-white/30' : ''}
                             `}
                             style={{
-                                backgroundColor: isVisible ? color : undefined
+                                backgroundColor: isVisible ? color : undefined,
+                                filter: isUsed ? 'grayscale(0.4)' : 'none'
                             }}
                             onPointerDown={(e) => {
                                 e.preventDefault();
@@ -187,8 +201,14 @@ const TapTheColor: React.FC<TapTheColorProps> = ({ seed, onScore, isPlaying }) =
                                 }
                                 handleTileClick(index);
                             }}
-                            disabled={phase !== 'input' || isVisible} // Disable if wrong phase or already revealed (matched)
-                        />
+                            disabled={phase !== 'input' || isRevealed}
+                        >
+                            {isUsed && (
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                    <span className="text-white text-3xl font-bold drop-shadow-lg">✓</span>
+                                </div>
+                            )}
+                        </motion.button>
                     );
                 })}
             </div>
