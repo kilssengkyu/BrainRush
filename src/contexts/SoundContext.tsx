@@ -66,11 +66,17 @@ const IS_NATIVE_PLATFORM = Capacitor.isNativePlatform();
 const USE_NATIVE_BGM = IS_NATIVE_PLATFORM;
 
 export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const resumeAudioContext = useCallback(() => {
+    const resumeAudioContext = useCallback(async (): Promise<boolean> => {
         const ctx = Howler.ctx;
-        if (ctx && ctx.state === 'suspended') {
-            ctx.resume().catch(() => undefined);
+        if (!ctx) return false;
+        if (ctx.state === 'suspended') {
+            try {
+                await ctx.resume();
+            } catch {
+                return false;
+            }
         }
+        return ctx.state === 'running';
     }, []);
 
     const [isMuted, setIsMuted] = useState<boolean>(() => {
@@ -281,15 +287,23 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const playSound = useCallback((type: SoundType) => {
         triggerHaptic(type);
-        resumeAudioContext();
         if (isMuted) return;
 
         const sound = sounds[type];
-        if (sound) {
+        if (!sound) return;
+
+        // iOS fix: ensure audio context is running before playing
+        void (async () => {
+            const isRunning = await resumeAudioContext();
+            if (!isRunning) {
+                // Retry once after a short delay
+                await new Promise(r => setTimeout(r, 50));
+                await resumeAudioContext();
+            }
             sound.seek(0);
             sound.play();
-        }
-    }, [isMuted, sounds, isVibrationEnabled]);
+        })();
+    }, [isMuted, sounds, isVibrationEnabled, resumeAudioContext]);
 
     const playBGM = useCallback((type: BGMType) => {
         if (USE_NATIVE_BGM) {
@@ -306,9 +320,16 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                     return;
                 }
                 try {
+                    // Stop all BGMs first
                     await Promise.all(
                         Object.keys(NATIVE_BGM_FILES).map((key) => NativeAudio.stop({ assetId: key }))
                     );
+                    // Android fix: wait for stop to fully complete before starting new loop
+                    await new Promise(r => setTimeout(r, 150));
+
+                    // Double-check we still want to play this type (state might have changed)
+                    if (currentBGM.current !== type) return;
+
                     console.log('[BGM] Native Looping:', type);
                     await NativeAudio.loop({ assetId: type });
 
