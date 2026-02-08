@@ -6,7 +6,7 @@ export const PRODUCT_IDS = {
     pencils5: 'pencils_5',
     pencils20: 'pencils_20',
     pencils100: 'pencils_100',
-    practiceNotes5: 'practice_notes_5',
+    practiceNotes10: 'practice_notes_10',
     practiceNotes20: 'practice_notes_20',
     practiceNotes100: 'practice_notes_100',
 } as const;

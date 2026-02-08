@@ -62,22 +62,22 @@
             "title": "铅笔 x20",
             "desc": "日常游玩刚刚好。"
         },
-    "pencils100": {
-      "title": "铅笔 x100",
-      "desc": "适合长期游玩的超值包。"
-    },
-    "practiceNotes5": {
-      "title": "练习笔记 x5",
-      "desc": "短时间练习的小份补充。"
-    },
-    "practiceNotes20": {
-      "title": "练习笔记 x20",
-      "desc": "适合稳定练习的补充。"
-    },
-    "practiceNotes100": {
-      "title": "练习笔记 x100",
-      "desc": "适合长时间练习的超值包。"
-    },
+        "pencils100": {
+            "title": "铅笔 x100",
+            "desc": "适合长期游玩的超值包。"
+        },
+        "practiceNotes5": {
+            "title": "10个练习笔记",
+            "desc": "适合快速练习。"
+        },
+        "practiceNotes20": {
+            "title": "练习笔记 x20",
+            "desc": "适合稳定练习的补充。"
+        },
+        "practiceNotes100": {
+            "title": "练习笔记 x100",
+            "desc": "适合长时间练习的超值包。"
+        },
         "buy": "购买",
         "premium": "高级",
         "popular": "热门",
