@@ -274,7 +274,7 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
                 }
 
                 // Host Logic: Finish Game w/ Grace Period
-                if (isHostUser && diff <= -1.5) {
+                if (isHostUser && diff <= 0) {
                     if (!isFinishing.current) {
                         isFinishing.current = true;
                         console.log('Ticker: Grace period over! FORCE SYNCING AND NEXT ROUND...');

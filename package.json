@@ -50,6 +50,7 @@
     "globals": "^16.5.0",
     "patch-package": "^8.0.1",
     "postcss": "^8.5.6",
+    "puppeteer": "^24.37.2",
     "supabase": "^2.72.8",
     "tailwindcss": "^4.1.18",
     "typescript": "~5.9.3",
