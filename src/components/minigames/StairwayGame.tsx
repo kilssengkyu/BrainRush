@@ -125,18 +125,25 @@ const StairwayGame: React.FC<StairwayGameProps> = ({ seed, onScore, isPlaying })
         }
     }, [isPlaying, falling, playerStepIndex, steps, playSound, onScore]);
 
-    // Touch/click handler: left half = left, right half = right
-    const handleTouch = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    const lastTouchRef = useRef(0);
+
+    // Touch handler (mobile)
+    const handleTouchStart = useCallback((e: React.TouchEvent) => {
         if (!containerRef.current) return;
+        lastTouchRef.current = Date.now();
         const rect = containerRef.current.getBoundingClientRect();
-        let clientX: number;
-        if ('touches' in e) {
-            clientX = e.touches[0].clientX;
-        } else {
-            clientX = e.clientX;
-        }
+        const clientX = e.touches[0].clientX;
         const midX = rect.left + rect.width / 2;
         handleInput(clientX < midX ? 'left' : 'right');
+    }, [handleInput]);
+
+    // Mouse handler (desktop only - skip if recent touch)
+    const handleMouseDown = useCallback((e: React.MouseEvent) => {
+        if (Date.now() - lastTouchRef.current < 300) return; // ignore mouse after touch
+        if (!containerRef.current) return;
+        const rect = containerRef.current.getBoundingClientRect();
+        const midX = rect.left + rect.width / 2;
+        handleInput(e.clientX < midX ? 'left' : 'right');
     }, [handleInput]);
 
     // Keyboard support
@@ -187,8 +194,8 @@ const StairwayGame: React.FC<StairwayGameProps> = ({ seed, onScore, isPlaying })
         <div
             ref={containerRef}
             className="w-full h-full flex flex-col items-center justify-center relative touch-none select-none overflow-hidden"
-            onMouseDown={handleTouch}
-            onTouchStart={handleTouch}
+            onMouseDown={handleMouseDown}
+            onTouchStart={handleTouchStart}
         >
             {/* Title */}
             <div className="absolute top-6 text-center w-full px-4 pointer-events-none z-20">
