@@ -420,6 +420,11 @@
         "title": "节奏条",
         "instruction": "下落条与目标条重合时点击即可。"
     },
+    "stairway": {
+        "title": "天国阶梯",
+        "instruction": "点击正确方向踏上阶梯！",
+        "scoreLabel": "阶梯"
+    },
     "tutorial": {
         "normal": "🌍 和全球玩家一起玩迷你游戏对战！",
         "rank": "🏆 与实力相近的玩家进行排位赛！",

@@ -423,6 +423,11 @@
         "title": "Timing Bar",
         "instruction": "Tap when the falling bar overlaps the target bar."
     },
+    "stairway": {
+        "title": "Stairway to Heaven",
+        "instruction": "Tap the correct side to climb the stairs!",
+        "scoreLabel": "Steps"
+    },
     "tutorial": {
         "normal": "🌍 Battle players worldwide in fun minigames!",
         "rank": "🏆 Compete with players of similar skill in ranked matches!",

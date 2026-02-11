@@ -38,6 +38,7 @@ const MINIGAMES = [
     { id: 'SORTING', title: 'sorting.title', icon: <img src="/icons/sorting.png" alt="Sorting" className="w-12 h-12 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Star className="w-8 h-8 text-purple-500" />, type: 'brain' },
     { id: 'SPY', title: 'spy.title', icon: <img src="/icons/spy.png" alt="Spy" className="w-12 h-12 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Ghost className="w-8 h-8 text-gray-500" />, type: 'brain' },
     { id: 'TIMING_BAR', title: 'timingBar.title', icon: <img src="/icons/timing.png" alt="Timing" className="w-12 h-12 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <BookOpen className="w-8 h-8 text-emerald-400" />, type: 'speed' },
+    { id: 'STAIRWAY', title: 'stairway.title', icon: <img src="/icons/stairway.png" alt="Stairway" className="w-12 h-12 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Star className="w-8 h-8 text-amber-400" />, type: 'speed' },
 ];
 
 const PracticeMode = () => {
