@@ -62,8 +62,22 @@ const NATIVE_BGM_FILES: Record<BGMType, string> = {
     bgm_game: 'sounds/bgm_game.mp3'
 };
 
+const NATIVE_SFX_FILES: Record<SoundType, string> = {
+    click: 'sounds/click_002.mp3',
+    hover: 'sounds/select_001.mp3',
+    win: 'sounds/confirmation_001.mp3',
+    lose: 'sounds/error_001.mp3',
+    countdown: 'sounds/tick_001.mp3',
+    match_found: 'sounds/maximize_001.mp3',
+    tick: 'sounds/tick_001.mp3',
+    error: 'sounds/error_006.mp3',
+    level_complete: 'sounds/confirmation_001.mp3',
+    correct: 'sounds/confirmation_002.mp3',
+};
+
 const IS_NATIVE_PLATFORM = Capacitor.isNativePlatform();
 const USE_NATIVE_BGM = IS_NATIVE_PLATFORM;
+const USE_NATIVE_SFX = IS_NATIVE_PLATFORM;
 
 export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const resumeAudioContext = useCallback(async (): Promise<boolean> => {
@@ -114,6 +128,8 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const lastBgmRef = useRef<BGMType | null>(null);
     const nativeBgmReady = useRef(false);
     const nativeBgmLoading = useRef<Promise<void> | null>(null);
+    const nativeSfxReady = useRef(false);
+    const nativeSfxLoading = useRef<Promise<void> | null>(null);
 
     const ensureNativeBgmReady = useCallback(async () => {
         if (!IS_NATIVE_PLATFORM) return false;
@@ -145,6 +161,61 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
         await nativeBgmLoading.current;
         return nativeBgmReady.current;
+    }, []);
+
+    const ensureNativeSfxReady = useCallback(async () => {
+        if (!IS_NATIVE_PLATFORM) return false;
+        if (nativeSfxReady.current) return true;
+        if (!nativeSfxLoading.current) {
+            nativeSfxLoading.current = (async () => {
+                try {
+                    // Deduplicate asset paths (some SFX share the same file)
+                    const uniqueAssets = new Map<string, string>();
+                    Object.entries(NATIVE_SFX_FILES).forEach(([key, assetPath]) => {
+                        if (!uniqueAssets.has(assetPath)) {
+                            uniqueAssets.set(assetPath, key);
+                        }
+                    });
+
+                    await Promise.all(
+                        Object.entries(NATIVE_SFX_FILES)
+                            .filter(([key, assetPath]) => uniqueAssets.get(assetPath) === key)
+                            .map(([key, assetPath]) =>
+                                NativeAudio.preload({
+                                    assetId: key,
+                                    assetPath,
+                                    volume: 0.5,
+                                    audioChannelNum: 3,
+                                    isUrl: false
+                                })
+                            )
+                    );
+
+                    // For duplicate paths, preload with their own assetId pointing to same file
+                    const duplicates = Object.entries(NATIVE_SFX_FILES)
+                        .filter(([key, assetPath]) => uniqueAssets.get(assetPath) !== key);
+                    await Promise.all(
+                        duplicates.map(([key, assetPath]) =>
+                            NativeAudio.preload({
+                                assetId: key,
+                                assetPath,
+                                volume: 0.5,
+                                audioChannelNum: 3,
+                                isUrl: false
+                            })
+                        )
+                    );
+
+                    nativeSfxReady.current = true;
+                    console.log('[SFX] Native preload complete');
+                } catch (err) {
+                    console.error('[SFX] Native preload failed', err);
+                    nativeSfxReady.current = false;
+                }
+            })();
+        }
+        await nativeSfxLoading.current;
+        return nativeSfxReady.current;
     }, []);
 
     // Keep resuming audio context on user interaction (iOS can suspend on background).
@@ -179,6 +250,10 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         });
         setSounds(loadedSounds);
 
+        if (USE_NATIVE_SFX) {
+            void ensureNativeSfxReady();
+        }
+
         if (USE_NATIVE_BGM) {
             void ensureNativeBgmReady();
         } else {
@@ -209,6 +284,11 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
         return () => {
             Object.values(loadedSounds).forEach((s: any) => s.unload());
+            if (USE_NATIVE_SFX) {
+                Object.keys(NATIVE_SFX_FILES).forEach((key) => {
+                    void NativeAudio.unload({ assetId: key });
+                });
+            }
             if (USE_NATIVE_BGM) {
                 Object.keys(NATIVE_BGM_FILES).forEach((key) => {
                     void NativeAudio.unload({ assetId: key });
@@ -217,7 +297,7 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 Object.values(bgmRef.current).forEach((s: any) => s?.unload());
             }
         };
-    }, [ensureNativeBgmReady]);
+    }, [ensureNativeBgmReady, ensureNativeSfxReady]);
 
     // Effect for SFX Volume/Mute
     useEffect(() => {
@@ -231,6 +311,14 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 sound.volume(volume);
             }
         });
+
+        // Sync native SFX volume
+        if (USE_NATIVE_SFX && nativeSfxReady.current) {
+            const nativeVol = isMuted ? 0 : volume;
+            Object.keys(NATIVE_SFX_FILES).forEach((key) => {
+                void NativeAudio.setVolume({ assetId: key, volume: nativeVol });
+            });
+        }
     }, [isMuted, volume, isVibrationEnabled, sounds]);
 
     // Effect for BGM Volume/Mute
@@ -289,21 +377,33 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         triggerHaptic(type);
         if (isMuted) return;
 
+        if (USE_NATIVE_SFX) {
+            void (async () => {
+                const ready = await ensureNativeSfxReady();
+                if (!ready) return;
+                try {
+                    await NativeAudio.play({ assetId: type });
+                } catch (err) {
+                    console.error('[SFX] Native play failed:', type, err);
+                }
+            })();
+            return;
+        }
+
         const sound = sounds[type];
         if (!sound) return;
 
-        // iOS fix: ensure audio context is running before playing
+        // Web fallback: ensure audio context is running before playing
         void (async () => {
             const isRunning = await resumeAudioContext();
             if (!isRunning) {
-                // Retry once after a short delay
                 await new Promise(r => setTimeout(r, 50));
                 await resumeAudioContext();
             }
             sound.seek(0);
             sound.play();
         })();
-    }, [isMuted, sounds, isVibrationEnabled, resumeAudioContext]);
+    }, [isMuted, sounds, isVibrationEnabled, resumeAudioContext, ensureNativeSfxReady]);
 
     const playBGM = useCallback((type: BGMType) => {
         if (USE_NATIVE_BGM) {
