@@ -62,22 +62,22 @@
             "title": "鉛筆 x20",
             "desc": "日常プレイにちょうど良い。"
         },
-    "pencils100": {
-      "title": "鉛筆 x100",
-      "desc": "長く遊ぶ人向けの大容量。"
-    },
-    "practiceNotes5": {
-      "title": "練習ノート x5",
-      "desc": "短時間の練習にちょうど良い。"
-    },
-    "practiceNotes20": {
-      "title": "練習ノート x20",
-      "desc": "しっかり練習したい人向け。"
-    },
-    "practiceNotes100": {
-      "title": "練習ノート x100",
-      "desc": "長時間練習する人におすすめ。"
-    },
+        "pencils100": {
+            "title": "鉛筆 x100",
+            "desc": "長く遊ぶ人向けの大容量。"
+        },
+        "practiceNotes5": {
+            "title": "練習ノート 10個",
+            "desc": "短い練習セッションに最適です。"
+        },
+        "practiceNotes20": {
+            "title": "練習ノート x20",
+            "desc": "しっかり練習したい人向け。"
+        },
+        "practiceNotes100": {
+            "title": "練習ノート x100",
+            "desc": "長時間練習する人におすすめ。"
+        },
         "buy": "購入",
         "premium": "プレミアム",
         "popular": "人気",
@@ -420,6 +420,11 @@
     "timingBar": {
         "title": "タイミングバー",
         "instruction": "落ちてくるバーがターゲットに重なったらタップ！"
+    },
+    "stairway": {
+        "title": "天国の階段",
+        "instruction": "正しい方向をタップして階段を登ろう！",
+        "scoreLabel": "階段"
     },
     "tutorial": {
         "normal": "🌍 世界中のプレイヤーとミニゲーム対戦を楽しもう！",

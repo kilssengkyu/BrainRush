@@ -205,7 +205,11 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
                             </h3>
                             <button
                                 onClick={onClose}
-                                className="p-2 rounded-full hover:bg-gray-700 transition-colors"
+                                disabled={adState === 'loading' || adState === 'playing'}
+                                className={`p-2 rounded-full transition-colors ${(adState === 'loading' || adState === 'playing')
+                                        ? 'opacity-30 cursor-not-allowed'
+                                        : 'hover:bg-gray-700'
+                                    }`}
                             >
                                 <X className="w-5 h-5 text-gray-400" />
                             </button>

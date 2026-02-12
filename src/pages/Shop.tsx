@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ShoppingBag, Pencil, Ban, Sparkles, BookOpen } from 'lucide-react';
+import { ArrowLeft, ShoppingBag, Pencil, Ban, Sparkles, BookOpen, Loader2 } from 'lucide-react';
 import { useSound } from '../contexts/SoundContext';
 import { useUI } from '../contexts/UIContext';
 import { consumePurchaseToken, getPurchaseToken, getTransactionId, loadProducts, PRODUCT_IDS, purchaseProduct, type ShopProductId } from '../lib/purchaseService';
@@ -31,6 +31,7 @@ const Shop = () => {
     const { user, profile, refreshProfile } = useAuth();
     const [priceMap, setPriceMap] = useState<Record<string, string>>({});
     const [loadingPrices, setLoadingPrices] = useState(false);
+    const [purchasing, setPurchasing] = useState(false);
 
     const items = useMemo<ShopItem[]>(() => ([
         {
@@ -76,11 +77,11 @@ const Shop = () => {
             isConsumable: true,
         },
         {
-            id: 'practice_notes_5',
-            productId: PRODUCT_IDS.practiceNotes5,
+            id: 'practice_notes_10',
+            productId: PRODUCT_IDS.practiceNotes10,
             titleKey: 'shop.practiceNotes5.title',
             descKey: 'shop.practiceNotes5.desc',
-            priceLabel: priceMap[PRODUCT_IDS.practiceNotes5] || '₩1,200',
+            priceLabel: priceMap[PRODUCT_IDS.practiceNotes10] || '₩1,200',
             accent: 'from-green-500/20 to-transparent',
             icon: <BookOpen className="w-8 h-8 text-green-300" />,
             isConsumable: true,
@@ -90,7 +91,7 @@ const Shop = () => {
             productId: PRODUCT_IDS.practiceNotes20,
             titleKey: 'shop.practiceNotes20.title',
             descKey: 'shop.practiceNotes20.desc',
-            priceLabel: priceMap[PRODUCT_IDS.practiceNotes20] || '₩3,900',
+            priceLabel: priceMap[PRODUCT_IDS.practiceNotes20] || '₩2,200',
             tagKey: 'shop.popular',
             accent: 'from-lime-500/20 to-transparent',
             icon: <BookOpen className="w-8 h-8 text-lime-300" />,
@@ -101,7 +102,7 @@ const Shop = () => {
             productId: PRODUCT_IDS.practiceNotes100,
             titleKey: 'shop.practiceNotes100.title',
             descKey: 'shop.practiceNotes100.desc',
-            priceLabel: priceMap[PRODUCT_IDS.practiceNotes100] || '₩19,000',
+            priceLabel: priceMap[PRODUCT_IDS.practiceNotes100] || '₩9,900',
             tagKey: 'shop.bestValue',
             accent: 'from-emerald-500/20 to-transparent',
             icon: <BookOpen className="w-8 h-8 text-emerald-300" />,
@@ -119,7 +120,7 @@ const Shop = () => {
                     PRODUCT_IDS.pencils5,
                     PRODUCT_IDS.pencils20,
                     PRODUCT_IDS.pencils100,
-                    PRODUCT_IDS.practiceNotes5,
+                    PRODUCT_IDS.practiceNotes10,
                     PRODUCT_IDS.practiceNotes20,
                     PRODUCT_IDS.practiceNotes100,
                 ]);
@@ -158,6 +159,7 @@ const Shop = () => {
         if (item.productId === PRODUCT_IDS.removeAds && profile?.ads_removed) {
             return;
         }
+        setPurchasing(true);
         try {
             const transaction = await purchaseProduct(item.productId);
             const transactionId = getTransactionId(transaction);
@@ -202,6 +204,8 @@ const Shop = () => {
                 ? t('shop.billingUnavailable', 'Billing not supported on this device.')
                 : t('shop.purchaseFail', 'Purchase failed.');
             showToast(message, 'error');
+        } finally {
+            setPurchasing(false);
         }
     };
 
@@ -225,7 +229,7 @@ const Shop = () => {
             <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-800 via-gray-900 to-black pointer-events-none" />
 
             <div className="w-full max-w-5xl mx-auto flex items-center justify-between z-10 mb-6 pt-4">
-                <button onClick={handleBack} className="p-2 rounded-full hover:bg-white/10 transition-colors">
+                <button onClick={handleBack} disabled={purchasing} className={`p-2 rounded-full transition-colors ${purchasing ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white/10'}`}>
                     <ArrowLeft className="w-8 h-8" />
                 </button>
                 <div className="flex items-center gap-3">
@@ -291,7 +295,7 @@ const Shop = () => {
                                     ) : (
                                         <button
                                             onClick={() => handlePurchase(item)}
-                                            disabled={loadingPrices}
+                                            disabled={loadingPrices || purchasing}
                                             className="px-4 py-2 rounded-xl bg-white text-black font-bold text-sm hover:bg-gray-200 transition-colors active:scale-95"
                                         >
                                             {loadingPrices ? t('shop.loading', 'Loading...') : t('shop.buy', 'Buy')}
@@ -307,6 +311,17 @@ const Shop = () => {
                     {t('shop.notice', 'Payments are processed via App Store / Google Play.')}
                 </div>
             </div>
+            {/* 구매 처리 중 오버레이 */}
+            {purchasing && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm">
+                    <div className="flex items-center gap-3 bg-gray-900/80 border border-white/10 rounded-2xl px-5 py-4 shadow-xl">
+                        <Loader2 className="w-5 h-5 text-blue-400 animate-spin" />
+                        <span className="text-sm font-bold text-gray-200">
+                            {t('shop.processing', '처리 중...')}
+                        </span>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Trophy } from 'lucide-react';
+import { AnimatedScore } from '../components/ui/AnimatedScore';
 import { useGameState } from '../hooks/useGameState';
 import { useSound } from '../contexts/SoundContext';
 import { supabase } from '../lib/supabaseClient';
@@ -31,6 +32,7 @@ import BallCounter from '../components/minigames/BallCounter';
 import BlindPathRunner from '../components/minigames/BlindPathRunner';
 import CatchColor from '../components/minigames/CatchColor';
 import TimingBar from '../components/minigames/TimingBar';
+import StairwayGame from '../components/minigames/StairwayGame';
 import ScoreProgressBar from '../components/ui/ScoreProgressBar';
 import Flag from '../components/ui/Flag';
 import HexRadar from '../components/ui/HexRadar';
@@ -89,18 +91,27 @@ const Game: React.FC = () => {
     const warmupStart = gameState.startAt ? new Date(gameState.startAt).getTime() : 0;
     const warmupDiff = (warmupStart - now) / 1000;
     const isWarmup = warmupDiff > 0;
-    const [roundFinishedUntil, setRoundFinishedUntil] = useState(0);
-    const wasTimeUpRef = useRef(false);
-    useEffect(() => {
-        if (isTimeUp && !wasTimeUpRef.current) {
-            setRoundFinishedUntil(Date.now() + serverOffset + 4000);
-        }
-        wasTimeUpRef.current = isTimeUp;
-    }, [isTimeUp, serverOffset]);
-    const showRoundFinished = roundFinishedUntil > now;
+    // All UI phases derived from server's start_at timestamp (no client-side timers!)
+    // Server sets start_at = now() + 6s in start_next_round
+    // warmupDiff > 3: "Round Finished" phase (first ~3s)
+    // warmupDiff 0~3: "Game Description" phase (last ~3s)
+    // warmupDiff <= 0: Game starts
+    const hasCompletedRound = gameState.roundScores.length > 0;
+    const showRoundFinished = isWarmup && warmupDiff > 3 && hasCompletedRound && !isFinished;
     const showWarmupOverlay = (isWarmup || isCountdown) && !showRoundFinished;
     const showEmojiBar = showRoundFinished || isWaiting;
-    const showEmojiOverlay = showEmojiBar || isFinished;
+    const showEmojiOverlay = showEmojiBar;
+
+    // Display scores: during Round Finished, use server's roundScores snapshot (reliable)
+    const lastRoundSnapshot = showRoundFinished && gameState.roundScores.length > 0
+        ? gameState.roundScores[gameState.roundScores.length - 1]
+        : null;
+    const displayMyScore = lastRoundSnapshot
+        ? (gameState.isPlayer1 ? lastRoundSnapshot.p1_score : lastRoundSnapshot.p2_score)
+        : gameState.myScore;
+    const displayOpScore = lastRoundSnapshot
+        ? (gameState.isPlayer1 ? lastRoundSnapshot.p2_score : lastRoundSnapshot.p1_score)
+        : gameState.opScore;
     const radarLabels = {
         speed: t('profile.stats.speed'),
         memory: t('profile.stats.memory'),
@@ -396,7 +407,7 @@ const Game: React.FC = () => {
                     {gameState.mode !== 'practice' && (
                         <div className="absolute bottom-0 left-0 w-full px-0">
                             <div className="w-full h-1.5 bg-gray-900/50 overflow-hidden backdrop-blur-sm">
-                                <ScoreProgressBar myScore={gameState.myScore} opScore={gameState.opScore} />
+                                <ScoreProgressBar myScore={displayMyScore} opScore={displayOpScore} />
                             </div>
                         </div>
                     )}
@@ -414,9 +425,7 @@ const Game: React.FC = () => {
                                 <Flag code={myProfile?.country} />
                                 <span className="hidden sm:inline truncate">{myProfile?.nickname}</span>
                             </div>
-                            <div className="text-2xl font-black text-blue-400 font-mono">
-                                {gameState.myScore.toLocaleString()}
-                            </div>
+                            <AnimatedScore value={displayMyScore} className="text-2xl font-black text-blue-400 font-mono" />
                         </div>
                     </div>
 
@@ -447,9 +456,7 @@ const Game: React.FC = () => {
                                         <span className="hidden sm:inline truncate">{opponentProfile?.nickname}</span>
                                         <Flag code={opponentProfile?.country} />
                                     </div>
-                                    <div className="text-2xl font-black text-red-400 font-mono">
-                                        {gameState.opScore.toLocaleString()}
-                                    </div>
+                                    <AnimatedScore value={displayOpScore} className="text-2xl font-black text-red-400 font-mono" />
                                 </div>
                                 <div className="relative flex-shrink-0">
                                     <img src={opponentProfile?.avatar_url || '/default-avatar.png'} className={`w-11 h-11 rounded-full border-2 ${!isOpponentOnline ? 'border-gray-500 grayscale opacity-50' : 'border-red-500'}`} />
@@ -478,7 +485,7 @@ const Game: React.FC = () => {
             )}
 
             {/* Round Finished Overlay (Standalone - shows during transition) */}
-            {showRoundFinished && (
+            {showRoundFinished && gameState.mode !== 'practice' && (
                 <div className="absolute inset-0 z-[65] flex items-center justify-center pointer-events-none">
                     <motion.div
                         initial={{ scale: 0.8, opacity: 0 }}
@@ -593,6 +600,7 @@ const Game: React.FC = () => {
                                         {gameState.gameType === 'BLIND_PATH' && t('blindPath.title')}
                                         {gameState.gameType === 'CATCH_COLOR' && t('catchColor.title')}
                                         {gameState.gameType === 'TIMING_BAR' && t('timingBar.title')}
+                                        {gameState.gameType === 'STAIRWAY' && t('stairway.title', '천국의 계단')}
                                     </h2>
                                     <p className="text-2xl text-white mb-12 font-bold max-w-2xl">
                                         {gameState.gameType === 'RPS' && t('rps.instruction')}
@@ -622,6 +630,7 @@ const Game: React.FC = () => {
                                         {gameState.gameType === 'BLIND_PATH' && t('blindPath.instruction')}
                                         {gameState.gameType === 'CATCH_COLOR' && t('catchColor.instruction')}
                                         {gameState.gameType === 'TIMING_BAR' && t('timingBar.instruction')}
+                                        {gameState.gameType === 'STAIRWAY' && t('stairway.instruction', '올바른 방향을 터치해 계단을 올라가세요!')}
                                     </p>
 
                                 </motion.div>
@@ -725,6 +734,9 @@ const Game: React.FC = () => {
                                             isPlaying={isGameplayActive}
                                             remainingTime={gameState.remainingTime}
                                         />
+                                    )}
+                                    {gameState.gameType === 'STAIRWAY' && (
+                                        <StairwayGame seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
                                     )}
                                 </>
                             )}
@@ -924,7 +936,7 @@ const Game: React.FC = () => {
                     </div>
                 )}
 
-                {showEmojiOverlay && (
+                {showEmojiOverlay && gameState.mode !== 'practice' && (
                     <div className="absolute inset-0 z-[70] pointer-events-none">
                         <AnimatePresence>
                             {emojiBursts.map((item) => (

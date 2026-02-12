@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import type { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
 import { App } from '@capacitor/app';
+import { SignInWithApple } from '@capacitor-community/apple-sign-in';
 import { COUNTRIES } from '../constants/countries';
 
 interface AuthContextType {
@@ -10,6 +11,7 @@ interface AuthContextType {
     profile: any | null;
     loading: boolean;
     signInWithGoogle: () => Promise<void>;
+    signInWithApple: () => Promise<void>;
     signInAnonymously: () => Promise<void>;
     linkWithGoogle: () => Promise<void>;
     signOut: () => Promise<void>;
@@ -23,6 +25,7 @@ const AuthContext = createContext<AuthContextType>({
     profile: null,
     loading: true,
     signInWithGoogle: async () => { },
+    signInWithApple: async () => { },
     signInAnonymously: async () => { },
     linkWithGoogle: async () => { },
     signOut: async () => { },
@@ -396,6 +399,39 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
     };
 
+    const signInWithApple = async () => {
+        try {
+            const result = await SignInWithApple.authorize({
+                clientId: 'com.kilssengkyu.brainrush',
+                redirectURI: '',
+                scopes: 'email name',
+                state: '',
+                nonce: '',
+            });
+
+            const identityToken = result.response?.identityToken;
+            if (!identityToken) {
+                throw new Error('Apple Sign In: No identity token received');
+            }
+
+            const { error } = await supabase.auth.signInWithIdToken({
+                provider: 'apple',
+                token: identityToken,
+            });
+
+            if (error) throw error;
+            console.log('Apple Sign-in Success!');
+        } catch (error: any) {
+            // User cancelled
+            if (error?.message?.includes('cancelled') || error?.message?.includes('canceled')) {
+                console.log('Apple Sign-in cancelled by user');
+                return;
+            }
+            console.error('Apple Sign-in Error:', error);
+            alert('Apple 로그인 중 오류가 발생했습니다.');
+        }
+    };
+
     const signOut = async () => {
         try {
             const { error } = await supabase.auth.signOut();
@@ -422,7 +458,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, session, profile, loading, signInWithGoogle, signInAnonymously, linkWithGoogle, signOut, refreshProfile, onlineUsers }}>
+        <AuthContext.Provider value={{ user, session, profile, loading, signInWithGoogle, signInWithApple, signInAnonymously, linkWithGoogle, signOut, refreshProfile, onlineUsers }}>
             {children}
         </AuthContext.Provider>
     );

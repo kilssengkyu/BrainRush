@@ -168,8 +168,8 @@ const grantEntitlement = async (
   } else if (productId === 'pencils_100') {
     const { error } = await supabase.rpc('grant_pencils', { user_id: userId, amount: 100 });
     if (error) throw error;
-  } else if (productId === 'practice_notes_5') {
-    const { error } = await supabase.rpc('grant_practice_notes', { user_id: userId, amount: 5 });
+  } else if (productId === 'practice_notes_10') {
+    const { error } = await supabase.rpc('grant_practice_notes', { user_id: userId, amount: 10 });
     if (error) throw error;
   } else if (productId === 'practice_notes_20') {
     const { error } = await supabase.rpc('grant_practice_notes', { user_id: userId, amount: 20 });
