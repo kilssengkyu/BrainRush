@@ -52,6 +52,7 @@ import Profile from './pages/Profile';
 import PracticeMode from './pages/PracticeMode';
 import Shop from './pages/Shop';
 import Privacy from './pages/Privacy';
+import Support from './pages/Support';
 
 import GameInviteListener from './components/social/GameInviteListener';
 import ChatNotificationListener from './components/social/ChatNotificationListener';
@@ -87,6 +88,7 @@ function App() {
                 <Route path="/practice" element={<PracticeMode />} />
                 <Route path="/shop" element={<Shop />} />
                 <Route path="/privacy" element={<Privacy />} />
+                <Route path="/support" element={<Support />} />
               </Routes>
             </BrowserRouter>
           </TutorialProvider>
