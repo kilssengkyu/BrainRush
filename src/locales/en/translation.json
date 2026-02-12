@@ -115,10 +115,22 @@
             "title": "Pencils x20",
             "desc": "Great for daily play."
         },
-        "pencils100": {
-            "title": "Pencils x100",
-            "desc": "Best value for long-term play."
-        },
+    "pencils100": {
+      "title": "Pencils x100",
+      "desc": "Best value for long-term play."
+    },
+    "practiceNotes5": {
+      "title": "Practice Notes x5",
+      "desc": "Quick refill for practice mode."
+    },
+    "practiceNotes20": {
+      "title": "Practice Notes x20",
+      "desc": "Solid boost for longer practice."
+    },
+    "practiceNotes100": {
+      "title": "Practice Notes x100",
+      "desc": "Best value for heavy practice."
+    },
         "buy": "Buy",
         "premium": "Premium",
         "popular": "Popular",

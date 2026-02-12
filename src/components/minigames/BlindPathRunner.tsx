@@ -79,14 +79,29 @@ const buildBoard = (rows: number, cols: number, seed: string, level: number) => 
     // 최적 종료 좌표를 보관합니다.
     let bestGoal: Coord = { r: 0, c: 0 };
 
+    // 가장자리 점수를 계산합니다 (중앙이 높음, 가장자리가 낮음).
+    const getEdgeScore = (r: number, c: number): number => {
+        const centerR = (rows - 1) / 2;
+        const centerC = (cols - 1) / 2;
+        const distR = Math.abs(r - centerR) / centerR;
+        const distC = Math.abs(c - centerC) / centerC;
+        // 중앙에 가까울수록 점수가 높음 (0~1 범위, 1이 중앙)
+        return 1 - (distR + distC) / 2;
+    };
+
     // 하나의 경로 생성 시도를 수행합니다.
     const attemptBuild = () => {
         // 시도별 경로 집합을 생성합니다.
         const localPath = new Set<string>();
         // 시도별 경로 좌표를 기록합니다.
         const coords: Coord[] = [];
-        // 시작 지점을 무작위로 선택합니다.
-        const start: Coord = { r: rng.nextInt(0, rows), c: rng.nextInt(0, cols) };
+        // 시작 지점을 중앙 근처에서 선택합니다.
+        const marginR = Math.floor(rows * 0.25);
+        const marginC = Math.floor(cols * 0.25);
+        const start: Coord = {
+            r: rng.nextInt(marginR, rows - marginR),
+            c: rng.nextInt(marginC, cols - marginC)
+        };
         // 시작 지점을 경로에 추가합니다.
         localPath.add(coordKey(start.r, start.c));
         coords.push(start);
@@ -97,6 +112,10 @@ const buildBoard = (rows: number, cols: number, seed: string, level: number) => 
         let prevDir: Direction | null = null;
         // 직전 회전 방향을 추적합니다.
         let lastTurn: Turn | null = null;
+        // 연속 직진 횟수를 추적합니다.
+        let straightCount = 0;
+        // 강제 회전까지 남은 직진 횟수 (2~3 사이 랜덤).
+        let maxStraight = rng.nextInt(2, 4);
 
         // 목표 길이만큼 경로를 확장합니다.
         for (let step = 1; step < targetLength; step += 1) {
@@ -112,33 +131,59 @@ const buildBoard = (rows: number, cols: number, seed: string, level: number) => 
 
             if (candidates.length === 0) break;
 
+            // 연속 직진이 최대치에 도달하면 회전을 강제합니다.
+            const mustTurn = straightCount >= maxStraight && prevDir !== null;
+
             // 회전 방향 반복을 피한 후보를 선별합니다.
-            const turnFiltered = candidates.filter(({ dir }) => {
+            let turnFiltered = candidates.filter(({ dir }) => {
                 if (!prevDir) return true;
-                const turn = getTurn(prevDir, dir); // 회전 방향을 계산합니다.
+                const turn = getTurn(prevDir, dir);
                 if (turn === 'back') return false;
+                // 강제 회전 시 직진 제외
+                if (mustTurn && turn === 'straight') return false;
                 if (turn === 'left' || turn === 'right') {
                     return lastTurn !== turn;
                 }
                 return true;
             });
 
+            // 강제 회전인데 후보가 없으면 뒤로가기만 제외하고 다시 시도
+            if (mustTurn && turnFiltered.length === 0) {
+                turnFiltered = candidates.filter(({ dir }) => {
+                    if (!prevDir) return true;
+                    return getTurn(prevDir, dir) !== 'back';
+                });
+            }
+
             // 회전 규칙으로 후보가 없으면 원 후보를 사용합니다.
             const turnCandidates = turnFiltered.length > 0 ? turnFiltered : candidates;
+
             // 경로가 뭉치지 않도록 인접 칸 수를 기준으로 후보를 추립니다.
             const spacedCandidates = turnCandidates.filter(({ next }) => countAdjacentPath(next.r, next.c, localPath) <= 1);
-            // 간격 후보가 없으면 회전 후보를 사용합니다.
-            const finalCandidates = spacedCandidates.length > 0 ? spacedCandidates : turnCandidates;
+            const spacedOrTurn = spacedCandidates.length > 0 ? spacedCandidates : turnCandidates;
 
-            // 최종 후보 중 하나를 선택합니다.
-            const picked = finalCandidates[rng.nextInt(0, finalCandidates.length)];
-            const nextPos = picked.next; // 다음 이동 좌표를 저장합니다.
+            // 가장자리 점수로 후보를 정렬하고 상위 후보를 우선 선택합니다.
+            const scoredCandidates = spacedOrTurn
+                .map(c => ({ ...c, score: getEdgeScore(c.next.r, c.next.c) }))
+                .sort((a, b) => b.score - a.score);
 
-            // 회전 방향 상태를 갱신합니다.
+            // 상위 50% 후보 중에서 랜덤 선택 (다양성 유지)
+            const topCount = Math.max(1, Math.ceil(scoredCandidates.length * 0.5));
+            const topCandidates = scoredCandidates.slice(0, topCount);
+            const picked = topCandidates[rng.nextInt(0, topCandidates.length)];
+            const nextPos = picked.next;
+
+            // 회전 방향 상태 및 직진 카운터를 갱신합니다.
             if (prevDir) {
-                const turn = getTurn(prevDir, picked.dir); // 회전 방향을 계산합니다.
-                if (turn === 'left' || turn === 'right') {
-                    lastTurn = turn;
+                const turn = getTurn(prevDir, picked.dir);
+                if (turn === 'straight') {
+                    straightCount += 1;
+                } else {
+                    straightCount = 0;
+                    maxStraight = rng.nextInt(2, 4); // 다음 강제 회전까지 거리 재설정
+                    if (turn === 'left' || turn === 'right') {
+                        lastTurn = turn;
+                    }
                 }
             }
             prevDir = picked.dir;

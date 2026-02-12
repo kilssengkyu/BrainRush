@@ -93,13 +93,13 @@ const Game: React.FC = () => {
     const wasTimeUpRef = useRef(false);
     useEffect(() => {
         if (isTimeUp && !wasTimeUpRef.current) {
-            setRoundFinishedUntil(Date.now() + serverOffset + 1500);
+            setRoundFinishedUntil(Date.now() + serverOffset + 4000);
         }
         wasTimeUpRef.current = isTimeUp;
     }, [isTimeUp, serverOffset]);
     const showRoundFinished = roundFinishedUntil > now;
     const showWarmupOverlay = (isWarmup || isCountdown) && !showRoundFinished;
-    const showEmojiBar = isWarmup || isTimeUp || isWaiting;
+    const showEmojiBar = showRoundFinished || isWaiting;
     const showEmojiOverlay = showEmojiBar || isFinished;
     const radarLabels = {
         speed: t('profile.stats.speed'),
@@ -390,7 +390,7 @@ const Game: React.FC = () => {
 
             {/* Top Info Bar (Timer & Scores) */}
             {!isFinished && (
-                <header className="h-24 w-full bg-gray-800/80 backdrop-blur-md flex items-center justify-between px-6 shadow-lg z-50 relative">
+                <header className="h-24 w-full bg-gray-800/80 backdrop-blur-md flex items-center justify-between px-4 shadow-lg z-50 relative">
 
                     {/* Score Progress Bar - Hide in Practice */}
                     {gameState.mode !== 'practice' && (
@@ -402,58 +402,57 @@ const Game: React.FC = () => {
                     )}
 
                     {/* My Profile */}
-                    <div className="flex items-center gap-4 w-1/3 pt-2">
-                        <div className="relative">
-                            <img src={myProfile?.avatar_url || '/default-avatar.png'} className="w-12 h-12 rounded-full border-2 border-blue-500" />
+                    <div className="flex items-center gap-2 flex-1 min-w-0 pt-2">
+                        <div className="relative flex-shrink-0">
+                            <img src={myProfile?.avatar_url || '/default-avatar.png'} className="w-11 h-11 rounded-full border-2 border-blue-500" />
                             {isConnectionUnstable && (
                                 <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-yellow-300 border-t-transparent animate-spin bg-gray-900/80" />
                             )}
                         </div>
-                        <div>
-                            <div className="font-bold text-lg flex items-center gap-2">
+                        <div className="min-w-0">
+                            <div className="font-bold text-sm flex items-center gap-1 truncate">
                                 <Flag code={myProfile?.country} />
-                                <span className="hidden sm:inline">{myProfile?.nickname}</span>
+                                <span className="hidden sm:inline truncate">{myProfile?.nickname}</span>
                             </div>
-                            <div className="text-3xl font-black text-blue-400 font-mono transition-all">
+                            <div className="text-2xl font-black text-blue-400 font-mono">
                                 {gameState.myScore.toLocaleString()}
                             </div>
                         </div>
                     </div>
 
                     {/* Center Timer */}
-                    <div className="flex flex-col items-center w-1/3 pt-2">
+                    <div className="flex flex-col items-center flex-shrink-0 px-2 pt-2">
                         {gameState.mode !== 'practice' && (
-                            <div className="flex flex-col items-center mb-1">
-                                <div className="text-sm font-bold text-blue-300 tracking-widest uppercase">
+                            <div className="flex flex-col items-center mb-0.5">
+                                <div className="text-xs font-bold text-blue-300 tracking-wider uppercase whitespace-nowrap">
                                     Round {gameState.currentRound}/{gameState.totalRounds}
                                 </div>
-                                {/* Wins Display Removed */}
                             </div>
                         )}
                         <div
                             key={gameState.remainingTime <= 10 ? 'urgent' : 'normal'}
-                            className={`text-5xl font-black font-mono tracking-widest ${gameState.remainingTime <= 10 ? 'text-red-500 animate-pulse' : 'text-yellow-400'}`}
+                            className={`text-4xl font-black font-mono tracking-wider ${gameState.remainingTime <= 10 ? 'text-red-500 animate-pulse' : 'text-yellow-400'}`}
                         >
                             {Math.floor(gameState.remainingTime)}
                         </div>
-                        <div className="text-xs text-gray-500 font-bold uppercase tracking-wider">Time Left</div>
+                        <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Time Left</div>
                     </div>
 
                     {/* Opponent Profile - Hide in Solo Practice */}
-                    <div className="flex items-center justify-end gap-4 w-1/3 text-right pt-2 relative">
+                    <div className="flex items-center justify-end gap-2 flex-1 min-w-0 text-right pt-2 relative">
                         {opponentProfile && (
                             <>
-                                <div>
-                                    <div className="font-bold text-lg flex items-center justify-end gap-2">
-                                        <span className="hidden sm:inline">{opponentProfile?.nickname}</span>
+                                <div className="min-w-0">
+                                    <div className="font-bold text-sm flex items-center justify-end gap-1 truncate">
+                                        <span className="hidden sm:inline truncate">{opponentProfile?.nickname}</span>
                                         <Flag code={opponentProfile?.country} />
                                     </div>
-                                    <div className="text-3xl font-black text-red-400 font-mono transition-all">
+                                    <div className="text-2xl font-black text-red-400 font-mono">
                                         {gameState.opScore.toLocaleString()}
                                     </div>
                                 </div>
-                                <div className="relative">
-                                    <img src={opponentProfile?.avatar_url || '/default-avatar.png'} className={`w-12 h-12 rounded-full border-2 ${!isOpponentOnline ? 'border-gray-500 grayscale opacity-50' : 'border-red-500'}`} />
+                                <div className="relative flex-shrink-0">
+                                    <img src={opponentProfile?.avatar_url || '/default-avatar.png'} className={`w-11 h-11 rounded-full border-2 ${!isOpponentOnline ? 'border-gray-500 grayscale opacity-50' : 'border-red-500'}`} />
                                     {!isOpponentOnline && gameState.status !== 'finished' && (
                                         <div className="absolute -bottom-2 -right-2 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded animate-pulse border border-red-400 whitespace-nowrap z-50">
                                             DISCONNECT
@@ -463,8 +462,8 @@ const Game: React.FC = () => {
                             </>
                         )}
                         {!opponentProfile && gameState.mode === 'practice' && (
-                            <div className="text-gray-500 font-bold uppercase tracking-widest text-sm">
-                                Practice Mode
+                            <div className="text-gray-500 font-bold uppercase tracking-widest text-xs">
+                                Practice
                             </div>
                         )}
                     </div>
@@ -478,60 +477,70 @@ const Game: React.FC = () => {
                 </div>
             )}
 
+            {/* Round Finished Overlay (Standalone - shows during transition) */}
+            {showRoundFinished && (
+                <div className="absolute inset-0 z-[65] flex items-center justify-center pointer-events-none">
+                    <motion.div
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="text-5xl font-black text-white drop-shadow-lg uppercase tracking-widest border-4 border-white p-6 rounded-2xl bg-black/60 backdrop-blur-sm"
+                    >
+                        {t('game.roundFinished')}
+                    </motion.div>
+                </div>
+            )}
 
             {/* Main Game Area */}
             <main className="flex-1 relative flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-black">
 
                 {/* Waiting Screen */}
                 {isWaiting && (
-                    <div className="absolute inset-0 flex flex-col">
-                        <div className="flex-1 flex items-center justify-center bg-gradient-to-b from-blue-900/40 to-transparent">
-                            <div className="flex items-center gap-6 bg-gray-900/60 border border-blue-400/20 rounded-3xl px-8 py-6 shadow-xl">
-                                <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-blue-500 bg-gray-800">
+                    <div className="absolute inset-0 flex flex-col items-center pb-44">
+                        {/* Background gradients */}
+                        <div className="absolute inset-0 bg-gradient-to-b from-blue-900/30 via-transparent to-red-900/30 pointer-events-none" />
+
+                        {/* My Profile - Top */}
+                        <div className="mt-4 flex flex-col items-center">
+                            <div className="flex items-center gap-3 bg-gray-900/70 border border-blue-400/30 rounded-2xl px-5 py-3 shadow-xl backdrop-blur-sm">
+                                <Flag code={myProfile?.country} className="w-6 h-4" />
+                                <span className="text-base font-bold text-white">{myProfile?.nickname || t('game.unknownPlayer')}</span>
+                                <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-blue-500 bg-gray-800">
                                     <img src={myProfile?.avatar_url || '/default-avatar.png'} className="w-full h-full object-cover" />
                                 </div>
-                                <div>
-                                    <div className="text-lg font-bold text-white flex items-center gap-2">
-                                        <Flag code={myProfile?.country} />
-                                        <span>{myProfile?.nickname || t('game.unknownPlayer')}</span>
-                                    </div>
-                                    <div className="text-blue-300 font-mono font-bold">{(myProfile?.mmr ?? 1000).toLocaleString()} MMR</div>
-                                </div>
                             </div>
+                            <div className="text-blue-300 font-mono font-bold text-xs mt-1">{(myProfile?.mmr ?? 1000).toLocaleString()} MMR</div>
                         </div>
 
-                        <div className="flex-1 flex items-center justify-center bg-gradient-to-t from-red-900/40 to-transparent">
-                            <div className="flex items-center gap-6 bg-gray-900/60 border border-red-400/20 rounded-3xl px-8 py-6 shadow-xl">
-                                <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-red-500 bg-gray-800 flex items-center justify-center">
-                                    {opponentProfile?.avatar_url ? (
-                                        <img src={opponentProfile.avatar_url} className="w-full h-full object-cover" />
-                                    ) : (
-                                        <div className="w-10 h-10 rounded-full border-2 border-red-400 border-dashed" />
-                                    )}
-                                </div>
-                                <div>
-                                    <div className="text-lg font-bold text-white flex items-center gap-2">
-                                        <Flag code={opponentProfile?.country} />
-                                        <span>{opponentProfile?.nickname || t('game.opponentWaiting')}</span>
-                                    </div>
-                                    <div className="text-red-300 font-mono font-bold">
-                                        {opponentProfile?.mmr ? `${opponentProfile.mmr.toLocaleString()} MMR` : t('game.opponentWaiting')}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-                            <div className="relative bg-gray-900/70 border border-white/10 rounded-3xl p-3 shadow-2xl">
+                        {/* Hex Radar - Center with Labels */}
+                        <div className="flex-1 flex items-center justify-center">
+                            <div className="relative bg-gray-900/60 border border-white/10 rounded-3xl p-3 shadow-2xl backdrop-blur-sm">
                                 <HexRadar
                                     values={myRadarStats}
                                     compareValues={opRadarStats}
                                     labels={radarLabels}
-                                    size={200}
-                                    showLabels={false}
+                                    size={180}
+                                    showLabels={true}
                                     primaryColor={{ fill: 'rgba(59,130,246,0.28)', stroke: 'rgba(59,130,246,0.95)' }}
                                     compareColor={{ fill: 'rgba(239,68,68,0.25)', stroke: 'rgba(239,68,68,0.95)' }}
                                 />
+                            </div>
+                        </div>
+
+                        {/* Opponent Profile - Above Emoji Bar (mirrored layout) */}
+                        <div className="mb-4 flex flex-col items-center">
+                            <div className="text-red-300 font-mono font-bold text-xs mb-1">
+                                {opponentProfile?.mmr ? `${opponentProfile.mmr.toLocaleString()} MMR` : t('game.opponentWaiting')}
+                            </div>
+                            <div className="flex items-center gap-3 bg-gray-900/70 border border-red-400/30 rounded-2xl px-5 py-3 shadow-xl backdrop-blur-sm">
+                                <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-red-500 bg-gray-800 flex items-center justify-center">
+                                    {opponentProfile?.avatar_url ? (
+                                        <img src={opponentProfile.avatar_url} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <div className="w-6 h-6 rounded-full border-2 border-red-400 border-dashed" />
+                                    )}
+                                </div>
+                                <span className="text-base font-bold text-white">{opponentProfile?.nickname || t('game.opponentWaiting')}</span>
+                                <Flag code={opponentProfile?.country} className="w-6 h-4" />
                             </div>
                         </div>
                     </div>
@@ -615,19 +624,6 @@ const Game: React.FC = () => {
                                         {gameState.gameType === 'TIMING_BAR' && t('timingBar.instruction')}
                                     </p>
 
-                                </motion.div>
-                            </div>
-                        )}
-
-                        {/* Round Finished Overlay (Grace Period) */}
-                        {showRoundFinished && (
-                            <div className="absolute inset-0 bg-black/40 z-[60] flex flex-col items-center justify-center p-8 text-center backdrop-blur-sm">
-                                <motion.div
-                                    initial={{ scale: 0.8, opacity: 0 }}
-                                    animate={{ scale: 1, opacity: 1 }}
-                                    className="text-5xl font-black text-white drop-shadow-lg uppercase tracking-widest border-4 border-white p-6 rounded-2xl bg-white/10"
-                                >
-                                    {t('game.roundFinished')}
                                 </motion.div>
                             </div>
                         )}
@@ -929,7 +925,7 @@ const Game: React.FC = () => {
                 )}
 
                 {showEmojiOverlay && (
-                    <div className="absolute inset-0 z-[60] pointer-events-none">
+                    <div className="absolute inset-0 z-[70] pointer-events-none">
                         <AnimatePresence>
                             {emojiBursts.map((item) => (
                                 <motion.span

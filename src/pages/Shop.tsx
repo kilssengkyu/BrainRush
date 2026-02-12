@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ShoppingBag, Pencil, Ban, Sparkles } from 'lucide-react';
+import { ArrowLeft, ShoppingBag, Pencil, Ban, Sparkles, BookOpen } from 'lucide-react';
 import { useSound } from '../contexts/SoundContext';
 import { useUI } from '../contexts/UIContext';
 import { consumePurchaseToken, getPurchaseToken, getTransactionId, loadProducts, PRODUCT_IDS, purchaseProduct, type ShopProductId } from '../lib/purchaseService';
@@ -74,6 +74,38 @@ const Shop = () => {
             accent: 'from-sky-500/20 to-transparent',
             icon: <Sparkles className="w-8 h-8 text-sky-300" />,
             isConsumable: true,
+        },
+        {
+            id: 'practice_notes_5',
+            productId: PRODUCT_IDS.practiceNotes5,
+            titleKey: 'shop.practiceNotes5.title',
+            descKey: 'shop.practiceNotes5.desc',
+            priceLabel: priceMap[PRODUCT_IDS.practiceNotes5] || '₩1,200',
+            accent: 'from-green-500/20 to-transparent',
+            icon: <BookOpen className="w-8 h-8 text-green-300" />,
+            isConsumable: true,
+        },
+        {
+            id: 'practice_notes_20',
+            productId: PRODUCT_IDS.practiceNotes20,
+            titleKey: 'shop.practiceNotes20.title',
+            descKey: 'shop.practiceNotes20.desc',
+            priceLabel: priceMap[PRODUCT_IDS.practiceNotes20] || '₩3,900',
+            tagKey: 'shop.popular',
+            accent: 'from-lime-500/20 to-transparent',
+            icon: <BookOpen className="w-8 h-8 text-lime-300" />,
+            isConsumable: true,
+        },
+        {
+            id: 'practice_notes_100',
+            productId: PRODUCT_IDS.practiceNotes100,
+            titleKey: 'shop.practiceNotes100.title',
+            descKey: 'shop.practiceNotes100.desc',
+            priceLabel: priceMap[PRODUCT_IDS.practiceNotes100] || '₩19,000',
+            tagKey: 'shop.bestValue',
+            accent: 'from-emerald-500/20 to-transparent',
+            icon: <BookOpen className="w-8 h-8 text-emerald-300" />,
+            isConsumable: true,
         }
     ]), [priceMap, t]);
 
@@ -87,6 +119,9 @@ const Shop = () => {
                     PRODUCT_IDS.pencils5,
                     PRODUCT_IDS.pencils20,
                     PRODUCT_IDS.pencils100,
+                    PRODUCT_IDS.practiceNotes5,
+                    PRODUCT_IDS.practiceNotes20,
+                    PRODUCT_IDS.practiceNotes100,
                 ]);
                 if (!active) return;
                 const nextMap: Record<string, string> = {};
