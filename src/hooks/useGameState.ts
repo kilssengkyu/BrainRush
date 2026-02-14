@@ -50,6 +50,7 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
     const [isWaitingTimeout, setIsWaitingTimeout] = useState(false);
     const [isTimeUp, setIsTimeUp] = useState(false); // Grace period flag
     const isFinishing = useRef(false);
+    const hasFinalSynced = useRef(false);
 
     // --- Time Sync ---
     useEffect(() => {
@@ -181,6 +182,19 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
         if (data) handleUpdate(data);
     }, [roomId, handleUpdate]);
 
+    const syncFinalScore = useCallback(async () => {
+        const { error } = await supabase.rpc('update_score', {
+            p_room_id: roomId,
+            p_player_id: myId,
+            p_score: scoreRef.current
+        });
+        if (error) {
+            console.error('FINAL SCORE SYNC ERROR:', error);
+            return false;
+        }
+        return true;
+    }, [roomId, myId]);
+
 
     // --- Realtime Subscription ---
     useEffect(() => {
@@ -265,29 +279,27 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
                 return; // Wait for update
             }
 
-            // Grace Period Logic (Playing -> Finished/NextRound):
-            // 0s: Set isTimeUp = true (Disable Inputs locally)
-            // -1.5s: Host calls next_round/finish (Allow last packets to land)
+            // Grace Period Logic (Playing -> NextRound):
+            // 0s: everyone flushes final score once.
+            // -0.2s: host advances round (gives peer flush packets a brief landing window).
             if (gameState.status === 'playing') {
                 if (remaining === 0 && !isTimeUp) {
                     setIsTimeUp(true);
                 }
 
-                // Host Logic: Finish Game w/ Grace Period
-                if (isHostUser && diff <= 0) {
+                if (diff <= 0 && !hasFinalSynced.current) {
+                    hasFinalSynced.current = true;
+                    await syncFinalScore();
+                }
+
+                // Host Logic: short grace, then advance.
+                if (isHostUser && diff <= -0.2) {
                     if (!isFinishing.current) {
                         isFinishing.current = true;
-                        console.log('Ticker: Grace period over! FORCE SYNCING AND NEXT ROUND...');
+                        console.log('Ticker: Grace window done. Advancing to next round...');
 
-                        // 1. Force Push Final Score
-                        const { error: syncError } = await supabase.rpc('update_score', {
-                            p_room_id: roomId,
-                            p_player_id: myId,
-                            p_score: scoreRef.current
-                        });
-
-                        if (syncError) console.error('FINAL SCORE SYNC ERROR:', syncError);
-                        else console.log('FINAL SCORE SYNC SUCCESS');
+                        // Ensure host pushes its latest score once more before advancing.
+                        await syncFinalScore();
 
                         // 2. Next Round or Finish
                         console.log('Ticker: Calling START_NEXT_ROUND...');
@@ -306,7 +318,7 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
         }, 500);
 
         return () => clearInterval(ticker);
-    }, [gameState.status, gameState.endAt, gameState.startAt, serverOffset, isHostUser, roomId, myId]);
+    }, [gameState.status, gameState.endAt, gameState.startAt, serverOffset, isHostUser, roomId, myId, isTimeUp, syncFinalScore]);
 
 
     // --- Universal Poller (Safety Net) ---
@@ -346,6 +358,13 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
     useEffect(() => {
         if (gameState.status !== 'playing') return;
         const interval = setInterval(() => {
+            const now = Date.now() + serverOffset;
+            const start = gameState.startAt ? new Date(gameState.startAt).getTime() : 0;
+            const end = gameState.endAt ? new Date(gameState.endAt).getTime() : 0;
+
+            // Sync score only during active round (exclude warmup / post-round).
+            if (!start || !end || now < start || now > end) return;
+
             if (scoreRef.current !== lastSyncedScore.current) {
                 lastSyncedScore.current = scoreRef.current;
                 supabase.rpc('update_score', {
@@ -356,9 +375,9 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
                     if (error) console.error('SCORE SYNC ERROR:', error);
                 });
             }
-        }, 300);
+        }, 1000);
         return () => clearInterval(interval);
-    }, [gameState.status, roomId, myId]);
+    }, [gameState.status, gameState.startAt, gameState.endAt, serverOffset, roomId, myId]);
 
 
     // --- Actions ---
@@ -372,6 +391,7 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
     // 라운드가 변경(또는 게임 타입 변경)되면 isFinishing 플래그를 초기화하여 다음 라운드 종료 시 트리거가 동작하도록 함
     useEffect(() => {
         isFinishing.current = false;
+        hasFinalSynced.current = false;
         setIsTimeUp(false); // Reset TimeUp flag
         scoreRef.current = 0; // Reset local score for new round
         hasLocalScoreChanges.current = false;

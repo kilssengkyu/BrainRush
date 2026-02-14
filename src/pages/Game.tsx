@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Trophy } from 'lucide-react';
+import { Trophy, User } from 'lucide-react';
 import { AnimatedScore } from '../components/ui/AnimatedScore';
 import { useGameState } from '../hooks/useGameState';
 import { useSound } from '../contexts/SoundContext';
@@ -61,6 +61,11 @@ const Game: React.FC = () => {
     const [myProfile, setMyProfile] = useState<any>(null);
     const [opponentProfile, setOpponentProfile] = useState<any>(null);
 
+    // --- Realtime Score Sync (Broadcast) ---
+    const [realtimeOpScore, setRealtimeOpScore] = useState<number | null>(null);
+    const lastBroadcastScore = useRef<number>(0);
+    const lastBroadcastTime = useRef<number>(0);
+
     // Game Hook
     const { gameState, incrementScore, serverOffset, isWaitingTimeout, isTimeUp, onlineUsers, connectionStatus } = useGameState(roomId!, myId, opponentId);
     const { playBGM, stopBGM } = useSound();
@@ -109,9 +114,11 @@ const Game: React.FC = () => {
     const displayMyScore = lastRoundSnapshot
         ? (gameState.isPlayer1 ? lastRoundSnapshot.p1_score : lastRoundSnapshot.p2_score)
         : gameState.myScore;
-    const displayOpScore = lastRoundSnapshot
-        ? (gameState.isPlayer1 ? lastRoundSnapshot.p2_score : lastRoundSnapshot.p1_score)
-        : gameState.opScore;
+    const displayOpScore = realtimeOpScore !== null
+        ? realtimeOpScore
+        : (lastRoundSnapshot
+            ? (gameState.isPlayer1 ? lastRoundSnapshot.p2_score : lastRoundSnapshot.p1_score)
+            : gameState.opScore);
     const radarLabels = {
         speed: t('profile.stats.speed'),
         memory: t('profile.stats.memory'),
@@ -138,9 +145,41 @@ const Game: React.FC = () => {
     };
 
     const showEmojiOverlayRef = useRef(false);
+    /* REMOVED: realtimeOpScore moved to top */
+
+    /* REMOVED: realtimeOpScore declaration was here */
+
     useEffect(() => {
-        showEmojiOverlayRef.current = showEmojiOverlay;
-    }, [showEmojiOverlay]);
+        showEmojiOverlayRef.current = showEmojiOverlay || (isFinished && gameState.mode !== 'practice');
+    }, [showEmojiOverlay, isFinished, gameState.mode]);
+
+    // Reset realtime score on round change
+    useEffect(() => {
+        setRealtimeOpScore(null);
+        lastBroadcastScore.current = 0;
+    }, [gameState.currentRound, gameState.gameType]);
+
+    // Throttled Score Sender
+    useEffect(() => {
+        if (!myId || !emojiChannelRef.current || gameState.status !== 'playing') return;
+
+        const now = Date.now();
+        const score = gameState.myScore;
+        const timeDiff = now - lastBroadcastTime.current;
+
+        // Condition: Score changed AND (Enough time passed OR Significant change)
+        if (score !== lastBroadcastScore.current) {
+            if (timeDiff > 150) { // 150ms Throttle
+                emojiChannelRef.current.send({
+                    type: 'broadcast',
+                    event: 'score',
+                    payload: { score, senderId: myId }
+                });
+                lastBroadcastScore.current = score;
+                lastBroadcastTime.current = now;
+            }
+        }
+    }, [gameState.myScore, myId, gameState.status]);
 
     const [emojiBursts, setEmojiBursts] = useState<Array<{ id: string; emoji: string; side: 'left' | 'right'; driftX: number; driftY: number; baseY: number; travelX: number }>>([]);
     const emojiChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
@@ -171,8 +210,19 @@ const Game: React.FC = () => {
             spawnEmoji(incomingEmoji, 'right');
         });
 
+        /* REMOVED: score listener logic was here */
+
         channel.subscribe();
         emojiChannelRef.current = channel;
+
+        // Listen for Score Updates (Moved here to use the same channel)
+        channel.on('broadcast', { event: 'score' }, ({ payload }) => {
+            const score = payload?.score;
+            const senderId = payload?.senderId;
+            if (typeof score === 'number' && senderId !== myId) {
+                setRealtimeOpScore(score);
+            }
+        });
 
         return () => {
             supabase.removeChannel(channel);
@@ -415,7 +465,13 @@ const Game: React.FC = () => {
                     {/* My Profile */}
                     <div className="flex items-center gap-2 flex-1 min-w-0 pt-2">
                         <div className="relative flex-shrink-0">
-                            <img src={myProfile?.avatar_url || '/default-avatar.png'} className="w-11 h-11 rounded-full border-2 border-blue-500" />
+                            {myProfile?.avatar_url ? (
+                                <img src={myProfile.avatar_url} className="w-11 h-11 rounded-full border-2 border-blue-500 object-cover" />
+                            ) : (
+                                <div className="w-11 h-11 rounded-full border-2 border-blue-500 flex items-center justify-center bg-gray-800 text-blue-500">
+                                    <User size={20} />
+                                </div>
+                            )}
                             {isConnectionUnstable && (
                                 <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-yellow-300 border-t-transparent animate-spin bg-gray-900/80" />
                             )}
@@ -459,7 +515,13 @@ const Game: React.FC = () => {
                                     <AnimatedScore value={displayOpScore} className="text-2xl font-black text-red-400 font-mono" />
                                 </div>
                                 <div className="relative flex-shrink-0">
-                                    <img src={opponentProfile?.avatar_url || '/default-avatar.png'} className={`w-11 h-11 rounded-full border-2 ${!isOpponentOnline ? 'border-gray-500 grayscale opacity-50' : 'border-red-500'}`} />
+                                    {opponentProfile?.avatar_url ? (
+                                        <img src={opponentProfile.avatar_url} className={`w-11 h-11 rounded-full border-2 object-cover ${!isOpponentOnline ? 'border-gray-500 grayscale opacity-50' : 'border-red-500'}`} />
+                                    ) : (
+                                        <div className={`w-11 h-11 rounded-full border-2 flex items-center justify-center bg-gray-800 ${!isOpponentOnline ? 'border-gray-500 text-gray-500' : 'border-red-500 text-red-500'}`}>
+                                            <User size={20} />
+                                        </div>
+                                    )}
                                     {!isOpponentOnline && gameState.status !== 'finished' && (
                                         <div className="absolute -bottom-2 -right-2 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded animate-pulse border border-red-400 whitespace-nowrap z-50">
                                             DISCONNECT
@@ -511,8 +573,12 @@ const Game: React.FC = () => {
                             <div className="flex items-center gap-3 bg-gray-900/70 border border-blue-400/30 rounded-2xl px-5 py-3 shadow-xl backdrop-blur-sm">
                                 <Flag code={myProfile?.country} className="w-6 h-4" />
                                 <span className="text-base font-bold text-white">{myProfile?.nickname || t('game.unknownPlayer')}</span>
-                                <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-blue-500 bg-gray-800">
-                                    <img src={myProfile?.avatar_url || '/default-avatar.png'} className="w-full h-full object-cover" />
+                                <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-blue-500 bg-gray-800 flex items-center justify-center">
+                                    {myProfile?.avatar_url ? (
+                                        <img src={myProfile.avatar_url} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <User size={20} className="text-blue-500" />
+                                    )}
                                 </div>
                             </div>
                             <div className="text-blue-300 font-mono font-bold text-xs mt-1">{(myProfile?.mmr ?? 1000).toLocaleString()} MMR</div>
@@ -543,7 +609,9 @@ const Game: React.FC = () => {
                                     {opponentProfile?.avatar_url ? (
                                         <img src={opponentProfile.avatar_url} className="w-full h-full object-cover" />
                                     ) : (
-                                        <div className="w-6 h-6 rounded-full border-2 border-red-400 border-dashed" />
+                                        <div className="w-full h-full flex items-center justify-center bg-gray-800 text-red-500">
+                                            <User size={20} />
+                                        </div>
                                     )}
                                 </div>
                                 <span className="text-base font-bold text-white">{opponentProfile?.nickname || t('game.opponentWaiting')}</span>
@@ -788,14 +856,14 @@ const Game: React.FC = () => {
                                             }}
                                             className="mb-8"
                                         >
-                                            <h3 className={`text-6xl font-black drop-shadow-2xl ${getWinnerMessage() === t('game.victory') ? 'text-blue-500' : 'text-red-500'}`}>
+                                            <h3 className={`text-4xl md:text-6xl font-black drop-shadow-2xl ${getWinnerMessage() === t('game.victory') ? 'text-blue-500' : 'text-red-500'}`}>
                                                 {getWinnerMessage()}
                                             </h3>
                                         </motion.div>
 
                                         {/* Scoreboard Table */}
-                                        <div className="w-full bg-gray-900/50 rounded-xl overflow-hidden mb-8 border border-white/5">
-                                            <div className="grid grid-cols-4 bg-gray-800 p-3 text-xs font-bold text-gray-400 uppercase tracking-widest">
+                                        <div className="w-full bg-gray-900/50 rounded-xl overflow-hidden mb-4 md:mb-8 border border-white/5">
+                                            <div className="grid grid-cols-4 bg-gray-800 p-2 md:p-3 text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest">
                                                 <div className="text-left pl-4">{t('game.table.round')}</div>
                                                 <div>{t('game.table.myScore')}</div>
                                                 <div>{t('game.table.opScore')}</div>
@@ -814,7 +882,7 @@ const Game: React.FC = () => {
                                                         initial={{ opacity: 0, x: -50 }}
                                                         animate={{ opacity: 1, x: 0 }}
                                                         transition={{ delay: 0.5 + idx * 0.4 }}
-                                                        className="grid grid-cols-4 p-4 border-t border-white/5 items-center font-mono relative overflow-hidden"
+                                                        className="grid grid-cols-4 p-2 md:p-4 border-t border-white/5 items-center font-mono relative overflow-hidden"
                                                     >
                                                         {/* Background Bar */}
                                                         <div className="absolute inset-0 z-0 opacity-10">
@@ -834,9 +902,9 @@ const Game: React.FC = () => {
                                                             />
                                                         </div>
 
-                                                        <div className="text-left pl-4 text-white font-bold relative z-10">#{round.round}</div>
-                                                        <div className="text-blue-400 font-bold text-lg relative z-10">{myS}</div>
-                                                        <div className="text-red-400 font-bold text-lg relative z-10">{opS}</div>
+                                                        <div className="text-left pl-2 md:pl-4 text-white font-bold relative z-10 text-sm md:text-base">#{round.round}</div>
+                                                        <div className="text-blue-400 font-bold text-base md:text-lg relative z-10">{myS}</div>
+                                                        <div className="text-red-400 font-bold text-base md:text-lg relative z-10">{opS}</div>
                                                         <div className="relative z-10">
                                                             <motion.div
                                                                 initial={{ scale: 0 }}
@@ -860,11 +928,11 @@ const Game: React.FC = () => {
                                                 initial={{ opacity: 0, y: 20 }}
                                                 animate={{ opacity: 1, y: 0 }}
                                                 transition={{ delay: 0.5 + gameState.roundScores.length * 0.4 }}
-                                                className="grid grid-cols-4 p-4 bg-white/5 border-t-2 border-white/10 items-center font-mono"
+                                                className="grid grid-cols-4 p-2 md:p-4 bg-white/5 border-t-2 border-white/10 items-center font-mono"
                                             >
-                                                <div className="text-left pl-4 text-yellow-400 font-black">{t('game.total')}</div>
-                                                <div className="text-blue-400 font-black text-2xl">{totalScores.my}</div>
-                                                <div className="text-red-400 font-black text-2xl">{totalScores.op}</div>
+                                                <div className="text-left pl-2 md:pl-4 text-yellow-400 font-black text-sm md:text-base">{t('game.total')}</div>
+                                                <div className="text-blue-400 font-black text-lg md:text-2xl">{totalScores.my}</div>
+                                                <div className="text-red-400 font-black text-lg md:text-2xl">{totalScores.op}</div>
                                                 <div>
                                                     {totalScores.my > totalScores.op ? (
                                                         <Trophy className="w-6 h-6 text-yellow-400 mx-auto animate-bounce" />
@@ -936,7 +1004,7 @@ const Game: React.FC = () => {
                     </div>
                 )}
 
-                {showEmojiOverlay && gameState.mode !== 'practice' && (
+                {(showEmojiOverlay || (isFinished && gameState.mode !== 'practice')) && (
                     <div className="absolute inset-0 z-[70] pointer-events-none">
                         <AnimatePresence>
                             {emojiBursts.map((item) => (

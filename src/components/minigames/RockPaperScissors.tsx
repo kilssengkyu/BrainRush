@@ -70,11 +70,11 @@ const RockPaperScissors: React.FC<RPSProps> = ({ seed, onScore, isPlaying }) => 
     const { target, isReverse } = currentProblem;
 
     return (
-        <div className="flex flex-col items-center justify-center w-full h-full gap-8">
+        <div className="flex flex-col items-center justify-center w-full h-full gap-2">
 
             {/* Instruction / Title overlay */}
             <h2 className="text-3xl font-black text-white mb-2">{t('rps.title')}</h2>
-            <p className={`text-xl font-bold mb-8 ${isReverse ? 'text-red-500' : 'text-blue-500'}`}>
+            <p className={`text-xl font-bold mb-4 ${isReverse ? 'text-red-500' : 'text-blue-500'}`}>
                 {isReverse ? t('rps.titleLose') : t('rps.titleWin')}
             </p>
 
@@ -102,7 +102,7 @@ const RockPaperScissors: React.FC<RPSProps> = ({ seed, onScore, isPlaying }) => 
             </div>
 
             {/* Input Buttons */}
-            <div className="flex gap-6 mt-8">
+            <div className="flex gap-6 mt-4">
                 {MOVES.map((move) => (
                     <motion.button
                         key={move}

@@ -199,9 +199,7 @@ const Home = () => {
     const [nicknameInput, setNicknameInput] = useState('');
     const [isSavingNickname, setIsSavingNickname] = useState(false);
     const shouldSuggestNicknameSetup = Boolean(user && profile?.needs_nickname_setup);
-    const mobileMainInsetClass = user
-        ? 'pt-[calc(env(safe-area-inset-top)+15vh)] pb-[calc(env(safe-area-inset-bottom)+7rem)]'
-        : 'pt-[calc(env(safe-area-inset-top)+1.25rem)] pb-[calc(env(safe-area-inset-bottom)+6.5rem)]';
+    const mobileMainInsetClass = 'pt-[calc(env(safe-area-inset-top)+15vh)] pb-[calc(env(safe-area-inset-bottom)+7rem)]';
 
     // Tutorial refs
     const normalModeRef = useRef<HTMLButtonElement>(null);

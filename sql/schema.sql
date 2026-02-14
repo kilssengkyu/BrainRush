@@ -2716,19 +2716,32 @@ DECLARE
     v_p1 text;
     v_p2 text;
     v_status text;
+    v_start_at timestamptz;
+    v_end_at timestamptz;
     v_p1_points int;
     v_p2_points int;
     v_bot_target int;
 BEGIN
-    SELECT player1_id, player2_id, status, COALESCE(p1_current_score, 0), COALESCE(p2_current_score, 0)
-    INTO v_p1, v_p2, v_status, v_p1_points, v_p2_points
+    SELECT player1_id, player2_id, status, start_at, end_at, COALESCE(p1_current_score, 0), COALESCE(p2_current_score, 0)
+    INTO v_p1, v_p2, v_status, v_start_at, v_end_at, v_p1_points, v_p2_points
     FROM game_sessions WHERE id = p_room_id;
 
     IF v_p1 IS NULL THEN
         RAISE EXCEPTION 'Room not found';
     END IF;
 
-    IF v_status = 'finished' THEN
+    -- Accept score updates only while the round is actively running.
+    -- This blocks stale updates during round_end/warmup that can overwrite reset(0) scores.
+    IF v_status <> 'playing' THEN
+        RETURN;
+    END IF;
+
+    IF v_start_at IS NULL OR v_end_at IS NULL THEN
+        RETURN;
+    END IF;
+
+    -- Allow a tiny grace window after end_at for final score flush.
+    IF now() < v_start_at OR now() > (v_end_at + interval '1 second') THEN
         RETURN;
     END IF;
 

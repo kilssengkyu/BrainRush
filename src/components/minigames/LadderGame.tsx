@@ -164,7 +164,7 @@ const LadderGame: React.FC<LadderGameProps> = ({ seed, onScore, isPlaying }) => 
 
     // Rendering Constants
     const CONTAINER_WIDTH = 300;
-    const CONTAINER_HEIGHT = 400;
+    const CONTAINER_HEIGHT = 320;
     const LINE_GAP = CONTAINER_WIDTH / (gameState.lines - 1);
     const STEP_HEIGHT = CONTAINER_HEIGHT / gameState.steps;
 
@@ -173,7 +173,7 @@ const LadderGame: React.FC<LadderGameProps> = ({ seed, onScore, isPlaying }) => 
             <h2 className="text-3xl font-black text-white mb-2 drop-shadow-md">
                 {t('ladder.title', 'LADDER')}
             </h2>
-            <div className="text-yellow-400 font-bold text-lg mb-16">
+            <div className="text-yellow-400 font-bold text-lg mb-6">
                 {t('ladder.instruction', 'Follow the path!')}
             </div>
 
@@ -236,7 +236,7 @@ const LadderGame: React.FC<LadderGameProps> = ({ seed, onScore, isPlaying }) => 
                 </div>
 
                 {/* Destination Buttons */}
-                <div className="absolute -bottom-16 w-full h-12">
+                <div className="absolute -bottom-14 w-full h-12">
                     {Array.from({ length: gameState.lines }).map((_, i) => (
                         <motion.button
                             key={`btn-${i}`}
