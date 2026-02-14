@@ -145,9 +145,15 @@ const SortingGame: React.FC<SortingGameProps> = ({ seed, onScore, isPlaying }) =
 
             setNextSymbol(newNext);
 
-            // Reset position for new card
-            controls.set({ x: 0, scale: 1, opacity: 0 }); // Start at scale 1
-            await controls.start({ opacity: 1, transition: { duration: 0.2 } }); // Simple fade in
+            // Next card moves into current slot: slightly up/smaller -> full size center
+            controls.set({ x: 0, y: -16, scale: 0.9, opacity: 1 });
+            await controls.start({
+                x: 0,
+                y: 0,
+                scale: 1,
+                opacity: 1,
+                transition: { duration: 0.18, ease: 'easeOut' }
+            });
 
         } else {
             playSound('error');
@@ -162,6 +168,7 @@ const SortingGame: React.FC<SortingGameProps> = ({ seed, onScore, isPlaying }) =
     if (!currentSymbol) return null;
 
     const CurrentIcon = currentSymbol.icon;
+    const NextIcon = nextSymbol?.icon;
 
     return (
         <div className="w-full h-full flex flex-col items-center justify-center relative overflow-hidden">
@@ -177,6 +184,13 @@ const SortingGame: React.FC<SortingGameProps> = ({ seed, onScore, isPlaying }) =
 
             {/* Card Stack */}
             <div className="relative w-64 h-80 flex items-center justify-center">
+                {/* Next Card (Preview) - above current card, no overlap */}
+                {nextSymbol && NextIcon && (
+                    <div className="absolute bottom-[95%] left-1/2 -translate-x-1/2 w-40 h-52 bg-gray-800 rounded-2xl border-4 border-white/20 shadow-xl flex flex-col items-center justify-center z-0 pointer-events-none">
+                        <NextIcon size={58} className={`${nextSymbol.color} drop-shadow-lg mb-3`} />
+                        <div className="text-white/50 font-mono text-[10px] uppercase tracking-widest">{nextSymbol.id}</div>
+                    </div>
+                )}
 
 
                 {/* Current Card (Draggable) */}

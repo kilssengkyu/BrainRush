@@ -561,6 +561,19 @@ const Game: React.FC = () => {
 
             {/* Main Game Area */}
             <main className="flex-1 relative flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-black">
+                {/* Background Scoreboard (play tension UI) */}
+                {isPlaying && !isFinished && (
+                    <div className="absolute inset-0 pointer-events-none z-0 select-none overflow-hidden">
+                        <div className="absolute inset-0 flex items-center justify-between px-4 sm:px-8">
+                            <div className={`font-black font-mono tracking-tight leading-none ${displayMyScore >= displayOpScore ? 'text-blue-400/18' : 'text-blue-400/10'} text-[clamp(72px,20vw,220px)]`}>
+                                {displayMyScore}
+                            </div>
+                            <div className={`font-black font-mono tracking-tight leading-none text-right ${displayOpScore > displayMyScore ? 'text-red-400/18' : 'text-red-400/10'} text-[clamp(72px,20vw,220px)]`}>
+                                {displayOpScore}
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Waiting Screen */}
                 {isWaiting && (

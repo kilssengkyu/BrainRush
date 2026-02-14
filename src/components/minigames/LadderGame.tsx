@@ -22,6 +22,8 @@ const LadderGame: React.FC<LadderGameProps> = ({ seed, onScore, isPlaying }) => 
     const [isAnimating, setIsAnimating] = useState(false);
     const [shakeId, setShakeId] = useState<number | null>(null); // For wrong answers
     const [tracePath, setTracePath] = useState<{ x: number, y: number }[]>([]);
+    const CONTAINER_WIDTH = 300;
+    const CONTAINER_HEIGHT = 320;
 
     // Difficulty Settings
     const getDifficulty = (index: number) => {
@@ -118,10 +120,8 @@ const LadderGame: React.FC<LadderGameProps> = ({ seed, onScore, isPlaying }) => 
 
         const { lines, steps, bridges, startIndex } = gameState;
         // Grid setup
-        const width = 300;
-        const height = 400;
-        const lineGap = width / (lines - 1);
-        const stepHeight = height / steps;
+        const lineGap = CONTAINER_WIDTH / (lines - 1);
+        const stepHeight = CONTAINER_HEIGHT / steps;
 
         const points: { x: number, y: number }[] = [];
         let currL = startIndex;
@@ -154,8 +154,8 @@ const LadderGame: React.FC<LadderGameProps> = ({ seed, onScore, isPlaying }) => 
         }
 
         // Final vertical line to bottom
-        points.push({ x: currL * lineGap, y: height });
-        points.push({ x: currL * lineGap, y: height + 20 });
+        points.push({ x: currL * lineGap, y: CONTAINER_HEIGHT });
+        points.push({ x: currL * lineGap, y: CONTAINER_HEIGHT + 20 });
 
         setTracePath(points);
     };
@@ -163,8 +163,6 @@ const LadderGame: React.FC<LadderGameProps> = ({ seed, onScore, isPlaying }) => 
     if (!gameState) return <div className="text-white">Loading...</div>;
 
     // Rendering Constants
-    const CONTAINER_WIDTH = 300;
-    const CONTAINER_HEIGHT = 320;
     const LINE_GAP = CONTAINER_WIDTH / (gameState.lines - 1);
     const STEP_HEIGHT = CONTAINER_HEIGHT / gameState.steps;
 
