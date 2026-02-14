@@ -93,124 +93,75 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const fetchProfile = async (userId: string) => {
         try {
-            // Use RPC to get profile AND trigger potential auto-recharge
-            const { error } = await supabase
-                .rpc('get_profile_with_pencils', { user_id: userId });
+            const isTemporaryNickname = (nickname?: string | null) => /^player_[0-9]{4}$/i.test((nickname || '').trim());
 
-            if (error) {
-                // If profile misses, fallback to create
-                // Note: get_profile_with_pencils might fail if row missing entirely? 
-                // Actually the RPC tries to select. If empty, it returns empty?
-                // Let's check error code. If just 'PGRST116' (no rows) or similar.
-
-                console.log('Profile RPC returned error or no data, checking plain fetch...', error);
-
-                // Fallback: Check if profile exists manually to differentiate corruption vs missing
-                const { error: plainError } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', userId)
-                    .single();
-
-                if (plainError && plainError.code === 'PGRST116') {
-                    // Create new profile
-                    console.log('Creating new profile for:', userId);
-                    const { data: userData } = await supabase.auth.getUser();
-                    if (userData.user) {
-                        const newProfile = {
-                            id: userId,
-                            email: userData.user.email,
-                            nickname: 'Player_' + Math.floor(Math.random() * 9000 + 1000),
-                            avatar_url: null,
-                            created_at: new Date().toISOString(),
-                            pencils: 5,
-                            last_recharge_at: new Date().toISOString(),
-                            practice_notes: 5,
-                            practice_last_recharge_at: new Date().toISOString(),
-                            practice_ad_reward_count: 0,
-                            practice_ad_reward_day: new Date().toISOString().slice(0, 10),
-                            country: getDefaultCountry(),
-                            xp: 0,
-                            level: 1
-                        };
-
-                        const { error: insertError } = await supabase
-                            .from('profiles')
-                            .insert([newProfile]);
-
-                        if (!insertError) {
-                            setProfile(newProfile);
-                            return;
-                        }
-                    }
-                }
-            } else {
-                // The RPC returns a table of inputs. 
-                // Wait, get_profile_with_pencils returns TABLE(pencils, last_recharge). 
-                // It does NOT return the FULL profile.
-                // We need to merge this with full profile usage.
-
-                // Better approach: Call RPC to sync, THEN select full profile?
-                // OR Update RPC to return full profile.
-                // Modifying RPC is cleaner but 'select *' inside RPC usually returns specific columns unless SETOF profiles.
-
-                // Let's do:
-                // 1. Call RPC to Ensure Sync.
-                // 2. Select * from profiles.
-
-                // Reuse existing logic actually.
-            }
-
-            // Revised Logic:
-            // 1. Just select * first.
-            // 2. If present, setProfile.
-            // 3. Then trigger background, non-blocking recharge check?
-            // "get_profile_with_pencils" does READ and WRITE.
-
-            // Let's try:
             const { error: rpcError } = await supabase.rpc('get_profile_with_pencils', { user_id: userId });
-
             if (rpcError) {
-                console.error('RPC Error:', rpcError);
-                // Fallback to normal fetch/create logic below
+                console.warn('get_profile_with_pencils failed, fallback to direct profile fetch', rpcError);
             }
 
-            // Now fetch full profile (which should have updated values)
-            const { data: fullProfile, error: fetchError } = await supabase
+            let { data: fullProfile, error: fetchError } = await supabase
                 .from('profiles')
                 .select('*')
                 .eq('id', userId)
-                .single();
+                .maybeSingle();
 
             if (fetchError) {
-                if (fetchError.code === 'PGRST116') {
-                    // Create logic
-                    const { data: userData } = await supabase.auth.getUser();
-                    if (userData.user) {
-                        const newProfile = {
-                            id: userId,
-                            email: userData.user.email,
-                            nickname: 'Player_' + Math.floor(Math.random() * 9000 + 1000),
-                            avatar_url: null,
-                            created_at: new Date().toISOString(),
-                            pencils: 5,
-                            last_recharge_at: new Date().toISOString(),
-                            practice_notes: 5,
-                            practice_last_recharge_at: new Date().toISOString(),
-                            practice_ad_reward_count: 0,
-                            practice_ad_reward_day: new Date().toISOString().slice(0, 10),
-                            country: getDefaultCountry(),
-                            xp: 0,
-                            level: 1
-                        };
-                        const { error: insertError } = await supabase.from('profiles').insert([newProfile]);
-                        if (!insertError) {
-                            setProfile(newProfile);
-                            return;
-                        }
+                throw fetchError;
+            }
+
+            if (!fullProfile) {
+                const { data: userData } = await supabase.auth.getUser();
+                const baseUser = userData.user;
+
+                if (baseUser) {
+                    const newProfile = {
+                        id: userId,
+                        email: baseUser.email,
+                        nickname: 'Player_' + Math.floor(Math.random() * 9000 + 1000),
+                        needs_nickname_setup: true,
+                        nickname_set_at: null,
+                        avatar_url: null,
+                        created_at: new Date().toISOString(),
+                        pencils: 5,
+                        last_recharge_at: new Date().toISOString(),
+                        practice_notes: 5,
+                        practice_last_recharge_at: new Date().toISOString(),
+                        practice_ad_reward_count: 0,
+                        practice_ad_reward_day: new Date().toISOString().slice(0, 10),
+                        country: getDefaultCountry(),
+                        xp: 0,
+                        level: 1
+                    };
+
+                    const { error: insertError } = await supabase.from('profiles').insert([newProfile]);
+                    if (insertError && insertError.code !== '23505') {
+                        throw insertError;
+                    }
+
+                    const refetch = await supabase
+                        .from('profiles')
+                        .select('*')
+                        .eq('id', userId)
+                        .maybeSingle();
+
+                    if (refetch.error) throw refetch.error;
+                    fullProfile = refetch.data ?? newProfile;
+                }
+            }
+
+            if (fullProfile) {
+                if (!fullProfile.needs_nickname_setup && isTemporaryNickname(fullProfile.nickname)) {
+                    const { error: setupFlagError } = await supabase
+                        .from('profiles')
+                        .update({ needs_nickname_setup: true })
+                        .eq('id', userId);
+
+                    if (!setupFlagError) {
+                        fullProfile = { ...fullProfile, needs_nickname_setup: true };
                     }
                 }
-            } else {
+
                 const defaultCountry = getDefaultCountry();
                 if (!fullProfile.country && defaultCountry) {
                     const { error: updateError } = await supabase
@@ -226,7 +177,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     setProfile(fullProfile);
                 }
             }
-
         } catch (error) {
             console.error('Error in fetchProfile:', error);
         } finally {

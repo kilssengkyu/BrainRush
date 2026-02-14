@@ -225,10 +225,11 @@ const Shop = () => {
     };
 
     return (
-        <div className="h-[100dvh] bg-gray-900 text-white flex flex-col p-4 pt-[calc(env(safe-area-inset-top)+1rem)] relative overflow-hidden">
+        <div className="h-[100dvh] bg-gray-900 text-white flex flex-col relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-800 via-gray-900 to-black pointer-events-none" />
 
-            <div className="w-full max-w-5xl mx-auto flex items-center justify-between z-10 mb-6 pt-4">
+            {/* Header - Fixed to top */}
+            <div className="flex-none w-full max-w-5xl mx-auto flex items-center justify-between z-20 px-4 pt-[calc(env(safe-area-inset-top)+1.5rem)] pb-4 bg-gray-900/50 backdrop-blur-sm sticky top-0">
                 <button onClick={handleBack} disabled={purchasing} className={`p-2 rounded-full transition-colors ${purchasing ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white/10'}`}>
                     <ArrowLeft className="w-8 h-8" />
                 </button>
@@ -248,7 +249,8 @@ const Shop = () => {
                 <div className="w-10" />
             </div>
 
-            <div className="flex-1 w-full max-w-5xl mx-auto z-10 overflow-y-auto pb-8 scrollbar-hide">
+            {/* Content - Scrollable */}
+            <div className="flex-1 w-full max-w-5xl mx-auto z-10 overflow-y-auto px-4 pb-8 scrollbar-hide min-h-0">
                 <motion.div
                     variants={containerVariants}
                     initial="hidden"

@@ -1839,13 +1839,14 @@ CREATE FUNCTION public.handle_new_user() RETURNS trigger
     SET search_path TO 'public'
     AS $$
 begin
-  insert into public.profiles (id, email, full_name, avatar_url, nickname)
+  insert into public.profiles (id, email, full_name, avatar_url, nickname, needs_nickname_setup)
   values (
     new.id, 
     new.email, 
     new.raw_user_meta_data->>'full_name', 
     new.raw_user_meta_data->>'avatar_url',
-    'Player_' || floor(random() * 9000 + 1000)::text
+    'Player_' || floor(random() * 9000 + 1000)::text,
+    true
   );
   return new;
 end;
@@ -2066,6 +2067,52 @@ BEGIN
     RETURNING practice_notes INTO new_count;
 
     RETURN new_count;
+END;
+$$;
+
+
+--
+-- Name: set_initial_nickname(text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.set_initial_nickname(p_nickname text) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_user_id uuid := auth.uid();
+  v_nickname text;
+BEGIN
+  IF v_user_id IS NULL THEN
+    RAISE EXCEPTION 'Not authenticated';
+  END IF;
+
+  v_nickname := btrim(coalesce(p_nickname, ''));
+
+  IF char_length(v_nickname) < 2 OR char_length(v_nickname) > 20 THEN
+    RAISE EXCEPTION 'Nickname must be between 2 and 20 characters';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM public.profiles p
+    WHERE p.id <> v_user_id
+      AND p.nickname IS NOT NULL
+      AND lower(p.nickname) = lower(v_nickname)
+  ) THEN
+    RAISE EXCEPTION 'Nickname already in use';
+  END IF;
+
+  UPDATE public.profiles
+  SET nickname = v_nickname,
+      needs_nickname_setup = false,
+      nickname_set_at = now()
+  WHERE id = v_user_id
+    AND needs_nickname_setup = true;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Nickname setup already completed';
+  END IF;
 END;
 $$;
 
@@ -5178,7 +5225,9 @@ CREATE TABLE public.profiles (
     practice_notes integer DEFAULT 5,
     practice_last_recharge_at timestamp with time zone DEFAULT now(),
     practice_ad_reward_count integer DEFAULT 0,
-    practice_ad_reward_day date DEFAULT CURRENT_DATE
+    practice_ad_reward_day date DEFAULT CURRENT_DATE,
+    needs_nickname_setup boolean DEFAULT false NOT NULL,
+    nickname_set_at timestamp with time zone
 );
 
 
@@ -7423,4 +7472,3 @@ CREATE EVENT TRIGGER pgrst_drop_watch ON sql_drop
 --
 
 \unrestrict s1GKWiFmOjPR8Fmnt5c457XgF6bngoNENcXDuXBcrgOsXjPlyXNk8YCUm6JYist
-

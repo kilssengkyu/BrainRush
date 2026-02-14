@@ -49,7 +49,7 @@
     },
     "shop": {
         "title": "商店",
-        "subtitle": "提升你的游戏体验",
+        "subtitle": "玩得更久一点",
         "removeAds": {
             "title": "去广告包",
             "desc": "无需看广告，立刻获得铅笔。"
@@ -232,6 +232,8 @@
         "rank": "排名"
     },
     "profile": {
+        "nicknameSetupTitle": "设置昵称",
+        "nicknameSetupDesc": "请输入你在游戏中要使用的昵称。",
         "nicknamePlaceholder": "输入昵称",
         "edit": "编辑",
         "highscoresTitle": "最高分",

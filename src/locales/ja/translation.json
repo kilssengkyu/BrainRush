@@ -49,7 +49,7 @@
     },
     "shop": {
         "title": "ショップ",
-        "subtitle": "プレイを強化",
+        "subtitle": "もっと長くプレイしよう",
         "removeAds": {
             "title": "広告削除パック",
             "desc": "広告なしで鉛筆をすぐに獲得。"
@@ -232,6 +232,8 @@
         "rank": "ランク"
     },
     "profile": {
+        "nicknameSetupTitle": "ニックネーム設定",
+        "nicknameSetupDesc": "ゲームで使うニックネームを入力してください。",
         "nicknamePlaceholder": "ニックネーム入力",
         "selectCountry": "国を選択",
         "edit": "編集",

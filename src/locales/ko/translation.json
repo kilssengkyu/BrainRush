@@ -101,7 +101,7 @@
   },
   "shop": {
     "title": "상점",
-    "subtitle": "플레이를 강화하세요",
+    "subtitle": "더 오래 플레이해보세요",
     "removeAds": {
       "title": "광고 제거 패키지",
       "desc": "광고 없이 바로 연필을 받습니다."
@@ -199,6 +199,8 @@
     "viewPrivacyPolicy": "개인정보 처리방침 보기"
   },
   "profile": {
+    "nicknameSetupTitle": "닉네임 설정",
+    "nicknameSetupDesc": "게임에서 사용할 닉네임을 입력해주세요.",
     "nicknamePlaceholder": "닉네임을 입력하세요",
     "selectCountry": "국가 선택",
     "edit": "수정",

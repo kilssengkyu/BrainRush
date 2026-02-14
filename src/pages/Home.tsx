@@ -195,6 +195,13 @@ const Home = () => {
 
     const [showAdModal, setShowAdModal] = useState(false);
     const [showLeaderboard, setShowLeaderboard] = useState(false);
+    const [showNicknameModal, setShowNicknameModal] = useState(false);
+    const [nicknameInput, setNicknameInput] = useState('');
+    const [isSavingNickname, setIsSavingNickname] = useState(false);
+    const shouldSuggestNicknameSetup = Boolean(user && profile?.needs_nickname_setup);
+    const mobileMainInsetClass = user
+        ? 'pt-[calc(env(safe-area-inset-top)+15vh)] pb-[calc(env(safe-area-inset-bottom)+7rem)]'
+        : 'pt-[calc(env(safe-area-inset-top)+1.25rem)] pb-[calc(env(safe-area-inset-bottom)+6.5rem)]';
 
     // Tutorial refs
     const normalModeRef = useRef<HTMLButtonElement>(null);
@@ -308,8 +315,57 @@ const Home = () => {
         }
     };
 
+    const handleNicknameSubmit = async () => {
+        if (!user) return;
+
+        const nextNickname = nicknameInput.trim();
+        if (!nextNickname) {
+            showToast(t('profile.nicknameSetupRequired', '닉네임을 먼저 설정해 주세요.'), 'info');
+            return;
+        }
+
+        setIsSavingNickname(true);
+        try {
+            const { error } = await supabase.rpc('set_initial_nickname', { p_nickname: nextNickname });
+            if (error) throw error;
+
+            await refreshProfile();
+            setShowNicknameModal(false);
+            setNicknameInput('');
+            showToast(t('profile.nicknameSetupSuccess', '닉네임이 설정되었습니다.'), 'success');
+        } catch (error: any) {
+            const message = String(error?.message || error || '').toLowerCase();
+            if (message.includes('already in use')) {
+                showToast(t('profile.nicknameTaken', '이미 사용 중인 닉네임입니다.'), 'error');
+            } else if (message.includes('between 2 and 20')) {
+                showToast(t('profile.nicknameInvalid', '닉네임은 2~20자로 입력해 주세요.'), 'error');
+            } else if (message.includes('already completed')) {
+                await refreshProfile();
+                setShowNicknameModal(false);
+            } else {
+                showToast(t('profile.updateFail', '프로필 업데이트 실패'), 'error');
+            }
+        } finally {
+            setIsSavingNickname(false);
+        }
+    };
+
+    const handleOpenNicknameModal = () => {
+        setNicknameInput('');
+        setShowNicknameModal(true);
+    };
+
+    useEffect(() => {
+        if (!user || !profile?.needs_nickname_setup) return;
+        const shownKey = `nickname_prompt_shown:${user.id}`;
+        if (window.sessionStorage.getItem(shownKey) === '1') return;
+
+        setShowNicknameModal(true);
+        window.sessionStorage.setItem(shownKey, '1');
+    }, [user, profile?.needs_nickname_setup]);
+
     return (
-        <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center p-4 pt-[calc(env(safe-area-inset-top)+1rem)] relative overflow-hidden">
+        <div className="min-h-[100dvh] bg-gray-900 text-white flex flex-col items-center p-4 relative overflow-hidden">
             {/* Background Effects */}
             <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-800 via-gray-900 to-black pointer-events-none" />
 
@@ -319,15 +375,15 @@ const Home = () => {
                     <motion.div
                         initial={{ opacity: 0, y: -50 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="absolute top-[calc(env(safe-area-inset-top)+1rem+var(--home-top-offset))] left-4 z-50 flex items-center"
+                        className="absolute top-[calc(env(safe-area-inset-top)+0.5rem+var(--home-top-offset))] left-4 z-50 flex items-center"
                     >
                         <div className="flex items-center gap-4 bg-gray-800/80 backdrop-blur-md p-2 pr-6 rounded-full border border-gray-700 shadow-lg cursor-pointer hover:bg-gray-800 transition-colors" onClick={() => navigate('/profile')}>
-                            <div className="relative w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 p-[2px]">
+                            <div className="relative w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 p-[2px]">
                                 <div className="w-full h-full rounded-full bg-gray-900 flex items-center justify-center overflow-hidden">
                                     {avatarUrl ? (
                                         <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
                                     ) : (
-                                        <User className="w-7 h-7 text-gray-400" />
+                                        <User className="w-6 h-6 md:w-7 md:h-7 text-gray-400" />
                                     )}
                                 </div>
                                 <LevelBadge level={level} size="sm" className="absolute -bottom-1 -right-1 ring-2 ring-gray-900" />
@@ -336,14 +392,26 @@ const Home = () => {
                                 )}
                             </div>
                             <div>
-                                <div className="font-bold text-white text-lg leading-none flex items-center gap-2">
+                                <div className="font-bold text-white text-base md:text-lg leading-none flex items-center gap-2">
                                     <Flag code={countryCode} />
                                     {nickname}
+                                    {shouldSuggestNicknameSetup && (
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                playSound('click');
+                                                handleOpenNicknameModal();
+                                            }}
+                                            className="relative w-4 h-4 rounded-full bg-red-500 ring-2 ring-gray-900 animate-pulse hover:scale-110 transition-transform"
+                                            aria-label={t('profile.nicknameSetupTitle', '닉네임 설정')}
+                                        >
+                                            <span className="absolute inset-0 rounded-full bg-red-400/60 animate-ping" />
+                                        </button>
+                                    )}
                                 </div>
                                 <div className="mt-1.5 flex gap-3 items-center">
-                                    {/* Tier Badge - Larger Size */}
-                                    <div className={`px-2.5 py-1 rounded-lg text-sm font-black bg-gradient-to-r ${tierColor} text-black flex items-center gap-1.5 shadow-md transform hover:scale-105 transition-transform`}>
-                                        <TierIcon className="w-4 h-4" />
+                                    <div className={`px-2 py-0.5 md:px-2.5 md:py-1 rounded-lg text-xs md:text-sm font-black bg-gradient-to-r ${tierColor} text-black flex items-center gap-1 shadow-md transform hover:scale-105 transition-transform`}>
+                                        <TierIcon className="w-3.5 h-3.5 md:w-4 md:h-4" />
                                         <span>{tier}</span>
                                         <span className="opacity-60">|</span>
                                         <span className="font-mono">{rank}</span>
@@ -354,14 +422,14 @@ const Home = () => {
                     </motion.div>
 
                     {/* Pencil Display (Top Right) */}
-                    <div className="absolute top-[calc(env(safe-area-inset-top)+1rem+var(--home-top-offset))] right-4 z-50">
+                    <div className="absolute top-[calc(env(safe-area-inset-top)+0.5rem+var(--home-top-offset))] right-4 z-50">
                         <button
                             onClick={() => setShowAdModal(true)}
-                            className="bg-gray-800/80 backdrop-blur-md border border-gray-700 rounded-full py-2 px-5 flex items-center gap-3 hover:bg-gray-700 transition-all shadow-lg active:scale-95"
+                            className="bg-gray-800/80 backdrop-blur-md border border-gray-700 rounded-full py-2 px-3 md:px-5 flex items-center gap-2 md:gap-3 hover:bg-gray-700 transition-all shadow-lg active:scale-95"
                         >
                             <div className="flex flex-col items-end leading-none">
                                 <div className="flex items-center gap-1.5">
-                                    <span className={`text-xl font-black ${profile?.pencils < 1 ? "text-red-400" : "text-yellow-400"}`}>
+                                    <span className={`text-lg md:text-xl font-black ${profile?.pencils < 1 ? "text-red-400" : "text-yellow-400"}`}>
                                         {profile?.pencils ?? 5}
                                     </span>
                                     <span className="text-gray-500 text-sm font-bold">/ 5</span>
@@ -376,7 +444,7 @@ const Home = () => {
                             <img
                                 src="/images/icon/icon_pen.png"
                                 alt="Pencil"
-                                className="w-6 h-6 object-contain"
+                                className="w-5 h-5 md:w-6 md:h-6 object-contain"
                             />
                         </button>
                     </div>
@@ -394,6 +462,50 @@ const Home = () => {
             )}
 
             {/* Modals */}
+            {showNicknameModal && (
+                <div className="fixed inset-0 z-[120] bg-black/80 backdrop-blur-sm flex items-center justify-center px-4">
+                    <div className="w-full max-w-md rounded-3xl border border-blue-500/30 bg-gray-900/95 p-6 shadow-2xl">
+                        <h2 className="text-2xl font-bold text-white mb-2">
+                            {t('profile.nicknameSetupTitle', '닉네임 설정')}
+                        </h2>
+                        <p className="text-sm text-gray-300 mb-5">
+                            {t('profile.nicknameSetupDesc', '게임에서 사용할 닉네임을 입력해주세요.')}
+                        </p>
+
+                        <input
+                            type="text"
+                            value={nicknameInput}
+                            onChange={(e) => setNicknameInput(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !isSavingNickname) {
+                                    e.preventDefault();
+                                    handleNicknameSubmit();
+                                }
+                            }}
+                            maxLength={20}
+                            autoFocus
+                            placeholder={t('profile.nicknamePlaceholder')}
+                            className="w-full rounded-xl border border-gray-700 bg-gray-800 px-4 py-3 text-white outline-none focus:border-blue-500"
+                        />
+
+                        <button
+                            onClick={handleNicknameSubmit}
+                            disabled={isSavingNickname}
+                            className="mt-4 w-full rounded-xl bg-blue-600 py-3 font-bold text-white transition-colors hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                            {isSavingNickname ? t('common.loading') : t('common.confirm')}
+                        </button>
+                        <button
+                            onClick={() => setShowNicknameModal(false)}
+                            disabled={isSavingNickname}
+                            className="mt-2 w-full rounded-xl border border-gray-600 bg-transparent py-3 font-semibold text-gray-300 transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                            {t('common.close')}
+                        </button>
+                    </div>
+                </div>
+            )}
+
             <AdModal
                 isOpen={showAdModal}
                 onClose={() => setShowAdModal(false)}
@@ -470,139 +582,176 @@ const Home = () => {
             </AnimatePresence>
 
             {/* Main Content */}
-            <motion.div
-                className="z-10 w-full max-w-md flex flex-col items-center gap-8"
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-            >
-                {/* Title */}
-                <motion.div variants={itemVariants} className="text-center">
-                    <h1 className="text-6xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 drop-shadow-lg">
-                        {t('app.title')}
-                    </h1>
-                    <p className="text-gray-400 mt-2 text-sm uppercase tracking-widest">{t('app.subtitle')}</p>
-                </motion.div>
+            <div className={`z-10 w-full flex-1 ${mobileMainInsetClass} md:pt-[calc(env(safe-area-inset-top)+1rem)] md:pb-8`}>
+                <motion.div
+                    className="mx-auto h-full w-full max-w-md flex flex-col items-center justify-center gap-6"
+                    variants={containerVariants}
+                    initial="hidden"
+                    animate="visible"
+                >
+                    {/* Title */}
+                    <motion.div variants={itemVariants} className="text-center">
+                        <h1 className="text-5xl md:text-6xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 drop-shadow-lg">
+                            {t('app.title')}
+                        </h1>
+                        <p className="text-gray-400 mt-2 text-sm uppercase tracking-widest">{t('app.subtitle')}</p>
+                    </motion.div>
 
-                {/* Game Modes */}
-                <motion.div variants={itemVariants} className="w-full flex flex-col gap-4">
+                    {/* Game Modes */}
+                    <motion.div variants={itemVariants} className="w-full flex flex-col gap-4">
 
-                    {/* Normal Mode */}
-                    <button
-                        ref={normalModeRef}
-                        onMouseEnter={() => playSound('hover')}
-                        onClick={() => handleModeSelect('normal')}
-                        className={`group relative w-full p-6 bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-300 hover:border-blue-500 hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] active:scale-95 cursor-pointer flex items-center gap-4 text-left`}
-                    >
-                        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        <div className="p-3 rounded-full bg-blue-500/20 group-hover:bg-blue-500/30 transition-colors">
-                            <Zap className="w-8 h-8 text-blue-400" />
-                        </div>
-                        <div>
-                            <h3 className="text-2xl font-bold group-hover:text-blue-400 transition-colors">{t('menu.normal.title')}</h3>
-                            <p className="text-gray-500 text-sm mt-1">{t('menu.normal.subtitle')}</p>
-                        </div>
-                    </button>
-
-                    {/* Rank Mode */}
-                    <button
-                        ref={rankModeRef}
-                        onMouseEnter={() => playSound('hover')}
-                        onClick={() => handleModeSelect('rank')}
-                        className={`group relative w-full p-6 bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-300 ${canPlayRank ? 'hover:border-purple-500 hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] active:scale-95 cursor-pointer' : 'opacity-50 grayscale cursor-not-allowed'} flex items-center gap-4 text-left`}
-                    >
-                        <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        <div className="p-3 rounded-full bg-purple-500/20 group-hover:bg-purple-500/30 transition-colors">
-                            <Trophy className="w-8 h-8 text-purple-400" />
-                        </div>
-                        <div>
-                            <h3 className="text-2xl font-bold group-hover:text-purple-400 transition-colors">{t('menu.rank.title')}</h3>
-                            <p className="text-gray-500 text-sm mt-1">{t('menu.rank.subtitle')}</p>
-                        </div>
-
-                        {!user && (
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/60 z-10">
-                                <Lock className="w-8 h-8 text-white/80" />
+                        {/* Normal Mode */}
+                        <button
+                            ref={normalModeRef}
+                            onMouseEnter={() => playSound('hover')}
+                            onClick={() => handleModeSelect('normal')}
+                            className={`group relative w-full p-6 bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-300 hover:border-blue-500 hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] active:scale-95 cursor-pointer flex items-center gap-4 text-left`}
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                            <div className="p-3 rounded-full bg-blue-500/20 group-hover:bg-blue-500/30 transition-colors">
+                                <Zap className="w-8 h-8 text-blue-400" />
                             </div>
+                            <div>
+                                <h3 className="text-2xl font-bold group-hover:text-blue-400 transition-colors">{t('menu.normal.title')}</h3>
+                                <p className="text-gray-500 text-sm mt-1">{t('menu.normal.subtitle')}</p>
+                            </div>
+                        </button>
+
+                        {/* Rank Mode */}
+                        <button
+                            ref={rankModeRef}
+                            onMouseEnter={() => playSound('hover')}
+                            onClick={() => handleModeSelect('rank')}
+                            className={`group relative w-full p-6 bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-300 ${canPlayRank ? 'hover:border-purple-500 hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] active:scale-95 cursor-pointer' : 'opacity-50 grayscale cursor-not-allowed'} flex items-center gap-4 text-left`}
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                            <div className="p-3 rounded-full bg-purple-500/20 group-hover:bg-purple-500/30 transition-colors">
+                                <Trophy className="w-8 h-8 text-purple-400" />
+                            </div>
+                            <div>
+                                <h3 className="text-2xl font-bold group-hover:text-purple-400 transition-colors">{t('menu.rank.title')}</h3>
+                                <p className="text-gray-500 text-sm mt-1">{t('menu.rank.subtitle')}</p>
+                            </div>
+
+                            {!user && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/60 z-10">
+                                    <Lock className="w-8 h-8 text-white/80" />
+                                </div>
+                            )}
+                        </button>
+
+                        {/* Practice Mode */}
+                        <button
+                            ref={practiceModeRef}
+                            onMouseEnter={() => playSound('hover')}
+                            onClick={() => { playSound('click'); navigate('/practice'); }}
+                            className={`group relative w-full p-6 bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-300 hover:border-green-500 hover:shadow-[0_0_20px_rgba(34,197,94,0.5)] active:scale-95 cursor-pointer flex items-center gap-4 text-left`}
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                            <div className="p-3 rounded-full bg-green-500/20 group-hover:bg-green-500/30 transition-colors">
+                                <Dumbbell className="w-8 h-8 text-green-400" />
+                            </div>
+                            <div>
+                                <h3 className="text-2xl font-bold group-hover:text-green-400 transition-colors">{t('menu.practice.title')}</h3>
+                                <p className="text-gray-500 text-sm mt-1">{t('menu.practice.subtitle')}</p>
+                            </div>
+                        </button>
+                    </motion.div>
+
+                    {/* Footer Buttons */}
+                    <motion.div variants={itemVariants} className="hidden md:grid grid-cols-2 gap-4 w-full mt-4">
+                        <button
+                            ref={rankingBtnRef}
+                            onMouseEnter={() => playSound('hover')}
+                            onClick={() => { playSound('click'); setShowLeaderboard(true); }}
+                            className="p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 group cursor-pointer"
+                        >
+                            <Trophy className="w-5 h-5 text-yellow-500 group-hover:text-yellow-400 transition-colors" />
+                            <span className="text-gray-300 group-hover:text-white transition-colors">{t('leaderboard.button', 'Ranking')}</span>
+                        </button>
+                        <button
+                            ref={shopBtnRef}
+                            onMouseEnter={() => playSound('hover')}
+                            onClick={() => { playSound('click'); navigate('/shop'); }}
+                            className="p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 group cursor-pointer"
+                        >
+                            <ShoppingBag className="w-5 h-5 text-cyan-400 group-hover:text-white transition-colors" />
+                            <span className="text-gray-300 group-hover:text-white transition-colors">{t('menu.shop', 'Shop')}</span>
+                        </button>
+                        <button
+                            ref={settingsBtnRef}
+                            onMouseEnter={() => playSound('hover')}
+                            onClick={() => { playSound('click'); navigate('/settings'); }}
+                            className="p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 group cursor-pointer"
+                        >
+                            <Settings className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
+                            <span className="text-gray-300 group-hover:text-white transition-colors">{t('menu.settings')}</span>
+                        </button>
+                        {user ? (
+                            <button
+                                ref={loginProfileBtnRef}
+                                onMouseEnter={() => playSound('hover')}
+                                onClick={() => { playSound('click'); navigate('/profile'); }}
+                                className="p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 group cursor-pointer"
+                            >
+                                <span className="relative">
+                                    <User className="w-5 h-5 text-blue-400 group-hover:text-white transition-colors" />
+                                    {hasSocialNotifications && (
+                                        <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-gray-900" aria-hidden="true"></span>
+                                    )}
+                                </span>
+                                <span className="text-blue-300 group-hover:text-white transition-colors">{t('menu.profile')}</span>
+                            </button>
+                        ) : (
+                            <button
+                                ref={loginProfileBtnRef}
+                                onMouseEnter={() => playSound('hover')}
+                                onClick={() => { playSound('click'); navigate('/login'); }}
+                                className="p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 group cursor-pointer"
+                            >
+                                <User className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
+                                <span className="text-gray-300 group-hover:text-white transition-colors">{t('menu.login')}</span>
+                            </button>
+                        )}
+                    </motion.div>
+                </motion.div>
+            </div>
+
+            <div className="fixed md:hidden bottom-0 inset-x-0 z-[70] border-t border-white/10 bg-gray-900/90 backdrop-blur-xl px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-2">
+                <div className="mx-auto grid w-full max-w-md grid-cols-4 gap-2">
+                    <button
+                        onClick={() => { playSound('click'); setShowLeaderboard(true); }}
+                        className="rounded-xl bg-gray-800/70 py-2.5 flex flex-col items-center justify-center gap-1.5 text-gray-200 hover:bg-gray-700 transition-colors"
+                    >
+                        <Trophy className="w-5 h-5 text-yellow-400" />
+                        <span className="text-[11px] font-semibold leading-none">{t('leaderboard.button', 'Ranking')}</span>
+                    </button>
+                    <button
+                        onClick={() => { playSound('click'); navigate('/shop'); }}
+                        className="rounded-xl bg-gray-800/70 py-2.5 flex flex-col items-center justify-center gap-1.5 text-gray-200 hover:bg-gray-700 transition-colors"
+                    >
+                        <ShoppingBag className="w-5 h-5 text-cyan-400" />
+                        <span className="text-[11px] font-semibold leading-none">{t('menu.shop', 'Shop')}</span>
+                    </button>
+                    <button
+                        onClick={() => { playSound('click'); navigate('/settings'); }}
+                        className="rounded-xl bg-gray-800/70 py-2.5 flex flex-col items-center justify-center gap-1.5 text-gray-200 hover:bg-gray-700 transition-colors"
+                    >
+                        <Settings className="w-5 h-5 text-gray-300" />
+                        <span className="text-[11px] font-semibold leading-none">{t('menu.settings')}</span>
+                    </button>
+                    <button
+                        onClick={() => { playSound('click'); navigate(user ? '/profile' : '/login'); }}
+                        className="relative rounded-xl bg-gray-800/70 py-2.5 flex flex-col items-center justify-center gap-1.5 text-gray-200 hover:bg-gray-700 transition-colors"
+                    >
+                        <User className={`w-5 h-5 ${user ? 'text-blue-400' : 'text-gray-300'}`} />
+                        <span className="text-[11px] font-semibold leading-none">{user ? t('menu.profile') : t('menu.login')}</span>
+                        {user && hasSocialNotifications && (
+                            <span className="absolute top-1.5 right-2 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-gray-900" aria-hidden="true"></span>
                         )}
                     </button>
-
-                    {/* Practice Mode */}
-                    <button
-                        ref={practiceModeRef}
-                        onMouseEnter={() => playSound('hover')}
-                        onClick={() => { playSound('click'); navigate('/practice'); }}
-                        className={`group relative w-full p-6 bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-300 hover:border-green-500 hover:shadow-[0_0_20px_rgba(34,197,94,0.5)] active:scale-95 cursor-pointer flex items-center gap-4 text-left`}
-                    >
-                        <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        <div className="p-3 rounded-full bg-green-500/20 group-hover:bg-green-500/30 transition-colors">
-                            <Dumbbell className="w-8 h-8 text-green-400" />
-                        </div>
-                        <div>
-                            <h3 className="text-2xl font-bold group-hover:text-green-400 transition-colors">{t('menu.practice.title')}</h3>
-                            <p className="text-gray-500 text-sm mt-1">{t('menu.practice.subtitle')}</p>
-                        </div>
-                    </button>
-                </motion.div>
-
-                {/* Footer Buttons */}
-                <motion.div variants={itemVariants} className="grid grid-cols-2 gap-4 w-full mt-4">
-                    <button
-                        ref={rankingBtnRef}
-                        onMouseEnter={() => playSound('hover')}
-                        onClick={() => { playSound('click'); setShowLeaderboard(true); }}
-                        className="p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 group cursor-pointer"
-                    >
-                        <Trophy className="w-5 h-5 text-yellow-500 group-hover:text-yellow-400 transition-colors" />
-                        <span className="text-gray-300 group-hover:text-white transition-colors">{t('leaderboard.button', 'Ranking')}</span>
-                    </button>
-                    <button
-                        ref={shopBtnRef}
-                        onMouseEnter={() => playSound('hover')}
-                        onClick={() => { playSound('click'); navigate('/shop'); }}
-                        className="p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 group cursor-pointer"
-                    >
-                        <ShoppingBag className="w-5 h-5 text-cyan-400 group-hover:text-white transition-colors" />
-                        <span className="text-gray-300 group-hover:text-white transition-colors">{t('menu.shop', 'Shop')}</span>
-                    </button>
-                    <button
-                        ref={settingsBtnRef}
-                        onMouseEnter={() => playSound('hover')}
-                        onClick={() => { playSound('click'); navigate('/settings'); }}
-                        className="p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 group cursor-pointer"
-                    >
-                        <Settings className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
-                        <span className="text-gray-300 group-hover:text-white transition-colors">{t('menu.settings')}</span>
-                    </button>
-                    {user ? (
-                        <button
-                            ref={loginProfileBtnRef}
-                            onMouseEnter={() => playSound('hover')}
-                            onClick={() => { playSound('click'); navigate('/profile'); }}
-                            className="p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 group cursor-pointer"
-                        >
-                            <span className="relative">
-                                <User className="w-5 h-5 text-blue-400 group-hover:text-white transition-colors" />
-                                {hasSocialNotifications && (
-                                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-gray-900" aria-hidden="true"></span>
-                                )}
-                            </span>
-                            <span className="text-blue-300 group-hover:text-white transition-colors">{t('menu.profile')}</span>
-                        </button>
-                    ) : (
-                        <button
-                            ref={loginProfileBtnRef}
-                            onMouseEnter={() => playSound('hover')}
-                            onClick={() => { playSound('click'); navigate('/login'); }}
-                            className="p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 group cursor-pointer"
-                        >
-                            <User className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
-                            <span className="text-gray-300 group-hover:text-white transition-colors">{t('menu.login')}</span>
-                        </button>
-                    )}
-                </motion.div>
-
-            </motion.div>
+                </div>
+            </div>
 
             {/* Tutorial Spotlight Overlay */}
             {isHomeTutorialActive && homeTutorialSteps[homeTutorialStep] && (

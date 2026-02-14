@@ -339,11 +339,18 @@ const Profile = () => {
         setIsLoading(true);
 
         try {
+            const isCompletingNicknameSetup = Boolean(profile?.needs_nickname_setup);
             const { error } = await supabase
                 .from('profiles')
                 .update({
                     nickname: nickname.trim(),
-                    country: country
+                    country: country,
+                    ...(isCompletingNicknameSetup
+                        ? {
+                            needs_nickname_setup: false,
+                            nickname_set_at: new Date().toISOString()
+                        }
+                        : {})
                 })
                 .eq('id', user.id);
 
@@ -519,6 +526,7 @@ const Profile = () => {
         observation: profile?.observation || 0
     };
     const hasSocialNotifications = pendingRequestsCount > 0 || unreadChatCount > 0;
+    const needsNicknameSetup = Boolean(profile?.needs_nickname_setup);
     const isGuest = Boolean(user?.is_anonymous || user?.app_metadata?.provider === 'anonymous');
 
     return (
@@ -633,7 +641,7 @@ const Profile = () => {
                                 </button>
 
                                 {/* Nickname & Country Edit */}
-                                <div className="flex flex-col items-center gap-4 w-full justify-center">
+                                <div className="mt-3 flex flex-col items-center gap-4 w-full justify-center">
                                     {isEditing ? (
                                         <div className="flex flex-col gap-2 w-full max-w-[240px]">
                                             <input
@@ -673,9 +681,12 @@ const Profile = () => {
                                                 <h2 className="text-2xl font-bold">{nickname}</h2>
                                                 <button
                                                     onClick={() => { playSound('click'); setIsEditing(true); }}
-                                                    className="text-gray-500 hover:text-white text-xs bg-gray-800 px-2 py-1 rounded border border-gray-700 ml-2"
+                                                    className="relative text-gray-500 hover:text-white text-xs bg-gray-800 px-2 py-1 rounded border border-gray-700 ml-2"
                                                 >
                                                     {t('profile.edit')}
+                                                    {needsNicknameSetup && (
+                                                        <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-slate-800" aria-hidden="true"></span>
+                                                    )}
                                                 </button>
                                             </div>
                                             {country && (
