@@ -1906,8 +1906,8 @@ BEGIN
         SET current_round_index = v_new_index,
             game_type = v_new_type,
             seed = v_seed,
-            start_at = now() + interval '6 seconds',
-            end_at = now() + interval '36 seconds'
+            start_at = now() + interval '8 seconds',
+            end_at = now() + interval '38 seconds'
         WHERE id = p_room_id;
     ELSE
         PERFORM finish_game(p_room_id);
@@ -2248,10 +2248,13 @@ DECLARE
   v_mode text;
   v_p1_id text;
   v_p2_id text;
+  v_game_types text[];
+  v_round_scores jsonb;
+  v_fallback_type text;
 BEGIN
   -- Get current state
-  SELECT game_type, status, COALESCE(current_round, 0), player1_score, player2_score, COALESCE(p1_current_score, 0), COALESCE(p2_current_score, 0), mode, player1_id, player2_id
-  INTO v_current_type, v_status, v_current_round, v_p1_wins, v_p2_wins, v_p1_points, v_p2_points, v_mode, v_p1_id, v_p2_id
+  SELECT game_type, status, COALESCE(current_round, 0), player1_score, player2_score, COALESCE(p1_current_score, 0), COALESCE(p2_current_score, 0), mode, player1_id, player2_id, game_types, COALESCE(round_scores, '[]'::jsonb)
+  INTO v_current_type, v_status, v_current_round, v_p1_wins, v_p2_wins, v_p1_points, v_p2_points, v_mode, v_p1_id, v_p2_id, v_game_types, v_round_scores
   FROM game_sessions WHERE id = p_room_id
   FOR UPDATE;
 
@@ -2387,13 +2390,41 @@ BEGIN
       RETURN;
   END IF;
 
-  -- 3. Pick Next Game Type (Random)
-  v_next_type := v_types[floor(random()*array_length(v_types, 1) + 1)];
-  
+  -- 3. Calculate Next Round
+  v_next_round := v_current_round + 1;
+  v_next_round_index := GREATEST(v_next_round - 1, 0);
+
+  -- 4. Pick Next Game Type from preselected game_types to prevent duplicates.
+  -- game_types is generated once in start_game for normal/rank/friendly.
+  IF array_length(v_game_types, 1) >= v_next_round THEN
+      v_next_type := v_game_types[v_next_round];
+  END IF;
+
+  -- Fallback for legacy/invalid sessions: pick a type not used in this set yet.
+  IF v_next_type IS NULL THEN
+      SELECT x
+      INTO v_fallback_type
+      FROM unnest(v_types) AS x
+      WHERE x <> v_current_type
+        AND NOT EXISTS (
+            SELECT 1
+            FROM jsonb_array_elements(v_round_scores) AS rs
+            WHERE rs->>'game_type' = x
+        )
+      ORDER BY random()
+      LIMIT 1;
+
+      IF v_fallback_type IS NOT NULL THEN
+          v_next_type := v_fallback_type;
+      ELSE
+          v_next_type := v_types[floor(random()*array_length(v_types, 1) + 1)];
+      END IF;
+  END IF;
+
   -- Get duration for next game type
   v_duration := get_game_duration(v_next_type);
   
-  -- 4. Setup Game Data
+  -- 5. Setup Game Data
   IF v_next_type = 'RPS' THEN
       v_target := v_opts[floor(random()*3 + 1)];
       v_game_data := '{}';
@@ -2402,11 +2433,7 @@ BEGIN
       v_game_data := jsonb_build_object('seed', floor(random()*10000));
   END IF;
 
-  -- 5. Calculate Next Round
-  v_next_round := v_current_round + 1;
-  v_next_round_index := GREATEST(v_next_round - 1, 0);
-
-  -- 6. Update Session -> PLAYING with 6s warmup (3s round_finished + 3s game_desc) + game duration
+  -- 6. Update Session -> PLAYING with 8s warmup (4s round_finished + 4s game_desc) + game duration
   UPDATE game_sessions
   SET status = 'playing',
       current_round = v_next_round,
@@ -2415,9 +2442,9 @@ BEGIN
       game_data = v_game_data,
       target_move = v_target,
       phase_start_at = now(),
-      phase_end_at = now() + interval '6 seconds',
-      start_at = now() + interval '6 seconds',
-      end_at = now() + interval '6 seconds' + (v_duration || ' seconds')::interval,
+      phase_end_at = now() + interval '8 seconds',
+      start_at = now() + interval '8 seconds',
+      end_at = now() + interval '8 seconds' + (v_duration || ' seconds')::interval,
       player1_ready = false,
       player2_ready = false
   WHERE id = p_room_id;

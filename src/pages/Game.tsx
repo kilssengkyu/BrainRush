@@ -97,12 +97,12 @@ const Game: React.FC = () => {
     const warmupDiff = (warmupStart - now) / 1000;
     const isWarmup = warmupDiff > 0;
     // All UI phases derived from server's start_at timestamp (no client-side timers!)
-    // Server sets start_at = now() + 6s in start_next_round
-    // warmupDiff > 3: "Round Finished" phase (first ~3s)
-    // warmupDiff 0~3: "Game Description" phase (last ~3s)
+    // Server sets start_at = now() + 8s in start_next_round
+    // warmupDiff > 4: "Round Finished" phase (first ~4s)
+    // warmupDiff 0~4: "Game Description" phase (last ~4s)
     // warmupDiff <= 0: Game starts
     const hasCompletedRound = gameState.roundScores.length > 0;
-    const showRoundFinished = isWarmup && warmupDiff > 3 && hasCompletedRound && !isFinished;
+    const showRoundFinished = isWarmup && warmupDiff > 4 && hasCompletedRound && !isFinished;
     const showWarmupOverlay = (isWarmup || isCountdown) && !showRoundFinished;
     const showEmojiBar = showRoundFinished || isWaiting;
     const showEmojiOverlay = showEmojiBar;
@@ -548,27 +548,56 @@ const Game: React.FC = () => {
 
             {/* Round Finished Overlay (Standalone - shows during transition) */}
             {showRoundFinished && gameState.mode !== 'practice' && (
-                <div className="absolute inset-0 z-[65] flex items-center justify-center pointer-events-none">
-                    <motion.div
-                        initial={{ scale: 0.8, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        className="text-5xl font-black text-white drop-shadow-lg uppercase tracking-widest border-4 border-white p-6 rounded-2xl bg-black/60 backdrop-blur-sm"
-                    >
-                        {t('game.roundFinished')}
-                    </motion.div>
+                <div className="absolute inset-0 z-[65] pointer-events-none">
+                    <div className="absolute inset-0 bg-black/20 backdrop-blur-[1px]" />
+                    <div className="absolute inset-x-0 top-32 flex items-center justify-center">
+                        <motion.div
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            className="text-4xl sm:text-5xl font-black text-white/65 drop-shadow-lg uppercase tracking-widest font-mono"
+                        >
+                            {t('game.roundFinished')}
+                        </motion.div>
+                    </div>
                 </div>
             )}
 
             {/* Main Game Area */}
             <main className="flex-1 relative flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-black">
                 {/* Background Scoreboard (play tension UI) */}
-                {isPlaying && !isFinished && (
+                {(isPlaying || showRoundFinished) && !isFinished && (
                     <div className="absolute inset-0 pointer-events-none z-0 select-none overflow-hidden">
-                        <div className="absolute inset-0 flex items-center justify-between px-4 sm:px-8">
-                            <div className={`font-black font-mono tracking-tight leading-none ${displayMyScore >= displayOpScore ? 'text-blue-400/18' : 'text-blue-400/10'} text-[clamp(72px,20vw,220px)]`}>
+                        {/* Score Ratio Background */}
+                        <div className="absolute inset-0 pointer-events-none flex opacity-20">
+                            {/* Blue Side (My Score) */}
+                            <div
+                                className="h-full bg-blue-500/30 transition-all duration-1000 ease-out"
+                                style={{
+                                    width: `${displayMyScore === 0 && displayOpScore === 0 ? 50 : (displayMyScore / (displayMyScore + displayOpScore)) * 100}%`
+                                }}
+                            />
+                            {/* Red Side (Op Score) */}
+                            <div
+                                className="h-full bg-red-500/30 transition-all duration-1000 ease-out"
+                                style={{
+                                    width: `${displayMyScore === 0 && displayOpScore === 0 ? 50 : (displayOpScore / (displayMyScore + displayOpScore)) * 100}%`
+                                }}
+                            />
+                        </div>
+
+                        <div className="absolute inset-0 flex items-start justify-between px-4 sm:px-8 pt-32">
+                            <div
+                                className={`font-black font-mono tracking-tight leading-none transition-opacity duration-500 text-[clamp(72px,20vw,220px)]
+                                    ${displayMyScore >= displayOpScore ? 'text-blue-400' : 'text-blue-400'}
+                                    ${showRoundFinished ? 'opacity-100 drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]' : 'opacity-10'}`}
+                            >
                                 {displayMyScore}
                             </div>
-                            <div className={`font-black font-mono tracking-tight leading-none text-right ${displayOpScore > displayMyScore ? 'text-red-400/18' : 'text-red-400/10'} text-[clamp(72px,20vw,220px)]`}>
+                            <div
+                                className={`font-black font-mono tracking-tight leading-none text-right transition-opacity duration-500 text-[clamp(72px,20vw,220px)]
+                                    ${displayOpScore > displayMyScore ? 'text-red-400' : 'text-red-400'}
+                                    ${showRoundFinished ? 'opacity-100 drop-shadow-[0_0_15px_rgba(239,68,68,0.5)]' : 'opacity-10'}`}
+                            >
                                 {displayOpScore}
                             </div>
                         </div>
