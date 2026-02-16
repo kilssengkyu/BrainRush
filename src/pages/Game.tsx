@@ -373,6 +373,16 @@ const Game: React.FC = () => {
         }
     }, [isFinished]);
 
+    // Check for Interstitial Ad on Game Finish
+    useEffect(() => {
+        if (!isFinished || !myProfile) return;
+        if (myProfile.ads_removed) return;
+
+        import('../utils/AdLogic').then(({ AdLogic }) => {
+            AdLogic.checkAndShowInterstitial();
+        });
+    }, [isFinished, myProfile]);
+
     // MMR Animation Logic
     const [displayMMR, setDisplayMMR] = useState<number | null>(null);
     const [mmrDelta, setMmrDelta] = useState<number | null>(null);

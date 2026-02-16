@@ -89,16 +89,16 @@ const SequenceGame: React.FC<SequenceGameProps> = ({ seed, onScore, isPlaying, m
                 setSeqStep(prev => {
                     const next = prev + 1;
                     if (next > sequence.length) {
-                        // End of sequence -> Wait 250ms then Switch to INPUT
+                        // End of sequence -> Wait 150ms then Switch to INPUT
                         clearInterval(interval);
                         setTimeout(() => {
                             setPhase('INPUT');
-                        }, 250);
+                        }, 150);
                         return prev;
                     }
                     return next;
                 });
-            }, 250); // fast interval (tak tak tak)
+            }, 150); // fast interval (tak tak tak)
 
             return () => clearInterval(interval);
         }

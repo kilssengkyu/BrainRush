@@ -1,4 +1,5 @@
 import { App as CapacitorApp } from '@capacitor/app';
+import { AdMob } from '@capacitor-community/admob';
 import { Capacitor } from '@capacitor/core';
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
@@ -66,6 +67,22 @@ function App() {
     const isAndroid = Capacitor.getPlatform() === 'android';
     const offset = isAndroid ? '12px' : '0px';
     document.documentElement.style.setProperty('--home-top-offset', offset);
+
+    // Request App Tracking Transparency on iOS
+    const requestTracking = async () => {
+      if (Capacitor.getPlatform() === 'ios') {
+        try {
+          await AdMob.requestTrackingAuthorization();
+        } catch (e) {
+          console.error('ATT Request failed:', e);
+        }
+      }
+      // Initialize AdMob globally
+      if (Capacitor.isNativePlatform()) {
+        AdMob.initialize().catch(e => console.error('Global AdMob init failed:', e));
+      }
+    };
+    requestTracking();
   }, []);
 
   return (
