@@ -107,9 +107,11 @@ const SortingGame: React.FC<SortingGameProps> = ({ seed, onScore, isPlaying }) =
             }
         }
 
+        const scoreAmount = 10 + Math.min(streak, 30);
+
         if (isCorrect) {
             playSound('correct');
-            onScore(10 + Math.min(streak, 20));
+            onScore(scoreAmount);
 
             // Animate out
             await controls.start({
@@ -157,7 +159,7 @@ const SortingGame: React.FC<SortingGameProps> = ({ seed, onScore, isPlaying }) =
 
         } else {
             playSound('error');
-            onScore(-10);
+            onScore(-scoreAmount);
             // Shake animation
             await controls.start({ x: direction === 'right' ? 20 : -20, transition: { duration: 0.1 } });
             await controls.start({ x: direction === 'right' ? -20 : 20, transition: { duration: 0.1 } });

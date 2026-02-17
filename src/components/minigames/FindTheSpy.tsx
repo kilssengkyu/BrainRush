@@ -144,14 +144,12 @@ const FindTheSpy: React.FC<FindTheSpyProps> = ({ seed, onScore, isPlaying }) => 
             // Correct
             playSound('correct');
             Haptics.notification({ type: NotificationType.Success }).catch(() => {});
+            const difficultyBonus = Math.max(0, targetSymbolIds.length - 1) * 60;
+            onScore(160 + difficultyBonus);
             const nextFound = [...foundSpyIds, symbolId];
             setFoundSpyIds(nextFound);
 
             if (nextFound.length >= targetSymbolIds.length) {
-                const baseScore = 120;
-                const streakBonus = Math.min(streak, 10) * 2;
-                const multiplier = targetSymbolIds.length >= 2 ? 2 : 1;
-                onScore((baseScore + streakBonus) * multiplier);
                 setStreak(prev => prev + 1);
                 startRound(streak + 1);
             }

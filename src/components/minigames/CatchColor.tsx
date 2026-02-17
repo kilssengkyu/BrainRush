@@ -202,11 +202,11 @@ const CatchColor: React.FC<CatchColorProps> = ({ seed, onScore, isPlaying }) => 
                     if (hit) {
                         if (ball.color === targetNow) {
                             playSound('correct');
-                            onScore(30);
+                            onScore(60);
                             setHitFeedback('correct');
                         } else {
                             playSound('error');
-                            onScore(-30);
+                            onScore(-60);
                             setHitFeedback('wrong');
                         }
                         window.setTimeout(() => setHitFeedback(null), 140);

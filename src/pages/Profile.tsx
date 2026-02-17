@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, LogOut, User as UserIcon, Trophy } from 'lucide-react';
+import { ArrowLeft, Save, LogOut, User as UserIcon, Trophy, ChevronRight, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useSound } from '../contexts/SoundContext';
 import { useUI } from '../contexts/UIContext';
@@ -48,6 +48,7 @@ const HIGHSCORE_GAME_TYPES = [
     { type: 'MOST_COLOR', labelKey: 'mostColor.title' },
     { type: 'SORTING', labelKey: 'sorting.title' },
     { type: 'SPY', labelKey: 'spy.title' },
+    { type: 'STAIRWAY', labelKey: 'stairway.title' },
     { type: 'TIMING_BAR', labelKey: 'timingBar.title' }
 ] as const;
 
@@ -65,6 +66,8 @@ const Profile = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
     const avatarInputRef = useRef<HTMLInputElement | null>(null);
+    const [isCountryModalOpen, setIsCountryModalOpen] = useState(false);
+    const [countrySearch, setCountrySearch] = useState('');
     const [highscores, setHighscores] = useState<Record<string, number>>({});
     const [rankStats, setRankStats] = useState<Record<string, { wins: number; losses: number; draws: number }>>({});
     const [isHighscoresLoading, setIsHighscoresLoading] = useState(false);
@@ -94,6 +97,45 @@ const Profile = () => {
             setCountry(profile.country);
         }
     }, [profile]);
+
+    const deviceCountryCode = useMemo(() => {
+        const candidates: string[] = [];
+        const pushRegionFromLocale = (locale?: string | null) => {
+            if (!locale) return;
+            const normalized = locale.replace('_', '-');
+            const parts = normalized.split('-');
+            if (parts.length >= 2) {
+                const region = parts[parts.length - 1]?.toUpperCase();
+                if (region && /^[A-Z]{2}$/.test(region)) candidates.push(region);
+            }
+        };
+
+        if (typeof navigator !== 'undefined') {
+            pushRegionFromLocale(navigator.language);
+            for (const locale of navigator.languages || []) {
+                pushRegionFromLocale(locale);
+            }
+        }
+
+        if (typeof Intl !== 'undefined') {
+            pushRegionFromLocale(Intl.DateTimeFormat().resolvedOptions().locale);
+        }
+
+        return candidates.find((code) => COUNTRIES.some((c) => c.code === code)) || null;
+    }, []);
+
+    const filteredCountries = useMemo(() => {
+        const q = countrySearch.trim().toLowerCase();
+        const filtered = COUNTRIES.filter((c) => !q || c.name.toLowerCase().includes(q) || c.code.toLowerCase().includes(q));
+
+        if (!deviceCountryCode) return filtered;
+
+        return [...filtered].sort((a, b) => {
+            if (a.code === deviceCountryCode && b.code !== deviceCountryCode) return -1;
+            if (b.code === deviceCountryCode && a.code !== deviceCountryCode) return 1;
+            return a.name.localeCompare(b.name);
+        });
+    }, [countrySearch, deviceCountryCode]);
 
     useEffect(() => {
         if (!user) {
@@ -653,18 +695,23 @@ const Profile = () => {
                                                 maxLength={12}
                                             />
 
-                                            <select
-                                                value={country || ''}
-                                                onChange={(e) => setCountry(e.target.value || null)}
-                                                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500 appearance-none text-center"
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    playSound('click');
+                                                    setCountrySearch('');
+                                                    setIsCountryModalOpen(true);
+                                                }}
+                                                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500 flex items-center justify-between"
                                             >
-                                                <option value="">{t('profile.selectCountry')}</option>
-                                                {COUNTRIES.map((c) => (
-                                                    <option key={c.code} value={c.code}>
-                                                        {c.name}
-                                                    </option>
-                                                ))}
-                                            </select>
+                                                <div className="flex items-center gap-2 min-w-0">
+                                                    <Flag code={country} size="sm" />
+                                                    <span className="truncate text-sm">
+                                                        {country ? COUNTRIES.find((c) => c.code === country)?.name : t('profile.selectCountry')}
+                                                    </span>
+                                                </div>
+                                                <ChevronRight className="w-4 h-4 text-gray-300" />
+                                            </button>
 
                                             <button
                                                 onClick={handleSave}
@@ -852,6 +899,81 @@ const Profile = () => {
                     )}
                 </AnimatePresence>
             </div>
+
+            {isCountryModalOpen && (
+                <div className="fixed inset-0 z-[130] bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
+                    <motion.div
+                        initial={{ opacity: 0, y: 24 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="w-full max-w-md max-h-[75vh] bg-gray-900 border border-white/10 rounded-2xl overflow-hidden shadow-2xl"
+                    >
+                        <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+                            <h3 className="text-lg font-bold">{t('profile.selectCountry')}</h3>
+                            <button
+                                onClick={() => {
+                                    playSound('click');
+                                    setCountrySearch('');
+                                    setIsCountryModalOpen(false);
+                                }}
+                                className="p-2 rounded-full hover:bg-white/10 transition-colors"
+                            >
+                                <X size={18} />
+                            </button>
+                        </div>
+                        <div className="p-3 border-b border-white/10">
+                            <input
+                                value={countrySearch}
+                                onChange={(e) => setCountrySearch(e.target.value)}
+                                placeholder={`${t('profile.selectCountry')}...`}
+                                className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm outline-none focus:border-blue-400/70"
+                            />
+                        </div>
+                        <div className="max-h-[52vh] overflow-y-auto p-3 space-y-2">
+                            <button
+                                onClick={() => {
+                                    playSound('click');
+                                    setCountry(null);
+                                    setCountrySearch('');
+                                    setIsCountryModalOpen(false);
+                                }}
+                                className={`w-full p-4 rounded-xl flex items-center justify-between border transition-all duration-200 ${!country
+                                    ? 'bg-blue-600/30 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.35)]'
+                                    : 'bg-white/5 border-white/10 hover:bg-white/10'
+                                    }`}
+                            >
+                                <span className="text-base font-medium truncate">{t('profile.selectCountry')}</span>
+                                {!country && <div className="w-3 h-3 bg-blue-400 rounded-full shadow-[0_0_8px_#60a5fa]" />}
+                            </button>
+                            {filteredCountries.map((c) => (
+                                <button
+                                    key={c.code}
+                                    onClick={() => {
+                                        playSound('click');
+                                        setCountry(c.code);
+                                        setCountrySearch('');
+                                        setIsCountryModalOpen(false);
+                                    }}
+                                    className={`w-full p-4 rounded-xl flex items-center justify-between border transition-all duration-200 ${country === c.code
+                                        ? 'bg-blue-600/30 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.35)]'
+                                        : 'bg-white/5 border-white/10 hover:bg-white/10'
+                                        }`}
+                                >
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <Flag code={c.code} size="sm" />
+                                        <span className="text-base font-medium truncate">{c.name}</span>
+                                    </div>
+                                    {country === c.code && <div className="w-3 h-3 bg-blue-400 rounded-full shadow-[0_0_8px_#60a5fa]" />}
+                                </button>
+                            ))}
+                            {filteredCountries.length === 0 && (
+                                <div className="text-center text-sm text-gray-400 py-6">
+                                    {t('common.noResults')}
+                                </div>
+                            )}
+                        </div>
+                    </motion.div>
+                </div>
+            )}
 
             {/* Match History Modal */}
             <MatchHistoryModal

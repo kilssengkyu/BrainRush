@@ -20,6 +20,7 @@ const RockPaperScissors: React.FC<RPSProps> = ({ seed, onScore, isPlaying }) => 
     const [index, setIndex] = useState(0);
     const [shake, setShake] = useState<Move | null>(null);
     const [animationKey, setAnimationKey] = useState(0);
+    const [combo, setCombo] = useState(0);
 
     // Initialize RNG
     // We strictly depend on `seed` and `index` to be deterministic.
@@ -51,14 +52,18 @@ const RockPaperScissors: React.FC<RPSProps> = ({ seed, onScore, isPlaying }) => 
 
         if (move === correctMove) {
             // Correct!
-            onScore(20);
+            const nextCombo = combo + 1;
+            const comboBonus = Math.min(nextCombo * 5, 40);
+            onScore(60 + comboBonus);
             playSound('correct');
+            setCombo(nextCombo);
             setIndex(prev => prev + 1);
             setAnimationKey(prev => prev + 1);
         } else {
             // Wrong!
-            onScore(-20); // Penalty
+            onScore(-60); // Penalty
             playSound('error');
+            setCombo(0);
             // Shake effect
             setShake(move);
             setTimeout(() => setShake(null), 400);

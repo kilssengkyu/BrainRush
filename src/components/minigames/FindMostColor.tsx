@@ -193,13 +193,13 @@ const FindMostColor: React.FC<FindMostColorProps> = ({ seed, onScore, isPlaying 
         if (winners.includes(color)) {
             // Correct
             playSound('correct');
-            onScore(10 + Math.min(successCount, 10) * 2); // Score scales slightly
+            onScore(30 + Math.min(successCount, 10) * 5); // Streak bonus capped at +50
             setSuccessCount(prev => prev + 1);
             generateRound();
         } else {
             // Wrong
             playSound('error');
-            onScore(-10);
+            onScore(-30);
             // Shake effect or feedback?
         }
     };

@@ -284,9 +284,13 @@ const Shop = () => {
                                     {t(item.descKey)}
                                 </p>
                                 <div className="flex items-center justify-between">
-                                    <div className="text-2xl font-black text-white">
-                                        {item.priceLabel}
-                                    </div>
+                                    {loadingPrices ? (
+                                        <div className="h-8 w-24 bg-gray-700 rounded animate-pulse" />
+                                    ) : (
+                                        <div className="text-2xl font-black text-white">
+                                            {item.priceLabel}
+                                        </div>
+                                    )}
                                     {item.productId === PRODUCT_IDS.removeAds && profile?.ads_removed ? (
                                         <button
                                             disabled

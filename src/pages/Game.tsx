@@ -362,6 +362,7 @@ const Game: React.FC = () => {
 
 
     const [isButtonEnabled, setIsButtonEnabled] = useState(false);
+    const [isReturningToMenu, setIsReturningToMenu] = useState(false);
 
     useEffect(() => {
         if (isFinished) {
@@ -373,15 +374,19 @@ const Game: React.FC = () => {
         }
     }, [isFinished]);
 
-    // Check for Interstitial Ad on Game Finish
-    useEffect(() => {
-        if (!isFinished || !myProfile) return;
-        if (myProfile.ads_removed) return;
-
-        import('../utils/AdLogic').then(({ AdLogic }) => {
-            AdLogic.checkAndShowInterstitial();
-        });
-    }, [isFinished, myProfile]);
+    const handleReturnMenu = useCallback(async () => {
+        if (isReturningToMenu) return;
+        setIsReturningToMenu(true);
+        try {
+            // Show interstitial only when user explicitly leaves result screen.
+            if (myProfile && !myProfile.ads_removed) {
+                const { AdLogic } = await import('../utils/AdLogic');
+                await AdLogic.checkAndShowInterstitial();
+            }
+        } finally {
+            navigate('/');
+        }
+    }, [isReturningToMenu, myProfile, navigate]);
 
     // MMR Animation Logic
     const [displayMMR, setDisplayMMR] = useState<number | null>(null);
@@ -691,36 +696,38 @@ const Game: React.FC = () => {
                                     className="flex flex-col items-center"
                                 >
                                     {/* Previous round result removed */}
-                                    <h2 className="text-6xl font-black text-yellow-400 mb-6 drop-shadow-lg flex flex-col items-center">
+                                    <h2 className="w-full max-w-[94vw] font-black text-yellow-400 mb-6 drop-shadow-lg flex flex-col items-center">
                                         <span className="text-3xl text-white mb-2">Round {gameState.currentRound}</span>
-                                        {gameState.gameType === 'RPS' && t('rps.title')}
-                                        {gameState.gameType === 'NUMBER' && t('number.title')}
-                                        {gameState.gameType === 'NUMBER_DESC' && t('number.titleDesc')}
-                                        {gameState.gameType === 'MATH' && t('math.title')}
-                                        {gameState.gameType === 'TEN' && t('ten.title')}
-                                        {gameState.gameType === 'COLOR' && t('color.title')}
-                                        {gameState.gameType === 'MEMORY' && t('memory.title')}
-                                        {gameState.gameType === 'SEQUENCE' && t('sequence.title')}
-                                        {gameState.gameType === 'SEQUENCE_NORMAL' && t('sequence.titleNormal')}
-                                        {gameState.gameType === 'LARGEST' && t('largest.title')}
-                                        {gameState.gameType === 'PAIR' && t('pair.title')}
-                                        {gameState.gameType === 'UPDOWN' && t('updown.title')}
-                                        {gameState.gameType === 'SLIDER' && t('slider.title')}
-                                        {gameState.gameType === 'ARROW' && t('arrow.title')}
-                                        {gameState.gameType === 'BLANK' && t('fillBlanks.title')}
-                                        {gameState.gameType === 'OPERATOR' && t('findOperator.title')}
-                                        {gameState.gameType === 'LADDER' && t('ladder.title')}
-                                        {gameState.gameType === 'TAP_COLOR' && t('tapTheColor.title')}
-                                        {gameState.gameType === 'AIM' && t('aim.title')}
-                                        {gameState.gameType === 'MOST_COLOR' && t('mostColor.title')}
-                                        {gameState.gameType === 'SORTING' && t('sorting.title')}
-                                        {gameState.gameType === 'SPY' && t('spy.title')}
-                                        {gameState.gameType === 'PATH' && t('path.title')}
-                                        {gameState.gameType === 'BALLS' && t('balls.title')}
-                                        {gameState.gameType === 'BLIND_PATH' && t('blindPath.title')}
-                                        {gameState.gameType === 'CATCH_COLOR' && t('catchColor.title')}
-                                        {gameState.gameType === 'TIMING_BAR' && t('timingBar.title')}
-                                        {gameState.gameType === 'STAIRWAY' && t('stairway.title', '천국의 계단')}
+                                        <span className="block w-full text-center whitespace-nowrap text-[clamp(1.4rem,8vw,3.75rem)] leading-none px-3">
+                                            {gameState.gameType === 'RPS' && t('rps.title')}
+                                            {gameState.gameType === 'NUMBER' && t('number.title')}
+                                            {gameState.gameType === 'NUMBER_DESC' && t('number.titleDesc')}
+                                            {gameState.gameType === 'MATH' && t('math.title')}
+                                            {gameState.gameType === 'TEN' && t('ten.title')}
+                                            {gameState.gameType === 'COLOR' && t('color.title')}
+                                            {gameState.gameType === 'MEMORY' && t('memory.title')}
+                                            {gameState.gameType === 'SEQUENCE' && t('sequence.title')}
+                                            {gameState.gameType === 'SEQUENCE_NORMAL' && t('sequence.titleNormal')}
+                                            {gameState.gameType === 'LARGEST' && t('largest.title')}
+                                            {gameState.gameType === 'PAIR' && t('pair.title')}
+                                            {gameState.gameType === 'UPDOWN' && t('updown.title')}
+                                            {gameState.gameType === 'SLIDER' && t('slider.title')}
+                                            {gameState.gameType === 'ARROW' && t('arrow.title')}
+                                            {gameState.gameType === 'BLANK' && t('fillBlanks.title')}
+                                            {gameState.gameType === 'OPERATOR' && t('findOperator.title')}
+                                            {gameState.gameType === 'LADDER' && t('ladder.title')}
+                                            {gameState.gameType === 'TAP_COLOR' && t('tapTheColor.title')}
+                                            {gameState.gameType === 'AIM' && t('aim.title')}
+                                            {gameState.gameType === 'MOST_COLOR' && t('mostColor.title')}
+                                            {gameState.gameType === 'SORTING' && t('sorting.title')}
+                                            {gameState.gameType === 'SPY' && t('spy.title')}
+                                            {gameState.gameType === 'PATH' && t('path.title')}
+                                            {gameState.gameType === 'BALLS' && t('balls.title')}
+                                            {gameState.gameType === 'BLIND_PATH' && t('blindPath.title')}
+                                            {gameState.gameType === 'CATCH_COLOR' && t('catchColor.title')}
+                                            {gameState.gameType === 'TIMING_BAR' && t('timingBar.title')}
+                                            {gameState.gameType === 'STAIRWAY' && t('stairway.title', '천국의 계단')}
+                                        </span>
                                     </h2>
                                     <p className="text-2xl text-white mb-12 font-bold max-w-2xl">
                                         {gameState.gameType === 'RPS' && t('rps.instruction')}
@@ -1040,14 +1047,16 @@ const Game: React.FC = () => {
                                             initial={{ opacity: 0, y: 20 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: 1.5 + (gameState.roundScores.length + 1) * 0.4 }}
-                                            onClick={() => navigate('/')}
-                                            disabled={!isButtonEnabled}
+                                            onClick={handleReturnMenu}
+                                            disabled={!isButtonEnabled || isReturningToMenu}
                                             className={`w-full py-4 font-bold text-xl rounded-xl transition-all ${isButtonEnabled
                                                 ? 'bg-white text-black hover:bg-gray-200'
                                                 : 'bg-gray-700 text-gray-500 cursor-not-allowed opacity-50'
                                                 }`}
                                         >
-                                            {isButtonEnabled ? t('game.returnMenu') : t('common.loading')}
+                                            {isButtonEnabled
+                                                ? (isReturningToMenu ? t('common.loading') : t('game.returnMenu'))
+                                                : t('common.loading')}
                                         </motion.button>
                                     </>
                                 )}

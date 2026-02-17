@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Globe, Volume2, VolumeX, RefreshCcw, BookOpen, Shield } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Globe, Volume2, VolumeX, RefreshCcw, BookOpen, Shield, X } from 'lucide-react';
 import { useSound } from '../contexts/SoundContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useUI } from '../contexts/UIContext';
@@ -18,18 +18,43 @@ const Settings = () => {
     const { showToast } = useUI();
     const { resetHomeTutorial } = useTutorial();
     const [isRestoring, setIsRestoring] = useState(false);
+    const [isLanguageModalOpen, setIsLanguageModalOpen] = useState(false);
+    const [languageSearch, setLanguageSearch] = useState('');
 
     const languages = [
         { code: 'ko', label: '한국어', flag: '🇰🇷' },
         { code: 'en', label: 'English', flag: '🇺🇸' },
         { code: 'zh', label: '中文', flag: '🇨🇳' },
         { code: 'ja', label: '日本語', flag: '🇯🇵' },
+        { code: 'es', label: 'Español', flag: '🇪🇸' },
+        { code: 'pt-BR', label: 'Português (Brasil)', flag: '🇧🇷' },
+        { code: 'de', label: 'Deutsch', flag: '🇩🇪' },
+        { code: 'fr', label: 'Français', flag: '🇫🇷' },
+        { code: 'id', label: 'Bahasa Indonesia', flag: '🇮🇩' },
+        { code: 'th', label: 'ไทย', flag: '🇹🇭' },
+        { code: 'vi', label: 'Tiếng Việt', flag: '🇻🇳' },
     ];
 
     const changeLanguage = (lng: string) => {
         i18n.changeLanguage(lng);
         playSound('click');
+        setIsLanguageModalOpen(false);
     };
+
+    const isLanguageSelected = (code: string) => {
+        const current = i18n.resolvedLanguage || i18n.language || '';
+        return current === code || current.startsWith(`${code}-`) || code.startsWith(`${current}-`);
+    };
+
+    const selectedLanguage = languages.find((lang) => isLanguageSelected(lang.code)) || languages[0];
+    const filteredLanguages = languages.filter((lang) => {
+        const q = languageSearch.trim().toLowerCase();
+        if (!q) return true;
+        return (
+            lang.label.toLowerCase().includes(q) ||
+            lang.code.toLowerCase().includes(q)
+        );
+    });
 
     const handleRestorePurchases = async () => {
         if (!user) {
@@ -101,27 +126,24 @@ const Settings = () => {
                             <h2 className="text-xl font-semibold">{t('settings.language')}</h2>
                         </div>
 
-                        <div className="grid grid-cols-1 gap-3">
-                            {languages.map((lang) => (
-                                <motion.button
-                                    key={lang.code}
-                                    onClick={() => changeLanguage(lang.code)}
-                                    whileTap={{ scale: 0.98 }}
-                                    className={`w-full p-4 rounded-xl backdrop-blur-md flex items-center justify-between border transition-all duration-200
-                                        ${i18n.language === lang.code
-                                            ? 'bg-blue-600/30 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)]'
-                                            : 'bg-white/5 border-white/10 hover:bg-white/10'}
-                                    `}
-                                >
-                                    <div className="flex items-center gap-4">
-                                        <span className="text-2xl">{lang.flag}</span>
-                                        <span className="text-lg font-medium">{lang.label}</span>
+                        <div className="bg-white/5 p-4 rounded-xl border border-white/10 backdrop-blur-md">
+                            <button
+                                onClick={() => {
+                                    playSound('click');
+                                    setLanguageSearch('');
+                                    setIsLanguageModalOpen(true);
+                                }}
+                                className="w-full flex items-center justify-between gap-3 rounded-lg px-2 py-1 transition-colors hover:bg-white/5"
+                            >
+                                <div className="flex items-center gap-3 min-w-0">
+                                    <span className="text-2xl">{selectedLanguage.flag}</span>
+                                    <div className="min-w-0 text-left">
+                                        <div className="text-xs text-gray-400 uppercase tracking-wider">{t('settings.language')}</div>
+                                        <div className="text-lg font-semibold truncate">{selectedLanguage.label}</div>
                                     </div>
-                                    {i18n.language === lang.code && (
-                                        <div className="w-3 h-3 bg-blue-400 rounded-full shadow-[0_0_8px_#60a5fa]" />
-                                    )}
-                                </motion.button>
-                            ))}
+                                </div>
+                                <ChevronRight size={18} className="text-gray-400 flex-shrink-0" />
+                            </button>
                         </div>
                     </section>
 
@@ -213,6 +235,60 @@ const Settings = () => {
 
                 </div>
             </div>
+
+            {isLanguageModalOpen && (
+                <div className="fixed inset-0 z-[120] bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
+                    <motion.div
+                        initial={{ opacity: 0, y: 24 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="w-full max-w-md max-h-[75vh] bg-gray-900 border border-white/10 rounded-2xl overflow-hidden shadow-2xl"
+                    >
+                        <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+                            <h3 className="text-lg font-bold">{t('settings.language')}</h3>
+                            <button
+                                onClick={() => { playSound('click'); setIsLanguageModalOpen(false); setLanguageSearch(''); }}
+                                className="p-2 rounded-full hover:bg-white/10 transition-colors"
+                            >
+                                <X size={18} />
+                            </button>
+                        </div>
+                        <div className="p-3 border-b border-white/10">
+                            <input
+                                value={languageSearch}
+                                onChange={(e) => setLanguageSearch(e.target.value)}
+                                placeholder={`${t('settings.language')}...`}
+                                className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm outline-none focus:border-blue-400/70"
+                            />
+                        </div>
+                        <div className="max-h-[52vh] overflow-y-auto p-3 space-y-2">
+                            {filteredLanguages.map((lang) => (
+                                <button
+                                    key={lang.code}
+                                    onClick={() => changeLanguage(lang.code)}
+                                    className={`w-full p-4 rounded-xl flex items-center justify-between border transition-all duration-200
+                                        ${isLanguageSelected(lang.code)
+                                            ? 'bg-blue-600/30 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.35)]'
+                                            : 'bg-white/5 border-white/10 hover:bg-white/10'}
+                                    `}
+                                >
+                                    <div className="flex items-center gap-4 min-w-0">
+                                        <span className="text-2xl">{lang.flag}</span>
+                                        <span className="text-lg font-medium truncate">{lang.label}</span>
+                                    </div>
+                                    {isLanguageSelected(lang.code) && (
+                                        <div className="w-3 h-3 bg-blue-400 rounded-full shadow-[0_0_8px_#60a5fa]" />
+                                    )}
+                                </button>
+                            ))}
+                            {filteredLanguages.length === 0 && (
+                                <div className="text-center text-sm text-gray-400 py-6">
+                                    {t('common.noResults', 'No results')}
+                                </div>
+                            )}
+                        </div>
+                    </motion.div>
+                </div>
+            )}
         </div>
     );
 };

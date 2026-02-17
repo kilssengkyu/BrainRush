@@ -261,42 +261,22 @@ const Home = () => {
         playSound('click');
         currentMode.current = mode;
 
-        // Pencil Check Logic
-        // Only for Rank/Online modes? Or all modes?
-        // User requested: "Need a pencil to play game".
-        // Let's enforce for 'rank' and 'normal' (standard online).
-        // Practice might be free? User said "5 pencils given, use 1 per game". Usually implies main loops.
-        // Let's apply to Rank/Normal. Free/Practice is debatable, usually practice is free or costs less.
-        // Let's make Practice FREE for now as it's separate.
-
+        // Normal/Rank require an authenticated session (anonymous guest login allowed).
         if (mode === 'rank' || mode === 'normal') {
-            if (!user) {
-                if (mode === 'rank') {
-                    navigate('/login');
-                    return;
-                }
-                // Guest playing Normal? Logic for Guest Pencils?
-                // For now, guest has no persistent pencils. Infinite or 0?
-                // Let's assume Guests have infinite or we skip check.
-                // Assuming Authentication is main.
-            } else {
-                // Authenticated: Check Pencils
-                const pencils = profile?.pencils ?? 0;
-                if (pencils < 1) {
-                    // Not enough
-                    playSound('error');
-                    // Show Ad Modal prompting for recharge
-                    setShowAdModal(true);
-                    return;
-                }
-            }
-        }
-
-        if (mode === 'rank') {
             if (!user) {
                 navigate('/login');
                 return;
             }
+
+            const pencils = profile?.pencils ?? 0;
+            if (pencils < 1) {
+                playSound('error');
+                setShowAdModal(true);
+                return;
+            }
+        }
+
+        if (mode === 'rank') {
             if (!isRankUnlocked) {
                 playSound('error');
                 showToast(t('matchmaking.rankLevelRequired', { level: requiredRankLevel }), 'info');
@@ -304,8 +284,6 @@ const Home = () => {
             }
             startSearch('rank');
         } else if (mode === 'normal') {
-            // "Normal" mode supports both Guests and Logged-in users.
-            // Hybrid logic handles the rest in useMatchmaking.
             startSearch('normal');
         } else {
             console.log(`Selected mode: ${mode} `);
@@ -715,7 +693,7 @@ const Home = () => {
                 </motion.div>
             </div>
 
-            <div className="fixed md:hidden bottom-0 inset-x-0 z-[70] border-t border-white/10 bg-gray-900/90 backdrop-blur-xl px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-2">
+            <div className="fixed md:hidden bottom-0 inset-x-0 z-20 border-t border-white/10 bg-gray-900/90 backdrop-blur-xl px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-2">
                 <div className="mx-auto grid w-full max-w-md grid-cols-4 gap-2">
                     <button
                         onClick={() => { playSound('click'); setShowLeaderboard(true); }}

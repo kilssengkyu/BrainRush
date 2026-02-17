@@ -177,7 +177,8 @@ const FindLargest: React.FC<FindLargestProps> = ({ seed, onScore, isPlaying }) =
     const handleOptionClick = (option: ExpressionOption) => {
         if (!currentProblem || !isPlaying) return;
 
-        const scoreBase = 20 + panelIndex * 5;
+        const difficultyBonus = (currentProblem.level - 1) * 15;
+        const scoreBase = (20 * 3) + difficultyBonus;
 
         if (option.value === currentProblem.maxValue) {
             // Correct

@@ -25,9 +25,9 @@ export const useMatchmaking = (
         const playerId = getPlayerId();
         console.log(`startSearch called. Mode: ${mode}, PlayerID: ${playerId}, IsGuest: ${!user}`);
 
-        // Block Rank mode for guests
-        if (mode === 'rank' && !profile) {
-            console.error('startSearch aborted: Rank mode requires login.');
+        // Guard: both rank/normal require session. (anonymous guest login is still a session)
+        if ((mode === 'rank' || mode === 'normal') && !user) {
+            console.error(`startSearch aborted: ${mode} mode requires login session.`);
             return;
         }
 

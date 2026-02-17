@@ -51,12 +51,17 @@ const MemoryMatch: React.FC<MemoryMatchProps> = ({ seed, onScore, isPlaying }) =
     // Check handling Level Clear
     const checkClear = useCallback((currentCards: Card[]) => {
         if (currentCards.length > 0 && currentCards.every(c => c.isMatched)) {
+            const currentDifficulty = Math.floor((stage - 1) / 3);
+            const nextDifficulty = Math.floor(stage / 3);
+            if (nextDifficulty > currentDifficulty) {
+                onScore(40);
+            }
             setGameState('CLEARED');
             setTimeout(() => {
                 setStage(prev => prev + 1);
             }, 500);
         }
-    }, []);
+    }, [onScore, stage]);
 
     // Initialize Level
     const startLevel = useCallback((count: number) => {
@@ -91,7 +96,7 @@ const MemoryMatch: React.FC<MemoryMatchProps> = ({ seed, onScore, isPlaying }) =
 
         if (card1.iconIndex === card2.iconIndex) {
             // Match found
-            onScore(20);
+            onScore(40);
 
             // Fast update
             setTimeout(() => {
@@ -106,7 +111,7 @@ const MemoryMatch: React.FC<MemoryMatchProps> = ({ seed, onScore, isPlaying }) =
             }, 0);
         } else {
             // No Match
-            onScore(-20);
+            onScore(-40);
             playSound('error');
 
             // Auto close fast

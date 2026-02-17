@@ -90,7 +90,7 @@ const LadderGame: React.FC<LadderGameProps> = ({ seed, onScore, isPlaying }) => 
         if (isAnimating || !gameState || !isPlaying) return;
 
         const isCorrect = endIndex === gameState.correctEndIndex;
-        const scoreBase = 30 + (panelIndex * 5);
+        const scoreBase = 120 + (panelIndex * 15);
 
         if (isCorrect) {
             setSelectedEnd(endIndex);

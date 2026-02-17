@@ -130,7 +130,7 @@ const FindPair: React.FC<FindPairProps> = ({ seed, onScore, isPlaying }) => {
 
             if (card1 && card2 && card1.content === card2.content) {
                 // 정답!
-                onScore(30 + (round * 5)); // 난이도별 가산점
+                onScore(90 + (round * 15)); // 난이도별 가산점 (3x)
                 playSound('correct');
                 setClearedIds([card1.id, card2.id]);
 
@@ -145,7 +145,7 @@ const FindPair: React.FC<FindPairProps> = ({ seed, onScore, isPlaying }) => {
                 }, 100);
             } else {
                 // 오답
-                onScore(-20);
+                onScore(-60);
                 playSound('error');
                 setShakeIds(newSelected);
                 setTimeout(() => {
