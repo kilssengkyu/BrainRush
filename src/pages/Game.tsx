@@ -37,6 +37,8 @@ import ScoreProgressBar from '../components/ui/ScoreProgressBar';
 import Flag from '../components/ui/Flag';
 import HexRadar from '../components/ui/HexRadar';
 import { isBotId } from '../constants/bot';
+import { useUI } from '../contexts/UIContext';
+import ReportReasonModal from '../components/ui/ReportReasonModal';
 
 const BOT_EMOJI_POOL = ['🙂', '😭', '😂', '☹️', '❤️', '💔', '👍', '👎'];
 const BOT_EMOJI_BURST = ['😂', '😭', '👍', '👎'];
@@ -52,6 +54,7 @@ const Game: React.FC = () => {
     const { roomId: routeRoomId } = useParams<{ roomId: string }>();
     const location = useLocation();
     const navigate = useNavigate();
+    const { showToast } = useUI();
 
     // Route state check
     const { roomId: stateRoomId, myId, opponentId } = location.state || {};
@@ -60,6 +63,7 @@ const Game: React.FC = () => {
     // Profiles
     const [myProfile, setMyProfile] = useState<any>(null);
     const [opponentProfile, setOpponentProfile] = useState<any>(null);
+    const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
     // --- Realtime Score Sync (Broadcast) ---
     const [realtimeOpScore, setRealtimeOpScore] = useState<number | null>(null);
@@ -80,6 +84,15 @@ const Game: React.FC = () => {
     }, [gameState.gameType, playBGM, stopBGM]);
 
     const isOpponentOnline = !opponentId || opponentId.startsWith('practice') || isBotId(opponentId) || onlineUsers.includes(opponentId);
+    const canReportOpponent = Boolean(
+        opponentId &&
+        myId &&
+        opponentId !== myId &&
+        !opponentId.startsWith('guest_') &&
+        !opponentId.startsWith('bot_') &&
+        !opponentId.startsWith('practice') &&
+        !isBotId(opponentId)
+    );
 
     // Determine Status Logic
     const isPlaying = gameState.status === 'playing';
@@ -387,6 +400,23 @@ const Game: React.FC = () => {
             navigate('/');
         }
     }, [isReturningToMenu, myProfile, navigate]);
+
+    const handleSubmitReport = useCallback(async (reason: string) => {
+        if (!canReportOpponent || !opponentId || !roomId) return;
+        try {
+            const { error } = await supabase.rpc('submit_player_report', {
+                p_reason: reason,
+                p_reported_user_id: opponentId,
+                p_session_id: roomId
+            });
+            if (error) throw error;
+            showToast(t('report.success', '신고가 접수되었습니다.'), 'success');
+            setIsReportModalOpen(false);
+        } catch (error: any) {
+            console.error('Report submit error:', error);
+            showToast(error?.message || t('report.fail', '신고 접수 중 오류가 발생했습니다.'), 'error');
+        }
+    }, [canReportOpponent, opponentId, roomId, showToast, t]);
 
     // MMR Animation Logic
     const [displayMMR, setDisplayMMR] = useState<number | null>(null);
@@ -1043,27 +1073,43 @@ const Game: React.FC = () => {
                                             </div>
                                         </div>
 
-                                        <motion.button
-                                            initial={{ opacity: 0, y: 20 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            transition={{ delay: 1.5 + (gameState.roundScores.length + 1) * 0.4 }}
-                                            onClick={handleReturnMenu}
-                                            disabled={!isButtonEnabled || isReturningToMenu}
-                                            className={`w-full py-4 font-bold text-xl rounded-xl transition-all ${isButtonEnabled
-                                                ? 'bg-white text-black hover:bg-gray-200'
-                                                : 'bg-gray-700 text-gray-500 cursor-not-allowed opacity-50'
-                                                }`}
-                                        >
-                                            {isButtonEnabled
-                                                ? (isReturningToMenu ? t('common.loading') : t('game.returnMenu'))
-                                                : t('common.loading')}
-                                        </motion.button>
+                                        <div className="flex flex-col gap-2">
+                                            {canReportOpponent && (
+                                                <button
+                                                    onClick={() => setIsReportModalOpen(true)}
+                                                    className="w-full py-2.5 font-semibold text-sm rounded-xl transition-all bg-red-600/15 border border-red-500/40 text-red-300 hover:bg-red-600/25"
+                                                >
+                                                    {t('report.button', '신고')}
+                                                </button>
+                                            )}
+                                            <motion.button
+                                                initial={{ opacity: 0, y: 20 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: 1.5 + (gameState.roundScores.length + 1) * 0.4 }}
+                                                onClick={handleReturnMenu}
+                                                disabled={!isButtonEnabled || isReturningToMenu}
+                                                className={`w-full py-4 font-bold text-xl rounded-xl transition-all ${isButtonEnabled
+                                                    ? 'bg-white text-black hover:bg-gray-200'
+                                                    : 'bg-gray-700 text-gray-500 cursor-not-allowed opacity-50'
+                                                    }`}
+                                            >
+                                                {isButtonEnabled
+                                                    ? (isReturningToMenu ? t('common.loading') : t('game.returnMenu'))
+                                                    : t('common.loading')}
+                                            </motion.button>
+                                        </div>
                                     </>
                                 )}
                             </motion.div>
                         </div>
                     </div>
                 )}
+                <ReportReasonModal
+                    isOpen={isReportModalOpen}
+                    targetName={opponentProfile?.nickname || t('game.unknownPlayer')}
+                    onClose={() => setIsReportModalOpen(false)}
+                    onSubmit={handleSubmitReport}
+                />
 
                 {(showEmojiOverlay || (isFinished && gameState.mode !== 'practice')) && (
                     <div className="absolute inset-0 z-[70] pointer-events-none">

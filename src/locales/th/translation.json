@@ -147,7 +147,9 @@
     },
     "leaderboard": {
         "button": "อันดับ",
-        "title": "อันดับ"
+        "title": "อันดับ",
+        "global": "ทั่วโลก",
+        "country": "ประเทศ"
     },
     "ad": {
         "remaining": "คงเหลือวันนี้: {{count}}/{{limit}}",
@@ -202,6 +204,16 @@
         "tutorial": "บทแนะนำ",
         "tutorialDesc": "หากต้องการทบทวนวิธีใช้งานแอป สามารถดูบทแนะนำอีกครั้งได้",
         "viewTutorial": "ดูบทแนะนำอีกครั้ง"
+    },
+    "report": {
+        "button": "รายงาน",
+        "title": "รายงานผู้เล่น",
+        "description": "กรุณากรอกเหตุผลในการรายงาน",
+        "descriptionWithTarget": "กรุณากรอกเหตุผลเพื่อรายงาน {{target}}",
+        "placeholder": "พิมพ์เหตุผลในการรายงาน",
+        "submit": "ส่งรายงาน",
+        "success": "ส่งรายงานเรียบร้อยแล้ว",
+        "fail": "ส่งรายงานไม่สำเร็จ"
     },
     "profile": {
         "nicknameSetupTitle": "ตั้งชื่อเล่น",

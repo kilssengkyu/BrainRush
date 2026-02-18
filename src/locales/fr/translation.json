@@ -147,7 +147,9 @@
     },
     "leaderboard": {
         "button": "Classement",
-        "title": "Classement"
+        "title": "Classement",
+        "global": "Global",
+        "country": "Pays"
     },
     "ad": {
         "remaining": "Restant aujourd'hui : {{count}}/{{limit}}",
@@ -202,6 +204,16 @@
         "tutorial": "Tutoriel",
         "tutorialDesc": "Si vous souhaitez revoir l’utilisation de l’application, relancez le tutoriel.",
         "viewTutorial": "Revoir le tutoriel"
+    },
+    "report": {
+        "button": "Signaler",
+        "title": "Signaler un joueur",
+        "description": "Veuillez saisir le motif du signalement.",
+        "descriptionWithTarget": "Veuillez saisir un motif pour signaler {{target}}.",
+        "placeholder": "Écrivez le motif du signalement.",
+        "submit": "Envoyer le signalement",
+        "success": "Votre signalement a été envoyé.",
+        "fail": "Échec de l'envoi du signalement."
     },
     "profile": {
         "nicknameSetupTitle": "Définir un pseudo",

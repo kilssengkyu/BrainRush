@@ -14,6 +14,7 @@ interface AuthContextType {
     signInWithApple: () => Promise<void>;
     signInAnonymously: () => Promise<void>;
     linkWithGoogle: () => Promise<void>;
+    linkWithApple: () => Promise<void>;
     signOut: () => Promise<void>;
     refreshProfile: () => Promise<void>;
     onlineUsers: Set<string>;
@@ -28,6 +29,7 @@ const AuthContext = createContext<AuthContextType>({
     signInWithApple: async () => { },
     signInAnonymously: async () => { },
     linkWithGoogle: async () => { },
+    linkWithApple: async () => { },
     signOut: async () => { },
     refreshProfile: async () => { },
     onlineUsers: new Set(),
@@ -40,6 +42,54 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [session, setSession] = useState<Session | null>(null);
     const [profile, setProfile] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
+    const AUTH_ERROR_STORAGE_KEY = 'brainrush_auth_error';
+
+    const persistAuthError = (error: any) => {
+        try {
+            const rawMessage = String(error?.message || error?.error_description || error?.msg || '');
+            if (!rawMessage) return;
+            const lower = rawMessage.toLowerCase();
+            const isBanned = lower.includes('banned');
+            const untilMatch = rawMessage.match(/until\\s+([0-9]{4}-[0-9]{2}-[0-9]{2}(?:[ t][0-9:.+-zZ]+)?)/i);
+            const payload = {
+                message: rawMessage,
+                isBanned,
+                bannedUntil: untilMatch?.[1] || null,
+                at: Date.now()
+            };
+            localStorage.setItem(AUTH_ERROR_STORAGE_KEY, JSON.stringify(payload));
+        } catch {
+            // no-op
+        }
+    };
+
+    const getGuestDeviceId = () => {
+        const key = 'brainrush_guest_device_id';
+        try {
+            const existing = localStorage.getItem(key);
+            if (existing) return existing;
+            const generated = (typeof crypto !== 'undefined' && 'randomUUID' in crypto)
+                ? crypto.randomUUID()
+                : `gd_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+            localStorage.setItem(key, generated);
+            return generated;
+        } catch {
+            return `gd_fallback_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+        }
+    };
+
+    const isAlreadyRegisteredIdentityError = (error: any) => {
+        const code = String(error?.code || '').toLowerCase();
+        const msg = String(error?.message || '').toLowerCase();
+        return (
+            code.includes('identity_already_exists') ||
+            code.includes('already_exists') ||
+            msg.includes('already registered') ||
+            msg.includes('already exists') ||
+            msg.includes('identity is already linked') ||
+            msg.includes('account exists')
+        );
+    };
 
     useEffect(() => {
         // 1. Get initial session
@@ -210,6 +260,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     });
                     if (error) {
                         console.error('Session Error:', error.message);
+                        persistAuthError(error);
                         throw error;
                     }
                     console.log('Login Success! Session Restored.');
@@ -217,12 +268,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     const { error } = await supabase.auth.exchangeCodeForSession(code);
                     if (error) {
                         console.error('PKCE Exchange Error:', error.message);
+                        persistAuthError(error);
                         throw error;
                     }
                     console.log('Login Success! Session Exchanged.');
                 }
             } catch (err) {
                 console.error('Deep link logic error:', err);
+                persistAuthError(err);
             }
         };
 
@@ -312,7 +365,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             if (error) throw error;
         } catch (error) {
             console.error('Google Sign-in Error:', error);
-            alert('구글 로그인 중 오류가 발생했습니다.');
+            persistAuthError(error);
+            throw new Error((error as any)?.message || '구글 로그인 중 오류가 발생했습니다.');
         }
     };
 
@@ -335,17 +389,81 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             if (error) throw error;
         } catch (error) {
             console.error('Google Link Error:', error);
-            alert('구글 계정 연동 중 오류가 발생했습니다.');
+            if (isAlreadyRegisteredIdentityError(error)) {
+                throw new Error('이미 가입된 구글 계정입니다.');
+            } else {
+                throw new Error('구글 계정 연동 중 오류가 발생했습니다.');
+            }
+        }
+    };
+
+    const linkWithApple = async () => {
+        try {
+            const isNative = Boolean((window as any).Capacitor?.isNativePlatform?.());
+            let error: any = null;
+
+            if (isNative) {
+                const result = await SignInWithApple.authorize({
+                    clientId: 'com.kilssengkyu.brainrush',
+                    redirectURI: '',
+                    scopes: 'email name',
+                    state: '',
+                    nonce: '',
+                });
+
+                const identityToken = result.response?.identityToken;
+                if (!identityToken) {
+                    throw new Error('Apple Link: No identity token received');
+                }
+
+                const linkResult = await supabase.auth.linkIdentity({
+                    provider: 'apple',
+                    token: identityToken,
+                });
+                error = linkResult.error;
+            } else {
+                const redirectUrl = window.location.origin;
+                const linkResult = await supabase.auth.linkIdentity({
+                    provider: 'apple',
+                    options: {
+                        redirectTo: redirectUrl,
+                        skipBrowserRedirect: false
+                    }
+                });
+                error = linkResult.error;
+            }
+
+            if (error) throw error;
+        } catch (error) {
+            console.error('Apple Link Error:', error);
+            if (isAlreadyRegisteredIdentityError(error)) {
+                throw new Error('이미 가입된 Apple 계정입니다.');
+            } else {
+                throw new Error('Apple 계정 연동 중 오류가 발생했습니다.');
+            }
         }
     };
 
     const signInAnonymously = async () => {
         try {
+            const deviceId = getGuestDeviceId();
+            const { error: limitError } = await supabase.rpc('register_guest_signup', {
+                p_device_id: deviceId
+            });
+            if (limitError) {
+                throw limitError;
+            }
             const { error } = await supabase.auth.signInAnonymously();
             if (error) throw error;
         } catch (error) {
             console.error('Anonymous Sign-in Error:', error);
-            alert('게스트 로그인 중 오류가 발생했습니다. (Supabase 설정에서 Anonymous Sign-ins가 켜져있는지 확인해주세요)');
+            persistAuthError(error);
+            const msg = String((error as any)?.message || '').toLowerCase();
+            if (msg.includes('guest signup limit exceeded')) {
+                throw new Error('이 기기에서는 잠시 후 다시 게스트 로그인이 가능합니다.');
+            } else {
+                throw new Error('게스트 로그인 중 오류가 발생했습니다. (Supabase 설정에서 Anonymous Sign-ins가 켜져있는지 확인해주세요)');
+            }
         }
     };
 
@@ -378,7 +496,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 return;
             }
             console.error('Apple Sign-in Error:', error);
-            alert('Apple 로그인 중 오류가 발생했습니다.');
+            persistAuthError(error);
+            throw new Error((error as any)?.message || 'Apple 로그인 중 오류가 발생했습니다.');
         }
     };
 
@@ -408,7 +527,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, session, profile, loading, signInWithGoogle, signInWithApple, signInAnonymously, linkWithGoogle, signOut, refreshProfile, onlineUsers }}>
+        <AuthContext.Provider value={{ user, session, profile, loading, signInWithGoogle, signInWithApple, signInAnonymously, linkWithGoogle, linkWithApple, signOut, refreshProfile, onlineUsers }}>
             {children}
         </AuthContext.Provider>
     );

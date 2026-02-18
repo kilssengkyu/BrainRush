@@ -143,7 +143,9 @@
     },
     "leaderboard": {
         "button": "排行榜",
-        "title": "排行榜"
+        "title": "排行榜",
+        "global": "全体",
+        "country": "国家"
     },
     "ad": {
         "remaining": "今日剩余：{{count}}/{{limit}}",
@@ -196,6 +198,16 @@
         "tutorial": "教程",
         "tutorialDesc": "如果你想再次确认应用使用方法，请重新查看教程。",
         "viewTutorial": "重新查看教程"
+    },
+    "report": {
+        "button": "举报",
+        "title": "举报玩家",
+        "description": "请输入举报原因。",
+        "descriptionWithTarget": "请输入举报 {{target}} 的原因。",
+        "placeholder": "填写举报原因。",
+        "submit": "提交举报",
+        "success": "举报已提交。",
+        "fail": "举报提交失败。"
     },
     "game": {
         "waiting": "等待游戏...",

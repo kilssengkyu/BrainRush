@@ -9,7 +9,7 @@ const Privacy = () => {
     const { playSound } = useSound();
 
     return (
-        <div className="min-h-[100dvh] bg-gray-950 text-white relative overflow-x-hidden overflow-y-auto flex flex-col items-center p-6 pt-[calc(env(safe-area-inset-top)+1.5rem)]">
+        <div className="h-[100dvh] bg-gray-950 text-white relative overflow-hidden flex flex-col items-center p-6 pt-[calc(env(safe-area-inset-top)+1.5rem)] pb-[calc(env(safe-area-inset-bottom)+1rem)]">
             <div className="absolute top-[-20%] left-[-20%] w-[80%] h-[80%] bg-emerald-600/10 rounded-full blur-3xl animate-pulse" />
             <div className="absolute bottom-[-20%] right-[-20%] w-[80%] h-[80%] bg-blue-600/10 rounded-full blur-3xl animate-pulse" />
 
@@ -24,7 +24,7 @@ const Privacy = () => {
                 <div className="w-12" />
             </header>
 
-            <main className="w-full max-w-2xl z-10 space-y-6 text-sm leading-relaxed text-gray-200">
+            <main className="w-full max-w-2xl z-10 flex-1 overflow-y-auto space-y-6 text-sm leading-relaxed text-gray-200 pr-1">
                 <p className="text-gray-400">{t('privacy.updated', '최종 업데이트')}: 2026-02-07</p>
 
                 <section className="space-y-2">
@@ -70,6 +70,7 @@ const Privacy = () => {
                 <section className="space-y-2">
                     <h2 className="text-base font-semibold text-white">5. 보유 및 이용 기간</h2>
                     <p>회원 탈퇴 또는 목적 달성 시 지체 없이 삭제합니다. 단, 관련 법령에 따라 보관이 필요한 경우 해당 기간 동안 보관합니다.</p>
+                    <p>게스트 계정(Apple/Google 미연동)은 서비스 안정성 및 계정 관리 정책에 따라 7일 동안 접속 기록이 없으면 삭제될 수 있습니다.</p>
                 </section>
 
                 <section className="space-y-2">

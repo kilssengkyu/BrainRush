@@ -147,7 +147,9 @@
     },
     "leaderboard": {
         "button": "Ranking",
-        "title": "Ranking"
+        "title": "Ranking",
+        "global": "Global",
+        "country": "Country"
     },
     "ad": {
         "remaining": "Remaining today: {{count}}/{{limit}}",
@@ -203,6 +205,16 @@
         "tutorialDesc": "If you want to review how to use the app, watch the tutorial again.",
         "viewTutorial": "View Tutorial Again"
     },
+    "report": {
+        "button": "Report",
+        "title": "Report Player",
+        "description": "Please enter the reason for this report.",
+        "descriptionWithTarget": "Please enter a reason to report {{target}}.",
+        "placeholder": "Write the report reason.",
+        "submit": "Submit Report",
+        "success": "Your report has been submitted.",
+        "fail": "Failed to submit report."
+    },
     "profile": {
         "nicknameSetupTitle": "Set Nickname",
         "nicknameSetupDesc": "Please enter a nickname to use in the game.",
@@ -223,8 +235,10 @@
             "score": "Score"
         },
         "guestTitle": "Guest Account",
-        "guestDesc": "Guest accounts can be lost if you sign out, delete the app, or change devices. Link a Google account to keep your progress.",
+        "guestDesc": "Guest accounts can be lost if you sign out, delete the app, or change devices. Link a Google account to keep your progress. Also, guest accounts may be deleted after 7 days of inactivity.",
+        "guestDescIOS": "Guest accounts can be lost if you sign out, delete the app, or change devices. Link an Apple or Google account to keep your progress. Also, guest accounts may be deleted after 7 days of inactivity.",
         "linkGoogle": "Link Google Account",
+        "linkApple": "Link Apple Account",
         "statsTitle": "Skills",
         "stats": {
             "speed": "Speed",

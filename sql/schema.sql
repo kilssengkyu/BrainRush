@@ -996,6 +996,16 @@ BEGIN
   DELETE FROM public.chat_messages WHERE sender_id::text = auth.uid()::text OR receiver_id::text = auth.uid()::text;
   DELETE FROM public.matchmaking_queue WHERE player_id::text = auth.uid()::text;
 
+  -- Delete user's uploaded avatars from Storage
+  PERFORM set_config('storage.allow_delete_query', 'true', true);
+  DELETE FROM storage.objects
+  WHERE bucket_id = 'avatars'
+    AND (
+      owner = auth.uid()
+      OR owner_id = auth.uid()::text
+      OR (storage.foldername(name))[1] = auth.uid()::text
+    );
+
   -- Delete profile (cascades to per-game stats/highscores)
   DELETE FROM public.profiles WHERE id::text = auth.uid()::text;
 
@@ -1448,10 +1458,10 @@ $$;
 
 
 --
--- Name: get_leaderboard(uuid); Type: FUNCTION; Schema: public; Owner: -
+-- Name: get_leaderboard(uuid, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_leaderboard(p_user_id uuid) RETURNS json
+CREATE FUNCTION public.get_leaderboard(p_user_id uuid, p_country text DEFAULT NULL::text) RETURNS json
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -1471,6 +1481,7 @@ BEGIN
             mmr,
             get_tier_name(mmr) as tier
         FROM profiles
+        WHERE p_country IS NULL OR country = p_country
         LIMIT 100
     ) t;
 
@@ -1490,6 +1501,7 @@ BEGIN
                 id, nickname, avatar_url, country, mmr,
                 RANK() OVER (ORDER BY mmr DESC) as rank
             FROM profiles
+            WHERE p_country IS NULL OR country = p_country
         ) sub
         WHERE id = p_user_id;
     END IF;
@@ -2469,35 +2481,34 @@ DECLARE
     v_observation int := 0;
 BEGIN
     CASE p_game_type
-        WHEN 'AIM' THEN v_speed := 2; v_accuracy := 1;
-        WHEN 'RPS' THEN v_speed := 2; v_judgment := 1;
-        WHEN 'UPDOWN' THEN v_judgment := 2; v_speed := 1;
-        WHEN 'ARROW' THEN v_speed := 2; v_judgment := 1;
-        WHEN 'SLIDER' THEN v_accuracy := 2; v_speed := 1;
-        WHEN 'MEMORY' THEN v_memory := 2; v_accuracy := 1;
-        WHEN 'SEQUENCE' THEN v_memory := 2; v_accuracy := 1;
-        WHEN 'SEQUENCE_NORMAL' THEN v_memory := 2; v_accuracy := 1;
-        WHEN 'SPY' THEN v_memory := 2; v_observation := 1;
-        WHEN 'PAIR' THEN v_memory := 2; v_observation := 1;
-        WHEN 'COLOR' THEN v_observation := 2; v_accuracy := 1;
-        WHEN 'MOST_COLOR' THEN v_observation := 2; v_judgment := 1;
-        WHEN 'TAP_COLOR' THEN v_observation := 2; v_speed := 1;
-        WHEN 'MATH' THEN v_calculation := 2; v_accuracy := 1;
-        WHEN 'TEN' THEN v_calculation := 2; v_judgment := 1;
-        WHEN 'BLANK' THEN v_calculation := 2; v_accuracy := 1;
-        WHEN 'OPERATOR' THEN v_calculation := 2; v_judgment := 1;
-        WHEN 'LARGEST' THEN v_calculation := 2; v_judgment := 1;
-        WHEN 'NUMBER' THEN v_accuracy := 2; v_judgment := 1;
-        WHEN 'NUMBER_DESC' THEN v_accuracy := 2; v_judgment := 1;
-        WHEN 'NUMBER_ASC' THEN v_accuracy := 2; v_judgment := 1;
-        WHEN 'SORTING' THEN v_accuracy := 2; v_judgment := 1;
-        WHEN 'LADDER' THEN v_judgment := 2; v_accuracy := 1;
-        WHEN 'PATH' THEN v_speed := 2; v_judgment := 1;
-        WHEN 'BALLS' THEN v_observation := 2; v_accuracy := 1;
-        WHEN 'BLIND_PATH' THEN v_observation := 2; v_accuracy := 1;
-        WHEN 'CATCH_COLOR' THEN v_speed := 2; v_accuracy := 1;
-        WHEN 'TIMING_BAR' THEN v_speed := 2; v_accuracy := 1;
-        WHEN 'STAIRWAY' THEN v_speed := 2; v_judgment := 1;
+        WHEN 'AIM' THEN v_speed := 4; v_accuracy := 1;
+        WHEN 'RPS' THEN v_judgment := 3; v_speed := 1; v_observation := 1;
+        WHEN 'UPDOWN' THEN v_judgment := 2; v_calculation := 2; v_speed := 1;
+        WHEN 'ARROW' THEN v_speed := 3; v_judgment := 2;
+        WHEN 'SLIDER' THEN v_calculation := 3; v_accuracy := 2;
+        WHEN 'MEMORY' THEN v_memory := 4; v_observation := 1;
+        WHEN 'SEQUENCE' THEN v_memory := 4; v_accuracy := 1;
+        WHEN 'SEQUENCE_NORMAL' THEN v_memory := 4; v_judgment := 1;
+        WHEN 'SPY' THEN v_observation := 3; v_memory := 2;
+        WHEN 'PAIR' THEN v_memory := 3; v_observation := 2;
+        WHEN 'COLOR' THEN v_observation := 3; v_accuracy := 2;
+        WHEN 'MOST_COLOR' THEN v_observation := 4; v_judgment := 1;
+        WHEN 'TAP_COLOR' THEN v_memory := 3; v_observation := 1; v_speed := 1;
+        WHEN 'MATH' THEN v_calculation := 4; v_accuracy := 1;
+        WHEN 'TEN' THEN v_calculation := 4; v_judgment := 1;
+        WHEN 'BLANK' THEN v_calculation := 3; v_accuracy := 2;
+        WHEN 'OPERATOR' THEN v_calculation := 4; v_judgment := 1;
+        WHEN 'LARGEST' THEN v_calculation := 3; v_judgment := 1; v_observation := 1;
+        WHEN 'NUMBER' THEN v_accuracy := 3; v_judgment := 2;
+        WHEN 'NUMBER_DESC' THEN v_accuracy := 3; v_judgment := 2;
+        WHEN 'SORTING' THEN v_judgment := 2; v_accuracy := 2; v_observation := 1;
+        WHEN 'LADDER' THEN v_judgment := 3; v_accuracy := 2;
+        WHEN 'PATH' THEN v_speed := 3; v_judgment := 1; v_observation := 1;
+        WHEN 'BALLS' THEN v_observation := 3; v_memory := 1; v_accuracy := 1;
+        WHEN 'BLIND_PATH' THEN v_memory := 3; v_observation := 1; v_judgment := 1;
+        WHEN 'CATCH_COLOR' THEN v_speed := 3; v_accuracy := 2;
+        WHEN 'TIMING_BAR' THEN v_accuracy := 3; v_speed := 2;
+        WHEN 'STAIRWAY' THEN v_speed := 4; v_judgment := 1;
         ELSE
             -- no-op
     END CASE;
@@ -2642,6 +2653,112 @@ BEGIN
   -- or we could blindly update it on any profile change, but a specific RPC is better.
   NEW.last_seen = NOW();
   RETURN NEW;
+END;
+$$;
+
+
+--
+-- Name: register_guest_signup(text, integer, interval); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.register_guest_signup(p_device_id text, p_limit integer DEFAULT 2, p_window interval DEFAULT '24:00:00'::interval) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+    v_row public.guest_device_signups%ROWTYPE;
+BEGIN
+    IF p_device_id IS NULL OR btrim(p_device_id) = '' THEN
+        RAISE EXCEPTION 'device id required';
+    END IF;
+
+    SELECT * INTO v_row
+    FROM public.guest_device_signups
+    WHERE device_id = btrim(p_device_id)
+    FOR UPDATE;
+
+    IF NOT FOUND THEN
+        INSERT INTO public.guest_device_signups (device_id, window_start, signup_count, last_guest_signup_at)
+        VALUES (btrim(p_device_id), now(), 1, now());
+        RETURN;
+    END IF;
+
+    IF now() - v_row.window_start >= p_window THEN
+        UPDATE public.guest_device_signups
+        SET window_start = now(),
+            signup_count = 1,
+            last_guest_signup_at = now()
+        WHERE device_id = btrim(p_device_id);
+        RETURN;
+    END IF;
+
+    IF v_row.signup_count >= p_limit THEN
+        RAISE EXCEPTION 'guest signup limit exceeded';
+    END IF;
+
+    UPDATE public.guest_device_signups
+    SET signup_count = signup_count + 1,
+        last_guest_signup_at = now()
+    WHERE device_id = btrim(p_device_id);
+END;
+$$;
+
+
+--
+-- Name: cleanup_stale_guest_accounts(integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.cleanup_stale_guest_accounts(p_inactive_days integer DEFAULT 7) RETURNS integer
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+    v_deleted_count integer := 0;
+BEGIN
+    IF p_inactive_days < 1 THEN
+        RAISE EXCEPTION 'p_inactive_days must be at least 1';
+    END IF;
+
+    WITH stale_guests AS (
+        SELECT u.id
+        FROM auth.users u
+        JOIN public.profiles p ON p.id = u.id
+        WHERE u.is_anonymous = true
+          AND COALESCE(p.last_seen, p.created_at, u.last_sign_in_at, u.created_at) < (now() - make_interval(days => p_inactive_days))
+          AND NOT EXISTS (
+              SELECT 1
+              FROM auth.identities i
+              WHERE i.user_id = u.id
+                AND i.provider IN ('google', 'apple')
+          )
+    )
+    DELETE FROM auth.users u
+    USING stale_guests sg
+    WHERE u.id = sg.id;
+
+    GET DIAGNOSTICS v_deleted_count = ROW_COUNT;
+    RETURN v_deleted_count;
+END;
+$$;
+
+DO $$
+BEGIN
+    BEGIN
+        PERFORM cron.unschedule('cleanup_stale_guest_accounts_daily');
+    EXCEPTION
+        WHEN OTHERS THEN
+            -- Ignore when job does not exist yet
+            NULL;
+    END;
+
+    PERFORM cron.schedule(
+        'cleanup_stale_guest_accounts_daily',
+        '17 3 * * *',
+        $job$SELECT public.cleanup_stale_guest_accounts(7);$job$
+    );
+EXCEPTION
+    WHEN undefined_table OR invalid_schema_name THEN
+        RAISE NOTICE 'pg_cron not available, skip scheduling cleanup_stale_guest_accounts_daily';
 END;
 $$;
 
@@ -5187,6 +5304,19 @@ CREATE TABLE public.game_sessions (
 
 
 --
+-- Name: guest_device_signups; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.guest_device_signups (
+    device_id text NOT NULL,
+    window_start timestamp with time zone DEFAULT now() NOT NULL,
+    signup_count integer DEFAULT 0 NOT NULL,
+    last_guest_signup_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT guest_device_signups_pkey PRIMARY KEY (device_id)
+);
+
+
+--
 -- Name: matchmaking_queue; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -7505,6 +7635,378 @@ CREATE EVENT TRIGGER pgrst_ddl_watch ON ddl_command_end
 
 CREATE EVENT TRIGGER pgrst_drop_watch ON sql_drop
    EXECUTE FUNCTION extensions.pgrst_drop_watch();
+
+
+--
+-- Name: player_reports; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.player_reports (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    reporter_id uuid NOT NULL,
+    reported_user_id uuid NOT NULL,
+    session_id uuid,
+    reason text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT player_reports_not_self CHECK ((reporter_id <> reported_user_id)),
+    CONSTRAINT player_reports_reason_length CHECK (((char_length(btrim(reason)) >= 3) AND (char_length(btrim(reason)) <= 300)))
+);
+
+
+--
+-- Name: idx_player_reports_reported_created_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_player_reports_reported_created_at ON public.player_reports USING btree (reported_user_id, created_at DESC);
+
+
+--
+-- Name: idx_player_reports_reporter_created_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_player_reports_reporter_created_at ON public.player_reports USING btree (reporter_id, created_at DESC);
+
+
+--
+-- Name: player_reports player_reports_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.player_reports
+    ADD CONSTRAINT player_reports_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: player_reports player_reports_reported_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.player_reports
+    ADD CONSTRAINT player_reports_reported_user_id_fkey FOREIGN KEY (reported_user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: player_reports player_reports_reporter_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.player_reports
+    ADD CONSTRAINT player_reports_reporter_id_fkey FOREIGN KEY (reporter_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: player_reports player_reports_session_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.player_reports
+    ADD CONSTRAINT player_reports_session_id_fkey FOREIGN KEY (session_id) REFERENCES public.game_sessions(id) ON DELETE SET NULL;
+
+
+--
+-- Name: submit_player_report(uuid, uuid, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.submit_player_report(p_reported_user_id uuid, p_session_id uuid, p_reason text) RETURNS uuid
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_id uuid;
+  v_reason text;
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'login required';
+  END IF;
+
+  IF p_reported_user_id IS NULL THEN
+    RAISE EXCEPTION 'reported user required';
+  END IF;
+
+  IF auth.uid() = p_reported_user_id THEN
+    RAISE EXCEPTION 'cannot report yourself';
+  END IF;
+
+  v_reason := btrim(COALESCE(p_reason, ''));
+  IF char_length(v_reason) < 3 OR char_length(v_reason) > 300 THEN
+    RAISE EXCEPTION 'reason must be between 3 and 300 characters';
+  END IF;
+
+  INSERT INTO public.player_reports (reporter_id, reported_user_id, session_id, reason)
+  VALUES (auth.uid(), p_reported_user_id, p_session_id, v_reason)
+  RETURNING id INTO v_id;
+
+  RETURN v_id;
+END;
+$$;
+
+
+--
+-- Name: player_reports; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.player_reports ENABLE ROW LEVEL SECURITY;
+
+
+--
+-- Name: player_reports player_reports_insert_own; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY player_reports_insert_own ON public.player_reports FOR INSERT TO authenticated WITH CHECK ((auth.uid() = reporter_id));
+
+
+--
+-- Name: FUNCTION submit_player_report(uuid, uuid, text); Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON FUNCTION public.submit_player_report(p_reported_user_id uuid, p_session_id uuid, p_reason text) TO anon;
+GRANT ALL ON FUNCTION public.submit_player_report(p_reported_user_id uuid, p_session_id uuid, p_reason text) TO authenticated;
+GRANT ALL ON FUNCTION public.submit_player_report(p_reported_user_id uuid, p_session_id uuid, p_reason text) TO service_role;
+
+
+--
+-- Name: get_admin_members(text, text, text, integer, integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_admin_members(p_search text DEFAULT NULL::text, p_sort_by text DEFAULT 'created_at'::text, p_sort_order text DEFAULT 'desc'::text, p_limit integer DEFAULT 200, p_offset integer DEFAULT 0) RETURNS TABLE(id uuid, nickname text, email text, country text, mmr integer, level integer, avatar_url text, created_at timestamp with time zone, last_seen timestamp with time zone, needs_nickname_setup boolean, report_count bigint, member_role text, banned_until timestamp with time zone)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_search text := NULLIF(btrim(COALESCE(p_search, '')), '');
+  v_sort_by text := lower(COALESCE(p_sort_by, 'created_at'));
+  v_sort_order text := lower(COALESCE(p_sort_order, 'desc'));
+  v_limit integer := LEAST(GREATEST(COALESCE(p_limit, 200), 1), 500);
+  v_offset integer := GREATEST(COALESCE(p_offset, 0), 0);
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'login required';
+  END IF;
+
+  IF COALESCE(auth.jwt() -> 'app_metadata' ->> 'role', '') <> 'admin' THEN
+    RAISE EXCEPTION 'admin only';
+  END IF;
+
+  IF v_sort_by NOT IN ('created_at', 'last_seen', 'mmr', 'level', 'nickname', 'report_count') THEN
+    v_sort_by := 'created_at';
+  END IF;
+
+  IF v_sort_order NOT IN ('asc', 'desc') THEN
+    v_sort_order := 'desc';
+  END IF;
+
+  RETURN QUERY
+  WITH report_agg AS (
+    SELECT pr.reported_user_id, COUNT(*)::bigint AS report_count
+    FROM public.player_reports pr
+    GROUP BY pr.reported_user_id
+  ), base AS (
+    SELECT
+      p.id,
+      p.nickname,
+      p.email,
+      p.country,
+      p.mmr,
+      p.level,
+      p.avatar_url,
+      p.created_at,
+      p.last_seen,
+      p.needs_nickname_setup,
+      COALESCE(ra.report_count, 0)::bigint AS report_count,
+      CASE WHEN COALESCE(au.raw_app_meta_data ->> 'role', '') = 'admin' THEN 'admin' ELSE 'user' END AS member_role,
+      au.banned_until
+    FROM public.profiles p
+    JOIN auth.users au ON au.id = p.id
+    LEFT JOIN report_agg ra ON ra.reported_user_id = p.id
+    WHERE (
+      v_search IS NULL
+      OR lower(COALESCE(p.nickname, '')) LIKE '%' || lower(v_search) || '%'
+      OR lower(COALESCE(p.email, '')) LIKE '%' || lower(v_search) || '%'
+      OR p.id::text LIKE '%' || v_search || '%'
+    )
+  )
+  SELECT
+    b.id,
+    b.nickname,
+    b.email,
+    b.country,
+    b.mmr,
+    b.level,
+    b.avatar_url,
+    b.created_at,
+    b.last_seen,
+    b.needs_nickname_setup,
+    b.report_count,
+    b.member_role,
+    b.banned_until
+  FROM base b
+  ORDER BY
+    CASE WHEN v_sort_by = 'report_count' AND v_sort_order = 'asc' THEN b.report_count END ASC,
+    CASE WHEN v_sort_by = 'report_count' AND v_sort_order = 'desc' THEN b.report_count END DESC,
+
+    CASE WHEN v_sort_by = 'created_at' AND v_sort_order = 'asc' THEN b.created_at END ASC,
+    CASE WHEN v_sort_by = 'created_at' AND v_sort_order = 'desc' THEN b.created_at END DESC,
+
+    CASE WHEN v_sort_by = 'last_seen' AND v_sort_order = 'asc' THEN b.last_seen END ASC,
+    CASE WHEN v_sort_by = 'last_seen' AND v_sort_order = 'desc' THEN b.last_seen END DESC,
+
+    CASE WHEN v_sort_by = 'mmr' AND v_sort_order = 'asc' THEN b.mmr END ASC,
+    CASE WHEN v_sort_by = 'mmr' AND v_sort_order = 'desc' THEN b.mmr END DESC,
+
+    CASE WHEN v_sort_by = 'level' AND v_sort_order = 'asc' THEN b.level END ASC,
+    CASE WHEN v_sort_by = 'level' AND v_sort_order = 'desc' THEN b.level END DESC,
+
+    CASE WHEN v_sort_by = 'nickname' AND v_sort_order = 'asc' THEN lower(COALESCE(b.nickname, '')) END ASC,
+    CASE WHEN v_sort_by = 'nickname' AND v_sort_order = 'desc' THEN lower(COALESCE(b.nickname, '')) END DESC,
+
+    b.created_at DESC,
+    b.id ASC
+  LIMIT v_limit
+  OFFSET v_offset;
+END;
+$$;
+
+
+--
+-- Name: FUNCTION get_admin_members(text, text, text, integer, integer); Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON FUNCTION public.get_admin_members(p_search text, p_sort_by text, p_sort_order text, p_limit integer, p_offset integer) TO anon;
+GRANT ALL ON FUNCTION public.get_admin_members(p_search text, p_sort_by text, p_sort_order text, p_limit integer, p_offset integer) TO authenticated;
+GRANT ALL ON FUNCTION public.get_admin_members(p_search text, p_sort_by text, p_sort_order text, p_limit integer, p_offset integer) TO service_role;
+
+
+--
+-- Name: admin_update_member_moderation(uuid, text, text, integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.admin_update_member_moderation(p_user_id uuid, p_role text DEFAULT NULL::text, p_ban_action text DEFAULT 'keep'::text, p_ban_days integer DEFAULT NULL::integer) RETURNS TABLE(user_id uuid, member_role text, banned_until timestamp with time zone)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_role text := lower(NULLIF(btrim(COALESCE(p_role, '')), ''));
+  v_ban_action text := lower(COALESCE(p_ban_action, 'keep'));
+  v_banned_until timestamptz;
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'login required';
+  END IF;
+
+  IF COALESCE(auth.jwt() -> 'app_metadata' ->> 'role', '') <> 'admin' THEN
+    RAISE EXCEPTION 'admin only';
+  END IF;
+
+  IF p_user_id IS NULL THEN
+    RAISE EXCEPTION 'user_id required';
+  END IF;
+
+  IF v_role IS NOT NULL AND v_role NOT IN ('user', 'admin') THEN
+    RAISE EXCEPTION 'invalid role';
+  END IF;
+
+  IF v_ban_action NOT IN ('keep', 'clear', 'temporary', 'permanent') THEN
+    RAISE EXCEPTION 'invalid ban action';
+  END IF;
+
+  IF v_ban_action = 'temporary' AND (p_ban_days IS NULL OR p_ban_days <= 0) THEN
+    RAISE EXCEPTION 'invalid ban days';
+  END IF;
+
+  SELECT u.banned_until INTO v_banned_until
+  FROM auth.users u
+  WHERE u.id = p_user_id
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'user not found';
+  END IF;
+
+  IF v_ban_action = 'clear' THEN
+    v_banned_until := NULL;
+  ELSIF v_ban_action = 'temporary' THEN
+    v_banned_until := now() + make_interval(days => p_ban_days);
+  ELSIF v_ban_action = 'permanent' THEN
+    v_banned_until := '9999-12-31 23:59:59+00'::timestamptz;
+  END IF;
+
+  UPDATE auth.users u
+  SET
+    raw_app_meta_data = CASE
+      WHEN v_role IS NULL THEN COALESCE(u.raw_app_meta_data, '{}'::jsonb)
+      WHEN v_role = 'admin' THEN COALESCE(u.raw_app_meta_data, '{}'::jsonb) || '{"role":"admin"}'::jsonb
+      ELSE COALESCE(u.raw_app_meta_data, '{}'::jsonb) - 'role'
+    END,
+    banned_until = v_banned_until,
+    updated_at = now()
+  WHERE u.id = p_user_id;
+
+  RETURN QUERY
+  SELECT
+    u.id,
+    CASE WHEN COALESCE(u.raw_app_meta_data ->> 'role', '') = 'admin' THEN 'admin' ELSE 'user' END AS member_role,
+    u.banned_until
+  FROM auth.users u
+  WHERE u.id = p_user_id;
+END;
+$$;
+
+
+--
+-- Name: FUNCTION admin_update_member_moderation(uuid, text, text, integer); Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON FUNCTION public.admin_update_member_moderation(p_user_id uuid, p_role text, p_ban_action text, p_ban_days integer) TO anon;
+GRANT ALL ON FUNCTION public.admin_update_member_moderation(p_user_id uuid, p_role text, p_ban_action text, p_ban_days integer) TO authenticated;
+GRANT ALL ON FUNCTION public.admin_update_member_moderation(p_user_id uuid, p_role text, p_ban_action text, p_ban_days integer) TO service_role;
+
+
+--
+-- Name: get_admin_member_reports(uuid, integer, integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_admin_member_reports(p_reported_user_id uuid, p_limit integer DEFAULT 100, p_offset integer DEFAULT 0) RETURNS TABLE(id uuid, session_id uuid, reason text, created_at timestamp with time zone, reporter_id uuid, reporter_nickname text, reporter_email text)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_limit integer := LEAST(GREATEST(COALESCE(p_limit, 100), 1), 500);
+  v_offset integer := GREATEST(COALESCE(p_offset, 0), 0);
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'login required';
+  END IF;
+
+  IF COALESCE(auth.jwt() -> 'app_metadata' ->> 'role', '') <> 'admin' THEN
+    RAISE EXCEPTION 'admin only';
+  END IF;
+
+  IF p_reported_user_id IS NULL THEN
+    RAISE EXCEPTION 'reported user required';
+  END IF;
+
+  RETURN QUERY
+  SELECT
+    pr.id,
+    pr.session_id,
+    pr.reason,
+    pr.created_at,
+    pr.reporter_id,
+    rp.nickname AS reporter_nickname,
+    rp.email AS reporter_email
+  FROM public.player_reports pr
+  LEFT JOIN public.profiles rp ON rp.id = pr.reporter_id
+  WHERE pr.reported_user_id = p_reported_user_id
+  ORDER BY pr.created_at DESC, pr.id DESC
+  LIMIT v_limit
+  OFFSET v_offset;
+END;
+$$;
+
+
+--
+-- Name: FUNCTION get_admin_member_reports(uuid, integer, integer); Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON FUNCTION public.get_admin_member_reports(p_reported_user_id uuid, p_limit integer, p_offset integer) TO anon;
+GRANT ALL ON FUNCTION public.get_admin_member_reports(p_reported_user_id uuid, p_limit integer, p_offset integer) TO authenticated;
+GRANT ALL ON FUNCTION public.get_admin_member_reports(p_reported_user_id uuid, p_limit integer, p_offset integer) TO service_role;
 
 
 --

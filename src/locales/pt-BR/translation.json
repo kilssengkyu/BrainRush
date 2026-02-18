@@ -147,7 +147,9 @@
     },
     "leaderboard": {
         "button": "Ranking",
-        "title": "Ranking"
+        "title": "Ranking",
+        "global": "Global",
+        "country": "País"
     },
     "ad": {
         "remaining": "Restante hoje: {{count}}/{{limit}}",
@@ -202,6 +204,16 @@
         "tutorial": "Tutorial",
         "tutorialDesc": "Se quiser revisar como usar o app, veja o tutorial novamente.",
         "viewTutorial": "Ver tutorial novamente"
+    },
+    "report": {
+        "button": "Denunciar",
+        "title": "Denunciar jogador",
+        "description": "Informe o motivo da denúncia.",
+        "descriptionWithTarget": "Informe um motivo para denunciar {{target}}.",
+        "placeholder": "Escreva o motivo da denúncia.",
+        "submit": "Enviar denúncia",
+        "success": "Sua denúncia foi enviada.",
+        "fail": "Falha ao enviar a denúncia."
     },
     "profile": {
         "nicknameSetupTitle": "Definir apelido",

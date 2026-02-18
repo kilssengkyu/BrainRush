@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useSound } from '../contexts/SoundContext';
+import { useUI } from '../contexts/UIContext';
 import { User, Loader2, ArrowLeft } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Capacitor } from '@capacitor/core';
@@ -10,10 +11,24 @@ import { Capacitor } from '@capacitor/core';
 const Login = () => {
     const { signInWithGoogle, signInWithApple, signInAnonymously, user } = useAuth();
     const { playSound } = useSound();
+    const { showToast } = useUI();
     const navigate = useNavigate();
     const { t } = useTranslation();
     const [isLoggingIn, setIsLoggingIn] = useState(false);
+    const [banModal, setBanModal] = useState<{ message: string; bannedUntil: string | null } | null>(null);
     const isIOS = Capacitor.getPlatform() === 'ios';
+    const AUTH_ERROR_STORAGE_KEY = 'brainrush_auth_error';
+
+    const openBanModalIfNeeded = (message: string) => {
+        const lower = String(message || '').toLowerCase();
+        if (!lower.includes('banned') && !lower.includes('정지')) return false;
+        const untilMatch = message.match(/until\\s+([0-9]{4}-[0-9]{2}-[0-9]{2}(?:[ t][0-9:.+-zZ]+)?)/i);
+        setBanModal({
+            message: '계정이 정지되었습니다.',
+            bannedUntil: untilMatch?.[1] || null
+        });
+        return true;
+    };
 
     // Redirect if already logged in (handles Deep Link return)
     useEffect(() => {
@@ -22,6 +37,23 @@ const Login = () => {
         }
     }, [user, navigate]);
 
+    useEffect(() => {
+        try {
+            const raw = localStorage.getItem(AUTH_ERROR_STORAGE_KEY);
+            if (!raw) return;
+            localStorage.removeItem(AUTH_ERROR_STORAGE_KEY);
+            const parsed = JSON.parse(raw);
+            if (parsed?.isBanned || String(parsed?.message || '').toLowerCase().includes('banned')) {
+                setBanModal({
+                    message: '계정이 정지되었습니다.',
+                    bannedUntil: parsed?.bannedUntil || null
+                });
+            }
+        } catch {
+            // ignore
+        }
+    }, []);
+
     const handleGoogleLogin = async () => {
         playSound('click');
         setIsLoggingIn(true);
@@ -29,6 +61,10 @@ const Login = () => {
             await signInWithGoogle();
         } catch (error) {
             console.error(error);
+            const message = (error as any)?.message || t('common.error');
+            if (!openBanModalIfNeeded(message)) {
+                showToast(message, 'error');
+            }
             setIsLoggingIn(false);
         }
     };
@@ -40,6 +76,10 @@ const Login = () => {
             await signInWithApple();
         } catch (error) {
             console.error(error);
+            const message = (error as any)?.message || t('common.error');
+            if (!openBanModalIfNeeded(message)) {
+                showToast(message, 'error');
+            }
         } finally {
             setIsLoggingIn(false);
         }
@@ -54,6 +94,10 @@ const Login = () => {
             navigate('/');
         } catch (error) {
             console.error(error);
+            const message = (error as any)?.message || t('common.error');
+            if (!openBanModalIfNeeded(message)) {
+                showToast(message, message.includes('잠시 후') ? 'info' : 'error');
+            }
             setIsLoggingIn(false);
         }
     };
@@ -158,6 +202,43 @@ const Login = () => {
                     </p>
                 </div>
             </motion.div>
+
+            {banModal && (
+                <div className="fixed inset-0 z-[130] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="w-full max-w-md rounded-2xl border border-red-500/30 bg-gray-900 p-5 shadow-2xl">
+                        <h3 className="text-xl font-bold text-red-300 mb-2">계정 정지 안내</h3>
+                        <p className="text-sm text-white/85">{banModal.message}</p>
+                        <p className="text-sm text-white/80 mt-2">
+                            {banModal.bannedUntil
+                                ? `정지 만료 예정: ${new Date(banModal.bannedUntil).toLocaleString()}`
+                                : '정지 기간은 관리자 판단에 따라 결정됩니다.'}
+                        </p>
+                        <p className="text-xs text-white/60 mt-3">
+                            정지 해제 요청(이의제기)은 고객센터로 문의해 주세요.
+                        </p>
+                        <div className="mt-4 flex gap-2">
+                            <button
+                                onClick={() => {
+                                    playSound('click');
+                                    navigate('/support');
+                                }}
+                                className="flex-1 rounded-xl bg-blue-600 hover:bg-blue-500 px-4 py-2.5 text-sm font-semibold"
+                            >
+                                문의하기
+                            </button>
+                            <button
+                                onClick={() => {
+                                    playSound('click');
+                                    setBanModal(null);
+                                }}
+                                className="flex-1 rounded-xl border border-white/20 px-4 py-2.5 text-sm font-semibold text-white/85 hover:bg-white/5"
+                            >
+                                확인
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

@@ -147,7 +147,9 @@
     },
     "leaderboard": {
         "button": "Peringkat",
-        "title": "Peringkat"
+        "title": "Peringkat",
+        "global": "Global",
+        "country": "Negara"
     },
     "ad": {
         "remaining": "Sisa hari ini: {{count}}/{{limit}}",
@@ -202,6 +204,16 @@
         "tutorial": "Tutorial",
         "tutorialDesc": "Jika ingin melihat kembali cara menggunakan aplikasi, buka lagi tutorialnya.",
         "viewTutorial": "Lihat tutorial lagi"
+    },
+    "report": {
+        "button": "Laporkan",
+        "title": "Laporkan pemain",
+        "description": "Masukkan alasan laporan.",
+        "descriptionWithTarget": "Masukkan alasan untuk melaporkan {{target}}.",
+        "placeholder": "Tulis alasan laporan.",
+        "submit": "Kirim laporan",
+        "success": "Laporan berhasil dikirim.",
+        "fail": "Gagal mengirim laporan."
     },
     "profile": {
         "nicknameSetupTitle": "Atur nickname",

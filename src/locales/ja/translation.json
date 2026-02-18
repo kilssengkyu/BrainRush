@@ -143,7 +143,9 @@
     },
     "leaderboard": {
         "button": "ランキング",
-        "title": "ランキング"
+        "title": "ランキング",
+        "global": "全体",
+        "country": "国別"
     },
     "ad": {
         "remaining": "本日の残り: {{count}}/{{limit}}",
@@ -196,6 +198,16 @@
         "tutorial": "チュートリアル",
         "tutorialDesc": "アプリの使い方をもう一度確認したい場合は、チュートリアルを再表示してください。",
         "viewTutorial": "チュートリアルをもう一度見る"
+    },
+    "report": {
+        "button": "通報",
+        "title": "プレイヤーを通報",
+        "description": "通報理由を入力してください。",
+        "descriptionWithTarget": "{{target}} を通報する理由を入力してください。",
+        "placeholder": "通報理由を入力してください。",
+        "submit": "通報する",
+        "success": "通報を受け付けました。",
+        "fail": "通報の送信に失敗しました。"
     },
     "game": {
         "waiting": "ゲーム待機中...",

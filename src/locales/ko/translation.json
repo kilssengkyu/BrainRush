@@ -146,7 +146,9 @@
   },
   "leaderboard": {
     "button": "랭킹",
-    "title": "랭킹"
+    "title": "랭킹",
+    "global": "전체",
+    "country": "국가별"
   },
   "ad": {
     "remaining": "오늘 남은 광고: {{count}}/{{limit}}",
@@ -202,6 +204,16 @@
     "tutorialDesc": "앱 사용 방법을 다시 확인하고 싶다면 튜토리얼을 다시 보세요.",
     "viewTutorial": "튜토리얼 다시 보기"
   },
+  "report": {
+    "button": "신고",
+    "title": "신고하기",
+    "description": "신고 사유를 입력해 주세요.",
+    "descriptionWithTarget": "{{target}} 신고 사유를 입력해 주세요.",
+    "placeholder": "신고 사유를 입력해 주세요.",
+    "submit": "신고하기",
+    "success": "신고가 접수되었습니다.",
+    "fail": "신고 접수 중 오류가 발생했습니다."
+  },
   "profile": {
     "nicknameSetupTitle": "닉네임 설정",
     "nicknameSetupDesc": "게임에서 사용할 닉네임을 입력해주세요.",
@@ -222,8 +234,10 @@
       "score": "점수"
     },
     "guestTitle": "게스트 계정",
-    "guestDesc": "게스트 계정은 로그아웃/앱 삭제/기기 변경 시 데이터가 사라질 수 있어요. 구글 계정으로 연동해 주세요.",
+    "guestDesc": "게스트 계정은 로그아웃/앱 삭제/기기 변경 시 데이터가 사라질 수 있어요. 구글 계정으로 연동해 주세요. 또한 7일 동안 접속 기록이 없으면 계정이 삭제될 수 있습니다.",
+    "guestDescIOS": "게스트 계정은 로그아웃/앱 삭제/기기 변경 시 데이터가 사라질 수 있어요. Apple 또는 Google 계정으로 연동해 주세요. 또한 7일 동안 접속 기록이 없으면 계정이 삭제될 수 있습니다.",
     "linkGoogle": "구글 계정 연동",
+    "linkApple": "Apple 계정 연동",
     "statsTitle": "능력치",
     "stats": {
       "speed": "스피드",

@@ -7,6 +7,7 @@ import { useSound } from '../contexts/SoundContext';
 import { useUI } from '../contexts/UIContext';
 import { supabase } from '../lib/supabaseClient';
 import { useTranslation } from 'react-i18next';
+import { Capacitor } from '@capacitor/core';
 import { COUNTRIES } from '../constants/countries';
 import Flag from '../components/ui/Flag';
 import FriendList from '../components/social/FriendList';
@@ -53,11 +54,12 @@ const HIGHSCORE_GAME_TYPES = [
 ] as const;
 
 const Profile = () => {
-    const { user, profile, signOut, refreshProfile, linkWithGoogle } = useAuth();
+    const { user, profile, signOut, refreshProfile, linkWithGoogle, linkWithApple } = useAuth();
     const { playSound } = useSound();
     const { showToast, confirm } = useUI();
     const navigate = useNavigate();
     const { t } = useTranslation();
+    const isIOS = Capacitor.getPlatform() === 'ios';
 
     const [activeTab, setActiveTab] = useState<'profile' | 'friends'>('profile');
     const [nickname, setNickname] = useState('');
@@ -622,21 +624,38 @@ const Profile = () => {
                                         {t('profile.guestTitle')}
                                     </div>
                                     <div className="mt-1 text-xs text-amber-100/80">
-                                        {t('profile.guestDesc')}
+                                        {t(isIOS ? 'profile.guestDescIOS' : 'profile.guestDesc')}
                                     </div>
-                                    <button
-                                        onClick={async () => {
-                                            try {
-                                                await linkWithGoogle();
-                                            } catch (err) {
-                                                console.error('Failed to link google:', err);
-                                                showToast(t('common.error'), 'error');
-                                            }
-                                        }}
-                                        className="mt-3 inline-flex items-center justify-center rounded-full bg-white/10 px-4 py-2 text-xs font-bold text-amber-100 hover:bg-white/20 transition-colors"
-                                    >
-                                        {t('profile.linkGoogle')}
-                                    </button>
+                                    <div className="mt-3 flex items-center justify-center gap-2">
+                                        {isIOS && (
+                                            <button
+                                                onClick={async () => {
+                                                try {
+                                                    await linkWithApple();
+                                                } catch (err) {
+                                                    console.error('Failed to link apple:', err);
+                                                    showToast((err as any)?.message || t('common.error'), 'error');
+                                                }
+                                            }}
+                                                className="inline-flex items-center justify-center rounded-full bg-white/10 px-4 py-2 text-xs font-bold text-amber-100 hover:bg-white/20 transition-colors"
+                                            >
+                                                {t('profile.linkApple', 'Apple 계정 연동')}
+                                            </button>
+                                        )}
+                                        <button
+                                            onClick={async () => {
+                                                try {
+                                                    await linkWithGoogle();
+                                                } catch (err) {
+                                                    console.error('Failed to link google:', err);
+                                                    showToast((err as any)?.message || t('common.error'), 'error');
+                                                }
+                                            }}
+                                            className="inline-flex items-center justify-center rounded-full bg-white/10 px-4 py-2 text-xs font-bold text-amber-100 hover:bg-white/20 transition-colors"
+                                        >
+                                            {t('profile.linkGoogle')}
+                                        </button>
+                                    </div>
                                 </div>
                             )}
 

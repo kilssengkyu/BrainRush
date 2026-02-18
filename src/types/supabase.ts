@@ -419,6 +419,48 @@ export type Database = {
         }
         Relationships: []
       }
+      player_reports: {
+        Row: {
+          created_at: string
+          id: string
+          reason: string
+          reported_user_id: string
+          reporter_id: string
+          session_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reason: string
+          reported_user_id: string
+          reporter_id: string
+          session_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reason?: string
+          reported_user_id?: string
+          reporter_id?: string
+          session_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_reports_reported_user_id_fkey"
+            columns: ["reported_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "player_reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       purchase_transactions: {
         Row: {
           created_at: string
@@ -522,7 +564,64 @@ export type Database = {
             Returns: string
           }
       finish_game: { Args: { p_room_id: string }; Returns: undefined }
+      cleanup_stale_guest_accounts: {
+        Args: { p_inactive_days?: number }
+        Returns: number
+      }
       get_game_duration: { Args: { p_game_type: string }; Returns: number }
+      get_admin_members: {
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_search?: string | null
+          p_sort_by?: string
+          p_sort_order?: string
+        }
+        Returns: {
+          avatar_url: string | null
+          banned_until: string | null
+          country: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          last_seen: string | null
+          level: number
+          member_role: string
+          mmr: number | null
+          needs_nickname_setup: boolean
+          nickname: string | null
+          report_count: number
+        }[]
+      }
+      admin_update_member_moderation: {
+        Args: {
+          p_ban_action?: string
+          p_ban_days?: number | null
+          p_role?: string | null
+          p_user_id: string
+        }
+        Returns: {
+          banned_until: string | null
+          member_role: string
+          user_id: string
+        }[]
+      }
+      get_admin_member_reports: {
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_reported_user_id: string
+        }
+        Returns: {
+          created_at: string
+          id: string
+          reason: string
+          reporter_email: string | null
+          reporter_id: string
+          reporter_nickname: string | null
+          session_id: string | null
+        }[]
+      }
       get_game_highscores: {
         Args: { p_game_type: string; p_limit?: number }
         Returns: {
@@ -534,7 +633,10 @@ export type Database = {
           user_id: string
         }[]
       }
-      get_leaderboard: { Args: { p_user_id: string }; Returns: Json }
+      get_leaderboard: {
+        Args: { p_country?: string | null; p_user_id?: string | null }
+        Returns: Json
+      }
       get_player_match_history: {
         Args: {
           p_limit?: number
@@ -565,6 +667,10 @@ export type Database = {
       }
       get_server_time: { Args: never; Returns: string }
       get_tier_name: { Args: { p_mmr: number }; Returns: string }
+      register_guest_signup: {
+        Args: { p_device_id: string; p_limit?: number; p_window?: unknown }
+        Returns: undefined
+      }
       grant_ads_removal: { Args: { user_id: string }; Returns: boolean }
       grant_pencils: {
         Args: { amount: number; user_id: string }
@@ -597,6 +703,10 @@ export type Database = {
       }
       start_game: { Args: { p_room_id: string }; Returns: undefined }
       start_next_round: { Args: { p_room_id: string }; Returns: undefined }
+      submit_player_report: {
+        Args: { p_reason: string; p_reported_user_id: string; p_session_id: string | null }
+        Returns: string
+      }
       stat_increments: {
         Args: { p_game_type: string }
         Returns: {

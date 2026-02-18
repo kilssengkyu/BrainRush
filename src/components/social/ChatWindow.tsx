@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
+import { useUI } from '../../contexts/UIContext';
 import { Send, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -33,6 +34,7 @@ const isSystemInviteMessage = (content?: string | null) =>
 
 const ChatWindow: React.FC<ChatWindowProps> = ({ friendId, friendNickname, onClose }) => {
     const { user } = useAuth();
+    const { showToast } = useUI();
     const { t } = useTranslation();
     const [messages, setMessages] = useState<Message[]>([]);
     const [newMessage, setNewMessage] = useState('');
@@ -176,7 +178,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ friendId, friendNickname, onClo
             console.error("Error sending message:", err);
             // Remove temp message or show error
             setMessages(prev => prev.filter(m => m.id !== tempId));
-            alert(t('social.sendFail'));
+            showToast(t('social.sendFail'), 'error');
         }
     };
 

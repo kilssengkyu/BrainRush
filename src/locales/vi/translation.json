@@ -147,7 +147,9 @@
     },
     "leaderboard": {
         "button": "Bảng xếp hạng",
-        "title": "Bảng xếp hạng"
+        "title": "Bảng xếp hạng",
+        "global": "Toàn cầu",
+        "country": "Quốc gia"
     },
     "ad": {
         "remaining": "Còn lại hôm nay: {{count}}/{{limit}}",
@@ -202,6 +204,16 @@
         "tutorial": "Hướng dẫn",
         "tutorialDesc": "Nếu muốn xem lại cách sử dụng ứng dụng, hãy mở lại phần hướng dẫn.",
         "viewTutorial": "Xem lại hướng dẫn"
+    },
+    "report": {
+        "button": "Báo cáo",
+        "title": "Báo cáo người chơi",
+        "description": "Vui lòng nhập lý do báo cáo.",
+        "descriptionWithTarget": "Vui lòng nhập lý do để báo cáo {{target}}.",
+        "placeholder": "Nhập lý do báo cáo.",
+        "submit": "Gửi báo cáo",
+        "success": "Đã gửi báo cáo.",
+        "fail": "Gửi báo cáo thất bại."
     },
     "profile": {
         "nicknameSetupTitle": "Đặt nickname",

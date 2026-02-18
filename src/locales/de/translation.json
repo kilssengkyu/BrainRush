@@ -147,7 +147,9 @@
     },
     "leaderboard": {
         "button": "Rangliste",
-        "title": "Rangliste"
+        "title": "Rangliste",
+        "global": "Global",
+        "country": "Land"
     },
     "ad": {
         "remaining": "Heute verbleibend: {{count}}/{{limit}}",
@@ -202,6 +204,16 @@
         "tutorial": "Tutorial",
         "tutorialDesc": "Wenn du die App-Nutzung noch einmal sehen möchtest, öffne das Tutorial erneut.",
         "viewTutorial": "Tutorial erneut ansehen"
+    },
+    "report": {
+        "button": "Melden",
+        "title": "Spieler melden",
+        "description": "Bitte gib den Grund für die Meldung ein.",
+        "descriptionWithTarget": "Bitte gib einen Grund an, um {{target}} zu melden.",
+        "placeholder": "Meldegrund eingeben.",
+        "submit": "Meldung senden",
+        "success": "Deine Meldung wurde eingereicht.",
+        "fail": "Meldung konnte nicht gesendet werden."
     },
     "profile": {
         "nicknameSetupTitle": "Nickname festlegen",

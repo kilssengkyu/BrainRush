@@ -147,7 +147,9 @@
     },
     "leaderboard": {
         "button": "Ranking",
-        "title": "Ranking"
+        "title": "Ranking",
+        "global": "Global",
+        "country": "País"
     },
     "ad": {
         "remaining": "Restante hoy: {{count}}/{{limit}}",
@@ -202,6 +204,16 @@
         "tutorial": "Tutorial",
         "tutorialDesc": "Si quieres revisar cómo usar la app, vuelve a ver el tutorial.",
         "viewTutorial": "Ver tutorial de nuevo"
+    },
+    "report": {
+        "button": "Reportar",
+        "title": "Reportar jugador",
+        "description": "Ingresa el motivo del reporte.",
+        "descriptionWithTarget": "Ingresa un motivo para reportar a {{target}}.",
+        "placeholder": "Escribe el motivo del reporte.",
+        "submit": "Enviar reporte",
+        "success": "Tu reporte fue enviado.",
+        "fail": "No se pudo enviar el reporte."
     },
     "profile": {
         "nicknameSetupTitle": "Configurar apodo",

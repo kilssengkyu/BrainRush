@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { X, Trophy, Zap, User as UserIcon } from 'lucide-react';
+import { AlertTriangle, X, Trophy, Zap, User as UserIcon } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 import Flag from './Flag';
 import { useUI } from '../../contexts/UIContext';
 import UserProfileModal from './UserProfileModal';
+import ReportReasonModal from './ReportReasonModal';
 
 interface MatchHistoryModalProps {
     isOpen: boolean;
@@ -25,6 +26,7 @@ const MatchHistoryModal = ({ isOpen, onClose, userId, initialMode = 'all' }: Mat
     const [hasMore, setHasMore] = useState(true);
     const observerTarget = useRef<HTMLDivElement>(null);
     const [viewProfileId, setViewProfileId] = useState<string | null>(null);
+    const [reportTarget, setReportTarget] = useState<{ opponentId: string; sessionId: string; nickname: string } | null>(null);
 
     const lastRequestMode = useRef<string | null>(null);
 
@@ -139,6 +141,23 @@ const MatchHistoryModal = ({ isOpen, onClose, userId, initialMode = 'all' }: Mat
         }
     };
 
+    const handleReportSubmit = async (reason: string) => {
+        if (!reportTarget) return;
+        try {
+            const { error } = await supabase.rpc('submit_player_report', {
+                p_reason: reason,
+                p_reported_user_id: reportTarget.opponentId,
+                p_session_id: reportTarget.sessionId
+            });
+            if (error) throw error;
+            showToast(t('report.success', '신고가 접수되었습니다.'), 'success');
+            setReportTarget(null);
+        } catch (err: any) {
+            console.error('Report submit error:', err);
+            showToast(err?.message || t('report.fail', '신고 접수 중 오류가 발생했습니다.'), 'error');
+        }
+    };
+
     const formatTime = (dateStr: string) => {
         const date = new Date(dateStr);
         const now = new Date();
@@ -245,6 +264,22 @@ const MatchHistoryModal = ({ isOpen, onClose, userId, initialMode = 'all' }: Mat
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
                                         </button>
                                     )}
+                                    {match.opponent_id && match.opponent_id !== userId && !match.opponent_id.startsWith('guest_') && !match.opponent_id.startsWith('bot_') && (
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setReportTarget({
+                                                    opponentId: match.opponent_id,
+                                                    sessionId: match.session_id,
+                                                    nickname: match.opponent_nickname || t('game.unknownPlayer')
+                                                });
+                                            }}
+                                            className="p-1.5 bg-red-600/20 text-red-400 rounded-lg hover:bg-red-600 hover:text-white transition"
+                                            title={t('report.button', '신고')}
+                                        >
+                                            <AlertTriangle className="w-4 h-4" />
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         ))
@@ -262,6 +297,12 @@ const MatchHistoryModal = ({ isOpen, onClose, userId, initialMode = 'all' }: Mat
                 isOpen={!!viewProfileId}
                 onClose={() => setViewProfileId(null)}
                 userId={viewProfileId}
+            />
+            <ReportReasonModal
+                isOpen={!!reportTarget}
+                targetName={reportTarget?.nickname}
+                onClose={() => setReportTarget(null)}
+                onSubmit={handleReportSubmit}
             />
         </div>
     );

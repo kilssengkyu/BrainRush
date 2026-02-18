@@ -28,24 +28,32 @@ interface Ranker {
 
 const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onClose }) => {
     const { t } = useTranslation();
-    const { user } = useAuth();
+    const { user, profile } = useAuth();
     const [topPlayers, setTopPlayers] = useState<Ranker[]>([]);
     const [myRank, setMyRank] = useState<Ranker | null>(null);
     const [loading, setLoading] = useState(false);
     const [viewProfileId, setViewProfileId] = useState<string | null>(null);
     const [avatarPreview, setAvatarPreview] = useState<{ src: string; alt: string } | null>(null);
+    const [scope, setScope] = useState<'global' | 'country'>('global');
+    const myCountry = profile?.country ?? null;
 
     useEffect(() => {
+        if (isOpen && scope === 'country' && !myCountry) {
+            setScope('global');
+            return;
+        }
         if (isOpen) {
             fetchLeaderboard();
         }
-    }, [isOpen]);
+    }, [isOpen, scope, myCountry, user?.id]);
 
     const fetchLeaderboard = async () => {
         setLoading(true);
         try {
+            const countryFilter = scope === 'country' ? myCountry : null;
             const { data, error } = await supabase.rpc('get_leaderboard', {
-                p_user_id: user?.id ?? null
+                p_user_id: user?.id ?? null,
+                p_country: countryFilter
             });
 
             if (error) throw error;
@@ -125,6 +133,25 @@ const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onClose }) 
                                 >
                                     <X className="w-5 h-5 text-gray-400" />
                                 </button>
+                            </div>
+                            <div className="px-4 pt-3">
+                                <div className="inline-flex rounded-xl border border-gray-700 bg-gray-800/70 p-1 gap-1">
+                                    <button
+                                        type="button"
+                                        onClick={() => setScope('global')}
+                                        className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${scope === 'global' ? 'bg-blue-500 text-white' : 'text-gray-300 hover:bg-gray-700'}`}
+                                    >
+                                        {t('leaderboard.global', 'Global')}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => myCountry && setScope('country')}
+                                        disabled={!myCountry}
+                                        className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${scope === 'country' ? 'bg-blue-500 text-white' : 'text-gray-300 hover:bg-gray-700'} ${!myCountry ? 'opacity-40 cursor-not-allowed hover:bg-transparent' : ''}`}
+                                    >
+                                        {myCountry ? `${t('leaderboard.country', 'Country')} (${myCountry})` : t('leaderboard.country', 'Country')}
+                                    </button>
+                                </div>
                             </div>
 
                             {/* List */}

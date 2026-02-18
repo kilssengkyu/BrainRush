@@ -14,12 +14,15 @@ const Settings = () => {
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
     const { isMuted, toggleMute, playSound } = useSound();
-    const { user, refreshProfile } = useAuth();
+    const { user, profile, refreshProfile } = useAuth();
     const { showToast } = useUI();
     const { resetHomeTutorial } = useTutorial();
     const [isRestoring, setIsRestoring] = useState(false);
     const [isLanguageModalOpen, setIsLanguageModalOpen] = useState(false);
     const [languageSearch, setLanguageSearch] = useState('');
+    const appRole = (user?.app_metadata as any)?.role;
+    const profileRole = (profile as any)?.role;
+    const isAdmin = appRole === 'admin' || profileRole === 'admin';
 
     const languages = [
         { code: 'ko', label: '한국어', flag: '🇰🇷' },
@@ -232,6 +235,26 @@ const Settings = () => {
                             </button>
                         </div>
                     </section>
+
+                    {isAdmin && (
+                        <section className="space-y-4">
+                            <div className="flex items-center gap-3 text-red-400 mb-2">
+                                <Shield size={24} />
+                                <h2 className="text-xl font-semibold">{t('settings.admin', '관리자')}</h2>
+                            </div>
+                            <div className="bg-white/5 p-6 rounded-xl border border-red-400/30 space-y-4 backdrop-blur-md">
+                                <p className="text-sm text-gray-400">
+                                    {t('settings.adminDesc', '관리자 전용 페이지로 이동합니다.')}
+                                </p>
+                                <button
+                                    onClick={() => { playSound('click'); navigate('/admin'); }}
+                                    className="w-full px-5 py-3 rounded-xl bg-red-600/80 hover:bg-red-600 text-white font-bold transition-colors"
+                                >
+                                    {t('settings.goToAdmin', '관리자 화면 가기')}
+                                </button>
+                            </div>
+                        </section>
+                    )}
 
                 </div>
             </div>
