@@ -61,8 +61,7 @@ const ForceUpdateCheck = () => {
                 }
             } catch (err) {
                 console.error('[ForceUpdate] Check failed:', err);
-                setDebugInfo({ error: String(err) });
-                setNeedsUpdate(true);
+                // Fail silently on error so we don't block the user
             }
         };
 
