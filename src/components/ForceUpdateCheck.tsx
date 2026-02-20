@@ -83,8 +83,11 @@ const ForceUpdateCheck = () => {
                 <h2 className="text-xl font-bold text-white mb-3">
                     {t('update.title', '업데이트 필요')}
                 </h2>
-                <p className="text-gray-300 text-sm mb-6 leading-relaxed">
+                <p className="text-gray-300 text-sm mb-4 leading-relaxed">
                     {t('update.message', '새로운 버전이 출시되었습니다. 원활한 플레이를 위해 업데이트해주세요.')}
+                </p>
+                <p className="text-gray-500 text-xs mb-6">
+                    현재: {debugInfo?.current || '?'} / 최소: {debugInfo?.min || '?'}
                 </p>
                 {storeUrl ? (
                     <button

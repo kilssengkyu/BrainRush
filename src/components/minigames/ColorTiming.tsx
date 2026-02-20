@@ -37,6 +37,7 @@ const ColorTiming: React.FC<ColorTimingProps> = ({ onScore, isPlaying }) => {
         left: null,
         right: null
     });
+    const [showTouchHint, setShowTouchHint] = useState(false);
 
     const ballsRef = useRef<Ball[]>([]);
     const nextIdRef = useRef(1);
@@ -46,6 +47,7 @@ const ColorTiming: React.FC<ColorTimingProps> = ({ onScore, isPlaying }) => {
     const elapsedSecRef = useRef(0);
     const isPlayingRef = useRef(isPlaying);
     const onScoreRef = useRef(onScore);
+    const hintTimeoutRef = useRef<number | null>(null);
 
     useEffect(() => {
         isPlayingRef.current = isPlaying;
@@ -151,17 +153,30 @@ const ColorTiming: React.FC<ColorTimingProps> = ({ onScore, isPlaying }) => {
             if (rafRef.current) {
                 cancelAnimationFrame(rafRef.current);
             }
+            if (hintTimeoutRef.current) {
+                window.clearTimeout(hintTimeoutRef.current);
+                hintTimeoutRef.current = null;
+            }
             rafRef.current = null;
             ballsRef.current = [];
             setBalls([]);
             setPressedLanes({ left: false, right: false });
             setFeedback(null);
             setLaneFlash({ left: null, right: null });
+            setShowTouchHint(false);
             return;
         }
 
         ballsRef.current = [];
         setBalls([]);
+        setShowTouchHint(true);
+        if (hintTimeoutRef.current) {
+            window.clearTimeout(hintTimeoutRef.current);
+        }
+        hintTimeoutRef.current = window.setTimeout(() => {
+            setShowTouchHint(false);
+            hintTimeoutRef.current = null;
+        }, 1200);
         elapsedSecRef.current = 0;
         lastTickRef.current = performance.now();
         scheduleNextSpawn(lastTickRef.current);
@@ -215,6 +230,10 @@ const ColorTiming: React.FC<ColorTimingProps> = ({ onScore, isPlaying }) => {
             if (rafRef.current) {
                 cancelAnimationFrame(rafRef.current);
                 rafRef.current = null;
+            }
+            if (hintTimeoutRef.current) {
+                window.clearTimeout(hintTimeoutRef.current);
+                hintTimeoutRef.current = null;
             }
         };
     }, [getCurrentSpeed, getDifficulty01, isPlaying, playSound, scheduleNextSpawn, spawnBall]);
@@ -324,6 +343,24 @@ const ColorTiming: React.FC<ColorTimingProps> = ({ onScore, isPlaying }) => {
             <div className="absolute inset-y-0 left-1/2 w-px bg-white/10" />
             {renderTarget('left')}
             {renderTarget('right')}
+            {showTouchHint && (
+                <>
+                    <div className="absolute inset-y-0 left-0 w-1/2 bg-blue-500/22 animate-pulse pointer-events-none">
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <span className="text-blue-100 text-4xl font-black tracking-widest drop-shadow-[0_0_10px_rgba(59,130,246,0.9)]">
+                                TOUCH
+                            </span>
+                        </div>
+                    </div>
+                    <div className="absolute inset-y-0 right-0 w-1/2 bg-red-500/22 animate-pulse pointer-events-none">
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <span className="text-red-100 text-4xl font-black tracking-widest drop-shadow-[0_0_10px_rgba(248,113,113,0.9)]">
+                                TOUCH
+                            </span>
+                        </div>
+                    </div>
+                </>
+            )}
             {balls.map(renderBall)}
 
             {feedback && (

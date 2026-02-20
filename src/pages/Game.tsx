@@ -1173,7 +1173,13 @@ const Game: React.FC = () => {
                                 className="bg-gradient-to-b from-gray-800 to-gray-900 rounded-3xl p-8 max-w-sm w-full border border-gray-600/50 shadow-2xl text-center"
                                 onClick={(e) => e.stopPropagation()}
                             >
-                                <div className="text-6xl mb-4">✏️</div>
+                                <div className="mb-4 flex justify-center">
+                                    <img
+                                        src="/images/icon/icon_pen.png"
+                                        alt="Pencil"
+                                        className="w-16 h-16 object-contain"
+                                    />
+                                </div>
                                 <h3 className="text-xl font-black text-white mb-3">
                                     {t('streak.loseBonusTitle', '3연패를 하셨네요...')}
                                 </h3>
@@ -1184,7 +1190,11 @@ const Game: React.FC = () => {
                                     {t('streak.loseBonusSubtext', '(계속 주는거 아니에요 그만 지세요 😅)')}
                                 </p>
                                 <div className="flex items-center justify-center gap-2 mb-6 py-3 px-4 bg-yellow-500/10 rounded-xl border border-yellow-500/20">
-                                    <span className="text-2xl">✏️</span>
+                                    <img
+                                        src="/images/icon/icon_pen.png"
+                                        alt="Pencil"
+                                        className="w-7 h-7 object-contain"
+                                    />
                                     <span className="text-yellow-400 font-bold text-lg">+1</span>
                                 </div>
                                 <button

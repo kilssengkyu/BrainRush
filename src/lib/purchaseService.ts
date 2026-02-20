@@ -1,14 +1,16 @@
 import { Capacitor } from '@capacitor/core';
 import { NativePurchases, PURCHASE_TYPE, type Product } from '@capgo/native-purchases';
 
+const isIOS = Capacitor.getPlatform() === 'ios';
+
 export const PRODUCT_IDS = {
     removeAds: 'remove_ads',
     pencils5: 'pencils_5',
-    pencils20: 'pencils_20',
-    pencils100: 'pencils_100',
-    practiceNotes10: 'practice_notes_10',
-    practiceNotes20: 'practice_notes_20',
-    practiceNotes100: 'practice_notes_100',
+    pencils20: isIOS ? 'pencil_20' : 'pencils_20',
+    pencils100: isIOS ? 'pencil_100' : 'pencils_100',
+    practiceNotes10: isIOS ? 'practice_note_10' : 'practice_notes_10',
+    practiceNotes20: isIOS ? 'practice_note_20' : 'practice_notes_20',
+    practiceNotes100: isIOS ? 'practice_note_100' : 'practice_notes_100',
 } as const;
 
 export type ShopProductId = typeof PRODUCT_IDS[keyof typeof PRODUCT_IDS];

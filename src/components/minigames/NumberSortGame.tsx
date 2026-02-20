@@ -71,7 +71,12 @@ const NumberSortGame: React.FC<NumberSortGameProps> = ({ seed, onScore, mode, is
         const nextExpectedIndex = clearedNumbers.length;
         const expected = sortedAnswer[nextExpectedIndex];
 
-        const scoreAmount = Math.min(10, 6 + Math.floor(panelIndex / 5) * 2);
+        const scoreAmount =
+            panelIndex < 5
+                ? 12
+                : panelIndex < 10
+                    ? 18
+                    : 26;
 
         if (num === expected) {
             // Correct

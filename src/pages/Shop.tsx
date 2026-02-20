@@ -176,18 +176,58 @@ const Shop = () => {
                 throw new Error('Missing transaction id');
             }
 
+            // Always refresh right before verify-purchase.
+            // iOS purchase flow can outlive existing access token and trigger Invalid JWT.
+            const refreshed = await supabase.auth.refreshSession();
+            if (refreshed.error) {
+                throw new Error(`세션 갱신 실패: ${refreshed.error.message}`);
+            }
+            let accessToken = refreshed.data.session?.access_token ?? null;
+            if (!accessToken) {
+                const fallbackSession = await supabase.auth.getSession();
+                accessToken = fallbackSession.data.session?.access_token ?? null;
+            }
+
+            if (!accessToken) {
+                throw new Error('로그인 세션이 만료되었습니다. 다시 로그인해 주세요.');
+            }
+
             const { data, error: verifyError } = await supabase.functions.invoke('verify-purchase', {
                 body: {
                     platform: Capacitor.getPlatform(),
                     productId: item.productId,
                     transactionId,
                     purchaseToken
+                },
+                headers: {
+                    Authorization: `Bearer ${accessToken}`
                 }
             });
             if (verifyError || !data?.ok) {
                 // If verification response failed, but we got a response, it might be due to duplicate.
                 // However, if we fail here, we should NOT consume the purchase.
-                throw new Error(verifyError?.message || data?.error || 'Verification failed');
+                let contextText = '';
+                try {
+                    const context = (verifyError as any)?.context;
+                    if (context && typeof context.text === 'function') {
+                        contextText = await context.text();
+                    }
+                } catch {
+                    // ignore context parsing errors
+                }
+
+                const realErrorMsg =
+                    contextText ||
+                    data?.detail ||
+                    data?.error ||
+                    (verifyError instanceof Error ? verifyError.message : (verifyError as any)?.message) ||
+                    JSON.stringify(verifyError);
+
+                console.error('Edge Function Error Detail:', realErrorMsg, verifyError);
+                if (String(realErrorMsg).toLowerCase().includes('invalid jwt')) {
+                    throw new Error('로그인 세션이 만료되었습니다. 다시 로그인해 주세요.');
+                }
+                throw new Error(`Function Error: ${realErrorMsg}`);
             }
 
             if (item.isConsumable) {
@@ -200,9 +240,10 @@ const Shop = () => {
             showToast(t('shop.purchaseSuccess', 'Purchase completed.'), 'success');
         } catch (err: any) {
             console.error('Purchase failed:', err);
+            const errMsg = err?.message || String(err);
             const message = err?.message?.includes('Billing not supported')
                 ? t('shop.billingUnavailable', 'Billing not supported on this device.')
-                : t('shop.purchaseFail', 'Purchase failed.');
+                : `구매 실패: ${errMsg}`;
             showToast(message, 'error');
         } finally {
             setPurchasing(false);
