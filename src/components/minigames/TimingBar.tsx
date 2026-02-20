@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Howl, Howler } from 'howler';
 import { useSound } from '../../contexts/SoundContext';
-import { Haptics, NotificationType } from '@capacitor/haptics';
+import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 
 interface TimingBarProps {
     onScore: (amount: number) => void;
@@ -43,7 +43,7 @@ const PIANO_FILES = [
 ];
 
 const TimingBar: React.FC<TimingBarProps> = ({ onScore, isPlaying, remainingTime }) => {
-    const { isMuted, volume } = useSound();
+    const { isMuted, volume, isVibrationEnabled } = useSound();
     const [notes, setNotes] = useState<Note[]>([]);
     const [feedback, setFeedback] = useState<'perfect' | 'good' | 'bad' | null>(null);
     const [feedbackText, setFeedbackText] = useState<string | null>(null);
@@ -78,6 +78,16 @@ const TimingBar: React.FC<TimingBarProps> = ({ onScore, isPlaying, remainingTime
         setFeedback(type);
         setTimeout(() => setFeedback(null), 150);
     }, []);
+
+    const triggerImpact = useCallback((style: ImpactStyle) => {
+        if (!isVibrationEnabled) return;
+        Haptics.impact({ style }).catch(() => { });
+    }, [isVibrationEnabled]);
+
+    const triggerNotification = useCallback((type: NotificationType) => {
+        if (!isVibrationEnabled) return;
+        Haptics.notification({ type }).catch(() => { });
+    }, [isVibrationEnabled]);
 
     const playPiano = useCallback(() => {
         if (isMuted || pianoRef.current.length === 0) return;
@@ -216,7 +226,7 @@ const TimingBar: React.FC<TimingBarProps> = ({ onScore, isPlaying, remainingTime
             }
 
             if (missed > 0) {
-                Haptics.notification({ type: NotificationType.Error }).catch(() => { });
+                triggerNotification(NotificationType.Error);
                 setFeedback('bad');
                 setTimeout(() => setFeedback(null), 150);
                 onScoreRef.current(-15 * missed);
@@ -231,7 +241,7 @@ const TimingBar: React.FC<TimingBarProps> = ({ onScore, isPlaying, remainingTime
         return () => {
             if (rafRef.current) cancelAnimationFrame(rafRef.current);
         };
-    }, [isPlaying, generateDelays]);
+    }, [isPlaying, generateDelays, triggerNotification]);
 
     // Hit detection: prioritize notes closest to target, tap notes over hold notes when overlapping
     const findHit = useCallback(() => {
@@ -301,7 +311,7 @@ const TimingBar: React.FC<TimingBarProps> = ({ onScore, isPlaying, remainingTime
             const n = notesRef.current[idx];
             if (n.type === 'hold') {
                 playPiano();
-                Haptics.impact({ style: 'light' as any }).catch(() => { });
+                triggerImpact(ImpactStyle.Light);
                 setIsHolding(true);
                 holdStartRef.current = performance.now();
                 activeHoldRef.current = n.id;
@@ -310,12 +320,12 @@ const TimingBar: React.FC<TimingBarProps> = ({ onScore, isPlaying, remainingTime
                 playPiano();
                 const isPerfect = dist < PERFECT_RANGE;
                 if (isPerfect) {
-                    Haptics.impact({ style: 'heavy' as any }).catch(() => { });
+                    triggerImpact(ImpactStyle.Heavy);
                     triggerFeedback('perfect');
                     setFeedbackText('PERFECT!');
                     onScore(50);
                 } else {
-                    Haptics.impact({ style: 'medium' as any }).catch(() => { });
+                    triggerImpact(ImpactStyle.Medium);
                     triggerFeedback('good');
 
                     // Percentage 0-99% based on distance (closer to perfect = higher %)
@@ -334,14 +344,14 @@ const TimingBar: React.FC<TimingBarProps> = ({ onScore, isPlaying, remainingTime
                 notesRef.current.splice(idx, 1);
             }
         } else {
-            Haptics.notification({ type: NotificationType.Error }).catch(() => { });
+            triggerNotification(NotificationType.Error);
             triggerFeedback('bad');
             setFeedbackText('MISS');
             setTimeout(() => setFeedbackText(null), 300);
             onScore(-10);
             setStreak(0);
         }
-    }, [isPlaying, findHit, playPiano, onScore, triggerFeedback]);
+    }, [isPlaying, findHit, playPiano, onScore, triggerFeedback, triggerImpact, triggerNotification]);
 
     const handleUp = useCallback(() => {
         if (!isHolding || activeHoldRef.current === null) return;
@@ -349,13 +359,13 @@ const TimingBar: React.FC<TimingBarProps> = ({ onScore, isPlaying, remainingTime
         if (idx >= 0) {
             const n = notesRef.current[idx];
             if (n.holdProgress >= 0.65) {
-                Haptics.impact({ style: 'heavy' as any }).catch(() => { });
+                triggerImpact(ImpactStyle.Heavy);
                 triggerFeedback('perfect');
                 setFeedbackText('PERFECT!');
                 onScore(50);
                 setStreak(s => s + 1);
             } else if (n.holdProgress >= 0.35) {
-                Haptics.impact({ style: 'medium' as any }).catch(() => { });
+                triggerImpact(ImpactStyle.Medium);
                 triggerFeedback('good');
 
                 // Percentage 0-99% based on hold duration
@@ -369,7 +379,7 @@ const TimingBar: React.FC<TimingBarProps> = ({ onScore, isPlaying, remainingTime
                 setFeedbackText(`${percent}%`);
                 onScore(score);
             } else {
-                Haptics.notification({ type: NotificationType.Error }).catch(() => { });
+                triggerNotification(NotificationType.Error);
                 triggerFeedback('bad');
                 setFeedbackText('MISS');
                 onScore(-5);
@@ -381,7 +391,7 @@ const TimingBar: React.FC<TimingBarProps> = ({ onScore, isPlaying, remainingTime
         setIsHolding(false);
         activeHoldRef.current = null;
         holdStartRef.current = null;
-    }, [isHolding, onScore, triggerFeedback]);
+    }, [isHolding, onScore, triggerFeedback, triggerImpact, triggerNotification]);
 
     return (
         <div

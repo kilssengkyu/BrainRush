@@ -181,6 +181,7 @@
         "language": "语言",
         "sound": "音效",
         "masterVolume": "主音量",
+        "vibration": "振动",
         "volume": "音量",
         "back": "返回",
         "deleteAccount": "删除账户",
@@ -438,6 +439,10 @@
     "timingBar": {
         "title": "节奏条",
         "instruction": "下落条与目标条重合时点击即可。"
+    },
+    "colorTiming": {
+        "title": "颜色时机",
+        "instruction": "当蓝球进入左侧圆圈、红球进入右侧圆圈时点击。点击相反颜色会扣分。"
     },
     "stairway": {
         "title": "天国阶梯",

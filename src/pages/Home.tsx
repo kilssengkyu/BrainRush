@@ -209,6 +209,20 @@ const Home = () => {
     const shopBtnRef = useRef<HTMLButtonElement>(null);
     const settingsBtnRef = useRef<HTMLButtonElement>(null);
     const loginProfileBtnRef = useRef<HTMLButtonElement>(null);
+    const mobileRankingBtnRef = useRef<HTMLButtonElement>(null);
+    const mobileShopBtnRef = useRef<HTMLButtonElement>(null);
+    const mobileSettingsBtnRef = useRef<HTMLButtonElement>(null);
+    const mobileLoginProfileBtnRef = useRef<HTMLButtonElement>(null);
+    const [isMobileLayout, setIsMobileLayout] = useState<boolean>(() => {
+        if (typeof window === 'undefined') return false;
+        return window.innerWidth < 768;
+    });
+
+    useEffect(() => {
+        const onResize = () => setIsMobileLayout(window.innerWidth < 768);
+        window.addEventListener('resize', onResize);
+        return () => window.removeEventListener('resize', onResize);
+    }, []);
 
     const {
         isHomeTutorialActive,
@@ -223,10 +237,10 @@ const Home = () => {
         normal: normalModeRef,
         rank: rankModeRef,
         practice: practiceModeRef,
-        ranking: rankingBtnRef,
-        shop: shopBtnRef,
-        settings: settingsBtnRef,
-        login: loginProfileBtnRef,
+        ranking: isMobileLayout ? mobileRankingBtnRef : rankingBtnRef,
+        shop: isMobileLayout ? mobileShopBtnRef : shopBtnRef,
+        settings: isMobileLayout ? mobileSettingsBtnRef : settingsBtnRef,
+        login: isMobileLayout ? mobileLoginProfileBtnRef : loginProfileBtnRef,
     };
 
     const handleAdReward = async (): Promise<'ok' | 'limit' | 'error'> => {
@@ -696,6 +710,7 @@ const Home = () => {
             <div className="fixed md:hidden bottom-0 inset-x-0 z-20 border-t border-white/10 bg-gray-900/90 backdrop-blur-xl px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-2">
                 <div className="mx-auto grid w-full max-w-md grid-cols-4 gap-2">
                     <button
+                        ref={mobileRankingBtnRef}
                         onClick={() => { playSound('click'); setShowLeaderboard(true); }}
                         className="rounded-xl bg-gray-800/70 py-2.5 flex flex-col items-center justify-center gap-1.5 text-gray-200 hover:bg-gray-700 transition-colors"
                     >
@@ -703,6 +718,7 @@ const Home = () => {
                         <span className="text-[11px] font-semibold leading-none">{t('leaderboard.button', 'Ranking')}</span>
                     </button>
                     <button
+                        ref={mobileShopBtnRef}
                         onClick={() => { playSound('click'); navigate('/shop'); }}
                         className="rounded-xl bg-gray-800/70 py-2.5 flex flex-col items-center justify-center gap-1.5 text-gray-200 hover:bg-gray-700 transition-colors"
                     >
@@ -710,6 +726,7 @@ const Home = () => {
                         <span className="text-[11px] font-semibold leading-none">{t('menu.shop', 'Shop')}</span>
                     </button>
                     <button
+                        ref={mobileSettingsBtnRef}
                         onClick={() => { playSound('click'); navigate('/settings'); }}
                         className="rounded-xl bg-gray-800/70 py-2.5 flex flex-col items-center justify-center gap-1.5 text-gray-200 hover:bg-gray-700 transition-colors"
                     >
@@ -717,6 +734,7 @@ const Home = () => {
                         <span className="text-[11px] font-semibold leading-none">{t('menu.settings')}</span>
                     </button>
                     <button
+                        ref={mobileLoginProfileBtnRef}
                         onClick={() => { playSound('click'); navigate(user ? '/profile' : '/login'); }}
                         className="relative rounded-xl bg-gray-800/70 py-2.5 flex flex-col items-center justify-center gap-1.5 text-gray-200 hover:bg-gray-700 transition-colors"
                     >

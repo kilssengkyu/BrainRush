@@ -188,6 +188,7 @@
     "language": "언어",
     "sound": "소리",
     "masterVolume": "마스터 볼륨",
+    "vibration": "진동",
     "deleteAccount": "회원 탈퇴",
     "deleteAccountConfirm": "정말로 탈퇴하시겠습니까? 계정은 영구 삭제되며 절대 되돌릴 수 없습니다.",
     "logoutConfirm": "정말로 로그아웃 하시겠습니까?",
@@ -441,6 +442,10 @@
   "timingBar": {
     "title": "타이밍바",
     "instruction": "떨어지는 바가 타겟 바와 겹칠 때 아무 곳이나 탭하세요."
+  },
+  "colorTiming": {
+      "title": "컬러 타이밍",
+      "instruction": "왼쪽 원에는 파란 공, 오른쪽 원에는 빨간 공이 들어올 때 터치하세요. 반대 색이면 감점됩니다."
   },
   "stairway": {
     "title": "천국의 계단",

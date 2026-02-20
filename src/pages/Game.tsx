@@ -32,6 +32,7 @@ import BallCounter from '../components/minigames/BallCounter';
 import BlindPathRunner from '../components/minigames/BlindPathRunner';
 import CatchColor from '../components/minigames/CatchColor';
 import TimingBar from '../components/minigames/TimingBar';
+import ColorTiming from '../components/minigames/ColorTiming';
 import StairwayGame from '../components/minigames/StairwayGame';
 import ScoreProgressBar from '../components/ui/ScoreProgressBar';
 import Flag from '../components/ui/Flag';
@@ -74,9 +75,9 @@ const Game: React.FC = () => {
     const { gameState, incrementScore, serverOffset, isWaitingTimeout, isTimeUp, onlineUsers, connectionStatus } = useGameState(roomId!, myId, opponentId);
     const { playBGM, stopBGM } = useSound();
 
-    // BGM Control for TimingBar
+    // BGM Control for timing-focused games
     useEffect(() => {
-        if (gameState.gameType === 'TIMING_BAR') {
+        if (gameState.gameType === 'TIMING_BAR' || gameState.gameType === 'COLOR_TIMING') {
             stopBGM();
         } else if (gameState.gameType) {
             playBGM('bgm_game');
@@ -756,6 +757,7 @@ const Game: React.FC = () => {
                                             {gameState.gameType === 'BLIND_PATH' && t('blindPath.title')}
                                             {gameState.gameType === 'CATCH_COLOR' && t('catchColor.title')}
                                             {gameState.gameType === 'TIMING_BAR' && t('timingBar.title')}
+                                            {gameState.gameType === 'COLOR_TIMING' && t('colorTiming.title', '컬러 타이밍')}
                                             {gameState.gameType === 'STAIRWAY' && t('stairway.title', '천국의 계단')}
                                         </span>
                                     </h2>
@@ -787,6 +789,7 @@ const Game: React.FC = () => {
                                         {gameState.gameType === 'BLIND_PATH' && t('blindPath.instruction')}
                                         {gameState.gameType === 'CATCH_COLOR' && t('catchColor.instruction')}
                                         {gameState.gameType === 'TIMING_BAR' && t('timingBar.instruction')}
+                                        {gameState.gameType === 'COLOR_TIMING' && t('colorTiming.instruction', '왼쪽은 파란 공, 오른쪽은 빨간 공이 원 안에 들어올 때 누르세요. 색이 반대면 감점됩니다.')}
                                         {gameState.gameType === 'STAIRWAY' && t('stairway.instruction', '올바른 방향을 터치해 계단을 올라가세요!')}
                                     </p>
 
@@ -890,6 +893,12 @@ const Game: React.FC = () => {
                                             onScore={incrementScore}
                                             isPlaying={isGameplayActive}
                                             remainingTime={gameState.remainingTime}
+                                        />
+                                    )}
+                                    {gameState.gameType === 'COLOR_TIMING' && (
+                                        <ColorTiming
+                                            onScore={incrementScore}
+                                            isPlaying={isGameplayActive}
                                         />
                                     )}
                                     {gameState.gameType === 'STAIRWAY' && (

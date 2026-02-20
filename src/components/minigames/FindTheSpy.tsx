@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { Haptics, NotificationType } from '@capacitor/haptics';
 import {
     Star, Heart, Circle, Square, Triangle, Hexagon,
     Diamond, Cloud, Moon, Sun, Zap, Anchor,
@@ -143,7 +142,6 @@ const FindTheSpy: React.FC<FindTheSpyProps> = ({ seed, onScore, isPlaying }) => 
         if (targetSymbolIds.includes(symbolId)) {
             // Correct
             playSound('correct');
-            Haptics.notification({ type: NotificationType.Success }).catch(() => {});
             const difficultyBonus = Math.max(0, targetSymbolIds.length - 1) * 60;
             onScore(160 + difficultyBonus);
             const nextFound = [...foundSpyIds, symbolId];
@@ -156,7 +154,6 @@ const FindTheSpy: React.FC<FindTheSpyProps> = ({ seed, onScore, isPlaying }) => 
         } else {
             // Wrong
             playSound('error');
-            Haptics.notification({ type: NotificationType.Error }).catch(() => {});
             onScore(-10);
             // Visual feedback could be added here (shake etc), 
             // but for fast pace we might just deduct score.

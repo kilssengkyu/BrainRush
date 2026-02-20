@@ -31,14 +31,24 @@ const SpotlightOverlay: React.FC<SpotlightOverlayProps> = ({
 
     // Update target position on mount and resize
     useEffect(() => {
+        let rafId: number | null = null;
+
         const updatePosition = () => {
             if (targetRef.current) {
                 const rect = targetRef.current.getBoundingClientRect();
-                setTargetRect(rect);
+                if (rect.width > 0 && rect.height > 0) {
+                    setTargetRect(rect);
+                }
             }
         };
 
+        const trackPosition = () => {
+            updatePosition();
+            rafId = window.requestAnimationFrame(trackPosition);
+        };
+
         updatePosition();
+        rafId = window.requestAnimationFrame(trackPosition);
 
         // Update on scroll/resize
         window.addEventListener('resize', updatePosition);
@@ -51,6 +61,9 @@ const SpotlightOverlay: React.FC<SpotlightOverlayProps> = ({
         }
 
         return () => {
+            if (rafId) {
+                window.cancelAnimationFrame(rafId);
+            }
             window.removeEventListener('resize', updatePosition);
             window.removeEventListener('scroll', updatePosition, true);
             observer.disconnect();

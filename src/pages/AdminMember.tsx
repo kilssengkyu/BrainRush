@@ -34,6 +34,7 @@ type MemberReport = {
 
 type SortBy = 'created_at' | 'last_seen' | 'mmr' | 'level' | 'nickname' | 'report_count';
 type SortOrder = 'asc' | 'desc';
+const PAGE_SIZE = 50;
 
 const AdminMember = () => {
   const navigate = useNavigate();
@@ -45,6 +46,8 @@ const AdminMember = () => {
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState<SortBy>('created_at');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
+  const [currentPage, setCurrentPage] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
 
   const [selectedMember, setSelectedMember] = useState<MemberProfile | null>(null);
   const [memberReports, setMemberReports] = useState<MemberReport[]>([]);
@@ -57,24 +60,26 @@ const AdminMember = () => {
   const profileRole = (profile as any)?.role;
   const isAdmin = appRole === 'admin' || profileRole === 'admin';
 
-  const loadMembers = async () => {
+  const loadMembers = async (page = currentPage) => {
     setIsLoadingMembers(true);
     try {
       const { data, error } = await supabase.rpc('get_admin_members', {
         p_search: search.trim() || null,
         p_sort_by: sortBy,
         p_sort_order: sortOrder,
-        p_limit: 200,
-        p_offset: 0
+        p_limit: PAGE_SIZE,
+        p_offset: page * PAGE_SIZE
       });
 
       if (error) throw error;
-      setMembers(((data || []) as any[]).map((row) => ({
+      const mapped = ((data || []) as any[]).map((row) => ({
         ...row,
         report_count: Number(row.report_count || 0),
         member_role: row.member_role === 'admin' ? 'admin' : 'user',
         banned_until: row.banned_until || null
-      })) as MemberProfile[]);
+      })) as MemberProfile[];
+      setMembers(mapped);
+      setHasMore(mapped.length === PAGE_SIZE);
     } catch (error) {
       console.error('Admin members load error:', error);
       showToast('회원 목록 조회 중 오류가 발생했습니다.', 'error');
@@ -117,7 +122,7 @@ const AdminMember = () => {
     if (!loading && user && isAdmin) {
       loadMembers();
     }
-  }, [loading, user, isAdmin, sortBy, sortOrder]);
+  }, [loading, user, isAdmin, sortBy, sortOrder, currentPage]);
 
   const filteredMembers = useMemo(() => members, [members]);
 
@@ -179,20 +184,24 @@ const AdminMember = () => {
                   onChange={(e) => setSearch(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
-                      playSound('click');
-                      loadMembers();
-                    }
-                  }}
+                    playSound('click');
+                    setCurrentPage(0);
+                    loadMembers(0);
+                  }
+                }}
                   placeholder="닉네임 / 이메일 / UID 검색"
                   className="w-full rounded-lg border border-white/10 bg-black/20 py-2 pl-9 pr-3 text-sm outline-none focus:border-cyan-400/60"
                 />
               </div>
               <div className="flex items-center gap-2">
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as SortBy)}
-                  className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white outline-none"
-                >
+              <select
+                value={sortBy}
+                onChange={(e) => {
+                  setSortBy(e.target.value as SortBy);
+                  setCurrentPage(0);
+                }}
+                className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white outline-none"
+              >
                   <option value="created_at">가입일</option>
                   <option value="last_seen">최근접속</option>
                   <option value="report_count">신고횟수</option>
@@ -200,20 +209,23 @@ const AdminMember = () => {
                   <option value="level">레벨</option>
                   <option value="nickname">닉네임</option>
                 </select>
-                <select
-                  value={sortOrder}
-                  onChange={(e) => setSortOrder(e.target.value as SortOrder)}
-                  className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white outline-none"
-                >
+              <select
+                value={sortOrder}
+                onChange={(e) => {
+                  setSortOrder(e.target.value as SortOrder);
+                  setCurrentPage(0);
+                }}
+                className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white outline-none"
+              >
                   <option value="desc">내림차순</option>
                   <option value="asc">오름차순</option>
                 </select>
               </div>
               <button
                 onClick={() => {
-                  playSound('click');
-                  loadMembers();
-                }}
+                playSound('click');
+                loadMembers();
+              }}
                 disabled={isLoadingMembers}
                 className="inline-flex items-center justify-center gap-2 rounded-lg border border-cyan-400/30 bg-cyan-500/20 px-4 py-2 text-sm font-semibold text-cyan-200 hover:bg-cyan-500/30 disabled:opacity-60"
               >
@@ -221,9 +233,33 @@ const AdminMember = () => {
                 새로고침
               </button>
             </div>
-            <p className="mt-3 text-xs text-white/60">
-              전체 {members.length}명 / 검색 결과 {filteredMembers.length}명
-            </p>
+          <p className="mt-3 text-xs text-white/60">
+            페이지 {currentPage + 1} / 현재 {filteredMembers.length}명 표시
+          </p>
+          <div className="mt-3 flex items-center justify-end gap-2">
+            <button
+              onClick={() => {
+                if (currentPage === 0) return;
+                playSound('click');
+                setCurrentPage((p) => Math.max(0, p - 1));
+              }}
+              disabled={isLoadingMembers || currentPage === 0}
+              className="rounded-lg border border-white/15 px-3 py-1.5 text-xs disabled:opacity-40"
+            >
+              이전
+            </button>
+            <button
+              onClick={() => {
+                if (!hasMore) return;
+                playSound('click');
+                setCurrentPage((p) => p + 1);
+              }}
+              disabled={isLoadingMembers || !hasMore}
+              className="rounded-lg border border-white/15 px-3 py-1.5 text-xs disabled:opacity-40"
+            >
+              다음
+            </button>
+          </div>
           </div>
 
           <div className="mt-4 space-y-3 pb-6">

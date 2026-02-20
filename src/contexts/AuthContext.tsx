@@ -406,10 +406,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 const result = await SignInWithApple.authorize({
                     clientId: 'com.kilssengkyu.brainrush',
                     redirectURI: '',
-                    scopes: 'email name',
+                    // iOS plugin runtime can expect an array for scopes.
+                    // The current TS definition is narrower (string), so cast is required.
+                    scopes: ['email', 'name'] as any,
                     state: '',
                     nonce: '',
-                });
+                } as any);
 
                 const identityToken = result.response?.identityToken;
                 if (!identityToken) {
@@ -472,10 +474,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             const result = await SignInWithApple.authorize({
                 clientId: 'com.kilssengkyu.brainrush',
                 redirectURI: '',
-                scopes: 'email name',
+                // iOS plugin runtime can expect an array for scopes.
+                // The current TS definition is narrower (string), so cast is required.
+                scopes: ['email', 'name'] as any,
                 state: '',
                 nonce: '',
-            });
+            } as any);
 
             const identityToken = result.response?.identityToken;
             if (!identityToken) {

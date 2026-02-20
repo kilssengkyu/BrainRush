@@ -49,8 +49,8 @@ const HIGHSCORE_GAME_TYPES = [
     { type: 'MOST_COLOR', labelKey: 'mostColor.title' },
     { type: 'SORTING', labelKey: 'sorting.title' },
     { type: 'SPY', labelKey: 'spy.title' },
+    { type: 'COLOR_TIMING', labelKey: 'colorTiming.title' },
     { type: 'STAIRWAY', labelKey: 'stairway.title' },
-    { type: 'TIMING_BAR', labelKey: 'timingBar.title' }
 ] as const;
 
 const Profile = () => {

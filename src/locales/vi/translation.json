@@ -189,6 +189,7 @@
         "language": "Ngôn ngữ",
         "sound": "Âm thanh",
         "masterVolume": "Âm lượng chính",
+        "vibration": "Rung",
         "deleteAccount": "Xóa tài khoản",
         "deleteAccountConfirm": "Bạn có chắc muốn xóa tài khoản không? Hành động này là vĩnh viễn và không thể hoàn tác.",
         "logoutConfirm": "Bạn có chắc muốn đăng xuất không?",
@@ -441,6 +442,10 @@
     "timingBar": {
         "title": "Thanh canh nhịp",
         "instruction": "Chạm khi thanh rơi chồng lên thanh mục tiêu."
+    },
+    "colorTiming": {
+        "title": "Canh màu",
+        "instruction": "Chạm khi bóng xanh vào vòng tròn bên trái và bóng đỏ vào vòng tròn bên phải. Chạm màu ngược sẽ bị trừ điểm."
     },
     "stairway": {
         "title": "Nấc thang thiên đường",

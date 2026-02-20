@@ -189,6 +189,7 @@
         "language": "Bahasa",
         "sound": "Suara",
         "masterVolume": "Volume utama",
+        "vibration": "Getaran",
         "deleteAccount": "Hapus akun",
         "deleteAccountConfirm": "Yakin ingin menghapus akun Anda? Ini permanen dan tidak bisa dibatalkan.",
         "logoutConfirm": "Yakin ingin keluar?",
@@ -441,6 +442,10 @@
     "timingBar": {
         "title": "Timing Bar",
         "instruction": "Tekan saat bar jatuh bertumpuk dengan bar target."
+    },
+    "colorTiming": {
+        "title": "Timing Warna",
+        "instruction": "Ketuk saat bola biru masuk ke lingkaran kiri dan bola merah masuk ke lingkaran kanan. Warna yang terbalik akan mengurangi poin."
     },
     "stairway": {
         "title": "Tangga ke Surga",

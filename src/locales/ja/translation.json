@@ -181,6 +181,7 @@
         "language": "言語",
         "sound": "効果音",
         "masterVolume": "マスターボリューム",
+        "vibration": "バイブ",
         "volume": "音量",
         "back": "戻る",
         "deleteAccount": "アカウント削除",
@@ -439,6 +440,10 @@
     "timingBar": {
         "title": "タイミングバー",
         "instruction": "落ちてくるバーがターゲットに重なったらタップ！"
+    },
+    "colorTiming": {
+        "title": "カラータイミング",
+        "instruction": "青いボールが左の円に、赤いボールが右の円に入ったタイミングでタップしてください。逆の色は減点です。"
     },
     "stairway": {
         "title": "天国の階段",

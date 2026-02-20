@@ -189,6 +189,7 @@
         "language": "Language",
         "sound": "Sound",
         "masterVolume": "Master Volume",
+        "vibration": "Vibration",
         "deleteAccount": "Delete Account",
         "deleteAccountConfirm": "Are you sure you want to delete your account? This is permanent and cannot be undone.",
         "logoutConfirm": "Are you sure you want to logout?",
@@ -443,6 +444,10 @@
     "timingBar": {
         "title": "Timing Bar",
         "instruction": "Tap when the falling bar overlaps the target bar."
+    },
+    "colorTiming": {
+        "title": "Color Timing",
+        "instruction": "Tap when blue balls enter the left circle and red balls enter the right circle. Opposite colors deduct points."
     },
     "stairway": {
         "title": "Stairway to Heaven",

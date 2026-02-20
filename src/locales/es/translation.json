@@ -189,6 +189,7 @@
         "language": "Idioma",
         "sound": "Sonido",
         "masterVolume": "Volumen principal",
+        "vibration": "Vibración",
         "deleteAccount": "Eliminar cuenta",
         "deleteAccountConfirm": "¿Seguro que quieres eliminar tu cuenta? Es permanente y no se puede deshacer.",
         "logoutConfirm": "¿Seguro que quieres cerrar sesión?",
@@ -441,6 +442,10 @@
     "timingBar": {
         "title": "Barra de timing",
         "instruction": "Toca cuando la barra que cae se superponga con la barra objetivo."
+    },
+    "colorTiming": {
+        "title": "Tiempo de color",
+        "instruction": "Toca cuando las bolas azules entren en el círculo izquierdo y las rojas en el derecho. Los colores opuestos restan puntos."
     },
     "stairway": {
         "title": "Escalera al cielo",

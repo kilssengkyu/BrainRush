@@ -189,6 +189,7 @@
         "language": "Sprache",
         "sound": "Sound",
         "masterVolume": "Master-Lautstärke",
+        "vibration": "Vibration",
         "deleteAccount": "Konto löschen",
         "deleteAccountConfirm": "Möchtest du dein Konto wirklich löschen? Das ist dauerhaft und kann nicht rückgängig gemacht werden.",
         "logoutConfirm": "Möchtest du dich wirklich abmelden?",
@@ -441,6 +442,10 @@
     "timingBar": {
         "title": "Timing-Leiste",
         "instruction": "Tippe, wenn die fallende Leiste die Ziellinie überlappt."
+    },
+    "colorTiming": {
+        "title": "Farb-Timing",
+        "instruction": "Tippe, wenn blaue Kugeln in den linken Kreis und rote Kugeln in den rechten Kreis gelangen. Falsche Farben geben Punktabzug."
     },
     "stairway": {
         "title": "Treppe zum Himmel",

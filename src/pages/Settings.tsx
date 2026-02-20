@@ -13,7 +13,7 @@ import { supabase } from '../lib/supabaseClient';
 const Settings = () => {
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
-    const { isMuted, toggleMute, playSound } = useSound();
+    const { isMuted, toggleMute, isVibrationEnabled, toggleVibration, playSound } = useSound();
     const { user, profile, refreshProfile } = useAuth();
     const { showToast } = useUI();
     const { resetHomeTutorial } = useTutorial();
@@ -167,6 +167,19 @@ const Settings = () => {
                                 >
                                     <span
                                         className={`block w-6 h-6 bg-white rounded-full shadow-lg transition-transform duration-200 ease-in-out ${isMuted ? 'translate-x-0' : 'translate-x-6'}`}
+                                    />
+                                </button>
+                            </div>
+
+                            {/* Vibration Toggle */}
+                            <div className="flex items-center justify-between">
+                                <span className="text-lg">{t('settings.vibration', '진동')}</span>
+                                <button
+                                    onClick={() => { toggleVibration(); playSound('click'); }}
+                                    className={`relative w-14 h-8 rounded-full transition-colors duration-200 ease-in-out focus:outline-none flex items-center p-1 ${isVibrationEnabled ? 'bg-purple-600' : 'bg-gray-600'}`}
+                                >
+                                    <span
+                                        className={`block w-6 h-6 bg-white rounded-full shadow-lg transition-transform duration-200 ease-in-out ${isVibrationEnabled ? 'translate-x-6' : 'translate-x-0'}`}
                                     />
                                 </button>
                             </div>
