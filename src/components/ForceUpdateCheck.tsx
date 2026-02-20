@@ -21,6 +21,7 @@ const ForceUpdateCheck = () => {
     const { t } = useTranslation();
     const [needsUpdate, setNeedsUpdate] = useState(false);
     const [storeUrl, setStoreUrl] = useState('');
+    const [debugInfo, setDebugInfo] = useState<any>(null);
 
     useEffect(() => {
         if (!Capacitor.isNativePlatform()) return;
@@ -44,12 +45,24 @@ const ForceUpdateCheck = () => {
                 const minVersion = data.find(d => d.key === versionKey)?.value;
                 const url = data.find(d => d.key === urlKey)?.value;
 
-                if (minVersion && compareVersions(currentVersion, minVersion) < 0) {
+                const cmp = minVersion ? compareVersions(currentVersion, minVersion) : 0;
+
+                setDebugInfo({
+                    current: currentVersion,
+                    currentType: typeof currentVersion,
+                    min: minVersion,
+                    platform,
+                    compareResult: cmp
+                });
+
+                if (minVersion && cmp < 0) {
                     setNeedsUpdate(true);
                     setStoreUrl(url || '');
                 }
             } catch (err) {
                 console.error('[ForceUpdate] Check failed:', err);
+                setDebugInfo({ error: String(err) });
+                setNeedsUpdate(true);
             }
         };
 
@@ -62,7 +75,7 @@ const ForceUpdateCheck = () => {
         }
     };
 
-    if (!needsUpdate) return null;
+    if (!needsUpdate || !debugInfo) return null;
 
     return (
         <div className="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-6">

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -9,7 +9,8 @@ import { useUI } from '../contexts/UIContext';
 import { PRODUCT_IDS, restorePurchases } from '../lib/purchaseService';
 import { useTutorial } from '../contexts/TutorialContext';
 import { supabase } from '../lib/supabaseClient';
-
+import { App as CapApp } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
 const Settings = () => {
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
@@ -23,6 +24,15 @@ const Settings = () => {
     const appRole = (user?.app_metadata as any)?.role;
     const profileRole = (profile as any)?.role;
     const isAdmin = appRole === 'admin' || profileRole === 'admin';
+    const [appVersion, setAppVersion] = useState<string>('');
+
+    useEffect(() => {
+        if (Capacitor.isNativePlatform()) {
+            CapApp.getInfo().then(info => setAppVersion(info.version)).catch(() => { });
+        } else {
+            setAppVersion('web');
+        }
+    }, []);
 
     const languages = [
         { code: 'ko', label: '한국어', flag: '🇰🇷' },
@@ -267,6 +277,13 @@ const Settings = () => {
                                 </button>
                             </div>
                         </section>
+                    )}
+
+                    {/* App Version */}
+                    {appVersion && (
+                        <div className="text-center text-gray-500 text-sm mt-8 pb-4">
+                            version : {appVersion}
+                        </div>
                     )}
 
                 </div>
