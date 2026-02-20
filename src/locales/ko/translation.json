@@ -27,7 +27,15 @@
     "guestMode": "게스트 모드",
     "guestWarning": "게스트는 저장된 기록을 잃어버릴 수 있습니다.",
     "terms": "계속 진행하면 서비스 약관에 동의하는 것으로 간주합니다.",
-        "loggedOutByOtherDevice": "다른 기기에서 로그인되어 종료되었습니다."
+    "loggedOutByOtherDevice": "다른 기기에서 로그인되어 종료되었습니다."
+  },
+  "streak": {
+    "bonusActive": "보너스 적용중",
+    "bonusIncluded": "연승 보너스 +{{bonus}}",
+    "nextBonus": "연승 시 +{{bonus}}",
+    "loseBonusTitle": "연패 선물",
+    "loseBonusMessage": "3연패를 하셨네요. 응원의 의미로 연필을 한 개 드립니다.",
+    "loseBonusSubtext": "계속 주는 건 아니니까 다음 판은 이기세요! 💪"
   },
   "social": {
     "friends": "친구",
@@ -445,8 +453,8 @@
     "instruction": "떨어지는 바가 타겟 바와 겹칠 때 아무 곳이나 탭하세요."
   },
   "colorTiming": {
-      "title": "컬러 타이밍",
-      "instruction": "왼쪽 원에는 파란 공, 오른쪽 원에는 빨간 공이 들어올 때 터치하세요. 반대 색이면 감점됩니다."
+    "title": "컬러 타이밍",
+    "instruction": "왼쪽 원에는 파란 공, 오른쪽 원에는 빨간 공이 들어올 때 터치하세요. 반대 색이면 감점됩니다."
   },
   "stairway": {
     "title": "천국의 계단",

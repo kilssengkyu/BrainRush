@@ -422,41 +422,58 @@ const Game: React.FC = () => {
     // MMR Animation Logic
     const [displayMMR, setDisplayMMR] = useState<number | null>(null);
     const [mmrDelta, setMmrDelta] = useState<number | null>(null);
+    const [streakBonus, setStreakBonus] = useState<number>(0);
+    const [showLosePencilModal, setShowLosePencilModal] = useState(false);
 
     useEffect(() => {
         if (isFinished && gameState.mode === 'rank' && myProfile?.id) {
             // Delay start to sync with "Total Score" appearance
-            // Rounds=3 -> 0.3*3 + 0.3 = 1.2s (Total) -> Rank starts at 1.5s
             const startDelay = setTimeout(() => {
-                supabase.from('profiles').select('mmr').eq('id', myProfile.id).single()
-                    .then(({ data }) => {
-                        if (data && myProfile.mmr) {
-                            const start = myProfile.mmr;
-                            const end = data.mmr;
-                            setMmrDelta(end - start);
-                            setDisplayMMR(start);
+                // Fetch both the new MMR and the streak bonus from the session
+                Promise.all([
+                    supabase.from('profiles').select('mmr').eq('id', myProfile.id).single(),
+                    supabase.from('game_sessions').select('player1_id, player1_streak_bonus, player2_streak_bonus, player1_lose_pencil, player2_lose_pencil').eq('id', roomId).single()
+                ]).then(([profileRes, sessionRes]) => {
+                    if (profileRes.data && myProfile.mmr) {
+                        const start = myProfile.mmr;
+                        const end = profileRes.data.mmr;
+                        setMmrDelta(end - start);
+                        setDisplayMMR(start);
 
-                            // Faster counting: 1.5s duration
-                            const duration = 1500;
-                            const steps = 60;
-                            const intervalTime = duration / steps;
-                            const stepValue = (end - start) / steps;
-                            let output = start;
-                            let count = 0;
+                        // Determine my streak bonus
+                        if (sessionRes.data) {
+                            const isP1 = sessionRes.data.player1_id === myId;
+                            const bonus = isP1 ? (sessionRes.data.player1_streak_bonus ?? 0) : (sessionRes.data.player2_streak_bonus ?? 0);
+                            setStreakBonus(bonus);
 
-                            const timer = setInterval(() => {
-                                count++;
-                                output += stepValue;
-                                if (count >= steps) {
-                                    setDisplayMMR(end);
-                                    clearInterval(timer);
-                                } else {
-                                    setDisplayMMR(Math.round(output));
-                                }
-                            }, intervalTime);
+                            // Check lose pencil reward
+                            const gotPencil = isP1 ? sessionRes.data.player1_lose_pencil : sessionRes.data.player2_lose_pencil;
+                            if (gotPencil) {
+                                setTimeout(() => setShowLosePencilModal(true), 2500);
+                            }
                         }
-                    });
-            }, 1000); // Reduced initial wait
+
+                        // Faster counting: 1.5s duration
+                        const duration = 1500;
+                        const steps = 60;
+                        const intervalTime = duration / steps;
+                        const stepValue = (end - start) / steps;
+                        let output = start;
+                        let count = 0;
+
+                        const timer = setInterval(() => {
+                            count++;
+                            output += stepValue;
+                            if (count >= steps) {
+                                setDisplayMMR(end);
+                                clearInterval(timer);
+                            } else {
+                                setDisplayMMR(Math.round(output));
+                            }
+                        }, intervalTime);
+                    }
+                });
+            }, 1000);
 
             return () => clearTimeout(startDelay);
         }
@@ -1053,14 +1070,26 @@ const Game: React.FC = () => {
                                                 <div className="flex items-center justify-center gap-4 text-4xl font-black">
                                                     <div className="text-white">{displayMMR}</div>
                                                     {mmrDelta !== null && mmrDelta !== 0 && (
-                                                        <motion.div
-                                                            initial={{ opacity: 0, y: 10 }}
-                                                            animate={{ opacity: 1, y: 0 }}
-                                                            transition={{ delay: 0.5 }} // local delay
-                                                            className={`text-2xl ${mmrDelta > 0 ? 'text-green-400' : 'text-red-400'}`}
-                                                        >
-                                                            {mmrDelta > 0 ? `+${mmrDelta}` : mmrDelta}
-                                                        </motion.div>
+                                                        <div className="flex flex-col items-start">
+                                                            <motion.div
+                                                                initial={{ opacity: 0, y: 10 }}
+                                                                animate={{ opacity: 1, y: 0 }}
+                                                                transition={{ delay: 0.5 }}
+                                                                className={`text-2xl ${mmrDelta > 0 ? 'text-green-400' : 'text-red-400'}`}
+                                                            >
+                                                                {mmrDelta > 0 ? `+${mmrDelta}` : mmrDelta}
+                                                            </motion.div>
+                                                            {streakBonus > 0 && (
+                                                                <motion.div
+                                                                    initial={{ opacity: 0, y: 5 }}
+                                                                    animate={{ opacity: 1, y: 0 }}
+                                                                    transition={{ delay: 1.0 }}
+                                                                    className="text-xs text-yellow-400 font-bold flex items-center gap-1"
+                                                                >
+                                                                    🔥 {t('streak.bonusIncluded', '연승 보너스 +{{bonus}}', { bonus: streakBonus })}
+                                                                </motion.div>
+                                                            )}
+                                                        </div>
                                                     )}
                                                 </div>
                                             </motion.div>
@@ -1119,6 +1148,49 @@ const Game: React.FC = () => {
                     onClose={() => setIsReportModalOpen(false)}
                     onSubmit={handleSubmitReport}
                 />
+
+                {/* Lose Streak Pencil Reward Modal */}
+                <AnimatePresence>
+                    {showLosePencilModal && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-sm px-6"
+                            onClick={() => setShowLosePencilModal(false)}
+                        >
+                            <motion.div
+                                initial={{ scale: 0.7, opacity: 0, y: 30 }}
+                                animate={{ scale: 1, opacity: 1, y: 0 }}
+                                exit={{ scale: 0.8, opacity: 0 }}
+                                transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+                                className="bg-gradient-to-b from-gray-800 to-gray-900 rounded-3xl p-8 max-w-sm w-full border border-gray-600/50 shadow-2xl text-center"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <div className="text-6xl mb-4">✏️</div>
+                                <h3 className="text-xl font-black text-white mb-3">
+                                    {t('streak.loseBonusTitle', '3연패를 하셨네요...')}
+                                </h3>
+                                <p className="text-gray-300 text-sm leading-relaxed mb-2">
+                                    {t('streak.loseBonusMessage', '위로의 마음을 담아 연필을 하나 드립니다.')}
+                                </p>
+                                <p className="text-gray-500 text-xs mb-6">
+                                    {t('streak.loseBonusSubtext', '(계속 주는거 아니에요 그만 지세요 😅)')}
+                                </p>
+                                <div className="flex items-center justify-center gap-2 mb-6 py-3 px-4 bg-yellow-500/10 rounded-xl border border-yellow-500/20">
+                                    <span className="text-2xl">✏️</span>
+                                    <span className="text-yellow-400 font-bold text-lg">+1</span>
+                                </div>
+                                <button
+                                    onClick={() => setShowLosePencilModal(false)}
+                                    className="w-full py-3 bg-white text-black font-bold rounded-xl hover:bg-gray-200 transition active:scale-95"
+                                >
+                                    {t('common.ok', '확인')}
+                                </button>
+                            </motion.div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 {(showEmojiOverlay || (isFinished && gameState.mode !== 'practice')) && (
                     <div className="absolute inset-0 z-[70] pointer-events-none">

@@ -1293,6 +1293,13 @@ DECLARE
     v_p2_total int := 0;
     v_round jsonb;
 
+    -- Streak variables
+    v_winner_streak int;
+    v_winner_streak_at timestamptz;
+    v_loser_lose_streak int;
+    v_loser_lose_bonus_date date;
+    v_streak_bonus int := 0;
+
     v_round_winner text;
     v_round_type text;
     v_inc record;
@@ -1383,18 +1390,84 @@ BEGIN
                  v_p1_exp := 1.0 / (1.0 + power(10.0, (v_p2_mmr - v_p1_mmr)::numeric / 400.0));
                  v_p2_exp := 1.0 / (1.0 + power(10.0, (v_p1_mmr - v_p2_mmr)::numeric / 400.0));
 
+                 -- === STREAK BONUS for winner ===
+                 SELECT rank_win_streak, rank_streak_updated_at
+                 INTO v_winner_streak, v_winner_streak_at
+                 FROM profiles WHERE id = v_winner::uuid;
+
+                 IF v_winner_streak_at IS NOT NULL AND (now() - v_winner_streak_at) <= interval '10 minutes' THEN
+                     v_winner_streak := COALESCE(v_winner_streak, 0) + 1;
+                 ELSE
+                     v_winner_streak := 1;
+                 END IF;
+
+                 IF v_winner_streak >= 3 AND (v_winner_streak % 3) = 0 THEN
+                     v_streak_bonus := LEAST((v_winner_streak / 3) * 5, 15);
+                 END IF;
+
+                 -- 9연승 달성 후 리셋
+                 IF v_winner_streak >= 9 THEN
+                     v_winner_streak := 0;
+                 END IF;
+
                  IF v_winner = v_session.player1_id::text THEN
-                    v_new_p1_mmr := round(v_p1_mmr + v_k_factor * (1 - v_p1_exp));
+                    v_new_p1_mmr := round(v_p1_mmr + v_k_factor * (1 - v_p1_exp)) + v_streak_bonus;
                     v_new_p2_mmr := round(v_p2_mmr + v_k_factor * (0 - v_p2_exp));
 
-                    UPDATE profiles SET mmr = v_new_p1_mmr, wins = wins + 1 WHERE id = v_session.player1_id::uuid;
-                    UPDATE profiles SET mmr = v_new_p2_mmr, losses = losses + 1 WHERE id = v_session.player2_id::uuid;
+                    UPDATE profiles SET mmr = v_new_p1_mmr, wins = wins + 1,
+                        rank_win_streak = v_winner_streak, rank_streak_updated_at = now(), rank_lose_streak = 0
+                    WHERE id = v_session.player1_id::uuid;
+                    UPDATE profiles SET mmr = v_new_p2_mmr, losses = losses + 1,
+                        rank_win_streak = 0, rank_streak_updated_at = NULL,
+                        rank_lose_streak = COALESCE(rank_lose_streak, 0) + 1
+                    WHERE id = v_session.player2_id::uuid;
                  ELSE
                     v_new_p1_mmr := round(v_p1_mmr + v_k_factor * (0 - v_p1_exp));
-                    v_new_p2_mmr := round(v_p2_mmr + v_k_factor * (1 - v_p2_exp));
+                    v_new_p2_mmr := round(v_p2_mmr + v_k_factor * (1 - v_p2_exp)) + v_streak_bonus;
 
-                    UPDATE profiles SET mmr = v_new_p1_mmr, losses = losses + 1 WHERE id = v_session.player1_id::uuid;
-                    UPDATE profiles SET mmr = v_new_p2_mmr, wins = wins + 1 WHERE id = v_session.player2_id::uuid;
+                    UPDATE profiles SET mmr = v_new_p1_mmr, losses = losses + 1,
+                        rank_win_streak = 0, rank_streak_updated_at = NULL,
+                        rank_lose_streak = COALESCE(rank_lose_streak, 0) + 1
+                    WHERE id = v_session.player1_id::uuid;
+                    UPDATE profiles SET mmr = v_new_p2_mmr, wins = wins + 1,
+                        rank_win_streak = v_winner_streak, rank_streak_updated_at = now(), rank_lose_streak = 0
+                    WHERE id = v_session.player2_id::uuid;
+                 END IF;
+
+                 -- Save MMR changes + streak bonus to session
+                 IF v_winner = v_session.player1_id::text THEN
+                     UPDATE game_sessions SET
+                         player1_mmr_change = v_new_p1_mmr - v_p1_mmr,
+                         player2_mmr_change = v_new_p2_mmr - v_p2_mmr,
+                         player1_streak_bonus = v_streak_bonus,
+                         player2_streak_bonus = 0
+                     WHERE id = p_room_id;
+                 ELSE
+                     UPDATE game_sessions SET
+                         player1_mmr_change = v_new_p1_mmr - v_p1_mmr,
+                         player2_mmr_change = v_new_p2_mmr - v_p2_mmr,
+                         player1_streak_bonus = 0,
+                         player2_streak_bonus = v_streak_bonus
+                     WHERE id = p_room_id;
+                 END IF;
+
+                 -- === LOSE STREAK BONUS (3연패 시 연필 1개, 하루 1회) ===
+                 SELECT rank_lose_streak, rank_lose_bonus_date
+                 INTO v_loser_lose_streak, v_loser_lose_bonus_date
+                 FROM profiles WHERE id = v_loser::uuid;
+
+                 IF v_loser_lose_streak >= 3 AND (v_loser_lose_bonus_date IS NULL OR v_loser_lose_bonus_date < CURRENT_DATE) THEN
+                     UPDATE profiles
+                     SET pencils = pencils + 1,
+                         rank_lose_bonus_date = CURRENT_DATE,
+                         rank_lose_streak = 0
+                     WHERE id = v_loser::uuid;
+
+                     IF v_loser = v_session.player1_id THEN
+                         UPDATE game_sessions SET player1_lose_pencil = true WHERE id = p_room_id;
+                     ELSE
+                         UPDATE game_sessions SET player2_lose_pencil = true WHERE id = p_room_id;
+                     END IF;
                  END IF;
              END IF;
         ELSIF v_session.mode = 'normal' THEN
@@ -5376,6 +5449,10 @@ CREATE TABLE public.game_sessions (
     phase_start_at timestamp with time zone,
     player1_ready boolean DEFAULT false,
     player2_ready boolean DEFAULT false,
+    player1_streak_bonus integer DEFAULT 0,
+    player2_streak_bonus integer DEFAULT 0,
+    player1_lose_pencil boolean DEFAULT false,
+    player2_lose_pencil boolean DEFAULT false,
     CONSTRAINT game_sessions_game_type_check CHECK ((game_type = ANY (ARRAY['RPS'::text, 'NUMBER'::text, 'MATH'::text, 'TEN'::text, 'COLOR'::text, 'MEMORY'::text, 'SEQUENCE'::text, 'SEQUENCE_NORMAL'::text, 'LARGEST'::text, 'PAIR'::text, 'UPDOWN'::text, 'SLIDER'::text, 'ARROW'::text, 'NUMBER_DESC'::text, 'BLANK'::text, 'OPERATOR'::text, 'LADDER'::text, 'TAP_COLOR'::text, 'AIM'::text, 'MOST_COLOR'::text, 'SORTING'::text, 'SPY'::text, 'PATH'::text, 'BLIND_PATH'::text, 'BALLS'::text, 'CATCH_COLOR'::text, 'TIMING_BAR'::text, 'COLOR_TIMING'::text, 'STAIRWAY'::text])))
 );
 
@@ -5474,7 +5551,11 @@ CREATE TABLE public.profiles (
     practice_ad_reward_count integer DEFAULT 0,
     practice_ad_reward_day date DEFAULT CURRENT_DATE,
     needs_nickname_setup boolean DEFAULT false NOT NULL,
-    nickname_set_at timestamp with time zone
+    nickname_set_at timestamp with time zone,
+    rank_win_streak integer DEFAULT 0,
+    rank_streak_updated_at timestamp with time zone,
+    rank_lose_streak integer DEFAULT 0,
+    rank_lose_bonus_date date
 );
 
 

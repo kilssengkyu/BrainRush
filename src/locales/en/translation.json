@@ -1,472 +1,480 @@
 {
-    "app": {
-        "title": "BrainRush",
-        "subtitle": "Speed & Intelligence"
-    },
-    "common": {
-        "cancel": "Cancel",
-        "confirm": "Confirm",
-        "close": "Close",
-        "retry": "Retry",
-        "loading": "Loading...",
-        "noResults": "No results",
-        "add": "Add",
-        "error": "An error occurred.",
-        "google": "Google",
-        "or": "Or",
-        "timeAgo": {
-            "justNow": "Just now",
-            "minute": "{{count}}m ago",
-            "hour": "{{count}}h ago",
-            "day": "{{count}}d ago",
-            "longAgo": "Long ago"
-        }
-    },
-    "auth": {
-        "loginRequired": "Login required.",
-        "guestMode": "Guest Mode",
-        "guestWarning": "Guests may lose saved progress.",
-        "terms": "By continuing, you agree to our Terms of Service.",
-        "loggedOutByOtherDevice": "You were logged out because this account was used on another device."
-    },
-    "social": {
-        "friends": "Friends",
-        "friendList": "Friend List",
-        "friendRequests": "Friend Requests",
-        "addFriend": "Add Friend",
-        "searchNickname": "Search Nickname",
-        "searchError": "Error occurred while searching.",
-        "userNotFound": "User not found.",
-        "cannotAddSelf": "You cannot add yourself.",
-        "alreadyFriends": "You are already friends.",
-        "requestPending": "Request already sent or pending.",
-        "blocked": "User is blocked or has blocked you.",
-        "requestSent": "Friend request sent!",
-        "requestFail": "Failed to send friend request.",
-        "loadingFriends": "Loading friends list...",
-        "noFriends": "No friends found.",
-        "deleteFriend": "Delete Friend",
-        "deleteFriendConfirm": "Are you sure you want to remove '{{nickname}}'?",
-        "deleteFriendFail": "Failed to remove friend",
-        "online": "Online",
-        "ingame": "In Game",
-        "offline": "Offline",
-        "challengeTitle": "Challenge Friend",
-        "challengeConfirm": "Do you want to challenge this friend?",
-        "challengeFail": "Failed to challenge: ",
-        "challengeWaiting": "Invite sent. Waiting for acceptance...",
-        "challengeWaitingTitle": "Waiting for Friendly Match",
-        "challengeWaitingDesc": "Waiting for your friend to accept.",
-        "challengeWaitingTime": "Time left: {{seconds}}s",
-        "challengeAccepted": "Friendly match accepted!",
-        "challengeRejected": "Friendly match rejected.",
-        "challengeTimeout": "Invite timed out.",
-        "challengeCancelled": "Invite cancelled.",
-        "challengeAlreadyPending": "You already have a pending invite.",
-        "challengeInGame": "You can't invite a friend who is in a game.",
-        "challengeOffline": "You can only invite friends who are online.",
-        "inviteSenderFallback": "Friend",
-        "inviteTitle": "Friendly Match Request",
-        "inviteBody": "'{{nickname}}' has challenged you to a friendly match. Accept?",
-        "inviteInvalidSession": "Game session is invalid or already started.",
-        "inviteJoinFail": "Failed to enter the game.",
-        "typeMessage": "Type a message...",
-        "sendFail": "Failed to send message",
-        "chat": "Chat",
-        "challenge": "Challenge",
-        "accept": "Accept",
-        "reject": "Reject",
-        "newMessage": "New message from {{nickname}}"
-    },
-    "menu": {
-        "normal": {
-            "title": "Normal Mode",
-            "subtitle": "Basic Brain Training"
-        },
-        "rank": {
-            "title": "Rank Mode",
-            "subtitle": "Compete globally"
-        },
-        "all": "All",
-        "friendly": {
-            "title": "Friendly Mode",
-            "subtitle": "1vs1 with Friends"
-        },
-        "practice": {
-            "title": "Practice Mode",
-            "subtitle": "Practice minigames freely"
-        },
-        "shop": "Shop",
-        "settings": "Settings",
-        "login": "Login",
-        "logout": "Logout",
-        "profile": "Profile"
-    },
-    "shop": {
-        "title": "Shop",
-        "subtitle": "Play longer",
-        "removeAds": {
-            "title": "Ad Removal Pack",
-            "desc": "No ads. Get pencils instantly when you tap ad rewards."
-        },
-        "pencils5": {
-            "title": "Pencils x5",
-            "desc": "Small boost for a short session."
-        },
-        "pencils20": {
-            "title": "Pencils x20",
-            "desc": "Great for daily play."
-        },
-        "pencils100": {
-            "title": "Pencils x100",
-            "desc": "Best value for long-term play."
-        },
-        "practiceNotes5": {
-            "title": "10 Practice Notes",
-            "desc": "Good for a quick practice session."
-        },
-        "practiceNotes20": {
-            "title": "Practice Notes x20",
-            "desc": "Solid boost for longer practice."
-        },
-        "practiceNotes100": {
-            "title": "Practice Notes x100",
-            "desc": "Best value for heavy practice."
-        },
-        "buy": "Buy",
-        "premium": "Premium",
-        "popular": "Popular",
-        "bestValue": "Best Value",
-        "notice": "Payments are processed via App Store.",
-        "comingSoon": "Preparing purchase flow...",
-        "priceTbd": "TBD",
-        "loading": "Loading...",
-        "purchased": "Purchased",
-        "purchaseSuccess": "Purchase completed.",
-        "purchaseFail": "Purchase failed.",
-        "billingUnavailable": "Billing not supported on this device."
-    },
-    "leaderboard": {
-        "button": "Ranking",
-        "title": "Ranking",
-        "global": "Global",
-        "country": "Country"
-    },
-    "ad": {
-        "remaining": "Remaining today: {{count}}/{{limit}}",
-        "limitReached": "Daily ad limit reached.",
-        "limitReachedDesc": "Come back tomorrow to watch more ads.",
-        "adFreeDesc": "Ad-free reward. Get 1 Pencil instantly.",
-        "adFreeDescPracticeNotes": "Ad-free reward. Get 2 Practice Notes instantly.",
-        "claimBtn": "Get Pencils",
-        "claimBtnPracticeNotes": "Get Practice Notes",
-        "granting": "Granting reward...",
-        "rewardFailed": "Reward failed.",
-        "rewardFailedDesc": "Please try again later.",
-        "title": "Get Pencils",
-        "titlePracticeNotes": "Get Practice Notes",
-        "loading": "Loading Ad...",
-        "watchDesc": "Watch a short ad to get 1 Pencil!",
-        "watchDescPracticeNotes": "Watch a short ad to get 2 Practice Notes!",
-        "watchBtn": "Watch Ad",
-        "watching": "Watching ad...",
-        "playing": "Ad is playing...",
-        "pencils": "Pencils",
-        "practiceNotes": "Practice Notes",
-        "success": "Reward earned successfully."
-    },
-    "notifications": {
-        "fullTitle": "Pencils full",
-        "fullBody": "Pencils are full. Time to use your brain!",
-        "reminderTitle": "Time to use your brain",
-        "reminderBody": "It has been 24 hours. Come back and play!"
-    },
-    "user": {
-        "level": "Level",
-        "rank": "Rank"
-    },
-    "settings": {
-        "title": "Settings",
-        "language": "Language",
-        "sound": "Sound",
-        "masterVolume": "Master Volume",
-        "vibration": "Vibration",
-        "deleteAccount": "Delete Account",
-        "deleteAccountConfirm": "Are you sure you want to delete your account? This is permanent and cannot be undone.",
-        "logoutConfirm": "Are you sure you want to logout?",
-        "restorePurchases": "Restore Purchases",
-        "restorePurchasesDesc": "Restore non-consumable purchases such as ad removal.",
-        "restorePurchasesSuccess": "Purchases restored.",
-        "restorePurchasesFail": "Failed to restore purchases.",
-        "restorePurchasesUnavailable": "Billing not supported on this device.",
-        "restorePurchasesEmpty": "No purchases to restore.",
-        "privacyPolicy": "Privacy Policy",
-        "privacyPolicyDesc": "Review how we handle personal data for the service.",
-        "viewPrivacyPolicy": "View Privacy Policy",
-        "tutorial": "Tutorial",
-        "tutorialDesc": "If you want to review how to use the app, watch the tutorial again.",
-        "viewTutorial": "View Tutorial Again"
-    },
-    "report": {
-        "button": "Report",
-        "title": "Report Player",
-        "description": "Please enter the reason for this report.",
-        "descriptionWithTarget": "Please enter a reason to report {{target}}.",
-        "placeholder": "Write the report reason.",
-        "submit": "Submit Report",
-        "success": "Your report has been submitted.",
-        "fail": "Failed to submit report."
-    },
-    "profile": {
-        "nicknameSetupTitle": "Set Nickname",
-        "nicknameSetupDesc": "Please enter a nickname to use in the game.",
-        "nicknamePlaceholder": "Enter nickname",
-        "selectCountry": "Select Country",
-        "edit": "Edit",
-        "highscoresTitle": "High Scores",
-        "highscoresColumns": {
-            "game": "Game",
-            "highscore": "Highscore",
-            "rankWinRate": "Rank Win Rate"
-        },
-        "highscoreLeaderboardTitle": "Top 10",
-        "highscoreLeaderboardEmpty": "No records yet.",
-        "highscoreLeaderboardColumns": {
-            "rank": "#",
-            "player": "Player",
-            "score": "Score"
-        },
-        "guestTitle": "Guest Account",
-        "guestDesc": "Guest accounts can be lost if you sign out, delete the app, or change devices. Link a Google account to keep your progress. Also, guest accounts may be deleted after 7 days of inactivity.",
-        "guestDescIOS": "Guest accounts can be lost if you sign out, delete the app, or change devices. Link an Apple or Google account to keep your progress. Also, guest accounts may be deleted after 7 days of inactivity.",
-        "linkGoogle": "Link Google Account",
-        "linkApple": "Link Apple Account",
-        "statsTitle": "Skills",
-        "stats": {
-            "speed": "Speed",
-            "memory": "Memory",
-            "judgment": "Judgment",
-            "calculation": "Calculation",
-            "accuracy": "Accuracy",
-            "observation": "Observation"
-        },
-        "changeAvatar": "Change Photo",
-        "avatarUploading": "Uploading...",
-        "avatarInvalidType": "Unsupported image type.",
-        "avatarTooLarge": "File is too large.",
-        "avatarUploadSuccess": "Profile photo updated.",
-        "avatarUploadFail": "Failed to upload profile photo",
-        "record": "Record",
-        "noRecord": "No match history.",
-        "disconnects": "Disconnects",
-        "updateSuccess": "Profile updated successfully!",
-        "updateFail": "Failed to update profile",
-        "deleteSuccess": "Account deleted successfully.",
-        "deleteFail": "Failed to delete account."
-    },
-    "game": {
-        "waiting": "Waiting for game...",
-        "victory": "VICTORY",
-        "defeat": "DEFEAT",
-        "returnMenu": "Return to Menu",
-        "reconnecting": "Waiting for Opponent...",
-        "reconnectingDesc": "Opponent disconnected. Winning by default in:",
-        "myTime": "My Time",
-        "rank": "RANK",
-        "normal": "NORMAL",
-        "unknownPlayer": "Unknown Player",
-        "guest": "Guest",
-        "you": "You",
-        "opponent": "Opponent",
-        "opponentWaiting": "Opponent is waiting...",
-        "draw": "DRAW",
-        "roundResult": "Round {{round}} Result",
-        "matchResult": "MATCH RESULT",
-        "startingIn": "Starting in",
-        "roundFinished": "ROUND FINISHED",
-        "total": "TOTAL",
-        "great": "Great!",
-        "tier": "Tier",
-        "table": {
-            "round": "Round",
-            "myScore": "My Score",
-            "opScore": "Op Score",
-            "result": "Result",
-            "win": "WIN",
-            "lose": "LOSE",
-            "draw": "DRAW"
-        }
-    },
-    "matchmaking": {
-        "searching": "Searching...",
-        "description": "Looking for a worthy opponent",
-        "cancel": "Cancel",
-        "found": "Match Found!",
-        "entering": "Entering game arena...",
-        "timeout": "Match Not Found",
-        "timeoutDesc": "We couldn't find an opponent in time.",
-        "range": "Range",
-        "rankLevelRequired": "Reach level {{level}} to unlock Rank."
-    },
-    "rps": {
-        "ready": "READY...",
-        "beatIt": "BEAT IT!",
-        "lose": "LOSE IT!",
-        "reverse": "REVERSE",
-        "round": "Round",
-        "titleWin": "Winning RPS",
-        "titleLose": "Losing RPS",
-        "title": "ROCK PAPER SCISSORS",
-        "instruction": "Choose the winning or losing move as instructed."
-    },
-    "number": {
-        "title": "NUMBER ORDER",
-        "instruction": "Ascending Order",
-        "asc": "Press numbers Low to High!",
-        "desc": "Press numbers High to Low!",
-        "ready": "READY",
-        "panel": "PANEL",
-        "titleDesc": "REVERSE SORT",
-        "instructionDesc": "Tap from High to Low!"
-    },
-    "math": {
-        "title": "MATH CHALLENGE",
-        "instruction": "Calculate the expression and choose the correct answer."
-    },
-    "ten": {
-        "title": "MAKE 10",
-        "instruction": "Make the sum of the selected numbers equal to 10."
-    },
-    "color": {
-        "title": "COLOR MATCH",
-        "instruction": "Select buttons where Color matches Text",
-        "red": "RED",
-        "blue": "BLUE",
-        "green": "GREEN",
-        "yellow": "YELLOW"
-    },
-    "memory": {
-        "title": "MEMORY MATCH",
-        "instruction": "Memorize card positions and tap the Memorized button. Then select matching pairs.",
-        "btn_memorized": "Memorized!",
-        "memorize_hint": "Memorize the cards!",
-        "find_pairs": "Find the pairs!"
-    },
-    "sequence": {
-        "title": "REVERSE ORDER",
-        "instruction": "Tap in REVERSE order!",
-        "titleNormal": "SEQUENCE",
-        "instructionNormal": "Tap in ORDER!"
-    },
-    "largest": {
-        "title": "BIGGEST RESULT",
-        "instruction": "Tap the expression with the largest value"
-    },
-    "pair": {
-        "title": "FIND PAIR",
-        "instruction": "Find the single matching pair!"
-    },
-    "updown": {
-        "title": "UP DOWN",
-        "instruction": "If it is bigger than the previous number, slide up. If smaller, slide down.",
-        "prev": "PREVIOUS",
-        "start": "START"
-    },
-    "slider": {
-        "title": "Number Slider",
-        "instruction": "Slide to sum adjacent numbers to the target!",
-        "target": "Target Sum"
-    },
-    "arrow": {
-        "title": "Arrow Slider",
-        "blue": "Blue = Same",
-        "red": "Red = Opposite",
-        "instruction": "Swipe Blue direction, or Opposite for Red!"
-    },
-    "fillBlanks": {
-        "title": "FILL BLANKS",
-        "instruction": "Choose the number that fills the blank to make the correct answer."
-    },
-    "findOperator": {
-        "title": "FIND OPERATOR",
-        "instruction": "Choose the correct operator to make the answer correct."
-    },
-    "ladder": {
-        "title": "Ladder Game",
-        "instruction": "Follow the path!"
-    },
-    "path": {
-        "title": "Path Runner",
-        "instruction": "Use the buttons to move the green block to the blue block. Watch out, button positions may change.",
-        "shuffle": "Shuffle"
-    },
-    "blindPath": {
-        "title": "Blind Path",
-        "instruction": "Memorize the white path, then use the buttons to move the green block to the blue block. The path disappears when you start moving. Hitting a wall costs points, but the path appears again.",
-        "memorizeHint": "Memorize the path!",
-        "runHint": "Follow the path!",
-        "memorized": "Memorized!"
-    },
-    "balls": {
-        "title": "Ball Counter",
-        "instruction": "Count the moving balls and tap the correct number."
-    },
-    "catchColor": {
-        "title": "Color Catch",
-        "instruction": "Slide the bar to catch balls with the same color as the bar. Catching a different color costs points, and the bar color keeps changing.",
-        "switchSoon": "Color switch soon"
-    },
-    "tapTheColor": {
-        "title": "Tap the Color",
-        "instruction": "Memorize the color positions, then tap the Memorized button. Select the remembered buttons in the color order shown at the top.",
-        "memorize": "Memorize the colors!",
-        "remembered": "Ready!"
-    },
-    "aim": {
-        "title": "Aiming Game",
-        "instruction": "Tap the red targets quickly to remove them. Do not remove the blue targets."
-    },
-    "mostColor": {
-        "title": "Find Most Color",
-        "instruction": "Select the color that appears the most on the screen."
-    },
-    "sorting": {
-        "title": "Sorting Game",
-        "instruction": "Send the first card in any direction you want. After that, slide cards with the same symbol in the same direction as before, and different symbols in the opposite direction. You can prepare in advance by checking the next card at the top.",
-        "firstMoveHint": "First card: Any direction!"
-    },
-    "spy": {
-        "title": "Find The Spy",
-        "instruction": "Memorize the symbols, then tap the Memorized button. After that, find the changed symbol. The number of spies can increase over time.",
-        "memorize": "Memorize these!",
-        "find": "Who is new?",
-        "ready": "Ready!"
-    },
-    "timingBar": {
-        "title": "Timing Bar",
-        "instruction": "Tap when the falling bar overlaps the target bar."
-    },
-    "colorTiming": {
-        "title": "Color Timing",
-        "instruction": "Tap when blue balls enter the left circle and red balls enter the right circle. Opposite colors deduct points."
-    },
-    "stairway": {
-        "title": "Stairway to Heaven",
-        "instruction": "Press the direction where the stairs are to climb up.",
-        "scoreLabel": "Steps"
-    },
-    "tutorial": {
-        "normal": "🌍 Battle players worldwide in fun minigames!",
-        "rank": "🏆 Compete with players of similar skill in ranked matches!",
-        "practice": "💪 Practice any game you want!",
-        "ranking": "👑 Check out the smartest players in the world!",
-        "shop": "🛒 Buy pencils or remove ads!",
-        "settings": "⚙️ Change sound, language and other settings!",
-        "login": "👤 Link your account for safe play!",
-        "profile": "📊 Check your skills, stats and high scores!",
-        "next": "Next",
-        "done": "Done",
-        "skip": "Skip",
-        "loginNow": "Login Now"
+  "app": {
+    "title": "BrainRush",
+    "subtitle": "Speed & Intelligence"
+  },
+  "common": {
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "close": "Close",
+    "retry": "Retry",
+    "loading": "Loading...",
+    "noResults": "No results",
+    "add": "Add",
+    "error": "An error occurred.",
+    "google": "Google",
+    "or": "Or",
+    "timeAgo": {
+      "justNow": "Just now",
+      "minute": "{{count}}m ago",
+      "hour": "{{count}}h ago",
+      "day": "{{count}}d ago",
+      "longAgo": "Long ago"
     }
+  },
+  "auth": {
+    "loginRequired": "Login required.",
+    "guestMode": "Guest Mode",
+    "guestWarning": "Guests may lose saved progress.",
+    "terms": "By continuing, you agree to our Terms of Service.",
+    "loggedOutByOtherDevice": "You were logged out because this account was used on another device."
+  },
+  "streak": {
+    "bonusActive": "Bonus Active",
+    "bonusIncluded": "Streak Bonus +{{bonus}}",
+    "nextBonus": " wins → +{{bonus}}",
+    "loseBonusTitle": "Losing Streak Gift",
+    "loseBonusMessage": "You lost 3 in a row. Here's a pencil to cheer you on!",
+    "loseBonusSubtext": "This won't last forever, so win the next one! 💪"
+  },
+  "social": {
+    "friends": "Friends",
+    "friendList": "Friend List",
+    "friendRequests": "Friend Requests",
+    "addFriend": "Add Friend",
+    "searchNickname": "Search Nickname",
+    "searchError": "Error occurred while searching.",
+    "userNotFound": "User not found.",
+    "cannotAddSelf": "You cannot add yourself.",
+    "alreadyFriends": "You are already friends.",
+    "requestPending": "Request already sent or pending.",
+    "blocked": "User is blocked or has blocked you.",
+    "requestSent": "Friend request sent!",
+    "requestFail": "Failed to send friend request.",
+    "loadingFriends": "Loading friends list...",
+    "noFriends": "No friends found.",
+    "deleteFriend": "Delete Friend",
+    "deleteFriendConfirm": "Are you sure you want to remove '{{nickname}}'?",
+    "deleteFriendFail": "Failed to remove friend",
+    "online": "Online",
+    "ingame": "In Game",
+    "offline": "Offline",
+    "challengeTitle": "Challenge Friend",
+    "challengeConfirm": "Do you want to challenge this friend?",
+    "challengeFail": "Failed to challenge: ",
+    "challengeWaiting": "Invite sent. Waiting for acceptance...",
+    "challengeWaitingTitle": "Waiting for Friendly Match",
+    "challengeWaitingDesc": "Waiting for your friend to accept.",
+    "challengeWaitingTime": "Time left: {{seconds}}s",
+    "challengeAccepted": "Friendly match accepted!",
+    "challengeRejected": "Friendly match rejected.",
+    "challengeTimeout": "Invite timed out.",
+    "challengeCancelled": "Invite cancelled.",
+    "challengeAlreadyPending": "You already have a pending invite.",
+    "challengeInGame": "You can't invite a friend who is in a game.",
+    "challengeOffline": "You can only invite friends who are online.",
+    "inviteSenderFallback": "Friend",
+    "inviteTitle": "Friendly Match Request",
+    "inviteBody": "'{{nickname}}' has challenged you to a friendly match. Accept?",
+    "inviteInvalidSession": "Game session is invalid or already started.",
+    "inviteJoinFail": "Failed to enter the game.",
+    "typeMessage": "Type a message...",
+    "sendFail": "Failed to send message",
+    "chat": "Chat",
+    "challenge": "Challenge",
+    "accept": "Accept",
+    "reject": "Reject",
+    "newMessage": "New message from {{nickname}}"
+  },
+  "menu": {
+    "normal": {
+      "title": "Normal Mode",
+      "subtitle": "Basic Brain Training"
+    },
+    "rank": {
+      "title": "Rank Mode",
+      "subtitle": "Compete globally"
+    },
+    "all": "All",
+    "friendly": {
+      "title": "Friendly Mode",
+      "subtitle": "1vs1 with Friends"
+    },
+    "practice": {
+      "title": "Practice Mode",
+      "subtitle": "Practice minigames freely"
+    },
+    "shop": "Shop",
+    "settings": "Settings",
+    "login": "Login",
+    "logout": "Logout",
+    "profile": "Profile"
+  },
+  "shop": {
+    "title": "Shop",
+    "subtitle": "Play longer",
+    "removeAds": {
+      "title": "Ad Removal Pack",
+      "desc": "No ads. Get pencils instantly when you tap ad rewards."
+    },
+    "pencils5": {
+      "title": "Pencils x5",
+      "desc": "Small boost for a short session."
+    },
+    "pencils20": {
+      "title": "Pencils x20",
+      "desc": "Great for daily play."
+    },
+    "pencils100": {
+      "title": "Pencils x100",
+      "desc": "Best value for long-term play."
+    },
+    "practiceNotes5": {
+      "title": "10 Practice Notes",
+      "desc": "Good for a quick practice session."
+    },
+    "practiceNotes20": {
+      "title": "Practice Notes x20",
+      "desc": "Solid boost for longer practice."
+    },
+    "practiceNotes100": {
+      "title": "Practice Notes x100",
+      "desc": "Best value for heavy practice."
+    },
+    "buy": "Buy",
+    "premium": "Premium",
+    "popular": "Popular",
+    "bestValue": "Best Value",
+    "notice": "Payments are processed via App Store.",
+    "comingSoon": "Preparing purchase flow...",
+    "priceTbd": "TBD",
+    "loading": "Loading...",
+    "purchased": "Purchased",
+    "purchaseSuccess": "Purchase completed.",
+    "purchaseFail": "Purchase failed.",
+    "billingUnavailable": "Billing not supported on this device."
+  },
+  "leaderboard": {
+    "button": "Ranking",
+    "title": "Ranking",
+    "global": "Global",
+    "country": "Country"
+  },
+  "ad": {
+    "remaining": "Remaining today: {{count}}/{{limit}}",
+    "limitReached": "Daily ad limit reached.",
+    "limitReachedDesc": "Come back tomorrow to watch more ads.",
+    "adFreeDesc": "Ad-free reward. Get 1 Pencil instantly.",
+    "adFreeDescPracticeNotes": "Ad-free reward. Get 2 Practice Notes instantly.",
+    "claimBtn": "Get Pencils",
+    "claimBtnPracticeNotes": "Get Practice Notes",
+    "granting": "Granting reward...",
+    "rewardFailed": "Reward failed.",
+    "rewardFailedDesc": "Please try again later.",
+    "title": "Get Pencils",
+    "titlePracticeNotes": "Get Practice Notes",
+    "loading": "Loading Ad...",
+    "watchDesc": "Watch a short ad to get 1 Pencil!",
+    "watchDescPracticeNotes": "Watch a short ad to get 2 Practice Notes!",
+    "watchBtn": "Watch Ad",
+    "watching": "Watching ad...",
+    "playing": "Ad is playing...",
+    "pencils": "Pencils",
+    "practiceNotes": "Practice Notes",
+    "success": "Reward earned successfully."
+  },
+  "notifications": {
+    "fullTitle": "Pencils full",
+    "fullBody": "Pencils are full. Time to use your brain!",
+    "reminderTitle": "Time to use your brain",
+    "reminderBody": "It has been 24 hours. Come back and play!"
+  },
+  "user": {
+    "level": "Level",
+    "rank": "Rank"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "sound": "Sound",
+    "masterVolume": "Master Volume",
+    "vibration": "Vibration",
+    "deleteAccount": "Delete Account",
+    "deleteAccountConfirm": "Are you sure you want to delete your account? This is permanent and cannot be undone.",
+    "logoutConfirm": "Are you sure you want to logout?",
+    "restorePurchases": "Restore Purchases",
+    "restorePurchasesDesc": "Restore non-consumable purchases such as ad removal.",
+    "restorePurchasesSuccess": "Purchases restored.",
+    "restorePurchasesFail": "Failed to restore purchases.",
+    "restorePurchasesUnavailable": "Billing not supported on this device.",
+    "restorePurchasesEmpty": "No purchases to restore.",
+    "privacyPolicy": "Privacy Policy",
+    "privacyPolicyDesc": "Review how we handle personal data for the service.",
+    "viewPrivacyPolicy": "View Privacy Policy",
+    "tutorial": "Tutorial",
+    "tutorialDesc": "If you want to review how to use the app, watch the tutorial again.",
+    "viewTutorial": "View Tutorial Again"
+  },
+  "report": {
+    "button": "Report",
+    "title": "Report Player",
+    "description": "Please enter the reason for this report.",
+    "descriptionWithTarget": "Please enter a reason to report {{target}}.",
+    "placeholder": "Write the report reason.",
+    "submit": "Submit Report",
+    "success": "Your report has been submitted.",
+    "fail": "Failed to submit report."
+  },
+  "profile": {
+    "nicknameSetupTitle": "Set Nickname",
+    "nicknameSetupDesc": "Please enter a nickname to use in the game.",
+    "nicknamePlaceholder": "Enter nickname",
+    "selectCountry": "Select Country",
+    "edit": "Edit",
+    "highscoresTitle": "High Scores",
+    "highscoresColumns": {
+      "game": "Game",
+      "highscore": "Highscore",
+      "rankWinRate": "Rank Win Rate"
+    },
+    "highscoreLeaderboardTitle": "Top 10",
+    "highscoreLeaderboardEmpty": "No records yet.",
+    "highscoreLeaderboardColumns": {
+      "rank": "#",
+      "player": "Player",
+      "score": "Score"
+    },
+    "guestTitle": "Guest Account",
+    "guestDesc": "Guest accounts can be lost if you sign out, delete the app, or change devices. Link a Google account to keep your progress. Also, guest accounts may be deleted after 7 days of inactivity.",
+    "guestDescIOS": "Guest accounts can be lost if you sign out, delete the app, or change devices. Link an Apple or Google account to keep your progress. Also, guest accounts may be deleted after 7 days of inactivity.",
+    "linkGoogle": "Link Google Account",
+    "linkApple": "Link Apple Account",
+    "statsTitle": "Skills",
+    "stats": {
+      "speed": "Speed",
+      "memory": "Memory",
+      "judgment": "Judgment",
+      "calculation": "Calculation",
+      "accuracy": "Accuracy",
+      "observation": "Observation"
+    },
+    "changeAvatar": "Change Photo",
+    "avatarUploading": "Uploading...",
+    "avatarInvalidType": "Unsupported image type.",
+    "avatarTooLarge": "File is too large.",
+    "avatarUploadSuccess": "Profile photo updated.",
+    "avatarUploadFail": "Failed to upload profile photo",
+    "record": "Record",
+    "noRecord": "No match history.",
+    "disconnects": "Disconnects",
+    "updateSuccess": "Profile updated successfully!",
+    "updateFail": "Failed to update profile",
+    "deleteSuccess": "Account deleted successfully.",
+    "deleteFail": "Failed to delete account."
+  },
+  "game": {
+    "waiting": "Waiting for game...",
+    "victory": "VICTORY",
+    "defeat": "DEFEAT",
+    "returnMenu": "Return to Menu",
+    "reconnecting": "Waiting for Opponent...",
+    "reconnectingDesc": "Opponent disconnected. Winning by default in:",
+    "myTime": "My Time",
+    "rank": "RANK",
+    "normal": "NORMAL",
+    "unknownPlayer": "Unknown Player",
+    "guest": "Guest",
+    "you": "You",
+    "opponent": "Opponent",
+    "opponentWaiting": "Opponent is waiting...",
+    "draw": "DRAW",
+    "roundResult": "Round {{round}} Result",
+    "matchResult": "MATCH RESULT",
+    "startingIn": "Starting in",
+    "roundFinished": "ROUND FINISHED",
+    "total": "TOTAL",
+    "great": "Great!",
+    "tier": "Tier",
+    "table": {
+      "round": "Round",
+      "myScore": "My Score",
+      "opScore": "Op Score",
+      "result": "Result",
+      "win": "WIN",
+      "lose": "LOSE",
+      "draw": "DRAW"
+    }
+  },
+  "matchmaking": {
+    "searching": "Searching...",
+    "description": "Looking for a worthy opponent",
+    "cancel": "Cancel",
+    "found": "Match Found!",
+    "entering": "Entering game arena...",
+    "timeout": "Match Not Found",
+    "timeoutDesc": "We couldn't find an opponent in time.",
+    "range": "Range",
+    "rankLevelRequired": "Reach level {{level}} to unlock Rank."
+  },
+  "rps": {
+    "ready": "READY...",
+    "beatIt": "BEAT IT!",
+    "lose": "LOSE IT!",
+    "reverse": "REVERSE",
+    "round": "Round",
+    "titleWin": "Winning RPS",
+    "titleLose": "Losing RPS",
+    "title": "ROCK PAPER SCISSORS",
+    "instruction": "Choose the winning or losing move as instructed."
+  },
+  "number": {
+    "title": "NUMBER ORDER",
+    "instruction": "Ascending Order",
+    "asc": "Press numbers Low to High!",
+    "desc": "Press numbers High to Low!",
+    "ready": "READY",
+    "panel": "PANEL",
+    "titleDesc": "REVERSE SORT",
+    "instructionDesc": "Tap from High to Low!"
+  },
+  "math": {
+    "title": "MATH CHALLENGE",
+    "instruction": "Calculate the expression and choose the correct answer."
+  },
+  "ten": {
+    "title": "MAKE 10",
+    "instruction": "Make the sum of the selected numbers equal to 10."
+  },
+  "color": {
+    "title": "COLOR MATCH",
+    "instruction": "Select buttons where Color matches Text",
+    "red": "RED",
+    "blue": "BLUE",
+    "green": "GREEN",
+    "yellow": "YELLOW"
+  },
+  "memory": {
+    "title": "MEMORY MATCH",
+    "instruction": "Memorize card positions and tap the Memorized button. Then select matching pairs.",
+    "btn_memorized": "Memorized!",
+    "memorize_hint": "Memorize the cards!",
+    "find_pairs": "Find the pairs!"
+  },
+  "sequence": {
+    "title": "REVERSE ORDER",
+    "instruction": "Tap in REVERSE order!",
+    "titleNormal": "SEQUENCE",
+    "instructionNormal": "Tap in ORDER!"
+  },
+  "largest": {
+    "title": "BIGGEST RESULT",
+    "instruction": "Tap the expression with the largest value"
+  },
+  "pair": {
+    "title": "FIND PAIR",
+    "instruction": "Find the single matching pair!"
+  },
+  "updown": {
+    "title": "UP DOWN",
+    "instruction": "If it is bigger than the previous number, slide up. If smaller, slide down.",
+    "prev": "PREVIOUS",
+    "start": "START"
+  },
+  "slider": {
+    "title": "Number Slider",
+    "instruction": "Slide to sum adjacent numbers to the target!",
+    "target": "Target Sum"
+  },
+  "arrow": {
+    "title": "Arrow Slider",
+    "blue": "Blue = Same",
+    "red": "Red = Opposite",
+    "instruction": "Swipe Blue direction, or Opposite for Red!"
+  },
+  "fillBlanks": {
+    "title": "FILL BLANKS",
+    "instruction": "Choose the number that fills the blank to make the correct answer."
+  },
+  "findOperator": {
+    "title": "FIND OPERATOR",
+    "instruction": "Choose the correct operator to make the answer correct."
+  },
+  "ladder": {
+    "title": "Ladder Game",
+    "instruction": "Follow the path!"
+  },
+  "path": {
+    "title": "Path Runner",
+    "instruction": "Use the buttons to move the green block to the blue block. Watch out, button positions may change.",
+    "shuffle": "Shuffle"
+  },
+  "blindPath": {
+    "title": "Blind Path",
+    "instruction": "Memorize the white path, then use the buttons to move the green block to the blue block. The path disappears when you start moving. Hitting a wall costs points, but the path appears again.",
+    "memorizeHint": "Memorize the path!",
+    "runHint": "Follow the path!",
+    "memorized": "Memorized!"
+  },
+  "balls": {
+    "title": "Ball Counter",
+    "instruction": "Count the moving balls and tap the correct number."
+  },
+  "catchColor": {
+    "title": "Color Catch",
+    "instruction": "Slide the bar to catch balls with the same color as the bar. Catching a different color costs points, and the bar color keeps changing.",
+    "switchSoon": "Color switch soon"
+  },
+  "tapTheColor": {
+    "title": "Tap the Color",
+    "instruction": "Memorize the color positions, then tap the Memorized button. Select the remembered buttons in the color order shown at the top.",
+    "memorize": "Memorize the colors!",
+    "remembered": "Ready!"
+  },
+  "aim": {
+    "title": "Aiming Game",
+    "instruction": "Tap the red targets quickly to remove them. Do not remove the blue targets."
+  },
+  "mostColor": {
+    "title": "Find Most Color",
+    "instruction": "Select the color that appears the most on the screen."
+  },
+  "sorting": {
+    "title": "Sorting Game",
+    "instruction": "Send the first card in any direction you want. After that, slide cards with the same symbol in the same direction as before, and different symbols in the opposite direction. You can prepare in advance by checking the next card at the top.",
+    "firstMoveHint": "First card: Any direction!"
+  },
+  "spy": {
+    "title": "Find The Spy",
+    "instruction": "Memorize the symbols, then tap the Memorized button. After that, find the changed symbol. The number of spies can increase over time.",
+    "memorize": "Memorize these!",
+    "find": "Who is new?",
+    "ready": "Ready!"
+  },
+  "timingBar": {
+    "title": "Timing Bar",
+    "instruction": "Tap when the falling bar overlaps the target bar."
+  },
+  "colorTiming": {
+    "title": "Color Timing",
+    "instruction": "Tap when blue balls enter the left circle and red balls enter the right circle. Opposite colors deduct points."
+  },
+  "stairway": {
+    "title": "Stairway to Heaven",
+    "instruction": "Press the direction where the stairs are to climb up.",
+    "scoreLabel": "Steps"
+  },
+  "tutorial": {
+    "normal": "🌍 Battle players worldwide in fun minigames!",
+    "rank": "🏆 Compete with players of similar skill in ranked matches!",
+    "practice": "💪 Practice any game you want!",
+    "ranking": "👑 Check out the smartest players in the world!",
+    "shop": "🛒 Buy pencils or remove ads!",
+    "settings": "⚙️ Change sound, language and other settings!",
+    "login": "👤 Link your account for safe play!",
+    "profile": "📊 Check your skills, stats and high scores!",
+    "next": "Next",
+    "done": "Done",
+    "skip": "Skip",
+    "loginNow": "Login Now"
+  }
 }

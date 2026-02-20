@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Settings, User, Trophy, Zap, Loader2, Lock, AlertTriangle, Dumbbell, ShoppingBag } from 'lucide-react';
+import { Settings, User, Trophy, Zap, Loader2, Lock, AlertTriangle, Dumbbell, ShoppingBag, Flame } from 'lucide-react';
 import { useMatchmaking } from '../hooks/useMatchmaking';
 import { useSound } from '../contexts/SoundContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -157,6 +157,30 @@ const Home = () => {
     const avatarUrl = profile?.avatar_url;
     const countryCode = profile?.country;
     const hasSocialNotifications = pendingRequestsCount > 0 || unreadChatCount > 0;
+
+    // Streak timer
+    const streakCount = profile?.rank_win_streak ?? 0;
+    const streakUpdatedAt = profile?.rank_streak_updated_at;
+    const [streakSecondsLeft, setStreakSecondsLeft] = useState(0);
+
+    useEffect(() => {
+        if (!streakUpdatedAt || streakCount < 1) { setStreakSecondsLeft(0); return; }
+        const calc = () => {
+            const elapsed = (Date.now() - new Date(streakUpdatedAt).getTime()) / 1000;
+            const left = Math.max(0, 600 - elapsed);
+            setStreakSecondsLeft(Math.floor(left));
+        };
+        calc();
+        const iv = setInterval(calc, 1000);
+        return () => clearInterval(iv);
+    }, [streakUpdatedAt, streakCount]);
+
+    const streakActive = streakCount >= 1 && streakSecondsLeft > 0;
+    const streakMinutes = Math.floor(streakSecondsLeft / 60);
+    const streakSeconds = streakSecondsLeft % 60;
+    // Next milestone: 3 -> +5, 6 -> +10, 9 -> +15
+    const nextMilestone = streakCount < 3 ? 3 : streakCount < 6 ? 6 : streakCount < 9 ? 9 : 0;
+    const nextBonusMMR = nextMilestone === 3 ? 5 : nextMilestone === 6 ? 10 : nextMilestone === 9 ? 15 : 0;
     const AD_DAILY_LIMIT = 10;
     const today = new Date().toISOString().slice(0, 10);
     const adRewardDay = profile?.ad_reward_day;
@@ -626,6 +650,22 @@ const Home = () => {
                             {!user && (
                                 <div className="absolute inset-0 flex items-center justify-center bg-black/60 z-10">
                                     <Lock className="w-8 h-8 text-white/80" />
+                                </div>
+                            )}
+
+                            {/* Win Streak Badge */}
+                            {streakActive && user && (
+                                <div className="absolute top-2 right-2 z-20 flex flex-col items-end gap-0.5">
+                                    <div className="flex items-center gap-1.5 bg-gradient-to-r from-orange-600/90 to-red-600/90 backdrop-blur-sm rounded-full px-2.5 py-1 shadow-lg border border-orange-400/40 animate-pulse">
+                                        <Flame className="w-4 h-4 text-yellow-300" />
+                                        <span className="text-xs font-black text-white">{streakCount}</span>
+                                        <span className="text-[10px] text-orange-200 font-mono">{streakMinutes}:{String(streakSeconds).padStart(2, '0')}</span>
+                                    </div>
+                                    {nextMilestone > 0 && (
+                                        <div className="bg-yellow-500/90 backdrop-blur-sm rounded-full px-2 py-0.5 shadow border border-yellow-400/50">
+                                            <span className="text-[10px] font-bold text-black">{nextMilestone}{t('streak.nextBonus', '연승 시 +{{bonus}}', { bonus: nextBonusMMR })}</span>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </button>
