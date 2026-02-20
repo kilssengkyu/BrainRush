@@ -7,8 +7,8 @@ CREATE TABLE IF NOT EXISTS app_config (
 
 -- Insert default min versions (update these when a forced update is needed)
 INSERT INTO app_config (key, value) VALUES
-    ('min_ios_version', '1.0.0'),
-    ('min_android_version', '1.0.0'),
+    ('min_ios_version', '0.9.0'),
+    ('min_android_version', '0.9.0'),
     ('store_url_ios', ''),
     ('store_url_android', 'https://play.google.com/store/apps/details?id=com.kilssengkyu.brainrush')
 ON CONFLICT (key) DO NOTHING;
