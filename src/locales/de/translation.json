@@ -26,7 +26,8 @@
         "loginRequired": "Anmeldung erforderlich.",
         "guestMode": "Gastmodus",
         "guestWarning": "Gastkonten können ihren Fortschritt verlieren.",
-        "terms": "Wenn du fortfährst, stimmst du unseren Nutzungsbedingungen zu."
+        "terms": "Wenn du fortfährst, stimmst du unseren Nutzungsbedingungen zu.",
+        "loggedOutByOtherDevice": "Du wurdest abgemeldet, weil dieses Konto auf einem anderen Gerät verwendet wurde."
     },
     "social": {
         "friends": "Freunde",
@@ -136,7 +137,7 @@
         "premium": "Premium",
         "popular": "Beliebt",
         "bestValue": "Bestes Angebot",
-        "notice": "Zahlungen werden über App Store / Google Play verarbeitet.",
+        "notice": "Zahlungen werden über App Store verarbeitet.",
         "comingSoon": "Kaufablauf wird vorbereitet...",
         "priceTbd": "Offen",
         "loading": "Wird geladen...",

@@ -26,7 +26,8 @@
         "loginRequired": "Login diperlukan.",
         "guestMode": "Mode Tamu",
         "guestWarning": "Akun tamu bisa kehilangan progres tersimpan.",
-        "terms": "Dengan melanjutkan, Anda menyetujui Syarat Layanan kami."
+        "terms": "Dengan melanjutkan, Anda menyetujui Syarat Layanan kami.",
+        "loggedOutByOtherDevice": "Anda keluar karena akun ini digunakan di perangkat lain."
     },
     "social": {
         "friends": "Teman",
@@ -136,7 +137,7 @@
         "premium": "Premium",
         "popular": "Populer",
         "bestValue": "Nilai terbaik",
-        "notice": "Pembayaran diproses melalui App Store / Google Play.",
+        "notice": "Pembayaran diproses melalui App Store.",
         "comingSoon": "Alur pembelian sedang disiapkan...",
         "priceTbd": "Segera",
         "loading": "Memuat...",

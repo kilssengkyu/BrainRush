@@ -26,7 +26,8 @@
         "loginRequired": "Se requiere iniciar sesión.",
         "guestMode": "Modo Invitado",
         "guestWarning": "Los invitados pueden perder el progreso guardado.",
-        "terms": "Al continuar, aceptas nuestros Términos de Servicio."
+        "terms": "Al continuar, aceptas nuestros Términos de Servicio.",
+        "loggedOutByOtherDevice": "Se cerró tu sesión porque esta cuenta se usó en otro dispositivo."
     },
     "social": {
         "friends": "Amigos",
@@ -136,7 +137,7 @@
         "premium": "Premium",
         "popular": "Popular",
         "bestValue": "Mejor valor",
-        "notice": "Los pagos se procesan mediante App Store / Google Play.",
+        "notice": "Los pagos se procesan mediante App Store.",
         "comingSoon": "Preparando flujo de compra...",
         "priceTbd": "Por definir",
         "loading": "Cargando...",

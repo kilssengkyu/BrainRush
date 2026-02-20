@@ -23,7 +23,8 @@
         "loginRequired": "ログインが必要です。",
         "guestMode": "ゲストモード",
         "guestWarning": "ゲストは保存された記録を失う可能性があります。",
-        "terms": "継続することで、利用規約に同意したものとみなされます。"
+        "terms": "継続することで、利用規約に同意したものとみなされます。",
+        "loggedOutByOtherDevice": "このアカウントが他の端末で使用されたため、ログアウトされました。"
     },
     "menu": {
         "normal": {
@@ -83,7 +84,7 @@
         "premium": "プレミアム",
         "popular": "人気",
         "bestValue": "お得",
-        "notice": "決済はApp Store / Google Playで処理されます。",
+        "notice": "決済はApp Storeで処理されます。",
         "comingSoon": "購入フロー準備中...",
         "priceTbd": "価格未定",
         "loading": "読み込み中...",

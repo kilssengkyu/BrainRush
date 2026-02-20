@@ -26,7 +26,8 @@
         "loginRequired": "Login required.",
         "guestMode": "Guest Mode",
         "guestWarning": "Guests may lose saved progress.",
-        "terms": "By continuing, you agree to our Terms of Service."
+        "terms": "By continuing, you agree to our Terms of Service.",
+        "loggedOutByOtherDevice": "You were logged out because this account was used on another device."
     },
     "social": {
         "friends": "Friends",
@@ -136,7 +137,7 @@
         "premium": "Premium",
         "popular": "Popular",
         "bestValue": "Best Value",
-        "notice": "Payments are processed via App Store / Google Play.",
+        "notice": "Payments are processed via App Store.",
         "comingSoon": "Preparing purchase flow...",
         "priceTbd": "TBD",
         "loading": "Loading...",

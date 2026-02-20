@@ -61,8 +61,8 @@ const Privacy = () => {
                     <p>서비스 운영을 위해 다음과 같은 제3자 서비스를 사용할 수 있습니다.</p>
                     <ul className="list-disc list-inside space-y-1 text-gray-300">
                         <li>인증/DB: Supabase</li>
-                        <li>결제: Apple App Store / Google Play</li>
-                        <li>광고: Google AdMob</li>
+                        <li>결제: Apple App Store, Google Play 등 앱 마켓</li>
+                        <li>광고: AdMob</li>
                         <li>호스팅: Vercel</li>
                     </ul>
                 </section>

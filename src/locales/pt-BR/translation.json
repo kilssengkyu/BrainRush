@@ -26,7 +26,8 @@
         "loginRequired": "Login obrigatório.",
         "guestMode": "Modo Convidado",
         "guestWarning": "Convidados podem perder o progresso salvo.",
-        "terms": "Ao continuar, você concorda com nossos Termos de Serviço."
+        "terms": "Ao continuar, você concorda com nossos Termos de Serviço.",
+        "loggedOutByOtherDevice": "Você saiu da conta porque ela foi usada em outro dispositivo."
     },
     "social": {
         "friends": "Amigos",
@@ -136,7 +137,7 @@
         "premium": "Premium",
         "popular": "Popular",
         "bestValue": "Melhor oferta",
-        "notice": "Pagamentos processados pela App Store / Google Play.",
+        "notice": "Pagamentos processados pela App Store.",
         "comingSoon": "Preparando fluxo de compra...",
         "priceTbd": "A definir",
         "loading": "Carregando...",

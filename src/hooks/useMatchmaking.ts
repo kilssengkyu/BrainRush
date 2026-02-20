@@ -21,6 +21,22 @@ export const useMatchmaking = (
         return user?.id || guestId.current;
     };
 
+    const getValidActiveSession = async (playerId: string) => {
+        const { data } = await supabase.rpc('check_active_session', {
+            p_player_id: playerId
+        }).maybeSingle() as { data: { room_id: string, opponent_id: string, status: string, created_at: string } | null };
+
+        if (!data) return null;
+
+        const sessionAgeMs = Date.now() - new Date(data.created_at).getTime();
+        const isStaleWaitingRoom = data.status === 'waiting' && sessionAgeMs > 60 * 1000;
+        const isStaleActiveRoom = data.status !== 'waiting' && sessionAgeMs > 5 * 60 * 1000;
+        if (isStaleWaitingRoom || isStaleActiveRoom) {
+            return null;
+        }
+        return data;
+    };
+
     const startSearch = async (mode: 'rank' | 'normal' = 'rank') => {
         const playerId = getPlayerId();
         console.log(`startSearch called. Mode: ${mode}, PlayerID: ${playerId}, IsGuest: ${!user}`);
@@ -29,6 +45,19 @@ export const useMatchmaking = (
         if ((mode === 'rank' || mode === 'normal') && !user) {
             console.error(`startSearch aborted: ${mode} mode requires login session.`);
             return;
+        }
+
+        // Reconnect first: if an active session already exists, never create a new one.
+        try {
+            const activeSession = await getValidActiveSession(playerId);
+            if (activeSession) {
+                console.log('Active session found before search. Reconnecting:', activeSession.room_id);
+                setStatus('matched');
+                onMatchFound(activeSession.room_id, activeSession.opponent_id);
+                return;
+            }
+        } catch (err) {
+            console.error('Active session check failed before search:', err);
         }
 
         setStatus('searching');
@@ -104,44 +133,15 @@ export const useMatchmaking = (
             }
 
 
-            // Use RPC to bypass RLS for Guest users
-            const { data: passiveMatch } = await supabase.rpc('check_active_session', {
-                p_player_id: playerId
-            }).maybeSingle() as { data: { room_id: string, opponent_id: string, status: string, created_at: string } | null };
-
+            const passiveMatch = await getValidActiveSession(playerId);
             if (passiveMatch) {
-                // Smart Filter:
-                // 1. waiting: older than 60s is ghost
-                // 2. active (non-waiting): older than 5 min is stale
-                const sessionAgeMs = Date.now() - new Date(passiveMatch.created_at).getTime();
-                const isStaleWaitingRoom = passiveMatch.status === 'waiting' && sessionAgeMs > 60 * 1000;
-                const isStaleActiveRoom = passiveMatch.status !== 'waiting' && sessionAgeMs > 5 * 60 * 1000;
-
-                if (isStaleWaitingRoom || isStaleActiveRoom) {
-                    console.log('Ignoring stale session:', passiveMatch.room_id);
-                } else {
-                    console.log('Passive Match Detected! Reconnecting/Matching:', passiveMatch.room_id);
-                    if (searchInterval.current) clearInterval(searchInterval.current);
-
-                    try {
-                        // Only Authenticated users consume pencils
-                        if (user) {
-                            const { data: consumed } = await supabase.rpc('consume_pencil', { user_id: user.id });
-                            if (!consumed) {
-                                console.error('Failed to consume pencil (Passive)!');
-                            }
-                        }
-                    } catch (e) {
-                        console.error('Pencil consumption error (Passive):', e);
-                    }
-
-                    setStatus('matched');
-                    // Add delay to show "Matched!" modal
-                    setTimeout(() => {
-                        onMatchFound(passiveMatch.room_id, passiveMatch.opponent_id);
-                    }, 1500);
-                    return;
-                }
+                console.log('Passive Match Detected! Reconnecting/Matching:', passiveMatch.room_id);
+                if (searchInterval.current) clearInterval(searchInterval.current);
+                setStatus('matched');
+                setTimeout(() => {
+                    onMatchFound(passiveMatch.room_id, passiveMatch.opponent_id);
+                }, 300);
+                return;
             }
 
             const rangeSteps = Math.floor(elapsedMs / rangeStepMs);

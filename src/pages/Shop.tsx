@@ -313,9 +313,7 @@ const Shop = () => {
                     ))}
                 </motion.div>
 
-                <div className="mt-6 text-center text-xs text-gray-500">
-                    {t('shop.notice', 'Payments are processed via App Store / Google Play.')}
-                </div>
+
             </div>
             {/* 구매 처리 중 오버레이 */}
             {purchasing && (

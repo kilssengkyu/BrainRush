@@ -1,7 +1,7 @@
 {
   "name": "temp-app",
   "private": true,
-  "version": "1.9.14",
+  "version": "1.9.15",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -15,6 +15,7 @@
     "@capacitor-community/apple-sign-in": "^6.0.0",
     "@capacitor/android": "^6.2.1",
     "@capacitor/app": "^6.0.3",
+    "@capacitor/browser": "^6.0.6",
     "@capacitor/cli": "^6.2.1",
     "@capacitor/core": "^6.2.1",
     "@capacitor/haptics": "^6.0.0",

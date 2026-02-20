@@ -26,7 +26,8 @@
         "loginRequired": "Connexion requise.",
         "guestMode": "Mode invité",
         "guestWarning": "Les invités peuvent perdre leur progression enregistrée.",
-        "terms": "En continuant, vous acceptez nos Conditions d'utilisation."
+        "terms": "En continuant, vous acceptez nos Conditions d'utilisation.",
+        "loggedOutByOtherDevice": "Vous avez été déconnecté car ce compte a été utilisé sur un autre appareil."
     },
     "social": {
         "friends": "Amis",
@@ -136,7 +137,7 @@
         "premium": "Premium",
         "popular": "Populaire",
         "bestValue": "Meilleure offre",
-        "notice": "Les paiements sont traités via App Store / Google Play.",
+        "notice": "Les paiements sont traités via App Store.",
         "comingSoon": "Préparation du flux d'achat...",
         "priceTbd": "À définir",
         "loading": "Chargement...",

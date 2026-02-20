@@ -26,7 +26,8 @@
         "loginRequired": "Yêu cầu đăng nhập.",
         "guestMode": "Chế độ Khách",
         "guestWarning": "Tài khoản khách có thể mất tiến trình đã lưu.",
-        "terms": "Tiếp tục đồng nghĩa bạn đồng ý với Điều khoản dịch vụ của chúng tôi."
+        "terms": "Tiếp tục đồng nghĩa bạn đồng ý với Điều khoản dịch vụ của chúng tôi.",
+        "loggedOutByOtherDevice": "Bạn đã bị đăng xuất vì tài khoản này được dùng trên thiết bị khác."
     },
     "social": {
         "friends": "Bạn bè",
@@ -136,7 +137,7 @@
         "premium": "Premium",
         "popular": "Phổ biến",
         "bestValue": "Giá trị tốt nhất",
-        "notice": "Thanh toán được xử lý qua App Store / Google Play.",
+        "notice": "Thanh toán được xử lý qua App Store.",
         "comingSoon": "Đang chuẩn bị luồng mua...",
         "priceTbd": "Sắp cập nhật",
         "loading": "Đang tải...",

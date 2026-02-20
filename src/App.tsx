@@ -3,6 +3,7 @@ import { AdMob } from '@capacitor-community/admob';
 import { Capacitor } from '@capacitor/core';
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import Home from './pages/Home';
 
 // BackButton Handler Component (Need inside Router)
@@ -80,7 +81,7 @@ import Settings from './pages/Settings';
 import { SoundProvider } from './contexts/SoundContext';
 
 import { AuthProvider } from './contexts/AuthContext';
-import { UIProvider } from './contexts/UIContext';
+import { UIProvider, useUI } from './contexts/UIContext';
 import { TutorialProvider } from './contexts/TutorialContext';
 // Pages
 import Login from './pages/Login';
@@ -95,6 +96,24 @@ import AdminMember from './pages/AdminMember';
 import GameInviteListener from './components/social/GameInviteListener';
 import ChatNotificationListener from './components/social/ChatNotificationListener';
 import LocalNotificationScheduler from './components/notifications/LocalNotificationScheduler';
+
+// Force Logout Listener (Single Active Session)
+const ForceLogoutListener = () => {
+  const navigate = useNavigate();
+  const { showToast } = useUI();
+  const { t } = useTranslation();
+
+  useEffect(() => {
+    const handler = () => {
+      showToast(t('auth.loggedOutByOtherDevice', 'You were logged out because this account was used on another device.'), 'error');
+      navigate('/login', { replace: true });
+    };
+    window.addEventListener('forceLogout', handler);
+    return () => window.removeEventListener('forceLogout', handler);
+  }, [navigate, showToast, t]);
+
+  return null;
+};
 
 
 import BGMManager from './components/audio/BGMManager';
@@ -134,6 +153,7 @@ function App() {
               <GameInviteListener />
               <ChatNotificationListener />
               <LocalNotificationScheduler />
+              <ForceLogoutListener />
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/game/:roomId" element={<Game />} />

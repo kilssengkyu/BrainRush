@@ -23,7 +23,8 @@
         "loginRequired": "需要登录。",
         "guestMode": "游客模式",
         "guestWarning": "游客模式可能会丢失保存的记录。",
-        "terms": "继续即表示您同意我们的服务条款。"
+        "terms": "继续即表示您同意我们的服务条款。",
+        "loggedOutByOtherDevice": "由于该账号在其他设备上被使用，您已被登出。"
     },
     "menu": {
         "normal": {
@@ -83,7 +84,7 @@
         "premium": "高级",
         "popular": "热门",
         "bestValue": "超值",
-        "notice": "付款将通过 App Store / Google Play 处理。",
+        "notice": "付款将通过 App Store 处理。",
         "comingSoon": "购买流程准备中...",
         "priceTbd": "价格待定",
         "loading": "加载中...",

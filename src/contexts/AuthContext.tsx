@@ -3,6 +3,7 @@ import type { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
 import { App } from '@capacitor/app';
 import { SignInWithApple } from '@capacitor-community/apple-sign-in';
+import { Browser } from '@capacitor/browser';
 import { COUNTRIES } from '../constants/countries';
 
 interface AuthContextType {
@@ -234,8 +235,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
     };
 
-    // Global Presence & Deep Link Handling
+    // Global Presence, Session Guard & Deep Link Handling
     const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
+    const sessionDeviceIdRef = React.useRef<string>(
+        `dev_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
+    );
 
     useEffect(() => {
         // Deep Link Listener
@@ -283,6 +287,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             // 1. Standard Capacitor Listener
             appListener = await App.addListener('appUrlOpen', async (event) => {
                 handleDeepLink(event.url);
+                // Close the browser if it was opened for login flow
+                await Browser.close();
             });
 
             // 1-1. 앱이 딥링크로 시작된 경우를 처리합니다.
@@ -307,6 +313,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
         // Presence Logic
         let channel: any;
+        // Session Guard (Single Active Session)
+        let sessionChannel: any;
+
         if (user) {
             channel = supabase.channel('online_users', {
                 config: { presence: { key: user.id } },
@@ -330,6 +339,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                             .eq('id', user.id);
                     }
                 });
+
+            // Session Guard Channel
+            const myDeviceId = sessionDeviceIdRef.current;
+            sessionChannel = supabase.channel(`session:${user.id}`);
+
+            sessionChannel
+                .on('broadcast', { event: 'force_logout' }, (payload: any) => {
+                    const senderDeviceId = payload?.payload?.deviceId;
+                    // 내가 보낸 게 아닌 경우에만 로그아웃 처리
+                    if (senderDeviceId && senderDeviceId !== myDeviceId) {
+                        console.warn('Another device logged in. Forcing logout.');
+                        window.dispatchEvent(new CustomEvent('forceLogout'));
+                        supabase.auth.signOut({ scope: 'local' });
+                    }
+                })
+                .subscribe(async (status: string) => {
+                    if (status === 'SUBSCRIBED') {
+                        // 나 로그인 했다고 다른 기기에 알림
+                        await sessionChannel.send({
+                            type: 'broadcast',
+                            event: 'force_logout',
+                            payload: { deviceId: myDeviceId },
+                        });
+                    }
+                });
         } else {
             setOnlineUsers(new Set());
         }
@@ -338,6 +372,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             if (appListener) appListener.remove();
             if (customDeepLinkHandler) window.removeEventListener('customDeepLink', customDeepLinkHandler as EventListener);
             if (channel) supabase.removeChannel(channel);
+            if (sessionChannel) supabase.removeChannel(sessionChannel);
         };
     }, [user]);
 
@@ -354,15 +389,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 redirectUrl = 'com.kilssengkyu.brainrush://login-callback';
             }
 
-            const { error } = await supabase.auth.signInWithOAuth({
+            const { data, error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
                     redirectTo: redirectUrl,
                     queryParams: { prompt: 'select_account' },
-                    skipBrowserRedirect: false // Important for native flow
+                    skipBrowserRedirect: true
                 }
             });
             if (error) throw error;
+            if (data?.url) {
+                await Browser.open({ url: data.url, windowName: '_self' });
+            }
         } catch (error) {
             console.error('Google Sign-in Error:', error);
             persistAuthError(error);
@@ -377,16 +415,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 redirectUrl = 'com.kilssengkyu.brainrush://login-callback';
             }
 
-            const { error } = await supabase.auth.linkIdentity({
+            const { data, error } = await supabase.auth.linkIdentity({
                 provider: 'google',
                 options: {
                     redirectTo: redirectUrl,
                     queryParams: { prompt: 'select_account' },
-                    skipBrowserRedirect: false
+                    skipBrowserRedirect: true
                 }
             });
 
             if (error) throw error;
+            if (data?.url) {
+                await Browser.open({ url: data.url, windowName: '_self' });
+            }
         } catch (error) {
             console.error('Google Link Error:', error);
             if (isAlreadyRegisteredIdentityError(error)) {
