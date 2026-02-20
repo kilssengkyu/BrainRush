@@ -1,7 +1,42 @@
 diff --git a/node_modules/@capgo/native-audio/ios/Plugin/Plugin.swift b/node_modules/@capgo/native-audio/ios/Plugin/Plugin.swift
-index f023730..a8b2fcd 100644
+index b99c9f3..8799979 100644
 --- a/node_modules/@capgo/native-audio/ios/Plugin/Plugin.swift
 +++ b/node_modules/@capgo/native-audio/ios/Plugin/Plugin.swift
-@@ -26,1 +26,1 @@
+@@ -21,12 +21,8 @@ public class NativeAudio: CAPPlugin, AVAudioPlayerDelegate {
+ 
+         self.fadeMusic = false
+ 
+-        do {
 -            try self.session.setCategory(AVAudioSession.Category.playback, options: .mixWithOthers)
-+            try self.session.setCategory(AVAudioSession.Category.ambient, options: .mixWithOthers)
+-            try self.session.setActive(false)
+-        } catch {
+-            print("Failed to set session category")
+-        }
++        // Audio session category is managed by AppDelegate.
++        // Do NOT set category here to avoid overriding AppDelegate's .ambient setting.
+     }
+ 
+     @objc func configure(_ call: CAPPluginCall) {
+@@ -112,19 +108,12 @@ public class NativeAudio: CAPPlugin, AVAudioPlayerDelegate {
+     }
+ 
+     func activateSession() {
+-        do {
+-            try self.session.setActive(true)
+-        } catch {
+-            print("Failed to set session active")
+-        }
++        // Keep session active but don't cycle it — cycling causes ReplayKit audio distortion
+     }
+ 
+     func endSession() {
+-        do {
+-            try self.session.setActive(false, options: .notifyOthersOnDeactivation)
+-        } catch {
+-            print("Failed to deactivate audio session")
+-        }
++        // Don't deactivate session — cycling setActive(true)/setActive(false)
++        // conflicts with ReplayKit screen recording and causes audio distortion.
+     }
+ 
+     public func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {

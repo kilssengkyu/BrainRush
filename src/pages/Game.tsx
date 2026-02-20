@@ -11,6 +11,7 @@ import RockPaperScissors from '../components/minigames/RockPaperScissors';
 import NumberSortGame from '../components/minigames/NumberSortGame';
 import MathChallenge from '../components/minigames/MathChallenge';
 import MakeTen from '../components/minigames/MakeTen';
+import MakeZero from '../components/minigames/MakeZero';
 import ColorMatch from '../components/minigames/ColorMatch';
 import MemoryMatch from '../components/minigames/MemoryMatch';
 import SequenceGame from '../components/minigames/SequenceGame';
@@ -776,6 +777,7 @@ const Game: React.FC = () => {
                                             {gameState.gameType === 'TIMING_BAR' && t('timingBar.title')}
                                             {gameState.gameType === 'COLOR_TIMING' && t('colorTiming.title', '컬러 타이밍')}
                                             {gameState.gameType === 'STAIRWAY' && t('stairway.title', '천국의 계단')}
+                                            {gameState.gameType === 'MAKE_ZERO' && t('zero.title', '0을 만들어라')}
                                         </span>
                                     </h2>
                                     <p className="text-2xl text-white mb-12 font-bold max-w-2xl">
@@ -808,6 +810,7 @@ const Game: React.FC = () => {
                                         {gameState.gameType === 'TIMING_BAR' && t('timingBar.instruction')}
                                         {gameState.gameType === 'COLOR_TIMING' && t('colorTiming.instruction', '왼쪽은 파란 공, 오른쪽은 빨간 공이 원 안에 들어올 때 누르세요. 색이 반대면 감점됩니다.')}
                                         {gameState.gameType === 'STAIRWAY' && t('stairway.instruction', '올바른 방향을 터치해 계단을 올라가세요!')}
+                                        {gameState.gameType === 'MAKE_ZERO' && t('zero.instruction', '숫자를 채워 0을 만드세요')}
                                     </p>
 
                                 </motion.div>
@@ -920,6 +923,9 @@ const Game: React.FC = () => {
                                     )}
                                     {gameState.gameType === 'STAIRWAY' && (
                                         <StairwayGame seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
+                                    )}
+                                    {gameState.gameType === 'MAKE_ZERO' && (
+                                        <MakeZero seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
                                     )}
                                 </>
                             )}

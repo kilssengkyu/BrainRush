@@ -474,5 +474,19 @@
     "done": "Concluir",
     "skip": "Pular",
     "loginNow": "Entrar agora"
+  },
+  "zero": {
+    "title": "Faça Zero",
+    "instruction": "Preencha os números em ordem para completar uma equação igual a 0. Toque na equação para desfazer.",
+    "undoHint": "Toque na equação para desfazer"
+  },
+  "practice": {
+    "random": "Aleatório"
+  },
+  "update": {
+    "title": "Atualização Necessária",
+    "message": "Uma nova versão está disponível. Atualize para a melhor experiência.",
+    "button": "Atualizar",
+    "storeNotReady": "A loja está sendo preparada."
   }
 }

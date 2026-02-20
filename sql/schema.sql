@@ -1559,6 +1559,7 @@ BEGIN
         WHEN 'SEQUENCE' THEN 30
         WHEN 'SEQUENCE_NORMAL' THEN 30
         WHEN 'PAIR' THEN 30
+        WHEN 'MAKE_ZERO' THEN 40
         
         -- 40초 게임
         WHEN 'AIM' THEN 40
@@ -2320,7 +2321,7 @@ DECLARE
         'MEMORY', 'SEQUENCE', 'LARGEST', 'PAIR',
         'UPDOWN', 'SEQUENCE_NORMAL', 'NUMBER_DESC',
         'SLIDER', 'ARROW', 'BLANK', 'OPERATOR', 'LADDER', 'TAP_COLOR',
-        'AIM', 'MOST_COLOR', 'SORTING', 'SPY', 'PATH', 'BLIND_PATH', 'BALLS', 'CATCH_COLOR', 'COLOR_TIMING', 'STAIRWAY'
+        'AIM', 'MOST_COLOR', 'SORTING', 'SPY', 'PATH', 'BLIND_PATH', 'BALLS', 'CATCH_COLOR', 'COLOR_TIMING', 'STAIRWAY', 'MAKE_ZERO'
     ];
     v_selected_types text[];
     v_first_type text;
@@ -2402,7 +2403,7 @@ DECLARE
   
   v_game_data jsonb;
   v_target text;
-  v_types text[] := ARRAY['RPS', 'NUMBER', 'MATH', 'TEN', 'COLOR', 'MEMORY', 'SEQUENCE', 'SEQUENCE_NORMAL', 'LARGEST', 'PAIR', 'UPDOWN', 'SLIDER', 'ARROW', 'NUMBER_DESC', 'BLANK', 'OPERATOR', 'LADDER', 'TAP_COLOR', 'AIM', 'MOST_COLOR', 'SORTING', 'SPY', 'PATH', 'BLIND_PATH', 'BALLS', 'CATCH_COLOR', 'COLOR_TIMING', 'STAIRWAY'];
+  v_types text[] := ARRAY['RPS', 'NUMBER', 'MATH', 'TEN', 'COLOR', 'MEMORY', 'SEQUENCE', 'SEQUENCE_NORMAL', 'LARGEST', 'PAIR', 'UPDOWN', 'SLIDER', 'ARROW', 'NUMBER_DESC', 'BLANK', 'OPERATOR', 'LADDER', 'TAP_COLOR', 'AIM', 'MOST_COLOR', 'SORTING', 'SPY', 'PATH', 'BLIND_PATH', 'BALLS', 'CATCH_COLOR', 'COLOR_TIMING', 'STAIRWAY', 'MAKE_ZERO'];
   v_opts text[] := ARRAY['rock','paper','scissors'];
   
   v_round_snapshot jsonb;
@@ -2659,6 +2660,7 @@ BEGIN
         WHEN 'TIMING_BAR' THEN v_accuracy := 3; v_speed := 2;
         WHEN 'COLOR_TIMING' THEN v_accuracy := 3; v_speed := 2;
         WHEN 'STAIRWAY' THEN v_speed := 4; v_judgment := 1;
+        WHEN 'MAKE_ZERO' THEN v_calculation := 4; v_judgment := 1;
         ELSE
             -- no-op
     END CASE;
@@ -5453,7 +5455,7 @@ CREATE TABLE public.game_sessions (
     player2_streak_bonus integer DEFAULT 0,
     player1_lose_pencil boolean DEFAULT false,
     player2_lose_pencil boolean DEFAULT false,
-    CONSTRAINT game_sessions_game_type_check CHECK ((game_type = ANY (ARRAY['RPS'::text, 'NUMBER'::text, 'MATH'::text, 'TEN'::text, 'COLOR'::text, 'MEMORY'::text, 'SEQUENCE'::text, 'SEQUENCE_NORMAL'::text, 'LARGEST'::text, 'PAIR'::text, 'UPDOWN'::text, 'SLIDER'::text, 'ARROW'::text, 'NUMBER_DESC'::text, 'BLANK'::text, 'OPERATOR'::text, 'LADDER'::text, 'TAP_COLOR'::text, 'AIM'::text, 'MOST_COLOR'::text, 'SORTING'::text, 'SPY'::text, 'PATH'::text, 'BLIND_PATH'::text, 'BALLS'::text, 'CATCH_COLOR'::text, 'TIMING_BAR'::text, 'COLOR_TIMING'::text, 'STAIRWAY'::text])))
+    CONSTRAINT game_sessions_game_type_check CHECK ((game_type = ANY (ARRAY['RPS'::text, 'NUMBER'::text, 'MATH'::text, 'TEN'::text, 'COLOR'::text, 'MEMORY'::text, 'SEQUENCE'::text, 'SEQUENCE_NORMAL'::text, 'LARGEST'::text, 'PAIR'::text, 'UPDOWN'::text, 'SLIDER'::text, 'ARROW'::text, 'NUMBER_DESC'::text, 'BLANK'::text, 'OPERATOR'::text, 'LADDER'::text, 'TAP_COLOR'::text, 'AIM'::text, 'MOST_COLOR'::text, 'SORTING'::text, 'SPY'::text, 'PATH'::text, 'BLIND_PATH'::text, 'BALLS'::text, 'CATCH_COLOR'::text, 'TIMING_BAR'::text, 'COLOR_TIMING'::text, 'STAIRWAY'::text, 'MAKE_ZERO'::text])))
 );
 
 

@@ -474,5 +474,19 @@
     "done": "Terminé",
     "skip": "Passer",
     "loginNow": "Se connecter"
+  },
+  "zero": {
+    "title": "Fais Zéro",
+    "instruction": "Remplissez les nombres dans l’ordre pour compléter une équation égale à 0. Touchez l’équation pour annuler.",
+    "undoHint": "Touchez l'équation pour annuler"
+  },
+  "practice": {
+    "random": "Aléatoire"
+  },
+  "update": {
+    "title": "Mise à jour requise",
+    "message": "Une nouvelle version est disponible. Veuillez mettre à jour pour une meilleure expérience.",
+    "button": "Mettre à jour",
+    "storeNotReady": "Le magasin est en préparation."
   }
 }

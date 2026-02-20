@@ -117,6 +117,7 @@ const ForceLogoutListener = () => {
 
 
 import BGMManager from './components/audio/BGMManager';
+import ForceUpdateCheck from './components/ForceUpdateCheck';
 
 function App() {
   useEffect(() => {
@@ -148,6 +149,7 @@ function App() {
           <TutorialProvider>
             <BrowserRouter>
               <BackButtonHandler />
+              <ForceUpdateCheck />
               <AuthErrorRelay />
               <BGMManager />
               <GameInviteListener />

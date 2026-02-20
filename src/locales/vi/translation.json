@@ -474,5 +474,19 @@
     "done": "Xong",
     "skip": "Bỏ qua",
     "loginNow": "Đăng nhập ngay"
+  },
+  "zero": {
+    "title": "Tạo Số Không",
+    "instruction": "Điền số theo thứ tự để hoàn thành phương trình bằng 0. Chạm phương trình để hoàn tác.",
+    "undoHint": "Chạm phương trình để hoàn tác"
+  },
+  "practice": {
+    "random": "Ngẫu nhiên"
+  },
+  "update": {
+    "title": "Cần cập nhật",
+    "message": "Phiên bản mới đã có sẵn. Vui lòng cập nhật để có trải nghiệm tốt nhất.",
+    "button": "Cập nhật",
+    "storeNotReady": "Cửa hàng đang được chuẩn bị."
   }
 }

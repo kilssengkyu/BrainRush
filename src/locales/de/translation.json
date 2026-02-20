@@ -474,5 +474,19 @@
     "done": "Fertig",
     "skip": "Überspringen",
     "loginNow": "Jetzt anmelden"
+  },
+  "zero": {
+    "title": "Mach Null",
+    "instruction": "Fülle der Reihe nach Zahlen ein, um eine Gleichung zu vervollständigen, die 0 ergibt. Tippe auf die Gleichung zum Rückgängigmachen.",
+    "undoHint": "Tippe auf die Gleichung zum Rückgängigmachen"
+  },
+  "practice": {
+    "random": "Zufällig"
+  },
+  "update": {
+    "title": "Update erforderlich",
+    "message": "Eine neue Version ist verfügbar. Bitte aktualisieren Sie für das beste Erlebnis.",
+    "button": "Aktualisieren",
+    "storeNotReady": "Store wird vorbereitet."
   }
 }

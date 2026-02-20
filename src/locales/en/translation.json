@@ -476,5 +476,19 @@
     "done": "Done",
     "skip": "Skip",
     "loginNow": "Login Now"
+  },
+  "zero": {
+    "title": "Make Zero",
+    "instruction": "Fill in numbers in order to complete an equation that equals 0. Tap the equation to undo.",
+    "undoHint": "Tap the equation to undo"
+  },
+  "practice": {
+    "random": "Random"
+  },
+  "update": {
+    "title": "Update Required",
+    "message": "A new version is available. Please update for the best experience.",
+    "button": "Update",
+    "storeNotReady": "Store is being prepared."
   }
 }

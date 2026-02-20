@@ -474,5 +474,19 @@
     "done": "Listo",
     "skip": "Saltar",
     "loginNow": "Iniciar sesión ahora"
+  },
+  "zero": {
+    "title": "Haz Cero",
+    "instruction": "Rellena los números en orden para completar una ecuación que sea igual a 0. Toca la ecuación para deshacer.",
+    "undoHint": "Toca la ecuación para deshacer"
+  },
+  "practice": {
+    "random": "Aleatorio"
+  },
+  "update": {
+    "title": "Actualización necesaria",
+    "message": "Hay una nueva versión disponible. Actualiza para la mejor experiencia.",
+    "button": "Actualizar",
+    "storeNotReady": "La tienda se está preparando."
   }
 }

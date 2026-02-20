@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Play, Zap, Brain, Hash, MousePointer2, Star, Ghost, Route, CircleDot, EyeOff, BookOpen } from 'lucide-react';
+import { ArrowLeft, Play, Zap, Brain, Hash, MousePointer2, Star, Ghost, Route, CircleDot, EyeOff, BookOpen, Shuffle } from 'lucide-react';
 import { useSound } from '../contexts/SoundContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useUI } from '../contexts/UIContext';
@@ -11,6 +11,7 @@ import AdModal from '../components/ui/AdModal';
 
 // Minigame Metadata
 const MINIGAMES = [
+    { id: 'RANDOM', title: 'practice.random', icon: null, defaultIcon: <Shuffle className="w-8 h-8 text-white" />, type: 'random' },
     { id: 'RPS', title: 'rps.title', icon: <img src="/icons/rps.png" alt="RPS" className="w-12 h-12 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <MousePointer2 className="w-8 h-8 text-yellow-400" />, type: 'speed' },
     { id: 'NUMBER', title: 'number.title', icon: <img src="/icons/number_asc.png" alt="Number Asc" className="w-12 h-12 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Hash className="w-8 h-8 text-blue-400" />, type: 'speed' },
     { id: 'NUMBER_DESC', title: 'number.titleDesc', icon: <img src="/icons/number_desc.png" alt="Number Desc" className="w-12 h-12 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Hash className="w-8 h-8 text-red-400" />, type: 'speed' },
@@ -39,6 +40,7 @@ const MINIGAMES = [
     { id: 'SPY', title: 'spy.title', icon: <img src="/icons/spy.png" alt="Spy" className="w-12 h-12 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Ghost className="w-8 h-8 text-gray-500" />, type: 'brain' },
     { id: 'COLOR_TIMING', title: 'colorTiming.title', icon: <img src="/icons/timing.png" alt="Color Timing" className="w-12 h-12 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <BookOpen className="w-8 h-8 text-emerald-400" />, type: 'speed' },
     { id: 'STAIRWAY', title: 'stairway.title', icon: <img src="/icons/stairway.png" alt="Stairway" className="w-12 h-12 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Star className="w-8 h-8 text-amber-400" />, type: 'speed' },
+    { id: 'MAKE_ZERO', title: 'zero.title', icon: <img src="/icons/make_zero.png" alt="Make Zero" className="w-12 h-12 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Hash className="w-8 h-8 text-cyan-300" />, type: 'brain' },
 ];
 
 const PracticeMode = () => {
@@ -76,6 +78,13 @@ const PracticeMode = () => {
             return;
         }
 
+        // Random: pick a random game from the list (excluding RANDOM itself)
+        let actualGameId = gameId;
+        if (gameId === 'RANDOM') {
+            const games = MINIGAMES.filter(g => g.id !== 'RANDOM');
+            actualGameId = games[Math.floor(Math.random() * games.length)].id;
+        }
+
         const notes = profile?.practice_notes ?? 0;
         if (notes < 1) {
             playSound('error');
@@ -91,7 +100,7 @@ const PracticeMode = () => {
             const { data: roomId, error } = await supabase
                 .rpc('create_practice_session', {
                     p_player_id: user.id,
-                    p_game_type: gameId
+                    p_game_type: actualGameId
                 });
 
             if (error) {

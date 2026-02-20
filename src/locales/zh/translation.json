@@ -471,5 +471,19 @@
     "done": "完成",
     "skip": "跳过",
     "loginNow": "立即登录"
+  },
+  "zero": {
+    "title": "凑成零",
+    "instruction": "按顺序填入数字，完成结果为0的算式。点击算式可撤销。",
+    "undoHint": "点击算式可撤销"
+  },
+  "practice": {
+    "random": "随机"
+  },
+  "update": {
+    "title": "需要更新",
+    "message": "新版本已发布，请更新以获得最佳体验。",
+    "button": "更新",
+    "storeNotReady": "商店准备中。"
   }
 }

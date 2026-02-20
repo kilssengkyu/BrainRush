@@ -474,5 +474,19 @@
     "done": "Selesai",
     "skip": "Lewati",
     "loginNow": "Masuk sekarang"
+  },
+  "zero": {
+    "title": "Buat Nol",
+    "instruction": "Isi angka secara berurutan untuk melengkapi persamaan yang hasilnya 0. Ketuk persamaan untuk membatalkan.",
+    "undoHint": "Ketuk persamaan untuk membatalkan"
+  },
+  "practice": {
+    "random": "Acak"
+  },
+  "update": {
+    "title": "Pembaruan Diperlukan",
+    "message": "Versi baru telah tersedia. Silakan perbarui untuk pengalaman terbaik.",
+    "button": "Perbarui",
+    "storeNotReady": "Toko sedang disiapkan."
   }
 }
