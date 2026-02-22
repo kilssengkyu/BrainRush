@@ -98,6 +98,8 @@
     "loading": "読み込み中...",
     "purchased": "購入済み",
     "purchaseSuccess": "購入が完了しました。",
+    "purchaseRewardDesc": "購入したアイテムが支給されました。",
+    "removeAdsApplied": "広告削除が適用されました。",
     "purchaseFail": "購入に失敗しました。",
     "billingUnavailable": "この端末では購入に対応していません。"
   },

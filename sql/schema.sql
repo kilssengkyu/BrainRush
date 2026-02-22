@@ -895,6 +895,7 @@ DECLARE
     v_level int;
     v_existing_room uuid;
     v_existing_opponent text;
+    v_mode text := 'normal';
 BEGIN
     -- Ownership check if UUID
     IF p_player_id ~ '^[0-9a-fA-F-]{36}$' THEN
@@ -933,6 +934,16 @@ BEGIN
     END IF;
 
     -- Remove from queue to avoid race
+    SELECT mode INTO v_mode
+    FROM matchmaking_queue
+    WHERE player_id = p_player_id
+    ORDER BY updated_at DESC
+    LIMIT 1;
+
+    IF v_mode IS NULL OR v_mode NOT IN ('normal', 'rank') THEN
+        v_mode := 'normal';
+    END IF;
+
     DELETE FROM matchmaking_queue WHERE player_id = p_player_id;
 
     -- Pick a random bot profile
@@ -942,7 +953,7 @@ BEGIN
     END IF;
 
     INSERT INTO game_sessions (player1_id, player2_id, status, current_round, mode)
-    VALUES (p_player_id, v_bot.id, 'waiting', 0, 'normal')
+    VALUES (p_player_id, v_bot.id, 'waiting', 0, v_mode)
     RETURNING id INTO v_room_id;
 
     room_id := v_room_id;
@@ -1179,7 +1190,6 @@ CREATE FUNCTION public.find_match(p_min_mmr integer, p_max_mmr integer, p_player
 DECLARE
     v_opponent_id text;
     v_room_id uuid;
-    v_level int;
     v_existing_room uuid;
 BEGIN
     -- [SECURE] Verify ownership if UUID
@@ -1187,15 +1197,10 @@ BEGIN
          IF p_player_id != auth.uid()::text THEN RAISE EXCEPTION 'Not authorized'; END IF;
     END IF;
 
-    -- Rank gate: require authenticated user with level >= 5
+    -- Rank gate: require authenticated user
     IF p_mode = 'rank' THEN
         IF p_player_id !~ '^[0-9a-fA-F-]{36}$' THEN
             RAISE EXCEPTION 'Rank requires login';
-        END IF;
-
-        SELECT level INTO v_level FROM profiles WHERE id = p_player_id::uuid;
-        IF v_level IS NULL OR v_level < 5 THEN
-            RAISE EXCEPTION 'Rank requires level 5';
         END IF;
     END IF;
 
@@ -1288,6 +1293,10 @@ DECLARE
     v_p2_exp float;
     v_new_p1_mmr int;
     v_new_p2_mmr int;
+    v_p1_delta int := 0;
+    v_p2_delta int := 0;
+    v_p1_is_real boolean := false;
+    v_p2_is_real boolean := false;
 
     v_p1_total int := 0;
     v_p2_total int := 0;
@@ -1382,90 +1391,149 @@ BEGIN
     -- STATS UPDATE LOGIC
     IF v_winner IS NOT NULL AND NOT v_is_draw THEN
         IF v_session.mode = 'rank' THEN
-             -- RANK MODE: Update MMR + Standard Wins/Losses (only for real users)
-             IF v_session.player1_id ~ '^[0-9a-fA-F-]{36}$' AND v_session.player2_id ~ '^[0-9a-fA-F-]{36}$' THEN
-                 SELECT mmr INTO v_p1_mmr FROM profiles WHERE id = v_session.player1_id::uuid;
-                 SELECT mmr INTO v_p2_mmr FROM profiles WHERE id = v_session.player2_id::uuid;
+             -- RANK MODE: allow bot matches by treating bot MMR as fixed 1000
+             v_p1_is_real := v_session.player1_id ~ '^[0-9a-fA-F-]{36}$';
+             v_p2_is_real := v_session.player2_id ~ '^[0-9a-fA-F-]{36}$';
+             v_streak_bonus := 0;
+
+             IF v_p1_is_real OR v_p2_is_real THEN
+                 IF v_p1_is_real THEN
+                     SELECT mmr INTO v_p1_mmr FROM profiles WHERE id = v_session.player1_id::uuid;
+                 ELSE
+                     v_p1_mmr := 1000;
+                 END IF;
+
+                 IF v_p2_is_real THEN
+                     SELECT mmr INTO v_p2_mmr FROM profiles WHERE id = v_session.player2_id::uuid;
+                 ELSE
+                     v_p2_mmr := 1000;
+                 END IF;
+
+                 v_p1_mmr := COALESCE(v_p1_mmr, 1000);
+                 v_p2_mmr := COALESCE(v_p2_mmr, 1000);
 
                  v_p1_exp := 1.0 / (1.0 + power(10.0, (v_p2_mmr - v_p1_mmr)::numeric / 400.0));
                  v_p2_exp := 1.0 / (1.0 + power(10.0, (v_p1_mmr - v_p2_mmr)::numeric / 400.0));
 
-                 -- === STREAK BONUS for winner ===
-                 SELECT rank_win_streak, rank_streak_updated_at
-                 INTO v_winner_streak, v_winner_streak_at
-                 FROM profiles WHERE id = v_winner::uuid;
+                 -- Winner streak bonus is only for real users
+                 IF v_winner = v_session.player1_id::text AND v_p1_is_real THEN
+                     SELECT rank_win_streak, rank_streak_updated_at
+                     INTO v_winner_streak, v_winner_streak_at
+                     FROM profiles WHERE id = v_session.player1_id::uuid;
 
-                 IF v_winner_streak_at IS NOT NULL AND (now() - v_winner_streak_at) <= interval '10 minutes' THEN
-                     v_winner_streak := COALESCE(v_winner_streak, 0) + 1;
-                 ELSE
-                     v_winner_streak := 1;
-                 END IF;
-
-                 IF v_winner_streak >= 3 AND (v_winner_streak % 3) = 0 THEN
-                     v_streak_bonus := LEAST((v_winner_streak / 3) * 5, 15);
-                 END IF;
-
-                 -- 9연승 달성 후 리셋
-                 IF v_winner_streak >= 9 THEN
-                     v_winner_streak := 0;
-                 END IF;
-
-                 IF v_winner = v_session.player1_id::text THEN
-                    v_new_p1_mmr := round(v_p1_mmr + v_k_factor * (1 - v_p1_exp)) + v_streak_bonus;
-                    v_new_p2_mmr := round(v_p2_mmr + v_k_factor * (0 - v_p2_exp));
-
-                    UPDATE profiles SET mmr = v_new_p1_mmr, wins = wins + 1,
-                        rank_win_streak = v_winner_streak, rank_streak_updated_at = now(), rank_lose_streak = 0
-                    WHERE id = v_session.player1_id::uuid;
-                    UPDATE profiles SET mmr = v_new_p2_mmr, losses = losses + 1,
-                        rank_win_streak = 0, rank_streak_updated_at = NULL,
-                        rank_lose_streak = COALESCE(rank_lose_streak, 0) + 1
-                    WHERE id = v_session.player2_id::uuid;
-                 ELSE
-                    v_new_p1_mmr := round(v_p1_mmr + v_k_factor * (0 - v_p1_exp));
-                    v_new_p2_mmr := round(v_p2_mmr + v_k_factor * (1 - v_p2_exp)) + v_streak_bonus;
-
-                    UPDATE profiles SET mmr = v_new_p1_mmr, losses = losses + 1,
-                        rank_win_streak = 0, rank_streak_updated_at = NULL,
-                        rank_lose_streak = COALESCE(rank_lose_streak, 0) + 1
-                    WHERE id = v_session.player1_id::uuid;
-                    UPDATE profiles SET mmr = v_new_p2_mmr, wins = wins + 1,
-                        rank_win_streak = v_winner_streak, rank_streak_updated_at = now(), rank_lose_streak = 0
-                    WHERE id = v_session.player2_id::uuid;
-                 END IF;
-
-                 -- Save MMR changes + streak bonus to session
-                 IF v_winner = v_session.player1_id::text THEN
-                     UPDATE game_sessions SET
-                         player1_mmr_change = v_new_p1_mmr - v_p1_mmr,
-                         player2_mmr_change = v_new_p2_mmr - v_p2_mmr,
-                         player1_streak_bonus = v_streak_bonus,
-                         player2_streak_bonus = 0
-                     WHERE id = p_room_id;
-                 ELSE
-                     UPDATE game_sessions SET
-                         player1_mmr_change = v_new_p1_mmr - v_p1_mmr,
-                         player2_mmr_change = v_new_p2_mmr - v_p2_mmr,
-                         player1_streak_bonus = 0,
-                         player2_streak_bonus = v_streak_bonus
-                     WHERE id = p_room_id;
-                 END IF;
-
-                 -- === LOSE STREAK BONUS (3연패 시 연필 1개, 하루 1회) ===
-                 SELECT rank_lose_streak, rank_lose_bonus_date
-                 INTO v_loser_lose_streak, v_loser_lose_bonus_date
-                 FROM profiles WHERE id = v_loser::uuid;
-
-                 IF v_loser_lose_streak >= 3 AND (v_loser_lose_bonus_date IS NULL OR v_loser_lose_bonus_date < CURRENT_DATE) THEN
-                     UPDATE profiles
-                     SET pencils = pencils + 1,
-                         rank_lose_bonus_date = CURRENT_DATE,
-                         rank_lose_streak = 0
-                     WHERE id = v_loser::uuid;
-
-                     IF v_loser = v_session.player1_id THEN
-                         UPDATE game_sessions SET player1_lose_pencil = true WHERE id = p_room_id;
+                     IF v_winner_streak_at IS NOT NULL AND (now() - v_winner_streak_at) <= interval '10 minutes' THEN
+                         v_winner_streak := COALESCE(v_winner_streak, 0) + 1;
                      ELSE
+                         v_winner_streak := 1;
+                     END IF;
+
+                     IF v_winner_streak >= 3 AND (v_winner_streak % 3) = 0 THEN
+                         v_streak_bonus := LEAST((v_winner_streak / 3) * 5, 15);
+                     END IF;
+
+                     IF v_winner_streak >= 9 THEN
+                         v_winner_streak := 0;
+                     END IF;
+                 ELSIF v_winner = v_session.player2_id::text AND v_p2_is_real THEN
+                     SELECT rank_win_streak, rank_streak_updated_at
+                     INTO v_winner_streak, v_winner_streak_at
+                     FROM profiles WHERE id = v_session.player2_id::uuid;
+
+                     IF v_winner_streak_at IS NOT NULL AND (now() - v_winner_streak_at) <= interval '10 minutes' THEN
+                         v_winner_streak := COALESCE(v_winner_streak, 0) + 1;
+                     ELSE
+                         v_winner_streak := 1;
+                     END IF;
+
+                     IF v_winner_streak >= 3 AND (v_winner_streak % 3) = 0 THEN
+                         v_streak_bonus := LEAST((v_winner_streak / 3) * 5, 15);
+                     END IF;
+
+                     IF v_winner_streak >= 9 THEN
+                         v_winner_streak := 0;
+                     END IF;
+                 END IF;
+
+                 IF v_winner = v_session.player1_id::text THEN
+                     v_new_p1_mmr := round(v_p1_mmr + v_k_factor * (1 - v_p1_exp)) + v_streak_bonus;
+                     v_new_p2_mmr := round(v_p2_mmr + v_k_factor * (0 - v_p2_exp));
+                 ELSE
+                     v_new_p1_mmr := round(v_p1_mmr + v_k_factor * (0 - v_p1_exp));
+                     v_new_p2_mmr := round(v_p2_mmr + v_k_factor * (1 - v_p2_exp)) + v_streak_bonus;
+                 END IF;
+
+                 v_p1_delta := v_new_p1_mmr - v_p1_mmr;
+                 v_p2_delta := v_new_p2_mmr - v_p2_mmr;
+
+                 -- Apply MMR/stat updates only to real profiles
+                 IF v_p1_is_real THEN
+                     IF v_winner = v_session.player1_id::text THEN
+                         UPDATE profiles
+                         SET mmr = v_new_p1_mmr, wins = wins + 1,
+                             rank_win_streak = COALESCE(v_winner_streak, 0),
+                             rank_streak_updated_at = now(),
+                             rank_lose_streak = 0
+                         WHERE id = v_session.player1_id::uuid;
+                     ELSE
+                         UPDATE profiles
+                         SET mmr = v_new_p1_mmr, losses = losses + 1,
+                             rank_win_streak = 0,
+                             rank_streak_updated_at = NULL,
+                             rank_lose_streak = COALESCE(rank_lose_streak, 0) + 1
+                         WHERE id = v_session.player1_id::uuid;
+                     END IF;
+                 END IF;
+
+                 IF v_p2_is_real THEN
+                     IF v_winner = v_session.player2_id::text THEN
+                         UPDATE profiles
+                         SET mmr = v_new_p2_mmr, wins = wins + 1,
+                             rank_win_streak = COALESCE(v_winner_streak, 0),
+                             rank_streak_updated_at = now(),
+                             rank_lose_streak = 0
+                         WHERE id = v_session.player2_id::uuid;
+                     ELSE
+                         UPDATE profiles
+                         SET mmr = v_new_p2_mmr, losses = losses + 1,
+                             rank_win_streak = 0,
+                             rank_streak_updated_at = NULL,
+                             rank_lose_streak = COALESCE(rank_lose_streak, 0) + 1
+                         WHERE id = v_session.player2_id::uuid;
+                     END IF;
+                 END IF;
+
+                 UPDATE game_sessions SET
+                     player1_mmr_change = v_p1_delta,
+                     player2_mmr_change = v_p2_delta,
+                     player1_streak_bonus = CASE WHEN v_winner = v_session.player1_id::text AND v_p1_is_real THEN v_streak_bonus ELSE 0 END,
+                     player2_streak_bonus = CASE WHEN v_winner = v_session.player2_id::text AND v_p2_is_real THEN v_streak_bonus ELSE 0 END
+                 WHERE id = p_room_id;
+
+                 -- Lose streak reward only for real loser
+                 IF v_loser = v_session.player1_id::text AND v_p1_is_real THEN
+                     SELECT rank_lose_streak, rank_lose_bonus_date
+                     INTO v_loser_lose_streak, v_loser_lose_bonus_date
+                     FROM profiles WHERE id = v_session.player1_id::uuid;
+
+                     IF v_loser_lose_streak >= 3 AND (v_loser_lose_bonus_date IS NULL OR v_loser_lose_bonus_date < CURRENT_DATE) THEN
+                         UPDATE profiles
+                         SET pencils = pencils + 1,
+                             rank_lose_bonus_date = CURRENT_DATE,
+                             rank_lose_streak = 0
+                         WHERE id = v_session.player1_id::uuid;
+                         UPDATE game_sessions SET player1_lose_pencil = true WHERE id = p_room_id;
+                     END IF;
+                 ELSIF v_loser = v_session.player2_id::text AND v_p2_is_real THEN
+                     SELECT rank_lose_streak, rank_lose_bonus_date
+                     INTO v_loser_lose_streak, v_loser_lose_bonus_date
+                     FROM profiles WHERE id = v_session.player2_id::uuid;
+
+                     IF v_loser_lose_streak >= 3 AND (v_loser_lose_bonus_date IS NULL OR v_loser_lose_bonus_date < CURRENT_DATE) THEN
+                         UPDATE profiles
+                         SET pencils = pencils + 1,
+                             rank_lose_bonus_date = CURRENT_DATE,
+                             rank_lose_streak = 0
+                         WHERE id = v_session.player2_id::uuid;
                          UPDATE game_sessions SET player2_lose_pencil = true WHERE id = p_room_id;
                      END IF;
                  END IF;
@@ -2274,6 +2342,52 @@ BEGIN
 
   IF NOT FOUND THEN
     RAISE EXCEPTION 'Nickname setup already completed';
+  END IF;
+END;
+$$;
+
+
+--
+-- Name: update_my_profile(text, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.update_my_profile(p_nickname text, p_country text DEFAULT NULL::text) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_user_id uuid := auth.uid();
+  v_nickname text;
+BEGIN
+  IF v_user_id IS NULL THEN
+    RAISE EXCEPTION 'Not authenticated';
+  END IF;
+
+  v_nickname := btrim(coalesce(p_nickname, ''));
+
+  IF char_length(v_nickname) < 2 OR char_length(v_nickname) > 20 THEN
+    RAISE EXCEPTION 'Nickname must be between 2 and 20 characters';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM public.profiles p
+    WHERE p.id <> v_user_id
+      AND p.nickname IS NOT NULL
+      AND lower(p.nickname) = lower(v_nickname)
+  ) THEN
+    RAISE EXCEPTION 'Nickname already in use';
+  END IF;
+
+  UPDATE public.profiles
+  SET nickname = v_nickname,
+      country = p_country,
+      needs_nickname_setup = false,
+      nickname_set_at = CASE WHEN needs_nickname_setup THEN now() ELSE nickname_set_at END
+  WHERE id = v_user_id;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Profile not found';
   END IF;
 END;
 $$;

@@ -151,6 +151,8 @@
     "loading": "Đang tải...",
     "purchased": "Đã mua",
     "purchaseSuccess": "Mua thành công.",
+    "purchaseRewardDesc": "Vật phẩm đã mua đã được cấp.",
+    "removeAdsApplied": "Đã áp dụng xóa quảng cáo.",
     "purchaseFail": "Mua thất bại.",
     "billingUnavailable": "Thiết bị này không hỗ trợ thanh toán."
   },

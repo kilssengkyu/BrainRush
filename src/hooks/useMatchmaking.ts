@@ -96,7 +96,9 @@ export const useMatchmaking = (
                 : typeof profile?.xp === 'number'
                     ? getLevelFromXp(profile.xp)
                     : 1;
-            const isBotEligible = mode === 'normal' && (playerLevel <= 5 || elapsedMs >= 15000);
+            const isBotEligible =
+                (mode === 'normal' || mode === 'rank') &&
+                (playerLevel <= 5 || elapsedMs >= 15000);
             const botDelayMs = playerLevel <= 5 ? 10000 : 15000;
             const forceBot = playerLevel > 5 && elapsedMs >= 15000;
 

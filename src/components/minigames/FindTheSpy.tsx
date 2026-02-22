@@ -143,7 +143,8 @@ const FindTheSpy: React.FC<FindTheSpyProps> = ({ seed, onScore, isPlaying }) => 
             // Correct
             playSound('correct');
             const difficultyBonus = Math.max(0, targetSymbolIds.length - 1) * 60;
-            onScore(160 + difficultyBonus);
+            const scorePerHit = 160 + difficultyBonus;
+            onScore(scorePerHit);
             const nextFound = [...foundSpyIds, symbolId];
             setFoundSpyIds(nextFound);
 
@@ -154,7 +155,9 @@ const FindTheSpy: React.FC<FindTheSpyProps> = ({ seed, onScore, isPlaying }) => 
         } else {
             // Wrong
             playSound('error');
-            onScore(-10);
+            const difficultyBonus = Math.max(0, targetSymbolIds.length - 1) * 60;
+            const scorePerHit = 160 + difficultyBonus;
+            onScore(-Math.round(scorePerHit / 2));
             // Visual feedback could be added here (shake etc), 
             // but for fast pace we might just deduct score.
         }

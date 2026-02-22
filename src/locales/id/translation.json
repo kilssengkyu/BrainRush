@@ -151,6 +151,8 @@
     "loading": "Memuat...",
     "purchased": "Sudah dibeli",
     "purchaseSuccess": "Pembelian berhasil.",
+    "purchaseRewardDesc": "Item yang dibeli sudah diberikan.",
+    "removeAdsApplied": "Penghapusan iklan telah diterapkan.",
     "purchaseFail": "Pembelian gagal.",
     "billingUnavailable": "Penagihan tidak didukung di perangkat ini."
   },

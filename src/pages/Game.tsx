@@ -613,12 +613,12 @@ const Game: React.FC = () => {
             {/* Round Finished Overlay (Standalone - shows during transition) */}
             {showRoundFinished && gameState.mode !== 'practice' && (
                 <div className="absolute inset-0 z-[65] pointer-events-none">
-                    <div className="absolute inset-0 bg-black/20 backdrop-blur-[1px]" />
+                    <div className="absolute inset-0 bg-black/20" />
                     <div className="absolute inset-x-0 top-32 flex items-center justify-center">
                         <motion.div
                             initial={{ scale: 0.8, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
-                            className="text-4xl sm:text-5xl font-black text-white/65 drop-shadow-lg uppercase tracking-widest font-mono"
+                            className="text-4xl sm:text-5xl font-black text-white/80 uppercase tracking-widest font-mono"
                         >
                             {t('game.roundFinished')}
                         </motion.div>
@@ -653,14 +653,14 @@ const Game: React.FC = () => {
                             <div
                                 className={`font-black font-mono tracking-tight leading-none transition-opacity duration-500 text-[clamp(72px,20vw,220px)]
                                     ${displayMyScore >= displayOpScore ? 'text-blue-400' : 'text-blue-400'}
-                                    ${showRoundFinished ? 'opacity-100 drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]' : 'opacity-10'}`}
+                                    ${showRoundFinished ? 'opacity-90' : 'opacity-10'}`}
                             >
                                 {displayMyScore}
                             </div>
                             <div
                                 className={`font-black font-mono tracking-tight leading-none text-right transition-opacity duration-500 text-[clamp(72px,20vw,220px)]
                                     ${displayOpScore > displayMyScore ? 'text-red-400' : 'text-red-400'}
-                                    ${showRoundFinished ? 'opacity-100 drop-shadow-[0_0_15px_rgba(239,68,68,0.5)]' : 'opacity-10'}`}
+                                    ${showRoundFinished ? 'opacity-90' : 'opacity-10'}`}
                             >
                                 {displayOpScore}
                             </div>

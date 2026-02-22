@@ -133,7 +133,7 @@ const MakeTen: React.FC<MakeTenProps> = ({ seed, onScore, isPlaying }) => {
             }, 150);
         } else if (sum > 10) {
             if (currentPanel.level < 3) {
-                onScore(-20);
+                onScore(-80);
                 playSound('error');
                 setSelectedIndices(new Set()); // Reset to force retry
             }

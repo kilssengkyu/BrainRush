@@ -222,7 +222,7 @@ const MakeZero: React.FC<MakeZeroProps> = ({ seed, onScore, isPlaying }) => {
         } else {
             // Wrong — show error, reset
             setShowWrong(true);
-            onScore(-30);
+            onScore(-100);
             playSound('error');
             setTimeout(() => {
                 setFilledSlots(new Array(totalSlots).fill(null));

@@ -51,6 +51,7 @@ const HIGHSCORE_GAME_TYPES = [
     { type: 'SPY', labelKey: 'spy.title' },
     { type: 'COLOR_TIMING', labelKey: 'colorTiming.title' },
     { type: 'STAIRWAY', labelKey: 'stairway.title' },
+    { type: 'MAKE_ZERO', labelKey: 'zero.title' },
 ] as const;
 
 const Profile = () => {
@@ -310,6 +311,43 @@ const Profile = () => {
 
     useEffect(() => {
         if (!user || !pendingInvite) return;
+        const handledMessageIds = new Set<string>();
+
+        const handleInviteResponseMessage = (msg: any) => {
+            if (!msg?.content || typeof msg.content !== 'string') return;
+            if (!msg.content.startsWith('INVITE_')) return;
+            if (msg.id && handledMessageIds.has(msg.id)) return;
+
+            const parts = msg.content.split(':');
+            const type = parts[0];
+            const inviteId = parts[1];
+            const roomId = parts[2];
+            if (!inviteId || inviteId !== pendingInvite.inviteId) return;
+
+            if (msg.id) handledMessageIds.add(msg.id);
+
+            if (type === 'INVITE_ACCEPTED') {
+                setPendingInvite(null);
+                setInviteTimeLeft(0);
+                showToast(t('social.challengeAccepted'), 'success');
+                if (!roomId) return;
+                navigate(`/game/${roomId}`, {
+                    state: { roomId, myId: user.id, opponentId: pendingInvite.friendId, mode: 'friendly' }
+                });
+            } else if (type === 'INVITE_REJECTED') {
+                setPendingInvite(null);
+                setInviteTimeLeft(0);
+                showToast(t('social.challengeRejected'), 'info');
+            } else if (type === 'INVITE_BUSY') {
+                setPendingInvite(null);
+                setInviteTimeLeft(0);
+                showToast(t('social.challengeInGame'), 'info');
+            } else if (type === 'INVITE_CANCELLED') {
+                setPendingInvite(null);
+                setInviteTimeLeft(0);
+                showToast(t('social.challengeCancelled'), 'info');
+            }
+        };
 
         const channel = supabase
             .channel(`invite_responses_${user.id}_${pendingInvite.inviteId}`)
@@ -319,42 +357,36 @@ const Profile = () => {
                 table: 'chat_messages',
                 filter: `receiver_id=eq.${user.id}`
             }, (payload: any) => {
-                const msg = payload.new;
-                if (!msg?.content || typeof msg.content !== 'string') return;
-                if (!msg.content.startsWith('INVITE_')) return;
-
-                const parts = msg.content.split(':');
-                const type = parts[0];
-                const inviteId = parts[1];
-                const roomId = parts[2];
-                if (!inviteId || inviteId !== pendingInvite.inviteId) return;
-
-                if (type === 'INVITE_ACCEPTED') {
-                    setPendingInvite(null);
-                    setInviteTimeLeft(0);
-                    showToast(t('social.challengeAccepted'), 'success');
-                    if (!roomId) return;
-                    navigate(`/game/${roomId}`, {
-                        state: { roomId, myId: user.id, opponentId: pendingInvite.friendId, mode: 'friendly' }
-                    });
-                } else if (type === 'INVITE_REJECTED') {
-                    setPendingInvite(null);
-                    setInviteTimeLeft(0);
-                    showToast(t('social.challengeRejected'), 'info');
-                } else if (type === 'INVITE_BUSY') {
-                    setPendingInvite(null);
-                    setInviteTimeLeft(0);
-                    showToast(t('social.challengeInGame'), 'info');
-                } else if (type === 'INVITE_CANCELLED') {
-                    setPendingInvite(null);
-                    setInviteTimeLeft(0);
-                    showToast(t('social.challengeCancelled'), 'info');
-                }
+                handleInviteResponseMessage(payload.new);
             })
             .subscribe();
 
+        const pollResponses = async () => {
+            const cutoffIso = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+            const { data, error } = await supabase
+                .from('chat_messages')
+                .select('id, content, created_at')
+                .eq('receiver_id', user.id)
+                .like('content', 'INVITE_%')
+                .gte('created_at', cutoffIso)
+                .order('created_at', { ascending: false })
+                .limit(20);
+
+            if (error) {
+                console.error('Failed to poll invite responses', error);
+                return;
+            }
+
+            (data || []).forEach((msg) => handleInviteResponseMessage(msg));
+        };
+
+        // Cover realtime subscription race: process any response that arrived just before subscribe
+        pollResponses();
+        const pollTimer = window.setInterval(pollResponses, 1500);
+
         return () => {
             supabase.removeChannel(channel);
+            window.clearInterval(pollTimer);
         };
     }, [user, pendingInvite, navigate, showToast, t]);
 
@@ -383,20 +415,11 @@ const Profile = () => {
         setIsLoading(true);
 
         try {
-            const isCompletingNicknameSetup = Boolean(profile?.needs_nickname_setup);
-            const { error } = await supabase
-                .from('profiles')
-                .update({
-                    nickname: nickname.trim(),
-                    country: country,
-                    ...(isCompletingNicknameSetup
-                        ? {
-                            needs_nickname_setup: false,
-                            nickname_set_at: new Date().toISOString()
-                        }
-                        : {})
-                })
-                .eq('id', user.id);
+            const nextNickname = nickname.trim();
+            const { error } = await supabase.rpc('update_my_profile', {
+                p_nickname: nextNickname,
+                p_country: country || null
+            });
 
             if (error) throw error;
 
@@ -405,7 +428,15 @@ const Profile = () => {
             showToast(t('profile.updateSuccess'), 'success');
         } catch (error: any) {
             console.error('Error updating profile:', error);
-            showToast(`${t('profile.updateFail')}: ${error.message || error}`, 'error');
+            const message = (error?.message || '').toString().toLowerCase();
+
+            if (message.includes('already in use')) {
+                showToast(t('profile.nicknameTaken', '이미 사용 중인 닉네임입니다.'), 'error');
+            } else if (message.includes('between 2 and 20')) {
+                showToast(t('profile.nicknameInvalid', '닉네임은 2~20자로 입력해 주세요.'), 'error');
+            } else {
+                showToast(`${t('profile.updateFail')}: ${error.message || error}`, 'error');
+            }
         } finally {
             setIsLoading(false);
         }

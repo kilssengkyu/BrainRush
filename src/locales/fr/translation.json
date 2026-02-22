@@ -151,6 +151,8 @@
     "loading": "Chargement...",
     "purchased": "Acheté",
     "purchaseSuccess": "Achat terminé.",
+    "purchaseRewardDesc": "Les articles achetés ont été attribués.",
+    "removeAdsApplied": "La suppression des publicités a été appliquée.",
     "purchaseFail": "Échec de l'achat.",
     "billingUnavailable": "Facturation non prise en charge sur cet appareil."
   },

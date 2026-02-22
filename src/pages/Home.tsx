@@ -150,9 +150,7 @@ const Home = () => {
         : typeof profile?.xp === 'number'
             ? getLevelFromXp(profile.xp)
             : 1;
-    const requiredRankLevel = 5;
-    const isRankUnlocked = level >= requiredRankLevel;
-    const canPlayRank = Boolean(user) && isRankUnlocked;
+    const canPlayRank = Boolean(user);
     const nickname = profile?.nickname || user?.email?.split('@')[0] || t('game.unknownPlayer');
     const avatarUrl = profile?.avatar_url;
     const countryCode = profile?.country;
@@ -315,11 +313,6 @@ const Home = () => {
         }
 
         if (mode === 'rank') {
-            if (!isRankUnlocked) {
-                playSound('error');
-                showToast(t('matchmaking.rankLevelRequired', { level: requiredRankLevel }), 'info');
-                return;
-            }
             startSearch('rank');
         } else if (mode === 'normal') {
             startSearch('normal');

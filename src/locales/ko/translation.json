@@ -150,6 +150,8 @@
     "loading": "불러오는 중...",
     "purchased": "구매 완료",
     "purchaseSuccess": "구매가 완료되었습니다.",
+    "purchaseRewardDesc": "구매하신 아이템이 지급되었습니다.",
+    "removeAdsApplied": "광고 제거가 적용되었습니다.",
     "purchaseFail": "구매에 실패했습니다.",
     "billingUnavailable": "이 기기에서는 결제를 지원하지 않습니다."
   },

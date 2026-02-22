@@ -121,7 +121,7 @@ const ColorMatch: React.FC<ColorMatchProps> = ({ seed, onScore, isPlaying }) => 
         } else {
             // Wrong item selected!
             // Penalty
-            onScore(-20);
+            onScore(-60);
             playSound('error');
             setShakeId(index);
             setTimeout(() => setShakeId(null), 400);

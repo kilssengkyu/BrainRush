@@ -151,6 +151,8 @@
     "loading": "Loading...",
     "purchased": "Purchased",
     "purchaseSuccess": "Purchase completed.",
+    "purchaseRewardDesc": "Purchased items have been delivered.",
+    "removeAdsApplied": "Ad removal has been applied.",
     "purchaseFail": "Purchase failed.",
     "billingUnavailable": "Billing not supported on this device."
   },

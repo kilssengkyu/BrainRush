@@ -151,6 +151,8 @@
     "loading": "Cargando...",
     "purchased": "Comprado",
     "purchaseSuccess": "Compra completada.",
+    "purchaseRewardDesc": "Los artículos comprados se han entregado.",
+    "removeAdsApplied": "La eliminación de anuncios se ha aplicado.",
     "purchaseFail": "La compra falló.",
     "billingUnavailable": "La facturación no es compatible en este dispositivo."
   },

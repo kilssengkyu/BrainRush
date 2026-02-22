@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ShoppingBag, Pencil, Ban, Sparkles, BookOpen, Loader2 } from 'lucide-react';
@@ -32,6 +32,11 @@ const Shop = () => {
     const [priceMap, setPriceMap] = useState<Record<string, string>>({});
     const [loadingPrices, setLoadingPrices] = useState(false);
     const [purchasing, setPurchasing] = useState(false);
+    const [purchaseReward, setPurchaseReward] = useState<{
+        amount: number | null;
+        unitLabel: string;
+        description: string;
+    } | null>(null);
 
     const items = useMemo<ShopItem[]>(() => ([
         {
@@ -237,7 +242,28 @@ const Shop = () => {
                 await consumePurchaseToken(tokenToConsume);
             }
             await refreshProfile();
-            showToast(t('shop.purchaseSuccess', 'Purchase completed.'), 'success');
+            const rewardMap: Partial<Record<ShopProductId, { amount: number; unitLabel: string }>> = {
+                [PRODUCT_IDS.pencils5]: { amount: 5, unitLabel: t('ad.pencils', '연필') },
+                [PRODUCT_IDS.pencils20]: { amount: 20, unitLabel: t('ad.pencils', '연필') },
+                [PRODUCT_IDS.pencils100]: { amount: 100, unitLabel: t('ad.pencils', '연필') },
+                [PRODUCT_IDS.practiceNotes10]: { amount: 10, unitLabel: t('ad.practiceNotes', '연습노트') },
+                [PRODUCT_IDS.practiceNotes20]: { amount: 20, unitLabel: t('ad.practiceNotes', '연습노트') },
+                [PRODUCT_IDS.practiceNotes100]: { amount: 100, unitLabel: t('ad.practiceNotes', '연습노트') },
+            };
+            const reward = rewardMap[item.productId];
+            if (reward) {
+                setPurchaseReward({
+                    amount: reward.amount,
+                    unitLabel: reward.unitLabel,
+                    description: t('shop.purchaseRewardDesc', '구매하신 아이템이 지급되었습니다.')
+                });
+            } else {
+                setPurchaseReward({
+                    amount: null,
+                    unitLabel: t('shop.purchased', '구매 완료'),
+                    description: t('shop.removeAdsApplied', '광고 제거가 적용되었습니다.')
+                });
+            }
         } catch (err: any) {
             console.error('Purchase failed:', err);
             const errMsg = err?.message || String(err);
@@ -367,6 +393,59 @@ const Shop = () => {
                     </div>
                 </div>
             )}
+
+            <AnimatePresence>
+                {purchaseReward && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-sm px-6"
+                        onClick={() => setPurchaseReward(null)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.7, opacity: 0, y: 30 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.8, opacity: 0 }}
+                            transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+                            className="bg-gradient-to-b from-gray-800 to-gray-900 rounded-3xl p-8 max-w-sm w-full border border-gray-600/50 shadow-2xl text-center"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="mb-4 flex justify-center">
+                                <img
+                                    src="/images/icon/icon_pen.png"
+                                    alt="Pencil"
+                                    className="w-16 h-16 object-contain"
+                                />
+                            </div>
+                            <h3 className="text-xl font-black text-white mb-3">
+                                {t('shop.purchaseSuccess', 'Purchase completed.')}
+                            </h3>
+                            <p className="text-gray-300 text-sm leading-relaxed mb-6">
+                                {purchaseReward.description}
+                            </p>
+                            {purchaseReward.amount !== null && (
+                                <div className="flex items-center justify-center gap-2 mb-6 py-3 px-4 bg-yellow-500/10 rounded-xl border border-yellow-500/20">
+                                    <img
+                                        src="/images/icon/icon_pen.png"
+                                        alt="Pencil"
+                                        className="w-7 h-7 object-contain"
+                                    />
+                                    <span className="text-yellow-400 font-bold text-lg">
+                                        +{purchaseReward.amount} {purchaseReward.unitLabel}
+                                    </span>
+                                </div>
+                            )}
+                            <button
+                                onClick={() => setPurchaseReward(null)}
+                                className="w-full py-3 bg-white text-black font-bold rounded-xl hover:bg-gray-200 transition active:scale-95"
+                            >
+                                {t('common.ok', '확인')}
+                            </button>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

@@ -151,6 +151,8 @@
     "loading": "Wird geladen...",
     "purchased": "Gekauft",
     "purchaseSuccess": "Kauf abgeschlossen.",
+    "purchaseRewardDesc": "Die gekauften Artikel wurden gutgeschrieben.",
+    "removeAdsApplied": "Werbung wurde entfernt.",
     "purchaseFail": "Kauf fehlgeschlagen.",
     "billingUnavailable": "Abrechnung auf diesem Gerät nicht unterstützt."
   },

@@ -76,8 +76,11 @@ const NATIVE_SFX_FILES: Record<SoundType, string> = {
 };
 
 const IS_NATIVE_PLATFORM = Capacitor.isNativePlatform();
+const IS_ANDROID = IS_NATIVE_PLATFORM && Capacitor.getPlatform() === 'android';
 const USE_NATIVE_BGM = IS_NATIVE_PLATFORM;
-const USE_NATIVE_SFX = IS_NATIVE_PLATFORM;
+// Android SFX can become inconsistent on some devices/ringer states with native-audio.
+// Keep BGM native, but route SFX through Howler for stable behavior.
+const USE_NATIVE_SFX = IS_NATIVE_PLATFORM && !IS_ANDROID;
 
 export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const resumeAudioContext = useCallback(async (): Promise<boolean> => {

@@ -98,6 +98,8 @@
     "loading": "加载中...",
     "purchased": "已购买",
     "purchaseSuccess": "购买成功。",
+    "purchaseRewardDesc": "已发放您购买的道具。",
+    "removeAdsApplied": "已应用去广告。",
     "purchaseFail": "购买失败。",
     "billingUnavailable": "此设备不支持购买。"
   },

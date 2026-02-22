@@ -151,6 +151,8 @@
     "loading": "กำลังโหลด...",
     "purchased": "ซื้อแล้ว",
     "purchaseSuccess": "ซื้อสำเร็จ",
+    "purchaseRewardDesc": "มอบไอเท็มที่ซื้อเรียบร้อยแล้ว",
+    "removeAdsApplied": "เปิดใช้งานการลบโฆษณาแล้ว",
     "purchaseFail": "ซื้อไม่สำเร็จ",
     "billingUnavailable": "อุปกรณ์นี้ไม่รองรับการชำระเงิน"
   },

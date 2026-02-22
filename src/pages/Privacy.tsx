@@ -95,7 +95,7 @@ const Privacy = () => {
 
                 <section className="space-y-2">
                     <h2 className="text-base font-semibold text-white">10. 문의처</h2>
-                    <p>이메일: kilssengkyu@naver.com</p>
+                    <p>이메일: brainrush.help@gmail.com</p>
                     <p>운영자: SK.GIL</p>
                 </section>
             </main>

@@ -10,7 +10,7 @@ export const PRODUCT_IDS = {
     pencils100: isIOS ? 'pencil_100' : 'pencils_100',
     practiceNotes10: isIOS ? 'practice_note_10' : 'practice_notes_10',
     practiceNotes20: isIOS ? 'practice_note_20' : 'practice_notes_20',
-    practiceNotes100: isIOS ? 'practice_note_100' : 'practice_notes_100',
+    practiceNotes100: 'practice_note_100',
 } as const;
 
 export type ShopProductId = typeof PRODUCT_IDS[keyof typeof PRODUCT_IDS];

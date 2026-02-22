@@ -151,6 +151,8 @@
     "loading": "Carregando...",
     "purchased": "Comprado",
     "purchaseSuccess": "Compra concluída.",
+    "purchaseRewardDesc": "Os itens comprados foram entregues.",
+    "removeAdsApplied": "A remoção de anúncios foi aplicada.",
     "purchaseFail": "Falha na compra.",
     "billingUnavailable": "Cobrança não suportada neste dispositivo."
   },
