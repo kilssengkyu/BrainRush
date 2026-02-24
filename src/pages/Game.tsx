@@ -41,6 +41,7 @@ import HexRadar from '../components/ui/HexRadar';
 import { isBotId } from '../constants/bot';
 import { useUI } from '../contexts/UIContext';
 import ReportReasonModal from '../components/ui/ReportReasonModal';
+import { resolveRoundWinner } from '../effects/roundWinner';
 
 const BOT_EMOJI_POOL = ['🙂', '😭', '😂', '☹️', '❤️', '💔', '👍', '👎'];
 const BOT_EMOJI_BURST = ['😂', '😭', '👍', '👎'];
@@ -99,6 +100,7 @@ const Game: React.FC = () => {
     // Determine Status Logic
     const isPlaying = gameState.status === 'playing';
     const isFinished = gameState.status === 'finished';
+    const [resultRevealReady, setResultRevealReady] = useState(false);
     const isWaiting = gameState.status === 'waiting';
     const isCountdown = gameState.status === 'countdown';
     const isCountdownActive = Boolean(
@@ -113,11 +115,12 @@ const Game: React.FC = () => {
     const isWarmup = warmupDiff > 0;
     // All UI phases derived from server's start_at timestamp (no client-side timers!)
     // Server sets start_at = now() + 8s in start_next_round
-    // warmupDiff > 4: "Round Finished" phase (first ~4s)
-    // warmupDiff 0~4: "Game Description" phase (last ~4s)
+    // warmupDiff > 3: "Round Finished" phase (first ~5s)
+    // warmupDiff 0~3: "Game Description" phase (last ~3s)
     // warmupDiff <= 0: Game starts
     const hasCompletedRound = gameState.roundScores.length > 0;
-    const showRoundFinished = isWarmup && warmupDiff > 4 && hasCompletedRound && !isFinished;
+    const showRoundFinished = isWarmup && warmupDiff > 3 && hasCompletedRound && !isFinished;
+    const showFinalResult = isFinished && resultRevealReady;
     const showWarmupOverlay = (isWarmup || isCountdown) && !showRoundFinished;
     const showEmojiBar = showRoundFinished || isWaiting;
     const showEmojiOverlay = showEmojiBar;
@@ -134,6 +137,94 @@ const Game: React.FC = () => {
         : (lastRoundSnapshot
             ? (gameState.isPlayer1 ? lastRoundSnapshot.p2_score : lastRoundSnapshot.p1_score)
             : gameState.opScore);
+    const requiredWins = gameState.mode === 'rank' ? 3 : 2;
+    const player1Id = gameState.isPlayer1 ? myId : opponentId;
+    const player2Id = gameState.isPlayer1 ? opponentId : myId;
+    const settledWins = (gameState.roundScores || []).reduce(
+        (acc, round) => {
+            const winner = resolveRoundWinner(round, player1Id, player2Id);
+            if (winner === 'p1') {
+                if (gameState.isPlayer1) acc.my += 1;
+                else acc.op += 1;
+            } else if (winner === 'p2') {
+                if (gameState.isPlayer1) acc.op += 1;
+                else acc.my += 1;
+            }
+            return acc;
+        },
+        { my: 0, op: 0 }
+    );
+    const myWinsForLives = Math.max(settledWins.my, gameState.myWins);
+    const opWinsForLives = Math.max(settledWins.op, gameState.opWins);
+    const myLives = Math.max(0, requiredWins - opWinsForLives);
+    const opLives = Math.max(0, requiredWins - myWinsForLives);
+    const [heartDrop, setHeartDrop] = useState<{ side: 'my' | 'op'; index: number; id: number } | null>(null);
+    const prevMyLivesRef = useRef<number | null>(null);
+    const prevOpLivesRef = useRef<number | null>(null);
+
+    useEffect(() => {
+        if (!heartDrop) return;
+        const timer = window.setTimeout(() => setHeartDrop(null), 420);
+        return () => window.clearTimeout(timer);
+    }, [heartDrop]);
+
+    const pickDropIndex = (livesBefore: number) => {
+        if (livesBefore <= 0) return 0;
+        const center = (requiredWins - 1) / 2;
+        let bestIndex = 0;
+        let bestDist = Number.POSITIVE_INFINITY;
+        for (let idx = 0; idx < livesBefore; idx++) {
+            const dist = Math.abs(idx - center);
+            if (dist < bestDist || (dist === bestDist && idx > bestIndex)) {
+                bestDist = dist;
+                bestIndex = idx;
+            }
+        }
+        return bestIndex;
+    };
+
+    useEffect(() => {
+        const prevMy = prevMyLivesRef.current;
+        const prevOp = prevOpLivesRef.current;
+
+        if (prevMy !== null && myLives < prevMy) {
+            setHeartDrop({ side: 'my', index: pickDropIndex(prevMy), id: Date.now() });
+        } else if (prevOp !== null && opLives < prevOp) {
+            setHeartDrop({ side: 'op', index: pickDropIndex(prevOp), id: Date.now() });
+        }
+
+        prevMyLivesRef.current = myLives;
+        prevOpLivesRef.current = opLives;
+    }, [myLives, opLives, requiredWins]);
+
+    const renderHearts = (lives: number, side: 'my' | 'op') => (
+        <div className="relative flex items-center gap-1.5">
+            {Array.from({ length: requiredWins }).map((_, idx) => {
+                const isDropping = heartDrop?.side === side && heartDrop.index === idx;
+                const isAlive = idx < lives && !isDropping;
+                return (
+                    <span
+                        key={idx}
+                        className={`inline-block text-[48px] leading-none text-red-400 drop-shadow-[0_0_16px_rgba(248,113,113,0.82)] transition-opacity duration-150 ${isAlive ? 'opacity-100' : 'opacity-0'}`}
+                    >
+                        ❤
+                    </span>
+                );
+            })}
+            {heartDrop?.side === side && heartDrop.index >= 0 && (
+                <motion.span
+                    key={heartDrop.id}
+                    className="inline-block text-[48px] leading-none text-red-400 drop-shadow-[0_0_16px_rgba(248,113,113,0.82)] absolute top-0"
+                    initial={{ y: 0, opacity: 1, scale: 1, rotate: 0 }}
+                    animate={{ y: 48, opacity: 0, scale: 0.72, rotate: -22 }}
+                    transition={{ duration: 0.42, ease: 'easeOut' }}
+                    style={{ left: `${heartDrop.index * 52}px` }}
+                >
+                    ❤
+                </motion.span>
+            )}
+        </div>
+    );
     const radarLabels = {
         speed: t('profile.stats.speed'),
         memory: t('profile.stats.memory'),
@@ -167,6 +258,22 @@ const Game: React.FC = () => {
     useEffect(() => {
         showEmojiOverlayRef.current = showEmojiOverlay || (isFinished && gameState.mode !== 'practice');
     }, [showEmojiOverlay, isFinished, gameState.mode]);
+
+    useEffect(() => {
+        if (!isFinished) {
+            setResultRevealReady(false);
+            return;
+        }
+
+        if (gameState.mode === 'practice') {
+            setResultRevealReady(true);
+            return;
+        }
+
+        // Let the last heart drop/fade animation finish before showing final result popup.
+        const timer = window.setTimeout(() => setResultRevealReady(true), 460);
+        return () => window.clearTimeout(timer);
+    }, [isFinished, gameState.mode]);
 
     // Reset realtime score on round change
     useEffect(() => {
@@ -380,14 +487,14 @@ const Game: React.FC = () => {
     const [isReturningToMenu, setIsReturningToMenu] = useState(false);
 
     useEffect(() => {
-        if (isFinished) {
+        if (showFinalResult) {
             // Wait for animations to finish (approx 4.5s)
             const timer = setTimeout(() => setIsButtonEnabled(true), 4500);
             return () => clearTimeout(timer);
         } else {
             setIsButtonEnabled(false);
         }
-    }, [isFinished]);
+    }, [showFinalResult]);
 
     const handleReturnMenu = useCallback(async () => {
         if (isReturningToMenu) return;
@@ -427,7 +534,7 @@ const Game: React.FC = () => {
     const [showLosePencilModal, setShowLosePencilModal] = useState(false);
 
     useEffect(() => {
-        if (isFinished && gameState.mode === 'rank' && myProfile?.id) {
+        if (showFinalResult && gameState.mode === 'rank' && myProfile?.id) {
             // Delay start to sync with "Total Score" appearance
             const startDelay = setTimeout(() => {
                 // Fetch both the new MMR and the streak bonus from the session
@@ -478,11 +585,47 @@ const Game: React.FC = () => {
 
             return () => clearTimeout(startDelay);
         }
-    }, [isFinished, gameState.mode, myProfile]);
+    }, [showFinalResult, gameState.mode, myProfile]);
 
     const getWinnerMessage = () => {
         if (!gameState.winnerId) return t('game.draw');
         return gameState.winnerId === myId ? t('game.victory') : t('game.defeat');
+    };
+
+    const getRoundGameTitle = (gameType: string | null | undefined) => {
+        switch (gameType) {
+            case 'RPS': return t('rps.title');
+            case 'NUMBER': return t('number.title');
+            case 'NUMBER_DESC': return t('number.titleDesc');
+            case 'MATH': return t('math.title');
+            case 'TEN': return t('ten.title');
+            case 'COLOR': return t('color.title');
+            case 'MEMORY': return t('memory.title');
+            case 'SEQUENCE': return t('sequence.title');
+            case 'SEQUENCE_NORMAL': return t('sequence.titleNormal');
+            case 'LARGEST': return t('largest.title');
+            case 'PAIR': return t('pair.title');
+            case 'UPDOWN': return t('updown.title');
+            case 'SLIDER': return t('slider.title');
+            case 'ARROW': return t('arrow.title');
+            case 'BLANK': return t('fillBlanks.title');
+            case 'OPERATOR': return t('findOperator.title');
+            case 'LADDER': return t('ladder.title');
+            case 'TAP_COLOR': return t('tapTheColor.title');
+            case 'AIM': return t('aim.title');
+            case 'MOST_COLOR': return t('mostColor.title');
+            case 'SORTING': return t('sorting.title');
+            case 'SPY': return t('spy.title');
+            case 'PATH': return t('path.title');
+            case 'BALLS': return t('balls.title');
+            case 'BLIND_PATH': return t('blindPath.title');
+            case 'CATCH_COLOR': return t('catchColor.title');
+            case 'TIMING_BAR': return t('timingBar.title');
+            case 'COLOR_TIMING': return t('colorTiming.title', '컬러 타이밍');
+            case 'STAIRWAY': return t('stairway.title', '천국의 계단');
+            case 'MAKE_ZERO': return t('zero.title', '0을 만들어라');
+            default: return gameType || '-';
+        }
     };
 
     const totalScores = React.useMemo(() => {
@@ -514,7 +657,7 @@ const Game: React.FC = () => {
             {isUrgentRound && <div className="round-urgent-frame z-[70]" aria-hidden="true" />}
 
             {/* Top Info Bar (Timer & Scores) */}
-            {!isFinished && (
+            {!showFinalResult && (
                 <header className="h-24 w-full bg-gray-800/80 backdrop-blur-md flex items-center justify-between px-4 shadow-lg z-50 relative">
 
                     {/* Score Progress Bar - Hide in Practice */}
@@ -601,6 +744,19 @@ const Game: React.FC = () => {
                         )}
                     </div>
                 </header>
+            )}
+
+            {gameState.mode !== 'practice' && !showFinalResult && (
+                <div className="absolute top-[calc(env(safe-area-inset-top)+96px)] left-0 right-0 z-[55] pointer-events-none px-4">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            {renderHearts(myLives, 'my')}
+                        </div>
+                        <div>
+                            {renderHearts(opLives, 'op')}
+                        </div>
+                    </div>
+                </div>
             )}
 
             {isConnectionUnstable && (
@@ -934,7 +1090,7 @@ const Game: React.FC = () => {
                 )}
 
                 {/* Result Overlay */}
-                {isFinished && (
+                {showFinalResult && (
                     <div className="absolute inset-0 bg-black/80 backdrop-blur-md z-50 overflow-y-auto">
                         <div className="min-h-full flex flex-col items-center justify-center p-4">
                             <motion.div
@@ -977,7 +1133,7 @@ const Game: React.FC = () => {
                                             }}
                                             className="mb-8"
                                         >
-                                            <h3 className={`text-4xl md:text-6xl font-black drop-shadow-2xl ${getWinnerMessage() === t('game.victory') ? 'text-blue-500' : 'text-red-500'}`}>
+                                            <h3 className={`text-3xl md:text-5xl font-black drop-shadow-2xl ${getWinnerMessage() === t('game.victory') ? 'text-blue-500' : 'text-red-500'}`}>
                                                 {getWinnerMessage()}
                                             </h3>
                                         </motion.div>
@@ -1023,7 +1179,7 @@ const Game: React.FC = () => {
                                                             />
                                                         </div>
 
-                                                        <div className="text-left pl-2 md:pl-4 text-white font-bold relative z-10 text-sm md:text-base">#{round.round}</div>
+                                                        <div className="text-left pl-2 md:pl-4 text-white font-bold relative z-10 text-xs md:text-sm truncate pr-2">{getRoundGameTitle(round?.game_type)}</div>
                                                         <div className="text-blue-400 font-bold text-base md:text-lg relative z-10">{myS}</div>
                                                         <div className="text-red-400 font-bold text-base md:text-lg relative z-10">{opS}</div>
                                                         <div className="relative z-10">
@@ -1052,8 +1208,8 @@ const Game: React.FC = () => {
                                                 className="grid grid-cols-4 p-2 md:p-4 bg-white/5 border-t-2 border-white/10 items-center font-mono"
                                             >
                                                 <div className="text-left pl-2 md:pl-4 text-yellow-400 font-black text-sm md:text-base">{t('game.total')}</div>
-                                                <div className="text-blue-400 font-black text-lg md:text-2xl">{totalScores.my}</div>
-                                                <div className="text-red-400 font-black text-lg md:text-2xl">{totalScores.op}</div>
+                                                <div className="text-blue-400 font-black text-base md:text-xl">{totalScores.my}</div>
+                                                <div className="text-red-400 font-black text-base md:text-xl">{totalScores.op}</div>
                                                 <div>
                                                     {totalScores.my > totalScores.op ? (
                                                         <Trophy className="w-6 h-6 text-yellow-400 mx-auto animate-bounce" />
@@ -1073,7 +1229,7 @@ const Game: React.FC = () => {
                                                 className="mb-8 p-4 bg-white/10 rounded-xl border border-white/20 overflow-hidden"
                                             >
                                                 <div className="text-gray-400 text-sm font-bold uppercase tracking-widest mb-2">{t('game.rankScore')}</div>
-                                                <div className="flex items-center justify-center gap-4 text-4xl font-black">
+                                                <div className="flex items-center justify-center gap-4 text-3xl font-black">
                                                     <div className="text-white">{displayMMR}</div>
                                                     {mmrDelta !== null && mmrDelta !== 0 && (
                                                         <div className="flex flex-col items-start">

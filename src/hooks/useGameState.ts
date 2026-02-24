@@ -12,9 +12,9 @@ export interface GameState {
     opScore: number;
     winnerId: string | null;
     remainingTime: number;
-    // New Fields for 3-Game Set
-    currentRound: number; // 1, 2, 3
-    totalRounds: number;  // 3
+    // Set info
+    currentRound: number;
+    totalRounds: number;
     gameTypes: string[];
     roundScores: any[];
     isPlayer1: boolean;
@@ -164,7 +164,9 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
                 winnerId: record.winner_id,
                 remainingTime: remaining,
                 currentRound: (record.current_round_index || 0) + 1,
-                totalRounds: 3,
+                totalRounds: (record.game_types && Array.isArray(record.game_types) && record.game_types.length > 0)
+                    ? record.game_types.length
+                    : (record.mode === 'rank' ? 5 : 3),
                 gameTypes: record.game_types || [],
                 roundScores: record.round_scores || [],
                 isPlayer1: isP1,

@@ -1300,6 +1300,8 @@ DECLARE
 
     v_p1_total int := 0;
     v_p2_total int := 0;
+    v_p1_wins int := 0;
+    v_p2_wins int := 0;
     v_round jsonb;
 
     -- Streak variables
@@ -1350,6 +1352,7 @@ BEGIN
         v_round_type := v_round->>'game_type';
 
         IF v_round_winner = 'p1' THEN
+            v_p1_wins := v_p1_wins + 1;
             SELECT * INTO v_inc FROM stat_increments(v_round_type);
             v_p1_speed := v_p1_speed + v_inc.speed;
             v_p1_memory := v_p1_memory + v_inc.memory;
@@ -1358,6 +1361,7 @@ BEGIN
             v_p1_accuracy := v_p1_accuracy + v_inc.accuracy;
             v_p1_observation := v_p1_observation + v_inc.observation;
         ELSIF v_round_winner = 'p2' THEN
+            v_p2_wins := v_p2_wins + 1;
             SELECT * INTO v_inc FROM stat_increments(v_round_type);
             v_p2_speed := v_p2_speed + v_inc.speed;
             v_p2_memory := v_p2_memory + v_inc.memory;
@@ -1369,10 +1373,10 @@ BEGIN
     END LOOP;
 
     -- Determine Winner
-    IF v_p1_total > v_p2_total THEN
+    IF v_p1_wins > v_p2_wins THEN
         v_winner := v_session.player1_id;
         v_loser := v_session.player2_id;
-    ELSIF v_p2_total > v_p1_total THEN
+    ELSIF v_p2_wins > v_p1_wins THEN
         v_winner := v_session.player2_id;
         v_loser := v_session.player1_id;
     ELSE
@@ -1384,8 +1388,8 @@ BEGIN
     SET status = 'finished',
         winner_id = v_winner,
         end_at = now(),
-        player1_score = v_p1_total,
-        player2_score = v_p2_total
+        player1_score = v_p1_wins,
+        player2_score = v_p2_wins
     WHERE id = p_room_id;
 
     -- STATS UPDATE LOGIC
@@ -2430,6 +2434,7 @@ DECLARE
     v_mode text;
     v_current_type text;
     v_duration int;
+    v_round_count int := 3;
     v_all_types text[] := ARRAY[
         'RPS', 'NUMBER', 'MATH', 'TEN', 'COLOR',
         'MEMORY', 'SEQUENCE', 'LARGEST', 'PAIR',
@@ -2461,12 +2466,18 @@ BEGIN
             round_scores = '[]'::jsonb
         WHERE id = p_room_id;
     ELSE
-        -- NORMAL/RANK: Random 3 games
+        -- NORMAL/FRIENDLY: BO3, RANK: BO5
+        IF v_mode = 'rank' THEN
+            v_round_count := 5;
+        ELSE
+            v_round_count := 3;
+        END IF;
+
         SELECT ARRAY(
             SELECT x
             FROM unnest(v_all_types) AS x
             ORDER BY random()
-            LIMIT 3
+            LIMIT v_round_count
         ) INTO v_selected_types;
 
         v_first_type := v_selected_types[1];
@@ -2527,6 +2538,8 @@ DECLARE
   v_game_types text[];
   v_round_scores jsonb;
   v_fallback_type text;
+  v_required_wins int := 2;
+  v_max_rounds int := 3;
 BEGIN
   -- Get current state
   SELECT game_type, status, COALESCE(current_round, 0), player1_score, player2_score, COALESCE(p1_current_score, 0), COALESCE(p2_current_score, 0), mode, player1_id, player2_id, game_types, COALESCE(round_scores, '[]'::jsonb)
@@ -2660,8 +2673,16 @@ BEGIN
       RETURN;
   END IF;
 
-  -- 2. Check Victory Condition (3 rounds fixed)
-  IF v_current_round >= 3 THEN
+  IF v_mode = 'rank' THEN
+      v_required_wins := 3;
+      v_max_rounds := 5;
+  ELSE
+      v_required_wins := 2;
+      v_max_rounds := 3;
+  END IF;
+
+  -- 2. Check Victory Condition (BO3/BO5 + early finish)
+  IF v_p1_wins >= v_required_wins OR v_p2_wins >= v_required_wins OR v_current_round >= v_max_rounds THEN
       PERFORM finish_game(p_room_id);
       RETURN;
   END IF;
