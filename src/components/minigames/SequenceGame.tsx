@@ -53,6 +53,15 @@ const SequenceGame: React.FC<SequenceGameProps> = ({ seed, onScore, isPlaying, m
         return Math.min(count, 7);
     }, [stage]);
 
+    // Keep current 150ms as top speed.
+    // Start at 2x slower (300ms) and ramp to 150ms by stage 5.
+    const showStepIntervalMs = useMemo(() => {
+        const slowest = 300;
+        const fastest = 150;
+        const progress = Math.max(0, Math.min(1, (stage - 1) / 4));
+        return Math.round(slowest - (slowest - fastest) * progress);
+    }, [stage]);
+
     // Start New Round
     const startRound = useCallback(() => {
         const rng = new SeededRandom(`${seed}_${mode}_${stage}`);
@@ -98,11 +107,11 @@ const SequenceGame: React.FC<SequenceGameProps> = ({ seed, onScore, isPlaying, m
                     }
                     return next;
                 });
-            }, 150); // fast interval (tak tak tak)
+            }, showStepIntervalMs);
 
             return () => clearInterval(interval);
         }
-    }, [phase, sequence]);
+    }, [phase, sequence, showStepIntervalMs]);
 
 
     const handlePadClick = (index: number) => {

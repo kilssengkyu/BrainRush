@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { X, User as UserIcon, Trophy } from 'lucide-react';
+import { X, User as UserIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../../lib/supabaseClient';
 import Flag from './Flag';
@@ -86,7 +86,7 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose, us
             >
                 <div className="flex justify-between items-center p-5 border-b border-gray-800 bg-gray-900/95 sticky top-0 z-10">
                     <h3 className="text-xl font-black text-white flex items-center gap-2">
-                        <Trophy className="text-yellow-400 w-6 h-6" />
+                        <img src="/images/icon/Mobile.png" alt="Profile" className="w-6 h-6 object-contain" />
                         {t('menu.profile', '프로필')}
                     </h3>
                     <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-800 transition-colors">

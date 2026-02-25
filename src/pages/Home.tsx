@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -217,6 +217,7 @@ const Home = () => {
 
     const [showAdModal, setShowAdModal] = useState(false);
     const [showLeaderboard, setShowLeaderboard] = useState(false);
+    const [activeSessionPrompt, setActiveSessionPrompt] = useState<{ roomId: string; opponentId: string } | null>(null);
     const [showNicknameModal, setShowNicknameModal] = useState(false);
     const [nicknameInput, setNicknameInput] = useState('');
     const [isSavingNickname, setIsSavingNickname] = useState(false);
@@ -239,6 +240,7 @@ const Home = () => {
         if (typeof window === 'undefined') return false;
         return window.innerWidth < 768;
     });
+    const dismissedActiveRoomRef = useRef<string | null>(null);
 
     useEffect(() => {
         const onResize = () => setIsMobileLayout(window.innerWidth < 768);
@@ -253,6 +255,53 @@ const Home = () => {
         nextHomeTutorialStep,
         skipHomeTutorial,
     } = useTutorial();
+
+    const checkActiveSessionAndPrompt = useCallback(async () => {
+        if (!user || authLoading || status !== 'idle') return;
+        try {
+            const { data, error } = await supabase.rpc('check_active_session', {
+                p_player_id: user.id
+            }).maybeSingle() as { data: { room_id: string; opponent_id: string; status: string; created_at: string } | null; error: any };
+
+            if (error || !data) return;
+
+            const sessionAgeMs = Date.now() - new Date(data.created_at).getTime();
+            const isStaleWaitingRoom = data.status === 'waiting' && sessionAgeMs > 60 * 1000;
+            const isStaleActiveRoom = data.status !== 'waiting' && sessionAgeMs > 5 * 60 * 1000;
+            if (isStaleWaitingRoom || isStaleActiveRoom) return;
+            if (dismissedActiveRoomRef.current === data.room_id) return;
+
+            setActiveSessionPrompt({ roomId: data.room_id, opponentId: data.opponent_id });
+        } catch (e) {
+            console.error('Active session prompt check failed:', e);
+        }
+    }, [user, authLoading, status]);
+
+    useEffect(() => {
+        checkActiveSessionAndPrompt();
+    }, [checkActiveSessionAndPrompt]);
+
+    useEffect(() => {
+        if (!user) {
+            setActiveSessionPrompt(null);
+            dismissedActiveRoomRef.current = null;
+            return;
+        }
+        const onFocus = () => {
+            checkActiveSessionAndPrompt();
+        };
+        const onVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                checkActiveSessionAndPrompt();
+            }
+        };
+        window.addEventListener('focus', onFocus);
+        document.addEventListener('visibilitychange', onVisibilityChange);
+        return () => {
+            window.removeEventListener('focus', onFocus);
+            document.removeEventListener('visibilitychange', onVisibilityChange);
+        };
+    }, [user, checkActiveSessionAndPrompt]);
 
     // Map step id to ref
     const tutorialRefs: Record<string, React.RefObject<HTMLButtonElement | null>> = {
@@ -296,6 +345,7 @@ const Home = () => {
     const handleModeSelect = async (mode: string) => {
         playSound('click');
         currentMode.current = mode;
+        setActiveSessionPrompt(null);
 
         // Normal/Rank require an authenticated session (anonymous guest login allowed).
         if (mode === 'rank' || mode === 'normal') {
@@ -509,6 +559,46 @@ const Home = () => {
                         >
                             {t('common.close')}
                         </button>
+                    </div>
+                </div>
+            )}
+
+            {activeSessionPrompt && status === 'idle' && (
+                <div className="fixed inset-0 z-[125] bg-black/75 backdrop-blur-sm flex items-center justify-center px-4">
+                    <div className="w-full max-w-md rounded-3xl border border-yellow-400/30 bg-gray-900/95 p-6 shadow-2xl">
+                        <h2 className="text-xl font-black text-white mb-2">
+                            진행 중인 게임이 있습니다
+                        </h2>
+                        <p className="text-sm text-gray-300 mb-5">
+                            홈으로 돌아왔어요. 진행 중이던 매치로 복귀할까요?
+                        </p>
+                        <div className="grid grid-cols-2 gap-2">
+                            <button
+                                onClick={() => {
+                                    playSound('click');
+                                    dismissedActiveRoomRef.current = activeSessionPrompt.roomId;
+                                    setActiveSessionPrompt(null);
+                                }}
+                                className="rounded-xl border border-gray-600 bg-transparent py-3 font-semibold text-gray-300 transition-colors hover:bg-gray-800"
+                            >
+                                나중에
+                            </button>
+                            <button
+                                onClick={() => {
+                                    playSound('click');
+                                    navigate(`/game/${activeSessionPrompt.roomId}`, {
+                                        state: {
+                                            roomId: activeSessionPrompt.roomId,
+                                            myId: user?.id,
+                                            opponentId: activeSessionPrompt.opponentId
+                                        }
+                                    });
+                                }}
+                                className="rounded-xl bg-yellow-500 py-3 font-black text-black transition-colors hover:bg-yellow-400"
+                            >
+                                복귀
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

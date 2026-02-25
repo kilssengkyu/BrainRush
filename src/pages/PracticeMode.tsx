@@ -203,7 +203,7 @@ const PracticeMode = () => {
                                 </div>
                             )}
                         </div>
-                        <BookOpen className="w-5 h-5 text-green-300" />
+                        <img src="/images/icon/icon_note.png" alt="Practice Note" className="w-5 h-5 object-contain" />
                     </button>
                 ) : (
                     <div className="w-10" />

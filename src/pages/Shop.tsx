@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ShoppingBag, Pencil, Ban, Sparkles, BookOpen, Loader2 } from 'lucide-react';
+import { ArrowLeft, ShoppingBag, Ban, Loader2 } from 'lucide-react';
 import { useSound } from '../contexts/SoundContext';
 import { useUI } from '../contexts/UIContext';
 import { consumePurchaseToken, getPurchaseToken, getTransactionId, loadProducts, PRODUCT_IDS, purchaseProduct, type ShopProductId } from '../lib/purchaseService';
@@ -36,6 +36,8 @@ const Shop = () => {
         amount: number | null;
         unitLabel: string;
         description: string;
+        iconSrc: string;
+        iconAlt: string;
     } | null>(null);
 
     const items = useMemo<ShopItem[]>(() => ([
@@ -56,7 +58,7 @@ const Shop = () => {
             descKey: 'shop.pencils5.desc',
             priceLabel: priceMap[PRODUCT_IDS.pencils5] || '₩1,200',
             accent: 'from-yellow-500/20 to-transparent',
-            icon: <Pencil className="w-8 h-8 text-yellow-300" />,
+            icon: <img src="/images/icon/icon_pen.png" alt="Pencil" className="w-8 h-8 object-contain" />,
             isConsumable: true,
         },
         {
@@ -67,7 +69,7 @@ const Shop = () => {
             priceLabel: priceMap[PRODUCT_IDS.pencils20] || '₩3,900',
             tagKey: 'shop.popular',
             accent: 'from-emerald-500/20 to-transparent',
-            icon: <Pencil className="w-8 h-8 text-emerald-300" />,
+            icon: <img src="/images/icon/icon_pen.png" alt="Pencil" className="w-8 h-8 object-contain" />,
             isConsumable: true,
         },
         {
@@ -78,7 +80,7 @@ const Shop = () => {
             priceLabel: priceMap[PRODUCT_IDS.pencils100] || '₩19,000',
             tagKey: 'shop.bestValue',
             accent: 'from-sky-500/20 to-transparent',
-            icon: <Sparkles className="w-8 h-8 text-sky-300" />,
+            icon: <img src="/images/icon/icon_pen.png" alt="Pencil" className="w-8 h-8 object-contain" />,
             isConsumable: true,
         },
         {
@@ -88,7 +90,7 @@ const Shop = () => {
             descKey: 'shop.practiceNotes5.desc',
             priceLabel: priceMap[PRODUCT_IDS.practiceNotes10] || '₩1,200',
             accent: 'from-green-500/20 to-transparent',
-            icon: <BookOpen className="w-8 h-8 text-green-300" />,
+            icon: <img src="/images/icon/icon_note.png" alt="Practice Note" className="w-8 h-8 object-contain" />,
             isConsumable: true,
         },
         {
@@ -99,7 +101,7 @@ const Shop = () => {
             priceLabel: priceMap[PRODUCT_IDS.practiceNotes20] || '₩2,200',
             tagKey: 'shop.popular',
             accent: 'from-lime-500/20 to-transparent',
-            icon: <BookOpen className="w-8 h-8 text-lime-300" />,
+            icon: <img src="/images/icon/icon_note.png" alt="Practice Note" className="w-8 h-8 object-contain" />,
             isConsumable: true,
         },
         {
@@ -110,7 +112,7 @@ const Shop = () => {
             priceLabel: priceMap[PRODUCT_IDS.practiceNotes100] || '₩9,900',
             tagKey: 'shop.bestValue',
             accent: 'from-emerald-500/20 to-transparent',
-            icon: <BookOpen className="w-8 h-8 text-emerald-300" />,
+            icon: <img src="/images/icon/icon_note.png" alt="Practice Note" className="w-8 h-8 object-contain" />,
             isConsumable: true,
         }
     ]), [priceMap, t]);
@@ -251,17 +253,24 @@ const Shop = () => {
                 [PRODUCT_IDS.practiceNotes100]: { amount: 100, unitLabel: t('ad.practiceNotes', '연습노트') },
             };
             const reward = rewardMap[item.productId];
+            const isPracticeNoteReward = item.productId === PRODUCT_IDS.practiceNotes10
+                || item.productId === PRODUCT_IDS.practiceNotes20
+                || item.productId === PRODUCT_IDS.practiceNotes100;
             if (reward) {
                 setPurchaseReward({
                     amount: reward.amount,
                     unitLabel: reward.unitLabel,
-                    description: t('shop.purchaseRewardDesc', '구매하신 아이템이 지급되었습니다.')
+                    description: t('shop.purchaseRewardDesc', '구매하신 아이템이 지급되었습니다.'),
+                    iconSrc: isPracticeNoteReward ? '/images/icon/icon_note.png' : '/images/icon/icon_pen.png',
+                    iconAlt: isPracticeNoteReward ? 'Practice Note' : 'Pencil'
                 });
             } else {
                 setPurchaseReward({
                     amount: null,
                     unitLabel: t('shop.purchased', '구매 완료'),
-                    description: t('shop.removeAdsApplied', '광고 제거가 적용되었습니다.')
+                    description: t('shop.removeAdsApplied', '광고 제거가 적용되었습니다.'),
+                    iconSrc: '/images/icon/icon_pen.png',
+                    iconAlt: 'Pencil'
                 });
             }
         } catch (err: any) {
@@ -413,8 +422,8 @@ const Shop = () => {
                         >
                             <div className="mb-4 flex justify-center">
                                 <img
-                                    src="/images/icon/icon_pen.png"
-                                    alt="Pencil"
+                                    src={purchaseReward.iconSrc}
+                                    alt={purchaseReward.iconAlt}
                                     className="w-16 h-16 object-contain"
                                 />
                             </div>
@@ -427,8 +436,8 @@ const Shop = () => {
                             {purchaseReward.amount !== null && (
                                 <div className="flex items-center justify-center gap-2 mb-6 py-3 px-4 bg-yellow-500/10 rounded-xl border border-yellow-500/20">
                                     <img
-                                        src="/images/icon/icon_pen.png"
-                                        alt="Pencil"
+                                        src={purchaseReward.iconSrc}
+                                        alt={purchaseReward.iconAlt}
                                         className="w-7 h-7 object-contain"
                                     />
                                     <span className="text-yellow-400 font-bold text-lg">

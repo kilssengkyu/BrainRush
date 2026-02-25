@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Trophy, User } from 'lucide-react';
+import { Heart, User } from 'lucide-react';
 import { AnimatedScore } from '../components/ui/AnimatedScore';
 import { useGameState } from '../hooks/useGameState';
 import { useSound } from '../contexts/SoundContext';
@@ -51,6 +51,24 @@ const BOT_EMOJI_REACTIVE = {
     close: ['🙂', '👍', '👎']
 };
 type BotEmojiPattern = 'burst' | 'silent' | 'reactive';
+const CROWN_ICON = '/images/icon/Crown%20(Border).png';
+const CUP_ICON = '/images/icon/Cup%20(Border).png';
+const SPEECH_BUBBLE_LEFT_ICON = '/images/icon/Speech%20Bubble%20-%20Left.png';
+const SPEECH_BUBBLE_RIGHT_ICON = '/images/icon/Speech%20Bubble%20-%20Right.png';
+const EMOJI_ICON_MAP: Record<string, string> = {
+    '🙂': '/images/icon/emoji/Big%20Smile%20-%20Cartoon.png',
+    '😂': '/images/icon/emoji/Heavy%20Smile%20-%20Cartoon.png',
+    '😭': '/images/icon/emoji/Sad%20-%20Cartoon.png',
+    '☹️': '/images/icon/emoji/Fear%20-%20Cartoon.png',
+    '❤️': '/images/icon/emoji/Heart%20-%20Pink.png',
+    '💔': '/images/icon/emoji/Heart%20-%20Broken.png',
+    '👍': '/images/icon/emoji/Cool%20-%20Cartoon.png',
+    '👎': '/images/icon/emoji/Shy%20-%20Cartoon.png'
+};
+const ROUND_LEAVE_BLOCK_PREFIX = 'brainrush.round_leave_block.v1';
+
+const makeRoundLeaveBlockKey = (roomId: string, playerId: string, round: number) =>
+    `${ROUND_LEAVE_BLOCK_PREFIX}:${roomId}:${playerId}:${round}`;
 
 const Game: React.FC = () => {
     const { t } = useTranslation();
@@ -108,6 +126,14 @@ const Game: React.FC = () => {
     );
     const isUrgentRound = isPlaying && !isCountdownActive && gameState.remainingTime <= 5 && gameState.remainingTime > 0;
     const isGameplayActive = isPlaying && !isCountdownActive && !isTimeUp;
+    const [isRoundLeaveBlocked, setIsRoundLeaveBlocked] = useState(false);
+    const roundLeaveMarkWrittenRef = useRef(false);
+    const gameplayActiveRef = useRef(false);
+    const blockContextRef = useRef<{ roomId: string | null; myId: string | null; round: number }>({
+        roomId: null,
+        myId: null,
+        round: 1
+    });
 
     const now = Date.now() + serverOffset;
     const warmupStart = gameState.startAt ? new Date(gameState.startAt).getTime() : 0;
@@ -124,6 +150,72 @@ const Game: React.FC = () => {
     const showWarmupOverlay = (isWarmup || isCountdown) && !showRoundFinished;
     const showEmojiBar = showRoundFinished || isWaiting;
     const showEmojiOverlay = showEmojiBar;
+    const isRoundBlockFeatureEnabled = gameState.mode !== 'practice';
+    const isGameplayInteractable = isGameplayActive && (!isRoundBlockFeatureEnabled || !isRoundLeaveBlocked);
+
+    useEffect(() => {
+        gameplayActiveRef.current = isGameplayActive;
+    }, [isGameplayActive]);
+
+    useEffect(() => {
+        blockContextRef.current = {
+            roomId: roomId ?? null,
+            myId: myId ?? null,
+            round: gameState.currentRound
+        };
+    }, [roomId, myId, gameState.currentRound]);
+
+    useEffect(() => {
+        roundLeaveMarkWrittenRef.current = false;
+        if (!isRoundBlockFeatureEnabled || !roomId || !myId) {
+            setIsRoundLeaveBlocked(false);
+            return;
+        }
+        try {
+            const key = makeRoundLeaveBlockKey(roomId, myId, gameState.currentRound);
+            setIsRoundLeaveBlocked(localStorage.getItem(key) === '1');
+        } catch {
+            setIsRoundLeaveBlocked(false);
+        }
+    }, [roomId, myId, gameState.currentRound, isRoundBlockFeatureEnabled]);
+
+    useEffect(() => {
+        if (!isRoundBlockFeatureEnabled || !roomId || !myId || !isFinished) return;
+        try {
+            for (let round = 1; round <= Math.max(1, gameState.totalRounds || 0); round += 1) {
+                localStorage.removeItem(makeRoundLeaveBlockKey(roomId, myId, round));
+            }
+        } catch {
+            // noop
+        }
+    }, [isFinished, roomId, myId, gameState.totalRounds, isRoundBlockFeatureEnabled]);
+
+    useEffect(() => {
+        const markCurrentRoundBlocked = () => {
+            if (roundLeaveMarkWrittenRef.current) return;
+            if (!gameplayActiveRef.current) return;
+            const ctx = blockContextRef.current;
+            if (!isRoundBlockFeatureEnabled || !ctx.roomId || !ctx.myId) return;
+            try {
+                localStorage.setItem(makeRoundLeaveBlockKey(ctx.roomId, ctx.myId, ctx.round), '1');
+                roundLeaveMarkWrittenRef.current = true;
+            } catch {
+                // noop
+            }
+        };
+
+        const onPageHide = () => markCurrentRoundBlocked();
+        const onBeforeUnload = () => markCurrentRoundBlocked();
+
+        window.addEventListener('pagehide', onPageHide);
+        window.addEventListener('beforeunload', onBeforeUnload);
+        return () => {
+            // Route leave from /game is treated as page leave.
+            markCurrentRoundBlocked();
+            window.removeEventListener('pagehide', onPageHide);
+            window.removeEventListener('beforeunload', onBeforeUnload);
+        };
+    }, [isRoundBlockFeatureEnabled]);
 
     // Display scores: during Round Finished, use server's roundScores snapshot (reliable)
     const lastRoundSnapshot = showRoundFinished && gameState.roundScores.length > 0
@@ -158,73 +250,171 @@ const Game: React.FC = () => {
     const opWinsForLives = Math.max(settledWins.op, gameState.opWins);
     const myLives = Math.max(0, requiredWins - opWinsForLives);
     const opLives = Math.max(0, requiredWins - myWinsForLives);
-    const [heartDrop, setHeartDrop] = useState<{ side: 'my' | 'op'; index: number; id: number } | null>(null);
-    const prevMyLivesRef = useRef<number | null>(null);
-    const prevOpLivesRef = useRef<number | null>(null);
+    const [backdropHeartOn, setBackdropHeartOn] = useState<{ my: boolean[]; op: boolean[] }>({
+        my: Array.from({ length: requiredWins }, () => true),
+        op: Array.from({ length: requiredWins }, () => true)
+    });
+    const [displayedLives, setDisplayedLives] = useState<{ my: number; op: number }>({
+        my: requiredWins,
+        op: requiredWins
+    });
+    const [finishRevealDelayMs, setFinishRevealDelayMs] = useState(460);
+    const displayedLivesRef = useRef(displayedLives);
+    const roundLifeFxRoundRef = useRef<number>(-1);
 
     useEffect(() => {
-        if (!heartDrop) return;
-        const timer = window.setTimeout(() => setHeartDrop(null), 420);
-        return () => window.clearTimeout(timer);
-    }, [heartDrop]);
+        displayedLivesRef.current = displayedLives;
+    }, [displayedLives]);
 
-    const pickDropIndex = (livesBefore: number) => {
-        if (livesBefore <= 0) return 0;
-        const center = (requiredWins - 1) / 2;
-        let bestIndex = 0;
-        let bestDist = Number.POSITIVE_INFINITY;
-        for (let idx = 0; idx < livesBefore; idx++) {
-            const dist = Math.abs(idx - center);
-            if (dist < bestDist || (dist === bestDist && idx > bestIndex)) {
-                bestDist = dist;
-                bestIndex = idx;
+    useEffect(() => {
+        if (gameState.roundScores.length === 0) {
+            roundLifeFxRoundRef.current = -1;
+            setDisplayedLives({ my: requiredWins, op: requiredWins });
+        }
+    }, [gameState.roundScores.length, requiredWins]);
+
+    useEffect(() => {
+        if (isFinished || !showRoundFinished || gameState.mode === 'practice') return;
+        const roundIdx = gameState.roundScores.length - 1;
+        if (roundIdx < 0 || roundLifeFxRoundRef.current === roundIdx) return;
+        roundLifeFxRoundRef.current = roundIdx;
+
+        const round = gameState.roundScores[roundIdx];
+        const winner = resolveRoundWinner(round, player1Id, player2Id);
+        const baseLives = displayedLivesRef.current;
+
+        const buildSideMask = (side: 'my' | 'op', lives: number) =>
+            Array.from({ length: requiredWins }, (_, idx) =>
+                side === 'my' ? idx < lives : idx >= (requiredWins - lives)
+            );
+
+        setBackdropHeartOn({
+            my: buildSideMask('my', baseLives.my),
+            op: buildSideMask('op', baseLives.op)
+        });
+
+        if (winner === 'draw') return;
+
+        const losingSide: 'my' | 'op' =
+            (winner === 'p1' && gameState.isPlayer1) || (winner === 'p2' && !gameState.isPlayer1)
+                ? 'op'
+                : 'my';
+        const targetIdx = losingSide === 'my'
+            ? Math.max(0, baseLives.my - 1)
+            : Math.max(0, requiredWins - baseLives.op);
+
+        const timers: number[] = [];
+        const flickerCount = 3 + Math.floor(Math.random() * 3); // 3~5 toggles
+        const flickerTimes: number[] = [];
+        let cursor = 180 + Math.floor(Math.random() * 120);
+        for (let i = 0; i < flickerCount; i++) {
+            flickerTimes.push(cursor);
+            // Uneven cadence like failing light bulb: short, long, short...
+            const nextGap = (i % 2 === 0)
+                ? (70 + Math.floor(Math.random() * 90))
+                : (140 + Math.floor(Math.random() * 220));
+            cursor += nextGap;
+        }
+
+        flickerTimes.forEach((at) => {
+            timers.push(window.setTimeout(() => {
+                setBackdropHeartOn((prev) => {
+                    const next = { ...prev, [losingSide]: [...prev[losingSide]] };
+                    next[losingSide][targetIdx] = !next[losingSide][targetIdx];
+                    return next;
+                });
+            }, at));
+        });
+
+        timers.push(window.setTimeout(() => {
+            setBackdropHeartOn((prev) => {
+                const next = { ...prev, [losingSide]: [...prev[losingSide]] };
+                next[losingSide][targetIdx] = false;
+                return next;
+            });
+            setDisplayedLives({ my: myLives, op: opLives });
+        }, cursor + 120 + Math.floor(Math.random() * 120)));
+
+        return () => timers.forEach((id) => window.clearTimeout(id));
+    }, [
+        isFinished,
+        showRoundFinished,
+        gameState.mode,
+        gameState.roundScores,
+        gameState.isPlayer1,
+        player1Id,
+        player2Id,
+        requiredWins,
+        myLives,
+        opLives
+    ]);
+
+    useEffect(() => {
+        if (!isFinished) {
+            setBackdropHeartOn({
+                my: Array.from({ length: requiredWins }, () => true),
+                op: Array.from({ length: requiredWins }, () => true)
+            });
+            setDisplayedLives({ my: requiredWins, op: requiredWins });
+            setFinishRevealDelayMs(460);
+            return;
+        }
+
+        if (gameState.mode === 'practice' || !gameState.winnerId || !myId) {
+            setFinishRevealDelayMs(460);
+            return;
+        }
+
+        const losingSide: 'my' | 'op' | null = gameState.winnerId === myId
+            ? 'op'
+            : (gameState.winnerId === opponentId ? 'my' : null);
+        if (!losingSide) {
+            setFinishRevealDelayMs(460);
+            return;
+        }
+
+        const timers: number[] = [];
+        let maxEnd = 0;
+        for (let idx = 0; idx < requiredWins; idx++) {
+            const startAt = idx * 220 + Math.floor(Math.random() * 140);
+            const flickers = 8 + Math.floor(Math.random() * 5);
+            let cursor = startAt;
+
+            for (let step = 0; step < flickers; step++) {
+                // Accelerate blink cadence for a "power dying" feel.
+                const interval = Math.max(38, 86 - step * 6) + Math.floor(Math.random() * 16);
+                cursor += interval;
+                const at = cursor;
+                maxEnd = Math.max(maxEnd, at);
+                timers.push(window.setTimeout(() => {
+                    setBackdropHeartOn((prev) => {
+                        const next = { ...prev, [losingSide]: [...prev[losingSide]] };
+                        next[losingSide][idx] = !next[losingSide][idx];
+                        return next;
+                    });
+                }, at));
             }
+
+            const offAt = cursor + 120 + Math.floor(Math.random() * 70);
+            maxEnd = Math.max(maxEnd, offAt);
+            timers.push(window.setTimeout(() => {
+                setBackdropHeartOn((prev) => {
+                    const next = { ...prev, [losingSide]: [...prev[losingSide]] };
+                    next[losingSide][idx] = false;
+                    return next;
+                });
+            }, offAt));
         }
-        return bestIndex;
+
+        setFinishRevealDelayMs(Math.max(760, maxEnd + 220));
+        return () => timers.forEach((timerId) => window.clearTimeout(timerId));
+    }, [isFinished, gameState.mode, gameState.winnerId, myId, opponentId, requiredWins]);
+
+    const renderEmojiVisual = (emoji: string, className: string) => {
+        const src = EMOJI_ICON_MAP[emoji];
+        if (!src) return <span className={className}>{emoji}</span>;
+        return <img src={src} alt={emoji} className={className} />;
     };
-
-    useEffect(() => {
-        const prevMy = prevMyLivesRef.current;
-        const prevOp = prevOpLivesRef.current;
-
-        if (prevMy !== null && myLives < prevMy) {
-            setHeartDrop({ side: 'my', index: pickDropIndex(prevMy), id: Date.now() });
-        } else if (prevOp !== null && opLives < prevOp) {
-            setHeartDrop({ side: 'op', index: pickDropIndex(prevOp), id: Date.now() });
-        }
-
-        prevMyLivesRef.current = myLives;
-        prevOpLivesRef.current = opLives;
-    }, [myLives, opLives, requiredWins]);
-
-    const renderHearts = (lives: number, side: 'my' | 'op') => (
-        <div className="relative flex items-center gap-1.5">
-            {Array.from({ length: requiredWins }).map((_, idx) => {
-                const isDropping = heartDrop?.side === side && heartDrop.index === idx;
-                const isAlive = idx < lives && !isDropping;
-                return (
-                    <span
-                        key={idx}
-                        className={`inline-block text-[48px] leading-none text-red-400 drop-shadow-[0_0_16px_rgba(248,113,113,0.82)] transition-opacity duration-150 ${isAlive ? 'opacity-100' : 'opacity-0'}`}
-                    >
-                        ❤
-                    </span>
-                );
-            })}
-            {heartDrop?.side === side && heartDrop.index >= 0 && (
-                <motion.span
-                    key={heartDrop.id}
-                    className="inline-block text-[48px] leading-none text-red-400 drop-shadow-[0_0_16px_rgba(248,113,113,0.82)] absolute top-0"
-                    initial={{ y: 0, opacity: 1, scale: 1, rotate: 0 }}
-                    animate={{ y: 48, opacity: 0, scale: 0.72, rotate: -22 }}
-                    transition={{ duration: 0.42, ease: 'easeOut' }}
-                    style={{ left: `${heartDrop.index * 52}px` }}
-                >
-                    ❤
-                </motion.span>
-            )}
-        </div>
-    );
     const radarLabels = {
         speed: t('profile.stats.speed'),
         memory: t('profile.stats.memory'),
@@ -270,10 +460,10 @@ const Game: React.FC = () => {
             return;
         }
 
-        // Let the last heart drop/fade animation finish before showing final result popup.
-        const timer = window.setTimeout(() => setResultRevealReady(true), 460);
+        // Delay final popup until loser-side heart flicker/power-down is completed.
+        const timer = window.setTimeout(() => setResultRevealReady(true), finishRevealDelayMs);
         return () => window.clearTimeout(timer);
-    }, [isFinished, gameState.mode]);
+    }, [isFinished, gameState.mode, finishRevealDelayMs]);
 
     // Reset realtime score on round change
     useEffect(() => {
@@ -651,6 +841,17 @@ const Game: React.FC = () => {
         return sum;
     }, [gameState.roundScores, gameState.isPlayer1, gameState.myScore, gameState.opScore]);
 
+    const maxBackdropScoreDigits = Math.max(
+        String(Math.max(0, Math.floor(displayMyScore))).length,
+        String(Math.max(0, Math.floor(displayOpScore))).length
+    );
+    const backdropScoreSizeClass =
+        maxBackdropScoreDigits >= 5
+            ? 'text-[clamp(40px,10vw,110px)]'
+            : maxBackdropScoreDigits === 4
+                ? 'text-[clamp(52px,13vw,150px)]'
+                : 'text-[clamp(72px,20vw,220px)]';
+
     return (
         <div className="relative w-full h-[100dvh] bg-gray-900 text-white overflow-hidden flex flex-col font-sans select-none pt-[env(safe-area-inset-top)]">
 
@@ -746,19 +947,6 @@ const Game: React.FC = () => {
                 </header>
             )}
 
-            {gameState.mode !== 'practice' && !showFinalResult && (
-                <div className="absolute top-[calc(env(safe-area-inset-top)+96px)] left-0 right-0 z-[55] pointer-events-none px-4">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            {renderHearts(myLives, 'my')}
-                        </div>
-                        <div>
-                            {renderHearts(opLives, 'op')}
-                        </div>
-                    </div>
-                </div>
-            )}
-
             {isConnectionUnstable && (
                 <div className="absolute top-24 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 bg-yellow-500/20 border border-yellow-400/40 text-yellow-100 text-xs font-bold px-3 py-1.5 rounded-full backdrop-blur-md">
                     <span className="w-3 h-3 rounded-full border-2 border-yellow-200 border-t-transparent animate-spin" />
@@ -807,18 +995,54 @@ const Game: React.FC = () => {
 
                         <div className="absolute inset-0 flex items-start justify-between px-4 sm:px-8 pt-32">
                             <div
-                                className={`font-black font-mono tracking-tight leading-none transition-opacity duration-500 text-[clamp(72px,20vw,220px)]
+                                className={`w-[42%] font-black font-mono tabular-nums tracking-tight leading-none transition-opacity duration-500 ${backdropScoreSizeClass}
                                     ${displayMyScore >= displayOpScore ? 'text-blue-400' : 'text-blue-400'}
                                     ${showRoundFinished ? 'opacity-90' : 'opacity-10'}`}
                             >
                                 {displayMyScore}
                             </div>
                             <div
-                                className={`font-black font-mono tracking-tight leading-none text-right transition-opacity duration-500 text-[clamp(72px,20vw,220px)]
+                                className={`w-[42%] font-black font-mono tabular-nums tracking-tight leading-none text-right transition-opacity duration-500 ${backdropScoreSizeClass}
                                     ${displayOpScore > displayMyScore ? 'text-red-400' : 'text-red-400'}
                                     ${showRoundFinished ? 'opacity-90' : 'opacity-10'}`}
                             >
                                 {displayOpScore}
+                            </div>
+                        </div>
+                    </div>
+                )}
+                {(isPlaying || showRoundFinished || (isFinished && !showFinalResult)) && gameState.mode !== 'practice' && (
+                    <div className="absolute inset-0 pointer-events-none z-0 select-none overflow-hidden">
+                        <div className="absolute inset-x-0 flex items-start justify-between px-4 sm:px-8 pt-[calc(env(safe-area-inset-top)+82px)]">
+                            <div className="flex gap-2">
+                                {Array.from({ length: requiredWins }).map((_, idx) => {
+                                    const isAlive = idx < displayedLives.my;
+                                    const isOn = (isFinished || showRoundFinished)
+                                        ? (backdropHeartOn.my[idx] ?? true)
+                                        : isAlive;
+                                    return (
+                                        <Heart
+                                            key={`bg-heart-my-${idx}`}
+                                            className={`w-[clamp(38px,6vw,74px)] h-[clamp(38px,6vw,74px)] text-blue-400 transition-opacity duration-120 ${showRoundFinished ? (isOn ? 'opacity-80' : 'opacity-24') : (isOn ? 'opacity-30' : 'opacity-0')}`}
+                                            strokeWidth={2.1}
+                                        />
+                                    );
+                                })}
+                            </div>
+                            <div className="flex gap-2">
+                                {Array.from({ length: requiredWins }).map((_, idx) => {
+                                    const isAlive = idx >= (requiredWins - displayedLives.op);
+                                    const isOn = (isFinished || showRoundFinished)
+                                        ? (backdropHeartOn.op[idx] ?? true)
+                                        : isAlive;
+                                    return (
+                                        <Heart
+                                            key={`bg-heart-op-${idx}`}
+                                            className={`w-[clamp(38px,6vw,74px)] h-[clamp(38px,6vw,74px)] text-red-400 transition-opacity duration-120 ${showRoundFinished ? (isOn ? 'opacity-80' : 'opacity-24') : (isOn ? 'opacity-30' : 'opacity-0')}`}
+                                            strokeWidth={2.1}
+                                        />
+                                    );
+                                })}
                             </div>
                         </div>
                     </div>
@@ -974,35 +1198,35 @@ const Game: React.FC = () => {
                         )}
 
                         <div className="w-full h-full select-none minigame-area">
-                            {isGameplayActive && (
+                            {isGameplayInteractable && (
                                 <>
                                     {gameState.gameType === 'RPS' && (
-                                        <RockPaperScissors seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
+                                        <RockPaperScissors seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'NUMBER' && (
-                                        <NumberSortGame mode="asc" seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
+                                        <NumberSortGame mode="asc" seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'NUMBER_DESC' && (
-                                        <NumberSortGame mode="desc" seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
+                                        <NumberSortGame mode="desc" seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'MATH' && (
-                                        <MathChallenge seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
+                                        <MathChallenge seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'TEN' && (
-                                        <MakeTen seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
+                                        <MakeTen seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'COLOR' && (
-                                        <ColorMatch seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
+                                        <ColorMatch seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'MEMORY' && (
-                                        <MemoryMatch seed={gameState.seed || ''} onScore={incrementScore} isPlaying={isGameplayActive} />
+                                        <MemoryMatch seed={gameState.seed || ''} onScore={incrementScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'SEQUENCE' && (
                                         <SequenceGame
                                             mode="reverse"
                                             seed={gameState.seed}
                                             onScore={incrementScore}
-                                            isPlaying={isGameplayActive}
+                                            isPlaying={isGameplayInteractable}
                                         />
                                     )}
                                     {gameState.gameType === 'SEQUENCE_NORMAL' && (
@@ -1010,83 +1234,93 @@ const Game: React.FC = () => {
                                             mode="forward"
                                             seed={gameState.seed}
                                             onScore={incrementScore}
-                                            isPlaying={isGameplayActive}
+                                            isPlaying={isGameplayInteractable}
                                         />
                                     )}
                                     {gameState.gameType === 'LARGEST' && (
-                                        <FindLargest seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
+                                        <FindLargest seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'PAIR' && (
-                                        <FindPair seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
+                                        <FindPair seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'UPDOWN' && (
-                                        <NumberUpDown seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
+                                        <NumberUpDown seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'SLIDER' && (
-                                        <NumberSlider seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
+                                        <NumberSlider seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'ARROW' && (
-                                        <ArrowSlider seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
+                                        <ArrowSlider seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'BLANK' && (
-                                        <FillBlanks seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
+                                        <FillBlanks seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'OPERATOR' && (
-                                        <FindOperator seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
+                                        <FindOperator seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'LADDER' && (
-                                        <LadderGame seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
+                                        <LadderGame seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'TAP_COLOR' && (
-                                        <TapTheColor seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
+                                        <TapTheColor seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'AIM' && (
-                                        <AimingGame seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
+                                        <AimingGame seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'MOST_COLOR' && (
-                                        <FindMostColor seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
+                                        <FindMostColor seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'SORTING' && (
-                                        <SortingGame seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
+                                        <SortingGame seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'SPY' && (
-                                        <FindTheSpy seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
+                                        <FindTheSpy seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'PATH' && (
-                                        <PathRunner seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
+                                        <PathRunner seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'BALLS' && (
-                                        <BallCounter seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
+                                        <BallCounter seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'BLIND_PATH' && (
-                                        <BlindPathRunner seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
+                                        <BlindPathRunner seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'CATCH_COLOR' && (
-                                        <CatchColor seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
+                                        <CatchColor seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'TIMING_BAR' && (
                                         <TimingBar
                                             onScore={incrementScore}
-                                            isPlaying={isGameplayActive}
+                                            isPlaying={isGameplayInteractable}
                                             remainingTime={gameState.remainingTime}
                                         />
                                     )}
                                     {gameState.gameType === 'COLOR_TIMING' && (
                                         <ColorTiming
                                             onScore={incrementScore}
-                                            isPlaying={isGameplayActive}
+                                            isPlaying={isGameplayInteractable}
                                         />
                                     )}
                                     {gameState.gameType === 'STAIRWAY' && (
-                                        <StairwayGame seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
+                                        <StairwayGame seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'MAKE_ZERO' && (
-                                        <MakeZero seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayActive} />
+                                        <MakeZero seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
                                     )}
                                 </>
                             )}
                         </div>
                     </motion.div>
+                )}
+                {isRoundLeaveBlocked && isPlaying && !isCountdownActive && !isFinished && gameState.mode !== 'practice' && (
+                    <div className="absolute inset-0 z-[72] flex items-center justify-center bg-black/45 backdrop-blur-[2px] pointer-events-none">
+                        <div className="rounded-2xl border border-amber-300/40 bg-black/70 px-5 py-3 text-center">
+                            <p className="text-sm sm:text-base font-black text-amber-300">라운드 이탈 감지</p>
+                            <p className="text-xs sm:text-sm text-amber-100/90 mt-1">
+                                현재 라운드는 점수를 획득할 수 없습니다.
+                            </p>
+                        </div>
+                    </div>
                 )}
 
                 {/* Result Overlay */}
@@ -1131,8 +1365,13 @@ const Game: React.FC = () => {
                                                 delay: 0.2 + (gameState.roundScores.length + 1) * 0.4,
                                                 type: "spring", stiffness: 200, damping: 15
                                             }}
-                                            className="mb-8"
+                                            className="mb-8 flex flex-col items-center"
                                         >
+                                            <img
+                                                src={CROWN_ICON}
+                                                alt="Crown"
+                                                className={`w-12 h-12 md:w-14 md:h-14 object-contain mb-2 ${getWinnerMessage() === t('game.victory') ? '' : 'opacity-50 grayscale'}`}
+                                            />
                                             <h3 className={`text-3xl md:text-5xl font-black drop-shadow-2xl ${getWinnerMessage() === t('game.victory') ? 'text-blue-500' : 'text-red-500'}`}>
                                                 {getWinnerMessage()}
                                             </h3>
@@ -1212,7 +1451,7 @@ const Game: React.FC = () => {
                                                 <div className="text-red-400 font-black text-base md:text-xl">{totalScores.op}</div>
                                                 <div>
                                                     {totalScores.my > totalScores.op ? (
-                                                        <Trophy className="w-6 h-6 text-yellow-400 mx-auto animate-bounce" />
+                                                        <img src={CUP_ICON} alt="Cup" className="w-7 h-7 object-contain mx-auto animate-bounce" />
                                                     ) : (
                                                         <span className="text-gray-500">-</span>
                                                     )}
@@ -1265,9 +1504,9 @@ const Game: React.FC = () => {
                                                     <button
                                                         key={emoji}
                                                         onClick={() => handleEmojiSend(emoji)}
-                                                        className="aspect-square rounded-xl bg-white/5 hover:bg-white/10 text-2xl flex items-center justify-center transition active:scale-95 border border-white/5"
+                                                        className="aspect-square rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition active:scale-95 border border-white/5"
                                                     >
-                                                        {emoji}
+                                                        {renderEmojiVisual(emoji, 'w-10 h-10 object-contain')}
                                                     </button>
                                                 ))}
                                             </div>
@@ -1371,7 +1610,7 @@ const Game: React.FC = () => {
                                 <motion.span
                                     key={item.id}
                                     style={{ top: `${item.baseY}%` }}
-                                    className={`absolute -translate-y-1/2 ${item.side === 'left' ? 'left-6' : 'right-6'} text-6xl inline-flex items-center justify-center w-20 h-20 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm shadow-[0_8px_18px_rgba(0,0,0,0.35)]`}
+                                    className={`absolute -translate-y-1/2 ${item.side === 'left' ? 'left-6' : 'right-6'} inline-flex items-center justify-center w-24 h-24 drop-shadow-[0_8px_18px_rgba(0,0,0,0.35)]`}
                                     initial={{ opacity: 0, y: 0, x: item.side === 'left' ? -6 : 6, scale: 0.7 }}
                                     animate={{
                                         opacity: 1,
@@ -1382,7 +1621,14 @@ const Game: React.FC = () => {
                                     exit={{ opacity: 0, scale: 0.8 }}
                                     transition={{ duration: 1.1, ease: 'easeOut' }}
                                 >
-                                    {item.emoji}
+                                    <img
+                                        src={item.side === 'left' ? SPEECH_BUBBLE_LEFT_ICON : SPEECH_BUBBLE_RIGHT_ICON}
+                                        alt=""
+                                        className="absolute inset-0 w-full h-full object-contain"
+                                    />
+                                    <span className="relative z-10">
+                                        {renderEmojiVisual(item.emoji, 'w-11 h-11 object-contain')}
+                                    </span>
                                 </motion.span>
                             ))}
                         </AnimatePresence>
@@ -1394,9 +1640,9 @@ const Game: React.FC = () => {
                                             <button
                                                 key={emoji}
                                                 onClick={() => handleEmojiSend(emoji)}
-                                                className="w-16 h-16 rounded-2xl bg-white/5 hover:bg-white/10 text-3xl transition active:scale-95"
+                                                className="w-16 h-16 rounded-2xl bg-white/5 hover:bg-white/10 transition active:scale-95 flex items-center justify-center"
                                             >
-                                                {emoji}
+                                                {renderEmojiVisual(emoji, 'w-10 h-10 object-contain')}
                                             </button>
                                         ))}
                                     </div>
@@ -1405,9 +1651,9 @@ const Game: React.FC = () => {
                                             <button
                                                 key={emoji}
                                                 onClick={() => handleEmojiSend(emoji)}
-                                                className="w-16 h-16 rounded-2xl bg-white/5 hover:bg-white/10 text-3xl transition active:scale-95"
+                                                className="w-16 h-16 rounded-2xl bg-white/5 hover:bg-white/10 transition active:scale-95 flex items-center justify-center"
                                             >
-                                                {emoji}
+                                                {renderEmojiVisual(emoji, 'w-10 h-10 object-contain')}
                                             </button>
                                         ))}
                                     </div>

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, LogOut, User as UserIcon, Trophy, ChevronRight, X } from 'lucide-react';
+import { ArrowLeft, Save, LogOut, User as UserIcon, ChevronRight, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useSound } from '../contexts/SoundContext';
 import { useUI } from '../contexts/UIContext';
@@ -803,19 +803,16 @@ const Profile = () => {
 
                             {/* Stats Grid */}
                             <div className="grid grid-cols-2 gap-4">
-                                <div className={`bg-gradient-to-br ${tierColor} p-[2px] rounded-2xl shadow-lg transform hover:scale-105 transition-transform`}>
-                                    <div className="bg-gray-800 w-full h-full rounded-2xl p-4 flex flex-col items-center justify-center">
-                                        <TierIcon className="w-8 h-8 text-white mb-2 filter drop-shadow-md" />
-                                        <span className="text-xs text-gray-400 font-bold uppercase tracking-widest mb-1">{t('game.tier')}</span>
-                                        <span className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300">
-                                            {tier}
-                                        </span>
+                                <div className={`col-span-2 bg-gradient-to-br ${tierColor} p-[2px] rounded-2xl shadow-lg transform hover:scale-[1.01] transition-transform`}>
+                                    <div className="bg-gray-800 w-full h-full rounded-2xl p-4 flex flex-col items-center justify-center gap-3">
+                                        <div className="w-16 h-16 rounded-xl bg-black/20 border border-white/10 flex items-center justify-center">
+                                            <TierIcon className="w-12 h-12 object-contain drop-shadow-md" />
+                                        </div>
+                                        <div className="min-w-0 flex flex-col justify-center items-center text-center leading-tight">
+                                            <div className="text-2xl font-black text-white truncate">{tier}</div>
+                                            <div className="text-xl font-black text-white/90 font-mono mt-1">{rank}</div>
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="bg-gray-700/30 p-4 rounded-2xl flex flex-col items-center justify-center border border-white/5">
-                                    <Trophy className="w-8 h-8 text-purple-400 mb-2" />
-                                    <span className="text-xs text-gray-400 font-bold uppercase tracking-widest mb-1">{t('user.rank')}</span>
-                                    <span className="text-xl font-bold text-white">{rank}</span>
                                 </div>
 
                                 {/* Rank Record */}

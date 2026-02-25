@@ -1,4 +1,5 @@
-import { Trophy, Medal, Crown } from 'lucide-react';
+import { createElement } from 'react';
+import type { ComponentType } from 'react';
 
 
 export type Tier = 'Bronze' | 'Silver' | 'Gold' | 'Platinum' | 'Diamond';
@@ -31,13 +32,31 @@ export const getTierBorderColor = (tier: string): string => {
     }
 };
 
-// Returns a Lucide Icon or we can use custom SVGs later
-export const getTierIcon = (tier: string) => {
+const TIER_BADGE_SRC: Record<Tier, string> = {
+    Bronze: '/images/icon/tier/Badge%20-%20Gray%202.png',
+    Silver: '/images/icon/tier/Badge%20-%20Yellow.png',
+    Gold: '/images/icon/tier/Badge%20-%20Pink.png',
+    Platinum: '/images/icon/tier/Badge%20-Blue.png',
+    Diamond: '/images/icon/tier/Badge%20-%20Yellow%202.png'
+};
+
+export const getTierIcon = (tier: string): ComponentType<{ className?: string }> => {
+    const source = TIER_BADGE_SRC[(tier as Tier)] ?? TIER_BADGE_SRC.Bronze;
+    const iconComponent: ComponentType<{ className?: string }> = ({ className }) =>
+        createElement('img', {
+            src: source,
+            alt: `${tier} badge`,
+            className
+        });
+
     switch (tier) {
-        case 'Diamond': return Crown;
-        case 'Platinum': return Trophy;
-        case 'Gold': return Medal;
-        case 'Silver': return Medal; // Different color handled by prop
-        default: return Medal;
+        case 'Diamond':
+        case 'Platinum':
+        case 'Gold':
+        case 'Silver':
+        case 'Bronze':
+            return iconComponent;
+        default:
+            return iconComponent;
     }
 };

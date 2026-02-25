@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { X, Loader2, Gift, BookOpen } from 'lucide-react';
+import { X, Loader2, Gift } from 'lucide-react';
 import { useSound } from '../../contexts/SoundContext';
 import { Capacitor } from '@capacitor/core';
 import { AdMob, RewardAdPluginEvents } from '@capacitor-community/admob';
@@ -36,7 +36,13 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
             claimBtnFallback: 'Get Practice Notes',
             rewardLabelKey: 'ad.practiceNotes',
             rewardLabelFallback: 'Practice Notes',
-            rewardIcon: <BookOpen className="w-10 h-10 text-green-400" />
+            rewardIcon: (
+                <img
+                    src="/images/icon/icon_note.png"
+                    alt="Practice Note"
+                    className="w-10 h-10 object-contain"
+                />
+            )
         }
         : {
             titleKey: 'ad.title',
