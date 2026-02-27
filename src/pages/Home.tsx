@@ -702,14 +702,14 @@ const Home = () => {
                             ref={normalModeRef}
                             onMouseEnter={() => playSound('hover')}
                             onClick={() => handleModeSelect('normal')}
-                            className={`group relative w-full p-6 bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-300 hover:border-blue-500 hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] active:scale-95 cursor-pointer flex items-center gap-4 text-left`}
+                            className={`group relative w-full p-6 bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-200 hover:border-blue-500 hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] active:scale-[0.98] active:border-blue-300 active:bg-blue-400/20 active:shadow-[0_0_28px_rgba(59,130,246,0.5)] active:brightness-125 active:saturate-150 cursor-pointer flex items-center gap-4 text-left`}
                         >
-                            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                            <div className="p-3 rounded-full bg-blue-500/20 group-hover:bg-blue-500/30 transition-colors">
-                                <Zap className="w-8 h-8 text-blue-400" />
+                            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-300" />
+                            <div className="p-3 rounded-full bg-blue-500/20 group-hover:bg-blue-500/30 group-active:bg-blue-500/40 transition-colors">
+                                <Zap className="w-8 h-8 text-blue-400 group-active:text-blue-200 transition-colors" />
                             </div>
                             <div>
-                                <h3 className="text-2xl font-bold group-hover:text-blue-400 transition-colors">{t('menu.normal.title')}</h3>
+                                <h3 className="text-2xl font-bold group-hover:text-blue-400 group-active:text-blue-200 transition-colors">{t('menu.normal.title')}</h3>
                                 <p className="text-gray-500 text-sm mt-1">{t('menu.normal.subtitle')}</p>
                             </div>
                         </button>
@@ -719,14 +719,14 @@ const Home = () => {
                             ref={rankModeRef}
                             onMouseEnter={() => playSound('hover')}
                             onClick={() => handleModeSelect('rank')}
-                            className={`group relative w-full p-6 bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-300 ${canPlayRank ? 'hover:border-purple-500 hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] active:scale-95 cursor-pointer' : 'opacity-50 grayscale cursor-not-allowed'} flex items-center gap-4 text-left`}
+                            className={`group relative w-full p-6 bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-200 ${canPlayRank ? 'hover:border-purple-500 hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] active:scale-[0.98] active:border-purple-300 active:bg-purple-400/20 active:shadow-[0_0_28px_rgba(168,85,247,0.5)] active:brightness-125 active:saturate-150 cursor-pointer' : 'opacity-50 grayscale cursor-not-allowed'} flex items-center gap-4 text-left`}
                         >
-                            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                            <div className="p-3 rounded-full bg-purple-500/20 group-hover:bg-purple-500/30 transition-colors">
-                                <Trophy className="w-8 h-8 text-purple-400" />
+                            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-300" />
+                            <div className="p-3 rounded-full bg-purple-500/20 group-hover:bg-purple-500/30 group-active:bg-purple-500/40 transition-colors">
+                                <Trophy className="w-8 h-8 text-purple-400 group-active:text-purple-200 transition-colors" />
                             </div>
                             <div>
-                                <h3 className="text-2xl font-bold group-hover:text-purple-400 transition-colors">{t('menu.rank.title')}</h3>
+                                <h3 className="text-2xl font-bold group-hover:text-purple-400 group-active:text-purple-200 transition-colors">{t('menu.rank.title')}</h3>
                                 <p className="text-gray-500 text-sm mt-1">{t('menu.rank.subtitle')}</p>
                             </div>
 
@@ -758,14 +758,14 @@ const Home = () => {
                             ref={practiceModeRef}
                             onMouseEnter={() => playSound('hover')}
                             onClick={() => { playSound('click'); navigate('/practice'); }}
-                            className={`group relative w-full p-6 bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-300 hover:border-green-500 hover:shadow-[0_0_20px_rgba(34,197,94,0.5)] active:scale-95 cursor-pointer flex items-center gap-4 text-left`}
+                            className={`group relative w-full p-6 bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-200 hover:border-green-500 hover:shadow-[0_0_20px_rgba(34,197,94,0.5)] active:scale-[0.98] active:border-green-300 active:bg-green-400/20 active:shadow-[0_0_28px_rgba(34,197,94,0.5)] active:brightness-125 active:saturate-150 cursor-pointer flex items-center gap-4 text-left`}
                         >
-                            <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                            <div className="p-3 rounded-full bg-green-500/20 group-hover:bg-green-500/30 transition-colors">
-                                <Dumbbell className="w-8 h-8 text-green-400" />
+                            <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-transparent opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-300" />
+                            <div className="p-3 rounded-full bg-green-500/20 group-hover:bg-green-500/30 group-active:bg-green-500/40 transition-colors">
+                                <Dumbbell className="w-8 h-8 text-green-400 group-active:text-green-200 transition-colors" />
                             </div>
                             <div>
-                                <h3 className="text-2xl font-bold group-hover:text-green-400 transition-colors">{t('menu.practice.title')}</h3>
+                                <h3 className="text-2xl font-bold group-hover:text-green-400 group-active:text-green-200 transition-colors">{t('menu.practice.title')}</h3>
                                 <p className="text-gray-500 text-sm mt-1">{t('menu.practice.subtitle')}</p>
                             </div>
                         </button>
@@ -777,53 +777,53 @@ const Home = () => {
                             ref={rankingBtnRef}
                             onMouseEnter={() => playSound('hover')}
                             onClick={() => { playSound('click'); setShowLeaderboard(true); }}
-                            className="p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 group cursor-pointer"
+                            className="p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 active:bg-yellow-400/20 active:border-yellow-300 active:shadow-[0_0_22px_rgba(234,179,8,0.45)] active:brightness-125 active:saturate-150 active:scale-[0.98] transition-all duration-150 flex items-center justify-center gap-2 group cursor-pointer"
                         >
-                            <Trophy className="w-5 h-5 text-yellow-500 group-hover:text-yellow-400 transition-colors" />
-                            <span className="text-gray-300 group-hover:text-white transition-colors">{t('leaderboard.button', 'Ranking')}</span>
+                            <Trophy className="w-5 h-5 text-yellow-500 group-hover:text-yellow-400 group-active:text-yellow-300 transition-colors" />
+                            <span className="text-gray-300 group-hover:text-white group-active:text-yellow-100 transition-colors">{t('leaderboard.button', 'Ranking')}</span>
                         </button>
                         <button
                             ref={shopBtnRef}
                             onMouseEnter={() => playSound('hover')}
                             onClick={() => { playSound('click'); navigate('/shop'); }}
-                            className="p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 group cursor-pointer"
+                            className="p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 active:bg-cyan-400/20 active:border-cyan-300 active:shadow-[0_0_22px_rgba(34,211,238,0.45)] active:brightness-125 active:saturate-150 active:scale-[0.98] transition-all duration-150 flex items-center justify-center gap-2 group cursor-pointer"
                         >
-                            <ShoppingBag className="w-5 h-5 text-cyan-400 group-hover:text-white transition-colors" />
-                            <span className="text-gray-300 group-hover:text-white transition-colors">{t('menu.shop', 'Shop')}</span>
+                            <ShoppingBag className="w-5 h-5 text-cyan-400 group-hover:text-white group-active:text-cyan-200 transition-colors" />
+                            <span className="text-gray-300 group-hover:text-white group-active:text-cyan-100 transition-colors">{t('menu.shop', 'Shop')}</span>
                         </button>
                         <button
                             ref={settingsBtnRef}
                             onMouseEnter={() => playSound('hover')}
                             onClick={() => { playSound('click'); navigate('/settings'); }}
-                            className="p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 group cursor-pointer"
+                            className="p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 active:bg-slate-300/20 active:border-slate-200 active:shadow-[0_0_22px_rgba(148,163,184,0.35)] active:brightness-125 active:scale-[0.98] transition-all duration-150 flex items-center justify-center gap-2 group cursor-pointer"
                         >
-                            <Settings className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
-                            <span className="text-gray-300 group-hover:text-white transition-colors">{t('menu.settings')}</span>
+                            <Settings className="w-5 h-5 text-gray-400 group-hover:text-white group-active:text-slate-200 transition-colors" />
+                            <span className="text-gray-300 group-hover:text-white group-active:text-slate-100 transition-colors">{t('menu.settings')}</span>
                         </button>
                         {user ? (
                             <button
                                 ref={loginProfileBtnRef}
                                 onMouseEnter={() => playSound('hover')}
                                 onClick={() => { playSound('click'); navigate('/profile'); }}
-                                className="p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 group cursor-pointer"
+                                className="p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 active:bg-blue-400/20 active:border-blue-300 active:shadow-[0_0_22px_rgba(59,130,246,0.45)] active:brightness-125 active:saturate-150 active:scale-[0.98] transition-all duration-150 flex items-center justify-center gap-2 group cursor-pointer"
                             >
                                 <span className="relative">
-                                    <User className="w-5 h-5 text-blue-400 group-hover:text-white transition-colors" />
+                                    <User className="w-5 h-5 text-blue-400 group-hover:text-white group-active:text-blue-200 transition-colors" />
                                     {hasSocialNotifications && (
                                         <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-gray-900" aria-hidden="true"></span>
                                     )}
                                 </span>
-                                <span className="text-blue-300 group-hover:text-white transition-colors">{t('menu.profile')}</span>
+                                <span className="text-blue-300 group-hover:text-white group-active:text-blue-100 transition-colors">{t('menu.profile')}</span>
                             </button>
                         ) : (
                             <button
                                 ref={loginProfileBtnRef}
                                 onMouseEnter={() => playSound('hover')}
                                 onClick={() => { playSound('click'); navigate('/login'); }}
-                                className="p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 group cursor-pointer"
+                                className="p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 active:bg-slate-300/20 active:border-slate-200 active:shadow-[0_0_22px_rgba(148,163,184,0.35)] active:brightness-125 active:scale-[0.98] transition-all duration-150 flex items-center justify-center gap-2 group cursor-pointer"
                             >
-                                <User className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
-                                <span className="text-gray-300 group-hover:text-white transition-colors">{t('menu.login')}</span>
+                                <User className="w-5 h-5 text-gray-400 group-hover:text-white group-active:text-slate-200 transition-colors" />
+                                <span className="text-gray-300 group-hover:text-white group-active:text-slate-100 transition-colors">{t('menu.login')}</span>
                             </button>
                         )}
                     </motion.div>
@@ -835,34 +835,37 @@ const Home = () => {
                     <button
                         ref={mobileRankingBtnRef}
                         onClick={() => { playSound('click'); setShowLeaderboard(true); }}
-                        className="rounded-xl bg-gray-800/70 py-2.5 flex flex-col items-center justify-center gap-1.5 text-gray-200 hover:bg-gray-700 transition-colors"
+                        className="group rounded-xl bg-gray-800/70 py-2.5 flex flex-col items-center justify-center gap-1.5 text-gray-200 hover:bg-gray-700 active:bg-yellow-400/20 active:border active:border-yellow-300 active:shadow-[0_0_18px_rgba(234,179,8,0.45)] active:brightness-125 active:saturate-150 active:scale-[0.98] transition-all duration-150"
                     >
-                        <Trophy className="w-5 h-5 text-yellow-400" />
-                        <span className="text-[11px] font-semibold leading-none">{t('leaderboard.button', 'Ranking')}</span>
+                        <Trophy className="w-5 h-5 text-yellow-400 group-active:text-yellow-300 transition-colors" />
+                        <span className="text-[11px] font-semibold leading-none group-active:text-yellow-100 transition-colors">{t('leaderboard.button', 'Ranking')}</span>
                     </button>
                     <button
                         ref={mobileShopBtnRef}
                         onClick={() => { playSound('click'); navigate('/shop'); }}
-                        className="rounded-xl bg-gray-800/70 py-2.5 flex flex-col items-center justify-center gap-1.5 text-gray-200 hover:bg-gray-700 transition-colors"
+                        className="group rounded-xl bg-gray-800/70 py-2.5 flex flex-col items-center justify-center gap-1.5 text-gray-200 hover:bg-gray-700 active:bg-cyan-400/20 active:border active:border-cyan-300 active:shadow-[0_0_18px_rgba(34,211,238,0.45)] active:brightness-125 active:saturate-150 active:scale-[0.98] transition-all duration-150"
                     >
-                        <ShoppingBag className="w-5 h-5 text-cyan-400" />
-                        <span className="text-[11px] font-semibold leading-none">{t('menu.shop', 'Shop')}</span>
+                        <ShoppingBag className="w-5 h-5 text-cyan-400 group-active:text-cyan-200 transition-colors" />
+                        <span className="text-[11px] font-semibold leading-none group-active:text-cyan-100 transition-colors">{t('menu.shop', 'Shop')}</span>
                     </button>
                     <button
                         ref={mobileSettingsBtnRef}
                         onClick={() => { playSound('click'); navigate('/settings'); }}
-                        className="rounded-xl bg-gray-800/70 py-2.5 flex flex-col items-center justify-center gap-1.5 text-gray-200 hover:bg-gray-700 transition-colors"
+                        className="group rounded-xl bg-gray-800/70 py-2.5 flex flex-col items-center justify-center gap-1.5 text-gray-200 hover:bg-gray-700 active:bg-slate-300/20 active:border active:border-slate-200 active:shadow-[0_0_18px_rgba(148,163,184,0.35)] active:brightness-125 active:scale-[0.98] transition-all duration-150"
                     >
-                        <Settings className="w-5 h-5 text-gray-300" />
-                        <span className="text-[11px] font-semibold leading-none">{t('menu.settings')}</span>
+                        <Settings className="w-5 h-5 text-gray-300 group-active:text-slate-200 transition-colors" />
+                        <span className="text-[11px] font-semibold leading-none group-active:text-slate-100 transition-colors">{t('menu.settings')}</span>
                     </button>
                     <button
                         ref={mobileLoginProfileBtnRef}
                         onClick={() => { playSound('click'); navigate(user ? '/profile' : '/login'); }}
-                        className="relative rounded-xl bg-gray-800/70 py-2.5 flex flex-col items-center justify-center gap-1.5 text-gray-200 hover:bg-gray-700 transition-colors"
+                        className={`group relative rounded-xl bg-gray-800/70 py-2.5 flex flex-col items-center justify-center gap-1.5 text-gray-200 hover:bg-gray-700 active:brightness-125 active:scale-[0.98] transition-all duration-150 ${user
+                            ? 'active:bg-blue-400/20 active:border active:border-blue-300 active:shadow-[0_0_18px_rgba(59,130,246,0.45)] active:saturate-150'
+                            : 'active:bg-slate-300/20 active:border active:border-slate-200 active:shadow-[0_0_18px_rgba(148,163,184,0.35)]'
+                            }`}
                     >
-                        <User className={`w-5 h-5 ${user ? 'text-blue-400' : 'text-gray-300'}`} />
-                        <span className="text-[11px] font-semibold leading-none">{user ? t('menu.profile') : t('menu.login')}</span>
+                        <User className={`w-5 h-5 transition-colors ${user ? 'text-blue-400 group-active:text-blue-200' : 'text-gray-300 group-active:text-slate-200'}`} />
+                        <span className={`text-[11px] font-semibold leading-none transition-colors ${user ? 'group-active:text-blue-100' : 'group-active:text-slate-100'}`}>{user ? t('menu.profile') : t('menu.login')}</span>
                         {user && hasSocialNotifications && (
                             <span className="absolute top-1.5 right-2 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-gray-900" aria-hidden="true"></span>
                         )}

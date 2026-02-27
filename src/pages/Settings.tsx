@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Globe, Volume2, VolumeX, RefreshCcw, BookOpen, Shield, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Globe, Volume2, VolumeX, RefreshCcw, BookOpen, Shield, X, Bell } from 'lucide-react';
 import { useSound } from '../contexts/SoundContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useUI } from '../contexts/UIContext';
@@ -11,6 +11,8 @@ import { useTutorial } from '../contexts/TutorialContext';
 import { supabase } from '../lib/supabaseClient';
 import { App as CapApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
+import { LocalNotifications } from '@capacitor/local-notifications';
+import { getNotificationsEnabled, setNotificationsEnabled } from '../lib/notificationPrefs';
 const Settings = () => {
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
@@ -21,6 +23,7 @@ const Settings = () => {
     const [isRestoring, setIsRestoring] = useState(false);
     const [isLanguageModalOpen, setIsLanguageModalOpen] = useState(false);
     const [languageSearch, setLanguageSearch] = useState('');
+    const [isNotificationsEnabled, setIsNotificationsEnabled] = useState<boolean>(() => getNotificationsEnabled());
     const appRole = (user?.app_metadata as any)?.role;
     const profileRole = (profile as any)?.role;
     const isAdmin = appRole === 'admin' || profileRole === 'admin';
@@ -110,6 +113,39 @@ const Settings = () => {
         }
     };
 
+    const handleToggleNotifications = async () => {
+        if (!Capacitor.isNativePlatform()) {
+            showToast(t('settings.notificationNativeOnly', '알림 설정은 모바일 앱에서만 사용할 수 있어요.'), 'info');
+            return;
+        }
+
+        if (isNotificationsEnabled) {
+            setNotificationsEnabled(false);
+            setIsNotificationsEnabled(false);
+            await LocalNotifications.cancel({ notifications: [{ id: 2001 }, { id: 2002 }] });
+            await LocalNotifications.removeAllDeliveredNotifications();
+            showToast(t('settings.notificationOff', '알림이 꺼졌습니다.'), 'success');
+            return;
+        }
+
+        const permission = await LocalNotifications.requestPermissions();
+        if (permission.display !== 'granted') {
+            setNotificationsEnabled(false);
+            setIsNotificationsEnabled(false);
+            showToast(
+                Capacitor.getPlatform() === 'ios'
+                    ? t('settings.notificationDeniedIos', 'iPhone 설정 > 알림에서 권한을 허용해 주세요.')
+                    : t('settings.notificationDeniedAndroid', 'Android 설정 > 알림에서 권한을 허용해 주세요.'),
+                'error'
+            );
+            return;
+        }
+
+        setNotificationsEnabled(true);
+        setIsNotificationsEnabled(true);
+        showToast(t('settings.notificationOn', '알림이 켜졌습니다.'), 'success');
+    };
+
     return (
         <div className="h-[100dvh] bg-gray-900 text-white relative overflow-hidden flex flex-col items-center">
             {/* ... (Background & Header code remains same) ... */}
@@ -194,6 +230,32 @@ const Settings = () => {
                                 </button>
                             </div>
 
+                        </div>
+                    </section>
+
+                    {/* Notifications Section */}
+                    <section className="space-y-4">
+                        <div className="flex items-center gap-3 text-indigo-400 mb-2">
+                            <Bell size={24} />
+                            <h2 className="text-xl font-semibold">{t('settings.notifications', '알림')}</h2>
+                        </div>
+                        <div className="bg-white/5 p-6 rounded-xl border border-white/10 space-y-3 backdrop-blur-md">
+                            <div className="flex items-center justify-between">
+                                <span className="text-lg">{t('settings.pushNotifications', '푸시/로컬 알림')}</span>
+                                <button
+                                    onClick={() => { playSound('click'); void handleToggleNotifications(); }}
+                                    className={`relative w-14 h-8 rounded-full transition-colors duration-200 ease-in-out focus:outline-none flex items-center p-1 ${isNotificationsEnabled ? 'bg-indigo-600' : 'bg-gray-600'}`}
+                                >
+                                    <span
+                                        className={`block w-6 h-6 bg-white rounded-full shadow-lg transition-transform duration-200 ease-in-out ${isNotificationsEnabled ? 'translate-x-6' : 'translate-x-0'}`}
+                                    />
+                                </button>
+                            </div>
+                            {!Capacitor.isNativePlatform() && (
+                                <p className="text-xs text-gray-400">
+                                    {t('settings.notificationNativeHint', '웹에서는 알림 토글이 비활성화됩니다.')}
+                                </p>
+                            )}
                         </div>
                     </section>
 

@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Heart, User } from 'lucide-react';
+import { Heart, User, MoreHorizontal } from 'lucide-react';
 import { AnimatedScore } from '../components/ui/AnimatedScore';
 import { useGameState } from '../hooks/useGameState';
 import { useSound } from '../contexts/SoundContext';
@@ -53,8 +53,6 @@ const BOT_EMOJI_REACTIVE = {
 type BotEmojiPattern = 'burst' | 'silent' | 'reactive';
 const CROWN_ICON = '/images/icon/Crown%20(Border).png';
 const CUP_ICON = '/images/icon/Cup%20(Border).png';
-const SPEECH_BUBBLE_LEFT_ICON = '/images/icon/Speech%20Bubble%20-%20Left.png';
-const SPEECH_BUBBLE_RIGHT_ICON = '/images/icon/Speech%20Bubble%20-%20Right.png';
 const EMOJI_ICON_MAP: Record<string, string> = {
     '🙂': '/images/icon/emoji/Big%20Smile%20-%20Cartoon.png',
     '😂': '/images/icon/emoji/Heavy%20Smile%20-%20Cartoon.png',
@@ -85,6 +83,7 @@ const Game: React.FC = () => {
     const [myProfile, setMyProfile] = useState<any>(null);
     const [opponentProfile, setOpponentProfile] = useState<any>(null);
     const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+    const [isResultActionsOpen, setIsResultActionsOpen] = useState(false);
 
     // --- Realtime Score Sync (Broadcast) ---
     const [realtimeOpScore, setRealtimeOpScore] = useState<number | null>(null);
@@ -114,6 +113,7 @@ const Game: React.FC = () => {
         !opponentId.startsWith('practice') &&
         !isBotId(opponentId)
     );
+    const canAddFriendOpponent = canReportOpponent;
 
     // Determine Status Logic
     const isPlaying = gameState.status === 'playing';
@@ -250,6 +250,10 @@ const Game: React.FC = () => {
     const opWinsForLives = Math.max(settledWins.op, gameState.opWins);
     const myLives = Math.max(0, requiredWins - opWinsForLives);
     const opLives = Math.max(0, requiredWins - myWinsForLives);
+    const buildSideMask = (side: 'my' | 'op', lives: number) =>
+        Array.from({ length: requiredWins }, (_, idx) =>
+            side === 'my' ? idx < lives : idx >= (requiredWins - lives)
+        );
     const [backdropHeartOn, setBackdropHeartOn] = useState<{ my: boolean[]; op: boolean[] }>({
         my: Array.from({ length: requiredWins }, () => true),
         op: Array.from({ length: requiredWins }, () => true)
@@ -269,9 +273,32 @@ const Game: React.FC = () => {
     useEffect(() => {
         if (gameState.roundScores.length === 0) {
             roundLifeFxRoundRef.current = -1;
-            setDisplayedLives({ my: requiredWins, op: requiredWins });
+            setDisplayedLives({ my: myLives, op: opLives });
+            setBackdropHeartOn({
+                my: buildSideMask('my', myLives),
+                op: buildSideMask('op', opLives)
+            });
         }
-    }, [gameState.roundScores.length, requiredWins]);
+    }, [gameState.roundScores.length, myLives, opLives, requiredWins]);
+
+    useEffect(() => {
+        if (gameState.mode === 'practice') return;
+        // Never allow visual lives to exceed authoritative lives from server snapshots.
+        setDisplayedLives((prev) => ({
+            my: Math.min(prev.my, myLives),
+            op: Math.min(prev.op, opLives)
+        }));
+    }, [gameState.mode, myLives, opLives]);
+
+    useEffect(() => {
+        if (gameState.mode === 'practice' || isFinished || showRoundFinished) return;
+        // Outside round-finished animation, always mirror authoritative lives.
+        setDisplayedLives({ my: myLives, op: opLives });
+        setBackdropHeartOn({
+            my: buildSideMask('my', myLives),
+            op: buildSideMask('op', opLives)
+        });
+    }, [gameState.mode, isFinished, showRoundFinished, myLives, opLives, requiredWins]);
 
     useEffect(() => {
         if (isFinished || !showRoundFinished || gameState.mode === 'practice') return;
@@ -282,11 +309,6 @@ const Game: React.FC = () => {
         const round = gameState.roundScores[roundIdx];
         const winner = resolveRoundWinner(round, player1Id, player2Id);
         const baseLives = displayedLivesRef.current;
-
-        const buildSideMask = (side: 'my' | 'op', lives: number) =>
-            Array.from({ length: requiredWins }, (_, idx) =>
-                side === 'my' ? idx < lives : idx >= (requiredWins - lives)
-            );
 
         setBackdropHeartOn({
             my: buildSideMask('my', baseLives.my),
@@ -302,6 +324,13 @@ const Game: React.FC = () => {
         const targetIdx = losingSide === 'my'
             ? Math.max(0, baseLives.my - 1)
             : Math.max(0, requiredWins - baseLives.op);
+        const forceTargetOff = () => {
+            setBackdropHeartOn((prev) => {
+                const next = { ...prev, [losingSide]: [...prev[losingSide]] };
+                next[losingSide][targetIdx] = false;
+                return next;
+            });
+        };
 
         const timers: number[] = [];
         const flickerCount = 3 + Math.floor(Math.random() * 3); // 3~5 toggles
@@ -327,15 +356,16 @@ const Game: React.FC = () => {
         });
 
         timers.push(window.setTimeout(() => {
-            setBackdropHeartOn((prev) => {
-                const next = { ...prev, [losingSide]: [...prev[losingSide]] };
-                next[losingSide][targetIdx] = false;
-                return next;
-            });
+            // Final frame must always be OFF.
+            forceTargetOff();
             setDisplayedLives({ my: myLives, op: opLives });
         }, cursor + 120 + Math.floor(Math.random() * 120)));
 
-        return () => timers.forEach((id) => window.clearTimeout(id));
+        return () => {
+            timers.forEach((id) => window.clearTimeout(id));
+            // Guarantee "power off" even if timers are cleared early.
+            forceTargetOff();
+        };
     }, [
         isFinished,
         showRoundFinished,
@@ -351,11 +381,6 @@ const Game: React.FC = () => {
 
     useEffect(() => {
         if (!isFinished) {
-            setBackdropHeartOn({
-                my: Array.from({ length: requiredWins }, () => true),
-                op: Array.from({ length: requiredWins }, () => true)
-            });
-            setDisplayedLives({ my: requiredWins, op: requiredWins });
             setFinishRevealDelayMs(460);
             return;
         }
@@ -372,6 +397,15 @@ const Game: React.FC = () => {
             setFinishRevealDelayMs(460);
             return;
         }
+        const forceSideAllOff = () => {
+            setBackdropHeartOn((prev) => {
+                const next = { ...prev, [losingSide]: [...prev[losingSide]] };
+                for (let i = 0; i < requiredWins; i++) {
+                    next[losingSide][i] = false;
+                }
+                return next;
+            });
+        };
 
         const timers: number[] = [];
         let maxEnd = 0;
@@ -407,7 +441,10 @@ const Game: React.FC = () => {
         }
 
         setFinishRevealDelayMs(Math.max(760, maxEnd + 220));
-        return () => timers.forEach((timerId) => window.clearTimeout(timerId));
+        return () => {
+            timers.forEach((timerId) => window.clearTimeout(timerId));
+            forceSideAllOff();
+        };
     }, [isFinished, gameState.mode, gameState.winnerId, myId, opponentId, requiredWins]);
 
     const renderEmojiVisual = (emoji: string, className: string) => {
@@ -683,6 +720,7 @@ const Game: React.FC = () => {
             return () => clearTimeout(timer);
         } else {
             setIsButtonEnabled(false);
+            setIsResultActionsOpen(false);
         }
     }, [showFinalResult]);
 
@@ -716,6 +754,28 @@ const Game: React.FC = () => {
             showToast(error?.message || t('report.fail', '신고 접수 중 오류가 발생했습니다.'), 'error');
         }
     }, [canReportOpponent, opponentId, roomId, showToast, t]);
+
+    const handleAddFriend = useCallback(async () => {
+        if (!canAddFriendOpponent || !myId || !opponentId) return;
+        try {
+            const { error } = await supabase
+                .from('friendships')
+                .insert({
+                    user_id: myId,
+                    friend_id: opponentId,
+                    status: 'pending'
+                });
+            if (error) throw error;
+            showToast(t('social.requestSent'), 'success');
+            setIsResultActionsOpen(false);
+        } catch (err: any) {
+            if (err?.code === '23505' || String(err?.message || '').toLowerCase().includes('duplicate')) {
+                showToast(t('social.requestPending'), 'error');
+            } else {
+                showToast(t('social.requestFail'), 'error');
+            }
+        }
+    }, [canAddFriendOpponent, myId, opponentId, showToast, t]);
 
     // MMR Animation Logic
     const [displayMMR, setDisplayMMR] = useState<number | null>(null);
@@ -1013,8 +1073,8 @@ const Game: React.FC = () => {
                 )}
                 {(isPlaying || showRoundFinished || (isFinished && !showFinalResult)) && gameState.mode !== 'practice' && (
                     <div className="absolute inset-0 pointer-events-none z-0 select-none overflow-hidden">
-                        <div className="absolute inset-x-0 flex items-start justify-between px-4 sm:px-8 pt-[calc(env(safe-area-inset-top)+82px)]">
-                            <div className="flex gap-2">
+                        <div className="absolute inset-x-0 flex items-start justify-between px-4 sm:px-8 pt-[4.0rem]">
+                            <div className="w-[42%] flex gap-2 justify-start">
                                 {Array.from({ length: requiredWins }).map((_, idx) => {
                                     const isAlive = idx < displayedLives.my;
                                     const isOn = (isFinished || showRoundFinished)
@@ -1029,7 +1089,7 @@ const Game: React.FC = () => {
                                     );
                                 })}
                             </div>
-                            <div className="flex gap-2">
+                            <div className="w-[42%] flex gap-2 justify-end">
                                 {Array.from({ length: requiredWins }).map((_, idx) => {
                                     const isAlive = idx >= (requiredWins - displayedLives.op);
                                     const isOn = (isFinished || showRoundFinished)
@@ -1330,7 +1390,7 @@ const Game: React.FC = () => {
                             <motion.div
                                 initial={{ scale: 0.9, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
-                                className="bg-gray-800 p-8 rounded-3xl border-4 border-white/10 shadow-2xl text-center max-w-2xl w-full"
+                                className="relative bg-gray-800 p-8 rounded-3xl border-4 border-white/10 shadow-2xl text-center max-w-2xl w-full"
                             >
                                 {/* PRACTICE MODE RESULT */}
                                 {gameState.mode === 'practice' ? (
@@ -1355,6 +1415,40 @@ const Game: React.FC = () => {
                                 ) : (
                                     /* NORMAL / RANK MODE RESULT */
                                     <>
+                                        {(canAddFriendOpponent || canReportOpponent) && (
+                                            <div className="absolute top-4 right-4 z-20">
+                                                <button
+                                                    onClick={() => setIsResultActionsOpen((prev) => !prev)}
+                                                    className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-gray-200 transition-colors"
+                                                    title={t('common.more', '더보기')}
+                                                >
+                                                    <MoreHorizontal className="w-5 h-5" />
+                                                </button>
+                                                {isResultActionsOpen && (
+                                                    <div className="absolute right-0 mt-2 w-40 bg-gray-900 border border-white/10 rounded-xl p-1.5 shadow-xl text-left">
+                                                        {canAddFriendOpponent && (
+                                                            <button
+                                                                onClick={handleAddFriend}
+                                                                className="w-full px-3 py-2 rounded-lg text-sm text-green-300 hover:bg-green-600/20 transition-colors"
+                                                            >
+                                                                {t('social.addFriend')}
+                                                            </button>
+                                                        )}
+                                                        {canReportOpponent && (
+                                                            <button
+                                                                onClick={() => {
+                                                                    setIsResultActionsOpen(false);
+                                                                    setIsReportModalOpen(true);
+                                                                }}
+                                                                className="w-full px-3 py-2 rounded-lg text-sm text-red-300 hover:bg-red-600/20 transition-colors"
+                                                            >
+                                                                {t('report.button', '신고')}
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
                                         {/* MATCH RESULT Header Removed */}
 
                                         {/* VICTORY / DEFEAT TEXT - SLAM ANIMATION (After Rounds) */}
@@ -1467,7 +1561,6 @@ const Game: React.FC = () => {
                                                 transition={{ delay: 0.8 + gameState.roundScores.length * 0.4 }}
                                                 className="mb-8 p-4 bg-white/10 rounded-xl border border-white/20 overflow-hidden"
                                             >
-                                                <div className="text-gray-400 text-sm font-bold uppercase tracking-widest mb-2">{t('game.rankScore')}</div>
                                                 <div className="flex items-center justify-center gap-4 text-3xl font-black">
                                                     <div className="text-white">{displayMMR}</div>
                                                     {mmrDelta !== null && mmrDelta !== 0 && (
@@ -1513,14 +1606,6 @@ const Game: React.FC = () => {
                                         </div>
 
                                         <div className="flex flex-col gap-2">
-                                            {canReportOpponent && (
-                                                <button
-                                                    onClick={() => setIsReportModalOpen(true)}
-                                                    className="w-full py-2.5 font-semibold text-sm rounded-xl transition-all bg-red-600/15 border border-red-500/40 text-red-300 hover:bg-red-600/25"
-                                                >
-                                                    {t('report.button', '신고')}
-                                                </button>
-                                            )}
                                             <motion.button
                                                 initial={{ opacity: 0, y: 20 }}
                                                 animate={{ opacity: 1, y: 0 }}
@@ -1621,14 +1706,7 @@ const Game: React.FC = () => {
                                     exit={{ opacity: 0, scale: 0.8 }}
                                     transition={{ duration: 1.1, ease: 'easeOut' }}
                                 >
-                                    <img
-                                        src={item.side === 'left' ? SPEECH_BUBBLE_LEFT_ICON : SPEECH_BUBBLE_RIGHT_ICON}
-                                        alt=""
-                                        className="absolute inset-0 w-full h-full object-contain"
-                                    />
-                                    <span className="relative z-10">
-                                        {renderEmojiVisual(item.emoji, 'w-11 h-11 object-contain')}
-                                    </span>
+                                    {renderEmojiVisual(item.emoji, 'w-11 h-11 object-contain')}
                                 </motion.span>
                             ))}
                         </AnimatePresence>

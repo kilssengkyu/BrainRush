@@ -15,6 +15,41 @@
     /* Prevent text selection */
     -webkit-user-select: none;
   }
+
+  /* Global interaction feedback (mobile-first) */
+  button,
+  [role="button"],
+  a,
+  input[type="button"],
+  input[type="submit"] {
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      transform 120ms ease,
+      filter 120ms ease,
+      opacity 120ms ease,
+      background-color 140ms ease,
+      border-color 140ms ease,
+      box-shadow 140ms ease;
+  }
+
+  @media (hover: none) and (pointer: coarse) {
+    button:active:not(:disabled),
+    [role="button"]:active:not([aria-disabled="true"]),
+    a:active,
+    input[type="button"]:active:not(:disabled),
+    input[type="submit"]:active:not(:disabled) {
+      transform: scale(0.97);
+      filter: brightness(1.08);
+    }
+  }
+
+  button:disabled,
+  [role="button"][aria-disabled="true"],
+  input[type="button"]:disabled,
+  input[type="submit"]:disabled {
+    transform: none !important;
+    filter: none !important;
+  }
 }
 
 /* 모바일 스크롤 바운스 및 당겨서 새로고침 방지 */

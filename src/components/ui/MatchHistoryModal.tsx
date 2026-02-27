@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AlertTriangle, X, Trophy, Zap, User as UserIcon } from 'lucide-react';
+import { X, Trophy, Zap, User as UserIcon, MoreHorizontal } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 import Flag from './Flag';
 import { useUI } from '../../contexts/UIContext';
@@ -27,6 +27,13 @@ const MatchHistoryModal = ({ isOpen, onClose, userId, initialMode = 'all' }: Mat
     const observerTarget = useRef<HTMLDivElement>(null);
     const [viewProfileId, setViewProfileId] = useState<string | null>(null);
     const [reportTarget, setReportTarget] = useState<{ opponentId: string; sessionId: string; nickname: string } | null>(null);
+    const [actionTarget, setActionTarget] = useState<{
+        opponentId: string;
+        sessionId: string;
+        nickname: string;
+        canAddFriend: boolean;
+        canReport: boolean;
+    } | null>(null);
 
     const lastRequestMode = useRef<string | null>(null);
 
@@ -46,6 +53,12 @@ const MatchHistoryModal = ({ isOpen, onClose, userId, initialMode = 'all' }: Mat
             setFilter(initialMode);
         }
     }, [initialMode, isOpen]);
+
+    useEffect(() => {
+        if (!isOpen) {
+            setActionTarget(null);
+        }
+    }, [isOpen]);
 
     // Infinite scroll observer
     useEffect(() => {
@@ -253,33 +266,27 @@ const MatchHistoryModal = ({ isOpen, onClose, userId, initialMode = 'all' }: Mat
                                             <UserIcon className="w-full h-full p-1.5 text-gray-400" />
                                         )}
                                     </div>
-
-                                    {/* Add Friend Button */}
-                                    {!match.is_friend && match.opponent_id && match.opponent_id !== userId && !match.opponent_id.startsWith('guest_') && !match.opponent_id.startsWith('bot_') && (
-                                        <button
-                                            onClick={(e) => { e.stopPropagation(); handleAddFriend(match.opponent_id); }}
-                                            className="p-1.5 bg-green-600/20 text-green-400 rounded-lg hover:bg-green-600 hover:text-white transition ml-1"
-                                            title={t('social.addFriend')}
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
-                                        </button>
-                                    )}
-                                    {match.opponent_id && match.opponent_id !== userId && !match.opponent_id.startsWith('guest_') && !match.opponent_id.startsWith('bot_') && (
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setReportTarget({
-                                                    opponentId: match.opponent_id,
-                                                    sessionId: match.session_id,
-                                                    nickname: match.opponent_nickname || t('game.unknownPlayer')
-                                                });
-                                            }}
-                                            className="p-1.5 bg-red-600/20 text-red-400 rounded-lg hover:bg-red-600 hover:text-white transition"
-                                            title={t('report.button', '신고')}
-                                        >
-                                            <AlertTriangle className="w-4 h-4" />
-                                        </button>
-                                    )}
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            const canAct =
+                                                match.opponent_id &&
+                                                match.opponent_id !== userId &&
+                                                !match.opponent_id.startsWith('guest_') &&
+                                                !match.opponent_id.startsWith('bot_');
+                                            setActionTarget({
+                                                opponentId: match.opponent_id || '',
+                                                sessionId: match.session_id,
+                                                nickname: match.opponent_nickname || t('game.unknownPlayer'),
+                                                canAddFriend: Boolean(canAct && !match.is_friend),
+                                                canReport: Boolean(canAct)
+                                            });
+                                        }}
+                                        className="p-1.5 bg-white/5 text-gray-300 rounded-lg hover:bg-white/10 transition ml-1"
+                                        title={t('common.more', '더보기')}
+                                    >
+                                        <MoreHorizontal className="w-4 h-4" />
+                                    </button>
                                 </div>
                             </div>
                         ))
@@ -304,6 +311,59 @@ const MatchHistoryModal = ({ isOpen, onClose, userId, initialMode = 'all' }: Mat
                 onClose={() => setReportTarget(null)}
                 onSubmit={handleReportSubmit}
             />
+            {actionTarget && (
+                <div
+                    className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-end sm:items-center sm:justify-center"
+                    onClick={() => setActionTarget(null)}
+                >
+                    <div
+                        className="w-full sm:w-[320px] bg-gray-900 border border-white/10 rounded-t-2xl sm:rounded-2xl p-4 space-y-2"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <button
+                            onClick={() => {
+                                setViewProfileId(actionTarget.opponentId);
+                                setActionTarget(null);
+                            }}
+                            className="w-full px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-left font-semibold text-white transition-colors"
+                        >
+                            {t('profile.title', '프로필 보기')}
+                        </button>
+                        {actionTarget.canAddFriend && (
+                            <button
+                                onClick={() => {
+                                    handleAddFriend(actionTarget.opponentId);
+                                    setActionTarget(null);
+                                }}
+                                className="w-full px-4 py-3 rounded-xl bg-green-600/20 hover:bg-green-600 text-left font-semibold text-green-300 hover:text-white transition-colors"
+                            >
+                                {t('social.addFriend')}
+                            </button>
+                        )}
+                        {actionTarget.canReport && (
+                            <button
+                                onClick={() => {
+                                    setReportTarget({
+                                        opponentId: actionTarget.opponentId,
+                                        sessionId: actionTarget.sessionId,
+                                        nickname: actionTarget.nickname
+                                    });
+                                    setActionTarget(null);
+                                }}
+                                className="w-full px-4 py-3 rounded-xl bg-red-600/20 hover:bg-red-600 text-left font-semibold text-red-300 hover:text-white transition-colors"
+                            >
+                                {t('report.button', '신고')}
+                            </button>
+                        )}
+                        <button
+                            onClick={() => setActionTarget(null)}
+                            className="w-full px-4 py-3 rounded-xl bg-gray-800 hover:bg-gray-700 text-center font-semibold text-gray-200 transition-colors"
+                        >
+                            {t('common.close')}
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
