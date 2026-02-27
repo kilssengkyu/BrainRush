@@ -311,7 +311,8 @@
     "timeout": "匹配超时",
     "timeoutDesc": "未找到对手",
     "range": "范围",
-    "rankLevelRequired": "达到{{level}}级后解锁排位。"
+    "rankLevelRequired": "达到{{level}}级后解锁排位。",
+    "searchingOpponent": "正在寻找对手..."
   },
   "rps": {
     "ready": "准备...",

@@ -312,7 +312,8 @@
     "timeout": "マッチ不成立",
     "timeoutDesc": "対戦相手が見つかりませんでした",
     "range": "範囲",
-    "rankLevelRequired": "ランクはレベル{{level}}から解放されます。"
+    "rankLevelRequired": "ランクはレベル{{level}}から解放されます。",
+    "searchingOpponent": "対戦相手を探しています..."
   },
   "rps": {
     "ready": "準備...",

@@ -316,7 +316,8 @@
     "timeout": "Match Not Found",
     "timeoutDesc": "We couldn't find an opponent in time.",
     "range": "Range",
-    "rankLevelRequired": "Reach level {{level}} to unlock Rank."
+    "rankLevelRequired": "Reach level {{level}} to unlock Rank.",
+    "searchingOpponent": "Searching for opponent..."
   },
   "rps": {
     "ready": "READY...",

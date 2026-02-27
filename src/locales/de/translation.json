@@ -314,7 +314,8 @@
     "timeout": "Kein Match gefunden",
     "timeoutDesc": "Wir konnten rechtzeitig keinen Gegner finden.",
     "range": "Bereich",
-    "rankLevelRequired": "Erreiche Level {{level}}, um Rang freizuschalten."
+    "rankLevelRequired": "Erreiche Level {{level}}, um Rang freizuschalten.",
+    "searchingOpponent": "Gegner wird gesucht..."
   },
   "rps": {
     "ready": "BEREIT...",

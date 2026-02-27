@@ -314,7 +314,8 @@
     "timeout": "Lawan tidak ditemukan",
     "timeoutDesc": "Kami tidak menemukan lawan tepat waktu.",
     "range": "Rentang",
-    "rankLevelRequired": "Capai level {{level}} untuk membuka Rank."
+    "rankLevelRequired": "Capai level {{level}} untuk membuka Rank.",
+    "searchingOpponent": "Mencari lawan..."
   },
   "rps": {
     "ready": "SIAP...",

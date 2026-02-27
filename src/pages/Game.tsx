@@ -76,7 +76,7 @@ const Game: React.FC = () => {
     const { showToast } = useUI();
 
     // Route state check
-    const { roomId: stateRoomId, myId, opponentId } = location.state || {};
+    const { roomId: stateRoomId, myId, opponentId, skipWaiting } = location.state || {};
     const roomId = routeRoomId || stateRoomId;
 
     // Profiles
@@ -1109,7 +1109,7 @@ const Game: React.FC = () => {
                 )}
 
                 {/* Waiting Screen */}
-                {isWaiting && (
+                {isWaiting && !skipWaiting && (
                     <div className="absolute inset-0 flex flex-col items-center pb-44">
                         {/* Background gradients */}
                         <div className="absolute inset-0 bg-gradient-to-b from-blue-900/30 via-transparent to-red-900/30 pointer-events-none" />

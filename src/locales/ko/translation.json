@@ -314,7 +314,8 @@
     "timeout": "상대를 찾지 못함",
     "timeoutDesc": "매칭 시간이 초과되었습니다.",
     "range": "범위",
-    "rankLevelRequired": "레벨 {{level}}부터 랭크가 열립니다."
+    "rankLevelRequired": "레벨 {{level}}부터 랭크가 열립니다.",
+    "searchingOpponent": "상대를 찾는 중..."
   },
   "rps": {
     "ready": "준비...",

@@ -314,7 +314,8 @@
     "timeout": "Aucun match trouvé",
     "timeoutDesc": "Nous n'avons pas trouvé d'adversaire à temps.",
     "range": "Plage",
-    "rankLevelRequired": "Atteignez le niveau {{level}} pour débloquer le mode classé."
+    "rankLevelRequired": "Atteignez le niveau {{level}} pour débloquer le mode classé.",
+    "searchingOpponent": "Recherche d'un adversaire..."
   },
   "rps": {
     "ready": "PRÊT...",

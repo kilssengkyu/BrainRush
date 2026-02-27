@@ -8,6 +8,7 @@ export const useMatchmaking = (
 ) => {
     const { profile, user } = useAuth();
     const [status, setStatus] = useState<'idle' | 'searching' | 'matched' | 'timeout'>('idle');
+    const [matchedOpponentId, setMatchedOpponentId] = useState<string | null>(null);
     const [searchRange, setSearchRange] = useState<number>(0);
     const [elapsedTime, setElapsedTime] = useState<number>(0);
     const searchInterval = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -60,6 +61,7 @@ export const useMatchmaking = (
             console.error('Active session check failed before search:', err);
         }
 
+        setMatchedOpponentId(null);
         setStatus('searching');
         searchStartTime.current = Date.now();
         setElapsedTime(0);
@@ -123,6 +125,7 @@ export const useMatchmaking = (
                         } catch (e) {
                             console.error('Pencil consumption error (Bot Match):', e);
                         }
+                        setMatchedOpponentId(data.opponent_id);
                         setStatus('matched');
                         onMatchFound(data.room_id, data.opponent_id);
                         return;
@@ -139,6 +142,7 @@ export const useMatchmaking = (
             if (passiveMatch) {
                 console.log('Passive Match Detected! Reconnecting/Matching:', passiveMatch.room_id);
                 if (searchInterval.current) clearInterval(searchInterval.current);
+                setMatchedOpponentId(passiveMatch.opponent_id);
                 setStatus('matched');
                 setTimeout(() => {
                     onMatchFound(passiveMatch.room_id, passiveMatch.opponent_id);
@@ -211,6 +215,7 @@ export const useMatchmaking = (
                 // Identify opponent (I could be p1 or p2)
                 const opponentId = session.player1_id === playerId ? session.player2_id : session.player1_id;
 
+                setMatchedOpponentId(opponentId);
                 onMatchFound(roomId, opponentId);
             }
         } catch (err) {
@@ -242,5 +247,5 @@ export const useMatchmaking = (
         };
     }, []);
 
-    return { status, startSearch, cancelSearch: () => cancelSearch(true), searchRange, elapsedTime, playerId: getPlayerId() };
+    return { status, startSearch, cancelSearch: () => cancelSearch(true), searchRange, elapsedTime, playerId: getPlayerId(), matchedOpponentId };
 };

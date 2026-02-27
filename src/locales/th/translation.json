@@ -314,7 +314,8 @@
     "timeout": "ไม่พบคู่แข่ง",
     "timeoutDesc": "เราไม่สามารถหาคู่แข่งได้ทันเวลา",
     "range": "ช่วง",
-    "rankLevelRequired": "เลเวลถึง {{level}} เพื่อปลดล็อกโหมดแรงก์"
+    "rankLevelRequired": "เลเวลถึง {{level}} เพื่อปลดล็อกโหมดแรงก์",
+    "searchingOpponent": "กำลังค้นหาคู่แข่ง..."
   },
   "rps": {
     "ready": "พร้อม...",

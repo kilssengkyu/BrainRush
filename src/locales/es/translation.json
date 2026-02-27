@@ -314,7 +314,8 @@
     "timeout": "No se encontró partida",
     "timeoutDesc": "No pudimos encontrar un oponente a tiempo.",
     "range": "Rango",
-    "rankLevelRequired": "Alcanza el nivel {{level}} para desbloquear Ranked."
+    "rankLevelRequired": "Alcanza el nivel {{level}} para desbloquear Ranked.",
+    "searchingOpponent": "Buscando oponente..."
   },
   "rps": {
     "ready": "LISTO...",

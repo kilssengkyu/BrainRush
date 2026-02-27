@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Settings, User, Trophy, Zap, Loader2, Lock, AlertTriangle, Dumbbell, ShoppingBag, Flame } from 'lucide-react';
+import HexRadar from '../components/ui/HexRadar';
 import { useMatchmaking } from '../hooks/useMatchmaking';
 import { useSound } from '../contexts/SoundContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -193,10 +194,62 @@ const Home = () => {
     const currentMode = useRef('rank');
 
     // Matchmaking Hook
-    const { status, startSearch, cancelSearch, elapsedTime, playerId } = useMatchmaking((roomId, opponentId) => {
+    const { status, startSearch, cancelSearch, elapsedTime, playerId, matchedOpponentId } = useMatchmaking((roomId, opponentId) => {
         playSound('match_found');
-        navigate(`/game/${roomId}`, { state: { roomId, myId: playerId, opponentId, mode: currentMode.current } });
+        // Delay navigation briefly so matched profile is visible
+        setTimeout(() => {
+            navigate(`/game/${roomId}`, { state: { roomId, myId: playerId, opponentId, mode: currentMode.current, skipWaiting: true } });
+        }, 1500);
     });
+
+    // Matched opponent profile fetch
+    const [matchedOpProfile, setMatchedOpProfile] = useState<any>(null);
+    useEffect(() => {
+        if (!matchedOpponentId) {
+            setMatchedOpProfile(null);
+            return;
+        }
+        const fetchOpProfile = async () => {
+            if (matchedOpponentId.startsWith('bot_')) {
+                const { data } = await supabase.from('bot_profiles').select('*').eq('id', matchedOpponentId).maybeSingle();
+                if (data) {
+                    setMatchedOpProfile({ nickname: data.nickname, avatar_url: data.avatar_url, country: data.country, mmr: data.mmr });
+                } else {
+                    setMatchedOpProfile({ nickname: 'Player', avatar_url: null });
+                }
+            } else {
+                const { data } = await supabase.from('profiles').select('*').eq('id', matchedOpponentId).single();
+                setMatchedOpProfile(data || { nickname: 'Opponent', avatar_url: null });
+            }
+        };
+        fetchOpProfile();
+    }, [matchedOpponentId]);
+
+    // Radar stats for matchmaking screen
+    const myRadarStats = {
+        speed: profile?.speed || 0,
+        memory: profile?.memory || 0,
+        judgment: profile?.judgment || 0,
+        calculation: profile?.calculation || 0,
+        accuracy: profile?.accuracy || 0,
+        observation: profile?.observation || 0
+    };
+    const opRadarStats = {
+        speed: matchedOpProfile?.speed || 0,
+        memory: matchedOpProfile?.memory || 0,
+        judgment: matchedOpProfile?.judgment || 0,
+        calculation: matchedOpProfile?.calculation || 0,
+        accuracy: matchedOpProfile?.accuracy || 0,
+        observation: matchedOpProfile?.observation || 0
+    };
+    const radarLabels = {
+        speed: t('profile.stats.speed'),
+        memory: t('profile.stats.memory'),
+        judgment: t('profile.stats.judgment'),
+        calculation: t('profile.stats.calculation'),
+        accuracy: t('profile.stats.accuracy'),
+        observation: t('profile.stats.observation')
+    };
 
     // Animation variants
     const containerVariants = {
@@ -617,37 +670,23 @@ const Home = () => {
                 onClose={() => setShowLeaderboard(false)}
             />
 
-            {/* Matchmaking Overlay */}
+            {/* Matchmaking Overlay - Profile Based */}
             <AnimatePresence>
                 {(status === 'searching' || status === 'matched' || status === 'timeout') && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="absolute inset-0 z-50 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center pointer-events-auto"
+                        className="fixed inset-0 z-50 bg-gray-900 flex flex-col items-center pointer-events-auto"
                     >
-                        <motion.div
-                            initial={{ scale: 0.8 }}
-                            animate={{ scale: 1 }}
-                            className="bg-gray-800 p-8 rounded-3xl border border-blue-500/50 flex flex-col items-center text-center shadow-2xl min-w-[300px]"
-                        >
-                            {status === 'searching' ? (
-                                <>
-                                    <Loader2 className="w-16 h-16 text-blue-500 animate-spin mb-6" />
-                                    <h2 className="text-3xl font-bold mb-2">{t('matchmaking.searching')}</h2>
-                                    <p className="text-gray-400 mb-2">{t('matchmaking.description')}</p>
-                                    <p className="text-2xl font-mono text-white mb-2">
-                                        {Math.floor(elapsedTime / 60)}:{(elapsedTime % 60).toString().padStart(2, '0')}
-                                    </p>
-                                    <button
-                                        onClick={() => { playSound('click'); cancelSearch(); }}
-                                        className="px-6 py-3 rounded-xl bg-gray-700 hover:bg-gray-600 font-bold transition-colors"
-                                    >
-                                        {t('common.cancel')}
-                                    </button>
-                                </>
-                            ) : status === 'timeout' ? (
-                                <>
+                        {status === 'timeout' ? (
+                            /* Timeout Screen - same as before */
+                            <div className="flex-1 flex flex-col items-center justify-center">
+                                <motion.div
+                                    initial={{ scale: 0.8 }}
+                                    animate={{ scale: 1 }}
+                                    className="bg-gray-800 p-8 rounded-3xl border border-red-500/50 flex flex-col items-center text-center shadow-2xl min-w-[300px]"
+                                >
                                     <AlertTriangle className="w-16 h-16 text-red-500 mb-6" />
                                     <h2 className="text-2xl font-bold mb-2 text-white">{t('matchmaking.timeout')}</h2>
                                     <p className="text-gray-400 mb-8">{t('matchmaking.timeoutDesc')}</p>
@@ -665,15 +704,135 @@ const Home = () => {
                                             {t('common.retry')}
                                         </button>
                                     </div>
-                                </>
-                            ) : (
-                                <>
-                                    <Trophy className="w-16 h-16 text-yellow-400 mb-6 animate-bounce" />
-                                    <h2 className="text-3xl font-bold mb-2 text-white">{t('matchmaking.found')}</h2>
-                                    <p className="text-gray-400 mb-0">{t('matchmaking.entering')}</p>
-                                </>
-                            )}
-                        </motion.div>
+                                </motion.div>
+                            </div>
+                        ) : (
+                            /* Searching / Matched Screen - Profile Based */
+                            <>
+                                {/* Background gradients */}
+                                <div className={`absolute inset-0 bg-gradient-to-br from-blue-900/40 via-purple-900/20 to-red-900/40 ${currentMode.current === 'normal' ? 'animate-bg-flow' : currentMode.current === 'rank' ? 'animate-bg-pulse-tense' : ''} pointer-events-none`} />
+
+                                <div className="relative z-10 flex flex-col items-center w-full h-full pt-[calc(env(safe-area-inset-top)+1rem)] pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+                                    {/* My Profile - Top */}
+                                    <motion.div
+                                        initial={{ y: -30, opacity: 0 }}
+                                        animate={{ y: 0, opacity: 1 }}
+                                        transition={{ delay: 0.1 }}
+                                        className="mt-4 flex flex-col items-center"
+                                    >
+                                        <div className="flex items-center gap-3 bg-gray-900/70 border border-blue-400/30 rounded-2xl px-5 py-3 shadow-xl backdrop-blur-sm">
+                                            <Flag code={countryCode} className="w-6 h-4" />
+                                            <span className="text-base font-bold text-white">{nickname}</span>
+                                            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-blue-500 bg-gray-800 flex items-center justify-center">
+                                                {avatarUrl ? (
+                                                    <img src={avatarUrl} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <User size={20} className="text-blue-500" />
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="text-blue-300 font-mono font-bold text-xs mt-1">{(profile?.mmr ?? 1000).toLocaleString()} MMR</div>
+                                    </motion.div>
+
+                                    {/* Timer */}
+                                    <div className="flex flex-col items-center justify-center mt-6 min-h-[48px]">
+                                        {status === 'searching' && (
+                                            <motion.p
+                                                initial={{ opacity: 0, y: 10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                className="text-4xl font-black font-mono tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300 drop-shadow-lg"
+                                            >
+                                                {Math.floor(elapsedTime / 60)}:{(elapsedTime % 60).toString().padStart(2, '0')}
+                                            </motion.p>
+                                        )}
+                                        {status === 'matched' && (
+                                            <motion.p
+                                                initial={{ opacity: 0, scale: 0.8 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                className="text-2xl font-black text-yellow-400 drop-shadow-lg animate-pulse"
+                                            >
+                                                {t('matchmaking.found')}
+                                            </motion.p>
+                                        )}
+                                    </div>
+
+                                    {/* Hex Radar - Center */}
+                                    <div className="flex-1 flex items-center justify-center">
+                                        <motion.div
+                                            initial={{ scale: 0.8, opacity: 0 }}
+                                            animate={{ scale: 1, opacity: 1 }}
+                                            transition={{ delay: 0.2 }}
+                                            className="relative bg-gray-900/60 border border-white/10 rounded-3xl p-3 shadow-2xl backdrop-blur-sm"
+                                        >
+                                            <HexRadar
+                                                values={myRadarStats}
+                                                compareValues={matchedOpProfile ? opRadarStats : undefined}
+                                                labels={radarLabels}
+                                                size={180}
+                                                showLabels={true}
+                                                primaryColor={{ fill: 'rgba(59,130,246,0.28)', stroke: 'rgba(59,130,246,0.95)' }}
+                                                compareColor={{ fill: 'rgba(239,68,68,0.25)', stroke: 'rgba(239,68,68,0.95)' }}
+                                            />
+                                        </motion.div>
+                                    </div>
+
+                                    {/* Opponent Profile - Bottom */}
+                                    <motion.div
+                                        initial={{ y: 30, opacity: 0 }}
+                                        animate={{ y: 0, opacity: 1 }}
+                                        transition={{ delay: 0.15 }}
+                                        className="mb-2 flex flex-col items-center"
+                                    >
+                                        {status === 'matched' && matchedOpProfile ? (
+                                            /* Matched - Show real opponent profile */
+                                            <>
+                                                <div className="text-red-300 font-mono font-bold text-xs mb-1">
+                                                    {matchedOpProfile.mmr ? `${matchedOpProfile.mmr.toLocaleString()} MMR` : ''}
+                                                </div>
+                                                <motion.div
+                                                    initial={{ scale: 0.9, opacity: 0 }}
+                                                    animate={{ scale: 1, opacity: 1 }}
+                                                    className="flex items-center gap-3 bg-gray-900/70 border border-red-400/30 rounded-2xl px-5 py-3 shadow-xl backdrop-blur-sm"
+                                                >
+                                                    <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-red-500 bg-gray-800 flex items-center justify-center">
+                                                        {matchedOpProfile.avatar_url ? (
+                                                            <img src={matchedOpProfile.avatar_url} className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            <User size={20} className="text-red-500" />
+                                                        )}
+                                                    </div>
+                                                    <span className="text-base font-bold text-white">{matchedOpProfile.nickname || t('game.unknownPlayer')}</span>
+                                                    <Flag code={matchedOpProfile.country} className="w-6 h-4" />
+                                                </motion.div>
+                                            </>
+                                        ) : (
+                                            /* Searching - Show skeleton */
+                                            <>
+                                                <div className="text-red-300/50 font-mono font-bold text-xs mb-1">&nbsp;</div>
+                                                <div className="flex items-center gap-3 bg-gray-900/70 border border-red-400/20 rounded-2xl px-5 py-3 shadow-xl backdrop-blur-sm">
+                                                    <div className="w-10 h-10 rounded-full border-2 border-red-500/40 bg-gray-800 flex items-center justify-center animate-pulse">
+                                                        <User size={20} className="text-red-500/40" />
+                                                    </div>
+                                                    <span className="text-base font-bold text-gray-500 animate-pulse">{t('matchmaking.searchingOpponent', '상대를 찾는 중...')}</span>
+                                                </div>
+                                            </>
+                                        )}
+                                    </motion.div>
+
+                                    {/* Cancel Button */}
+                                    <div className="flex flex-col items-center mb-6 min-h-[56px] justify-center mt-2">
+                                        {status === 'searching' && (
+                                            <button
+                                                onClick={() => { playSound('click'); cancelSearch(); }}
+                                                className="px-10 py-3.5 rounded-2xl bg-gray-800/60 backdrop-blur-md border border-gray-700 font-bold text-gray-300 transition-all duration-200 hover:border-red-500/50 hover:bg-gray-800 hover:text-white hover:shadow-[0_0_15px_rgba(239,68,68,0.3)] active:scale-[0.98]"
+                                            >
+                                                {t('common.cancel')}
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            </>
+                        )}
                     </motion.div>
                 )}
             </AnimatePresence>

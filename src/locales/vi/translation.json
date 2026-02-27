@@ -314,7 +314,8 @@
     "timeout": "Không tìm thấy trận",
     "timeoutDesc": "Chúng tôi không thể tìm được đối thủ kịp thời gian.",
     "range": "Khoảng",
-    "rankLevelRequired": "Đạt cấp {{level}} để mở khóa Xếp hạng."
+    "rankLevelRequired": "Đạt cấp {{level}} để mở khóa Xếp hạng.",
+    "searchingOpponent": "Đang tìm đối thủ..."
   },
   "rps": {
     "ready": "SẴN SÀNG...",
