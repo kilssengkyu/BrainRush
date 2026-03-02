@@ -114,11 +114,7 @@ const Game: React.FC = () => {
     const canAddFriendOpponent = canReportOpponent;
 
     useEffect(() => {
-        console.log('[XP-SAVE] effect fired', { roomId, userId: user?.id, myId, hasProfile: !!profile, profileXp: profile?.xp });
-        if (!roomId || !user || myId !== user.id || !profile) {
-            console.log('[XP-SAVE] bailed: guard failed', { roomId: !!roomId, user: !!user, myIdMatch: myId === user?.id, profile: !!profile });
-            return;
-        }
+        if (!roomId || !user || myId !== user.id || !profile) return;
 
         const xp = Math.max(0, Math.floor(Number(profile.xp ?? 0)));
         const level = typeof profile.level === 'number'
@@ -129,10 +125,7 @@ const Game: React.FC = () => {
         try {
             const raw = window.sessionStorage.getItem(storageKey);
             const existing = raw ? JSON.parse(raw) : null;
-            if (existing?.roomId === roomId) {
-                console.log('[XP-SAVE] skipped: same roomId already saved');
-                return;
-            }
+            if (existing?.roomId === roomId) return;
 
             window.sessionStorage.setItem(storageKey, JSON.stringify({
                 roomId,
@@ -140,9 +133,8 @@ const Game: React.FC = () => {
                 beforeLevel: level,
                 capturedAt: Date.now()
             }));
-            console.log('[XP-SAVE] ✅ snapshot saved', { roomId, xp, level, storageKey });
         } catch (error) {
-            console.error('[XP-SAVE] Failed to store xp snapshot', error);
+            console.error('Failed to store xp snapshot', error);
         }
     }, [roomId, user, myId, profile]);
 

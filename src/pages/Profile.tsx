@@ -713,13 +713,13 @@ const Profile = () => {
                                         {isIOS && (
                                             <button
                                                 onClick={async () => {
-                                                try {
-                                                    await linkWithApple();
-                                                } catch (err) {
-                                                    console.error('Failed to link apple:', err);
-                                                    showToast((err as any)?.message || t('common.error'), 'error');
-                                                }
-                                            }}
+                                                    try {
+                                                        await linkWithApple();
+                                                    } catch (err) {
+                                                        console.error('Failed to link apple:', err);
+                                                        showToast((err as any)?.message || t('common.error'), 'error');
+                                                    }
+                                                }}
                                                 className="inline-flex items-center justify-center rounded-full bg-white/10 px-4 py-2 text-xs font-bold text-amber-100 hover:bg-white/20 transition-colors"
                                             >
                                                 {t('profile.linkApple', 'Apple 계정 연동')}
@@ -846,7 +846,7 @@ const Profile = () => {
                                         </div>
                                     )}
                                 </div>
-                                <p className="text-gray-400 text-sm mt-1">{user?.email}</p>
+
 
                                 <button onClick={handleDeleteAccount} className="mt-4 text-xs text-red-500/70 hover:text-red-500 underline">
                                     {t('settings.deleteAccount')}

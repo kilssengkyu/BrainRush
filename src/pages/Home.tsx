@@ -188,7 +188,6 @@ const Home = () => {
     useEffect(() => { refreshProfileRef.current = refreshProfile; }, [refreshProfile]);
 
     useEffect(() => {
-        console.log('[XP-READ] effect fired', { userId: user?.id, hasProfile: !!profile, profileXp: profile?.xp });
         if (!user || !profile) return;
 
         const storageKey = getXpSnapshotStorageKey(user.id);
@@ -197,27 +196,22 @@ const Home = () => {
         const tryProcess = () => {
             try {
                 const raw = window.sessionStorage.getItem(storageKey);
-                console.log('[XP-READ] raw from storage:', raw);
-                if (!raw) { console.log('[XP-READ] no snapshot in storage'); return; }
+                if (!raw) return;
 
                 const snapshot = JSON.parse(raw) as { roomId?: string; beforeXp?: number; beforeLevel?: number; capturedAt?: number } | null;
-                if (!snapshot?.roomId || typeof snapshot.beforeXp !== 'number') { console.log('[XP-READ] invalid snapshot'); return; }
-                if (lastHandledXpRoomRef.current === snapshot.roomId) { console.log('[XP-READ] already handled this roomId'); return; }
+                if (!snapshot?.roomId || typeof snapshot.beforeXp !== 'number') return;
+                if (lastHandledXpRoomRef.current === snapshot.roomId) return;
 
                 const afterXp = Math.max(0, Math.floor(Number(profile.xp ?? 0)));
                 const afterLevel = typeof profile.level === 'number'
                     ? Math.max(1, Math.floor(profile.level))
                     : getLevelFromXp(afterXp);
 
-                console.log('[XP-READ] comparing', { beforeXp: snapshot.beforeXp, afterXp, beforeLevel: snapshot.beforeLevel, afterLevel });
-
                 if (afterXp <= snapshot.beforeXp && afterLevel <= (snapshot.beforeLevel ?? 1)) {
                     const ageMs = Date.now() - Number(snapshot.capturedAt ?? Date.now());
-                    console.log('[XP-READ] xp not yet increased. ageMs:', ageMs, 'retryCount:', xpRefreshRetryRef.current);
                     // Games last 30-40s+, so allow retries for up to 5 minutes
                     if (ageMs < 300000 && xpRefreshRetryRef.current < 8) {
                         xpRefreshRetryRef.current += 1;
-                        console.log('[XP-READ] scheduling retry #', xpRefreshRetryRef.current);
                         retryTimer = window.setTimeout(() => {
                             refreshProfileRef.current();
                         }, 700);
@@ -225,13 +219,11 @@ const Home = () => {
                     }
                     // Only expire after 10 minutes
                     if (ageMs > 600000) {
-                        console.log('[XP-READ] snapshot too old, removing');
                         window.sessionStorage.removeItem(storageKey);
                     }
                     return;
                 }
 
-                console.log('[XP-READ] ✅ XP increased! Triggering animation', { gain: afterXp - snapshot.beforeXp });
                 xpRefreshRetryRef.current = 0;
                 window.sessionStorage.removeItem(storageKey);
                 lastHandledXpRoomRef.current = snapshot.roomId;
@@ -245,7 +237,7 @@ const Home = () => {
                 });
                 setAnimatedXpValue(snapshot.beforeXp);
             } catch (error) {
-                console.error('[XP-READ] Failed to restore xp snapshot', error);
+                console.error('Failed to restore xp snapshot', error);
             }
         };
 

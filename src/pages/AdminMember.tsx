@@ -9,7 +9,6 @@ import { useUI } from '../contexts/UIContext';
 type MemberProfile = {
   id: string;
   nickname: string | null;
-  email: string | null;
   country: string | null;
   mmr: number | null;
   level: number;
@@ -29,7 +28,6 @@ type MemberReport = {
   created_at: string;
   reporter_id: string;
   reporter_nickname: string | null;
-  reporter_email: string | null;
 };
 
 type SortBy = 'created_at' | 'last_seen' | 'mmr' | 'level' | 'nickname' | 'report_count';
@@ -184,24 +182,24 @@ const AdminMember = () => {
                   onChange={(e) => setSearch(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
-                    playSound('click');
-                    setCurrentPage(0);
-                    loadMembers(0);
-                  }
-                }}
+                      playSound('click');
+                      setCurrentPage(0);
+                      loadMembers(0);
+                    }
+                  }}
                   placeholder="닉네임 / 이메일 / UID 검색"
                   className="w-full rounded-lg border border-white/10 bg-black/20 py-2 pl-9 pr-3 text-sm outline-none focus:border-cyan-400/60"
                 />
               </div>
               <div className="flex items-center gap-2">
-              <select
-                value={sortBy}
-                onChange={(e) => {
-                  setSortBy(e.target.value as SortBy);
-                  setCurrentPage(0);
-                }}
-                className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white outline-none"
-              >
+                <select
+                  value={sortBy}
+                  onChange={(e) => {
+                    setSortBy(e.target.value as SortBy);
+                    setCurrentPage(0);
+                  }}
+                  className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white outline-none"
+                >
                   <option value="created_at">가입일</option>
                   <option value="last_seen">최근접속</option>
                   <option value="report_count">신고횟수</option>
@@ -209,23 +207,23 @@ const AdminMember = () => {
                   <option value="level">레벨</option>
                   <option value="nickname">닉네임</option>
                 </select>
-              <select
-                value={sortOrder}
-                onChange={(e) => {
-                  setSortOrder(e.target.value as SortOrder);
-                  setCurrentPage(0);
-                }}
-                className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white outline-none"
-              >
+                <select
+                  value={sortOrder}
+                  onChange={(e) => {
+                    setSortOrder(e.target.value as SortOrder);
+                    setCurrentPage(0);
+                  }}
+                  className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white outline-none"
+                >
                   <option value="desc">내림차순</option>
                   <option value="asc">오름차순</option>
                 </select>
               </div>
               <button
                 onClick={() => {
-                playSound('click');
-                loadMembers();
-              }}
+                  playSound('click');
+                  loadMembers();
+                }}
                 disabled={isLoadingMembers}
                 className="inline-flex items-center justify-center gap-2 rounded-lg border border-cyan-400/30 bg-cyan-500/20 px-4 py-2 text-sm font-semibold text-cyan-200 hover:bg-cyan-500/30 disabled:opacity-60"
               >
@@ -233,33 +231,33 @@ const AdminMember = () => {
                 새로고침
               </button>
             </div>
-          <p className="mt-3 text-xs text-white/60">
-            페이지 {currentPage + 1} / 현재 {filteredMembers.length}명 표시
-          </p>
-          <div className="mt-3 flex items-center justify-end gap-2">
-            <button
-              onClick={() => {
-                if (currentPage === 0) return;
-                playSound('click');
-                setCurrentPage((p) => Math.max(0, p - 1));
-              }}
-              disabled={isLoadingMembers || currentPage === 0}
-              className="rounded-lg border border-white/15 px-3 py-1.5 text-xs disabled:opacity-40"
-            >
-              이전
-            </button>
-            <button
-              onClick={() => {
-                if (!hasMore) return;
-                playSound('click');
-                setCurrentPage((p) => p + 1);
-              }}
-              disabled={isLoadingMembers || !hasMore}
-              className="rounded-lg border border-white/15 px-3 py-1.5 text-xs disabled:opacity-40"
-            >
-              다음
-            </button>
-          </div>
+            <p className="mt-3 text-xs text-white/60">
+              페이지 {currentPage + 1} / 현재 {filteredMembers.length}명 표시
+            </p>
+            <div className="mt-3 flex items-center justify-end gap-2">
+              <button
+                onClick={() => {
+                  if (currentPage === 0) return;
+                  playSound('click');
+                  setCurrentPage((p) => Math.max(0, p - 1));
+                }}
+                disabled={isLoadingMembers || currentPage === 0}
+                className="rounded-lg border border-white/15 px-3 py-1.5 text-xs disabled:opacity-40"
+              >
+                이전
+              </button>
+              <button
+                onClick={() => {
+                  if (!hasMore) return;
+                  playSound('click');
+                  setCurrentPage((p) => p + 1);
+                }}
+                disabled={isLoadingMembers || !hasMore}
+                className="rounded-lg border border-white/15 px-3 py-1.5 text-xs disabled:opacity-40"
+              >
+                다음
+              </button>
+            </div>
           </div>
 
           <div className="mt-4 space-y-3 pb-6">
@@ -303,7 +301,7 @@ const AdminMember = () => {
                         <div className="text-xs text-cyan-300">MMR {m.mmr ?? 1000} / Lv {m.level ?? 1}</div>
                       </div>
                       <div className="mt-2 grid gap-1 text-xs text-white/75 break-all">
-                        <div>Email: {m.email || '-'}</div>
+
                         <div>UID: {m.id}</div>
                         <div>Country: {m.country || '-'}</div>
                         <div>신고횟수: {m.report_count}</div>
@@ -346,7 +344,7 @@ const AdminMember = () => {
                   </div>
                   <div className="min-w-0 flex-1 text-sm text-white/85 space-y-1 break-all">
                     <div className="text-base font-bold text-white">{selectedMember.nickname || '(닉네임 없음)'}</div>
-                    <div>Email: {selectedMember.email || '-'}</div>
+
                     <div>UID: {selectedMember.id}</div>
                     <div>Country: {selectedMember.country || '-'}</div>
                     <div>MMR: {selectedMember.mmr ?? 1000}</div>
@@ -455,7 +453,7 @@ const AdminMember = () => {
                       <div key={r.id} className="rounded-lg border border-white/10 bg-black/25 p-3">
                         <div className="text-sm text-white whitespace-pre-wrap break-words">{r.reason}</div>
                         <div className="mt-2 text-xs text-white/60 space-y-0.5">
-                          <div>신고자: {r.reporter_nickname || '(알 수 없음)'} ({r.reporter_email || '-'})</div>
+                          <div>신고자: {r.reporter_nickname || '(알 수 없음)'}</div>
                           <div>신고시각: {formatDateTime(r.created_at)}</div>
                           <div>세션ID: {r.session_id || '-'}</div>
                         </div>

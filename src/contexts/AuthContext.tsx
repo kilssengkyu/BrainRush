@@ -168,7 +168,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 if (baseUser) {
                     const newProfile = {
                         id: userId,
-                        email: baseUser.email,
                         nickname: 'Player_' + Math.floor(Math.random() * 9000 + 1000),
                         needs_nickname_setup: true,
                         nickname_set_at: null,
