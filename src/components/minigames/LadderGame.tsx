@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
+import { usePanelProgress } from '../../hooks/usePanelProgress';
 import { motion } from 'framer-motion';
-import { useTranslation } from 'react-i18next';
 import { SeededRandom } from '../../utils/seededRandom';
 import { useSound } from '../../contexts/SoundContext';
 
@@ -15,9 +15,8 @@ interface LadderGameProps {
 type Bridge = [number, number];
 
 const LadderGame: React.FC<LadderGameProps> = ({ seed, onScore, isPlaying }) => {
-    const { t } = useTranslation();
     const { playSound } = useSound();
-    const [panelIndex, setPanelIndex] = useState(0);
+    const [panelIndex, setPanelIndex] = usePanelProgress(seed);
     const [selectedEnd, setSelectedEnd] = useState<number | null>(null);
     const [isAnimating, setIsAnimating] = useState(false);
     const [shakeId, setShakeId] = useState<number | null>(null); // For wrong answers
@@ -168,13 +167,6 @@ const LadderGame: React.FC<LadderGameProps> = ({ seed, onScore, isPlaying }) => 
 
     return (
         <div className="flex flex-col items-center justify-center w-full h-full relative">
-            <h2 className="text-3xl font-black text-white mb-2 drop-shadow-md">
-                {t('ladder.title', 'LADDER')}
-            </h2>
-            <div className="text-yellow-400 font-bold text-lg mb-6">
-                {t('ladder.instruction', 'Follow the path!')}
-            </div>
-
             {/* Game Board */}
             <div className="relative" style={{ width: CONTAINER_WIDTH, height: CONTAINER_HEIGHT }}>
 

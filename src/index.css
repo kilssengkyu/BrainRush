@@ -196,3 +196,31 @@ body {
 .animate-bg-pulse-tense {
   animation: bg-pulse-tense 1.2s ease-in-out infinite;
 }
+
+@keyframes lightning-flash {
+
+  0%,
+  100% {
+    opacity: 0;
+  }
+
+  3% {
+    opacity: 0.6;
+  }
+
+  5% {
+    opacity: 0;
+  }
+
+  8% {
+    opacity: 0.8;
+  }
+
+  12% {
+    opacity: 0;
+  }
+}
+
+.animate-lightning {
+  animation: lightning-flash 7s infinite;
+}

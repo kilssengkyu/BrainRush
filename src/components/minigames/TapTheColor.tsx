@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { usePanelProgress } from '../../hooks/usePanelProgress';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { SeededRandom } from '../../utils/seededRandom';
@@ -27,7 +28,7 @@ const COLORS = [
 const TapTheColor: React.FC<TapTheColorProps> = ({ seed, onScore, isPlaying }) => {
     const { t } = useTranslation();
     const { playSound } = useSound();
-    const [panelIndex, setPanelIndex] = useState(0);
+    const [panelIndex, setPanelIndex] = usePanelProgress(seed);
     const [phase, setPhase] = useState<Phase>('memorize');
     const [currentStep, setCurrentStep] = useState(0);
     const [shakeId, setShakeId] = useState<number | null>(null);
@@ -132,10 +133,6 @@ const TapTheColor: React.FC<TapTheColorProps> = ({ seed, onScore, isPlaying }) =
 
     return (
         <div className="flex flex-col items-center justify-center w-full h-full p-4">
-            <h2 className="text-3xl font-black text-white mb-2 drop-shadow-md">
-                {t('tapTheColor.title', 'Tap the Color')}
-            </h2>
-
             {/* Sequence Bar (Only visible in Input phase) */}
             <div className="h-16 mb-4 flex items-center justify-center space-x-2">
                 {phase === 'input' || phase === 'result' ? (

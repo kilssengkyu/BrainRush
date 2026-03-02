@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { usePanelProgress } from '../../hooks/usePanelProgress';
 import { useTranslation } from 'react-i18next';
 import { SeededRandom } from '../../utils/seededRandom';
 import { useSound } from '../../contexts/SoundContext';
@@ -21,7 +22,7 @@ const COLORS: Record<ColorType, { tailwind: string; hex: string }> = {
 const ColorMatch: React.FC<ColorMatchProps> = ({ seed, onScore, isPlaying }) => {
     const { t } = useTranslation();
     const { playSound } = useSound();
-    const [panelIndex, setPanelIndex] = useState(0);
+    const [panelIndex, setPanelIndex] = usePanelProgress(seed);
     const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
     const [shakeId, setShakeId] = useState<number | null>(null);
     const [isSolved, setIsSolved] = useState(false);
@@ -137,15 +138,6 @@ const ColorMatch: React.FC<ColorMatchProps> = ({ seed, onScore, isPlaying }) => 
 
     return (
         <div className="flex flex-col items-center justify-center w-full h-full gap-8 relative">
-            <div className="absolute top-0 text-gray-500 font-mono text-sm mt-2">
-                Level: {currentPanel.level} | Panel: {panelIndex + 1}
-            </div>
-
-            <h2 className="text-4xl font-black text-white drop-shadow-md">
-                {t('color.title')}
-            </h2>
-            <div className="text-gray-400 text-sm mb-4">{t('color.instruction')}</div>
-
             <div className={`grid gap-6 ${currentPanel.items.length === 2 ? 'grid-cols-2' : 'grid-cols-2'}`}>
                 {currentPanel.items.map((item, idx) => (
                     <button

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { usePanelProgress } from '../../hooks/usePanelProgress';
 import { motion } from 'framer-motion';
-import { useTranslation } from 'react-i18next';
 import { SeededRandom } from '../../utils/seededRandom';
 import { useSound } from '../../contexts/SoundContext';
 
@@ -40,12 +40,11 @@ const SAFE_TRIADS = [
 ];
 
 const FindMostColor: React.FC<FindMostColorProps> = ({ seed, onScore, isPlaying }) => {
-    const { t } = useTranslation();
     const { playSound } = useSound();
 
     const [grid, setGrid] = useState<string[]>([]);
     const [cols, setCols] = useState(3);
-    const [successCount, setSuccessCount] = useState(0);
+    const [successCount, setSuccessCount] = usePanelProgress(seed, 'successCount');
     const [roundKey, setRoundKey] = useState(0); // To trigger animations
 
     const rng = useRef<SeededRandom | null>(null);
@@ -53,9 +52,9 @@ const FindMostColor: React.FC<FindMostColorProps> = ({ seed, onScore, isPlaying 
     useEffect(() => {
         if (seed) {
             rng.current = new SeededRandom(seed);
-            setSuccessCount(0);
             generateRound();
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [seed]);
 
     const generateRound = useCallback(() => {
@@ -206,10 +205,6 @@ const FindMostColor: React.FC<FindMostColorProps> = ({ seed, onScore, isPlaying 
 
     return (
         <div className="w-full h-full flex flex-col items-center justify-center p-4">
-            <h2 className="text-2xl font-black text-white mb-6 drop-shadow-md animate-pulse">
-                {t('mostColor.title')}
-            </h2>
-
             <motion.div
                 key={roundKey}
                 initial={{ scale: 0.9, opacity: 0 }}

@@ -445,16 +445,6 @@ const TimingBar: React.FC<TimingBarProps> = ({ onScore, isPlaying, remainingTime
                     </div>
                 ))}
 
-                {/* Streak - center display, sparkle at 10+ */}
-                {streak > 0 && (
-                    <div className={`absolute top-[15%] left-1/2 -translate-x-1/2 font-bold drop-shadow-lg z-30 ${streak >= 10
-                        ? 'text-4xl text-yellow-300 animate-pulse [text-shadow:0_0_10px_gold,0_0_20px_yellow,0_0_30px_orange]'
-                        : 'text-3xl text-yellow-400'
-                        }`}>
-                        {streak} COMBO
-                    </div>
-                )}
-
                 {/* Hold indicator */}
                 {isHolding && (
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-cyan-400 text-2xl font-bold animate-pulse drop-shadow-lg z-30">

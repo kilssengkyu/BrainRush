@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { isBotId } from '../constants/bot';
+import { clearGameProgress } from './usePanelProgress';
 
 export interface GameState {
     status: 'waiting' | 'countdown' | 'playing' | 'finished';
@@ -51,6 +52,10 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
     const [isTimeUp, setIsTimeUp] = useState(false); // Grace period flag
     const isFinishing = useRef(false);
     const hasFinalSynced = useRef(false);
+    const scoreTimelineRef = useRef<[number, number][]>([]); // [[elapsed_secs, delta], ...]
+    const ghostTimelineRef = useRef<[number, number][] | null>(null); // Ghost events for bot opponent
+    const ghostScoreRef = useRef<number>(0); // Current ghost-computed bot score
+    const ghostReplayKeyRef = useRef<string>(''); // Round-scoped key to avoid replay resets on every row update
 
     // --- Time Sync ---
     useEffect(() => {
@@ -158,7 +163,7 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
                 startAt,
                 endAt,
                 myScore: record.status === 'playing' ? scoreRef.current : myServerScore,
-                opScore: opServerScore,
+                opScore: ghostTimelineRef.current ? ghostScoreRef.current : opServerScore,
                 myWins: myWins, // New
                 opWins: opWins, // New
                 winnerId: record.winner_id,
@@ -173,6 +178,24 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
                 mode: record.mode || 'normal'
             };
         });
+
+        // Extract ghost timeline from game_data for client-side replay.
+        // Important: only reset replay state when the round actually changes.
+        if (record.game_data?.ghost_timeline && (isBotId(record.player1_id) || isBotId(record.player2_id))) {
+            if (record.status === 'playing' || record.status === 'countdown') {
+                const nextReplayKey = `${record.current_round_index || 0}:${record.start_at || ''}:${record.game_type || ''}`;
+                if (ghostReplayKeyRef.current !== nextReplayKey) {
+                    ghostTimelineRef.current = record.game_data.ghost_timeline as [number, number][];
+                    ghostScoreRef.current = 0;
+                    ghostReplayKeyRef.current = nextReplayKey;
+                }
+            }
+        }
+        if (record.status === 'finished' || record.status === 'waiting') {
+            ghostTimelineRef.current = null;
+            ghostScoreRef.current = 0;
+            ghostReplayKeyRef.current = '';
+        }
     }, [myId, serverOffset]);
 
     const startGame = useCallback(async () => {
@@ -300,6 +323,20 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
                         isFinishing.current = true;
                         console.log('Ticker: Grace window done. Advancing to next round...');
 
+                        // Save ghost score timeline before advancing
+                        const currentGameType = gameState.gameType;
+                        const timeline = [...scoreTimelineRef.current];
+                        const finalScore = scoreRef.current;
+                        if (currentGameType && finalScore > 0 && timeline.length > 0) {
+                            supabase.rpc('save_ghost_score', {
+                                p_game_type: currentGameType,
+                                p_timeline: timeline,
+                                p_final_score: finalScore
+                            }).then(({ error }) => {
+                                if (error) console.error('GHOST SAVE ERROR:', error);
+                            });
+                        }
+
                         // Ensure host pushes its latest score once more before advancing.
                         await syncFinalScore();
 
@@ -382,21 +419,68 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
     }, [gameState.status, gameState.startAt, gameState.endAt, serverOffset, roomId, myId]);
 
 
+    // --- Ghost Replay Timer (Client-Side, 100ms) ---
+    useEffect(() => {
+        if (gameState.status !== 'playing' || !ghostTimelineRef.current || !gameState.startAt) return;
+        const timeline = ghostTimelineRef.current;
+        const startAtMs = new Date(gameState.startAt).getTime();
+
+        const interval = setInterval(() => {
+            const elapsed = ((Date.now() + serverOffset) - startAtMs) / 1000;
+            if (elapsed < 0) return;
+
+            // Sum all ghost deltas where event time <= elapsed
+            let total = 0;
+            for (const [t, delta] of timeline) {
+                if (t <= elapsed) total += delta;
+                else break; // timeline is sorted by time, so we can break early
+            }
+            total = Math.max(0, total);
+
+            if (total !== ghostScoreRef.current) {
+                ghostScoreRef.current = total;
+                setGameState(prev => ({ ...prev, opScore: total }));
+            }
+        }, 100);
+
+        return () => clearInterval(interval);
+    }, [gameState.status, gameState.startAt, serverOffset]);
+
+
     // --- Actions ---
     const incrementScore = (amount: number = 100) => {
         scoreRef.current = Math.max(0, scoreRef.current + amount);
         hasLocalScoreChanges.current = true;
-        setGameState(prev => ({ ...prev, myScore: scoreRef.current }));
+        setGameState(prev => {
+            // Record ghost event: [elapsed_seconds, delta]
+            const startAt = prev.startAt ? new Date(prev.startAt).getTime() : 0;
+            if (startAt > 0) {
+                const elapsed = Math.round(((Date.now() + serverOffset) - startAt) / 10) / 100; // 2 decimal places
+                scoreTimelineRef.current.push([elapsed, amount]);
+            }
+            return { ...prev, myScore: scoreRef.current };
+        });
     };
 
     // Fix: Reset finishing flag AND ScoreRef when round changes
     // 라운드가 변경(또는 게임 타입 변경)되면 isFinishing 플래그를 초기화하여 다음 라운드 종료 시 트리거가 동작하도록 함
+    const prevRoundKeyRef = useRef<string>('');
     useEffect(() => {
         isFinishing.current = false;
         hasFinalSynced.current = false;
         setIsTimeUp(false); // Reset TimeUp flag
         scoreRef.current = 0; // Reset local score for new round
         hasLocalScoreChanges.current = false;
+        scoreTimelineRef.current = []; // Reset ghost timeline for new round
+        ghostTimelineRef.current = null; // Reset ghost replay
+        ghostScoreRef.current = 0;
+        ghostReplayKeyRef.current = '';
+        // Only clear game progress when round/gameType actually changes (not on initial mount)
+        const roundKey = `${gameState.currentRound}:${gameState.gameType}`;
+        if (prevRoundKeyRef.current && prevRoundKeyRef.current !== roundKey) {
+            clearGameProgress();
+        }
+        prevRoundKeyRef.current = roundKey;
         console.log('Resetting isFinishing flag and scoreRef for new round/game type');
     }, [gameState.currentRound, gameState.gameType, gameState.status]);
 

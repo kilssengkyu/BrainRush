@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { usePanelProgress } from '../../hooks/usePanelProgress';
 import { motion, useAnimation } from 'framer-motion';
 import type { PanInfo } from 'framer-motion';
-import { useTranslation } from 'react-i18next';
 import { Star, Heart, Circle, Square, Triangle, Hexagon } from 'lucide-react';
 import { SeededRandom } from '../../utils/seededRandom';
 import { useSound } from '../../contexts/SoundContext';
@@ -22,11 +22,10 @@ const SYMBOLS = [
 ];
 
 const SortingGame: React.FC<SortingGameProps> = ({ seed, onScore, isPlaying }) => {
-    const { t } = useTranslation();
     const { playSound } = useSound();
     const controls = useAnimation();
 
-    const [streak, setStreak] = useState(0);
+    const [streak, setStreak] = usePanelProgress(seed, 'streak');
     const [currentSymbol, setCurrentSymbol] = useState<typeof SYMBOLS[0] | null>(null);
     const [nextSymbol, setNextSymbol] = useState<typeof SYMBOLS[0] | null>(null);
 
@@ -39,11 +38,10 @@ const SortingGame: React.FC<SortingGameProps> = ({ seed, onScore, isPlaying }) =
     useEffect(() => {
         if (seed) {
             rng.current = new SeededRandom(seed);
-            setStreak(0);
             setLastMove(null);
 
-            // Initial Symbols
-            const pool = getSymbolPool(0);
+            // Initial Symbols — use restored streak for correct pool size
+            const pool = getSymbolPool(streak);
             const first = pool[Math.floor(rng.current.next() * pool.length)];
 
             // Generate second symbol with 50/50 rule relative to first
@@ -58,6 +56,7 @@ const SortingGame: React.FC<SortingGameProps> = ({ seed, onScore, isPlaying }) =
             setCurrentSymbol(first);
             setNextSymbol(second);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [seed]);
 
     const getSymbolPool = (currentStreak: number) => {
@@ -174,13 +173,6 @@ const SortingGame: React.FC<SortingGameProps> = ({ seed, onScore, isPlaying }) =
 
     return (
         <div className="w-full h-full flex flex-col items-center justify-center relative overflow-hidden">
-            {/* Guide Text */}
-            <div className="absolute top-10 text-white/70 text-center text-sm font-medium z-0 animate-pulse">
-                {!lastMove ? t('sorting.firstMoveHint') : t('sorting.instruction')}
-            </div>
-            {/* Guide Text */}
-
-
             {/* Hint Arrows */}
 
 

@@ -19,6 +19,15 @@ import { getLevelFromXp } from '../utils/levelUtils';
 import { useTutorial } from '../contexts/TutorialContext';
 import SpotlightOverlay from '../components/ui/SpotlightOverlay';
 
+type RadarStats = {
+    speed: number;
+    memory: number;
+    judgment: number;
+    calculation: number;
+    accuracy: number;
+    observation: number;
+};
+
 // Simple Timer Component
 const RechargeTimer = ({ lastRecharge }: { lastRecharge: string }) => {
     const [timeLeft, setTimeLeft] = useState<string>('');
@@ -192,7 +201,6 @@ const Home = () => {
 
     // Track selected mode for navigation callback
     const currentMode = useRef('rank');
-
     // Matchmaking Hook
     const { status, startSearch, cancelSearch, elapsedTime, playerId, matchedOpponentId } = useMatchmaking((roomId, opponentId) => {
         playSound('match_found');
@@ -204,9 +212,11 @@ const Home = () => {
 
     // Matched opponent profile fetch
     const [matchedOpProfile, setMatchedOpProfile] = useState<any>(null);
+    const [matchedBotRadarStats, setMatchedBotRadarStats] = useState<RadarStats | null>(null);
     useEffect(() => {
         if (!matchedOpponentId) {
             setMatchedOpProfile(null);
+            setMatchedBotRadarStats(null);
             return;
         }
         const fetchOpProfile = async () => {
@@ -225,6 +235,27 @@ const Home = () => {
         fetchOpProfile();
     }, [matchedOpponentId]);
 
+    useEffect(() => {
+        if (!matchedOpponentId?.startsWith('bot_') || !profile) {
+            setMatchedBotRadarStats(null);
+            return;
+        }
+
+        const randomizeAround = (value: number) => {
+            const factor = 0.8 + Math.random() * 0.4;
+            return Math.max(0, Math.round(value * factor));
+        };
+
+        setMatchedBotRadarStats({
+            speed: randomizeAround(profile.speed || 0),
+            memory: randomizeAround(profile.memory || 0),
+            judgment: randomizeAround(profile.judgment || 0),
+            calculation: randomizeAround(profile.calculation || 0),
+            accuracy: randomizeAround(profile.accuracy || 0),
+            observation: randomizeAround(profile.observation || 0)
+        });
+    }, [matchedOpponentId, profile]);
+
     // Radar stats for matchmaking screen
     const myRadarStats = {
         speed: profile?.speed || 0,
@@ -235,12 +266,12 @@ const Home = () => {
         observation: profile?.observation || 0
     };
     const opRadarStats = {
-        speed: matchedOpProfile?.speed || 0,
-        memory: matchedOpProfile?.memory || 0,
-        judgment: matchedOpProfile?.judgment || 0,
-        calculation: matchedOpProfile?.calculation || 0,
-        accuracy: matchedOpProfile?.accuracy || 0,
-        observation: matchedOpProfile?.observation || 0
+        speed: matchedOpponentId?.startsWith('bot_') ? (matchedBotRadarStats?.speed || 0) : (matchedOpProfile?.speed || 0),
+        memory: matchedOpponentId?.startsWith('bot_') ? (matchedBotRadarStats?.memory || 0) : (matchedOpProfile?.memory || 0),
+        judgment: matchedOpponentId?.startsWith('bot_') ? (matchedBotRadarStats?.judgment || 0) : (matchedOpProfile?.judgment || 0),
+        calculation: matchedOpponentId?.startsWith('bot_') ? (matchedBotRadarStats?.calculation || 0) : (matchedOpProfile?.calculation || 0),
+        accuracy: matchedOpponentId?.startsWith('bot_') ? (matchedBotRadarStats?.accuracy || 0) : (matchedOpProfile?.accuracy || 0),
+        observation: matchedOpponentId?.startsWith('bot_') ? (matchedBotRadarStats?.observation || 0) : (matchedOpProfile?.observation || 0)
     };
     const radarLabels = {
         speed: t('profile.stats.speed'),
@@ -711,6 +742,9 @@ const Home = () => {
                             <>
                                 {/* Background gradients */}
                                 <div className={`absolute inset-0 bg-gradient-to-br from-blue-900/40 via-purple-900/20 to-red-900/40 ${currentMode.current === 'normal' ? 'animate-bg-flow' : currentMode.current === 'rank' ? 'animate-bg-pulse-tense' : ''} pointer-events-none`} />
+                                {currentMode.current === 'rank' && (
+                                    <div className="absolute inset-0 bg-white mix-blend-overlay animate-lightning pointer-events-none" />
+                                )}
 
                                 <div className="relative z-10 flex flex-col items-center w-full h-full pt-[calc(env(safe-area-inset-top)+1rem)] pb-[calc(env(safe-area-inset-bottom)+1rem)]">
                                     {/* My Profile - Top */}

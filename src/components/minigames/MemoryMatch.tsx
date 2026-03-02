@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { usePanelProgress } from '../../hooks/usePanelProgress';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import {
@@ -31,7 +32,7 @@ const ICONS = [
 const MemoryMatch: React.FC<MemoryMatchProps> = ({ seed, onScore, isPlaying }) => {
     const { t } = useTranslation();
     const { playSound } = useSound();
-    const [stage, setStage] = useState(1);
+    const [stage, setStage] = usePanelProgress(seed, 'stage', 1);
     const [cards, setCards] = useState<Card[]>([]);
     const [gameState, setGameState] = useState<'MEMORIZING' | 'PLAYING' | 'CLEARED'>('MEMORIZING');
     const [flippedIndices, setFlippedIndices] = useState<number[]>([]);

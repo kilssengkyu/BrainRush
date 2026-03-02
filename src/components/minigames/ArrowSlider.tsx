@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { usePanelProgress } from '../../hooks/usePanelProgress';
 import { motion, useAnimation, type PanInfo } from 'framer-motion';
-import { useTranslation } from 'react-i18next';
 import { SeededRandom } from '../../utils/seededRandom';
 import { ArrowLeft, ArrowRight, ArrowUp, ArrowDown } from 'lucide-react';
 import { useSound } from '../../contexts/SoundContext';
@@ -15,12 +15,11 @@ type Direction = 'left' | 'right' | 'up' | 'down';
 type Color = 'blue' | 'red';
 
 const ArrowSlider: React.FC<ArrowSliderProps> = ({ seed, onScore, isPlaying }) => {
-    const { t } = useTranslation();
     const { playSound } = useSound();
     const [rng, setRng] = useState<SeededRandom | null>(null);
     const [currentDirection, setCurrentDirection] = useState<Direction>('right');
     const [currentColor, setCurrentColor] = useState<Color>('blue');
-    const [scoreCount, setScoreCount] = useState(0);
+    const [scoreCount, setScoreCount] = usePanelProgress(seed, 'scoreCount');
     const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
 
     const controls = useAnimation();
@@ -31,8 +30,9 @@ const ArrowSlider: React.FC<ArrowSliderProps> = ({ seed, onScore, isPlaying }) =
         if (seed) {
             const newRng = new SeededRandom(seed + '_arrow');
             setRng(newRng);
-            generateNext(newRng, 0);
+            generateNext(newRng, scoreCount);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [seed]);
 
     const generateNext = (random: SeededRandom, currentScore: number) => {
@@ -153,16 +153,6 @@ const ArrowSlider: React.FC<ArrowSliderProps> = ({ seed, onScore, isPlaying }) =
 
     return (
         <div className="w-full h-full flex flex-col items-center justify-center relative touch-none select-none">
-            {/* Instruction Overlay */}
-            <div className="absolute top-10 text-center w-full px-4 pointer-events-none">
-                <h2 className="text-3xl font-black text-white drop-shadow-md mb-2">{t('arrow.title')}</h2>
-                <div className="flex justify-center gap-4 text-sm font-bold bg-black/40 p-2 rounded-xl backdrop-blur-sm">
-                    <span className="text-blue-400">{t('arrow.blue')}</span>
-                    <span className="text-white">|</span>
-                    <span className="text-red-400">{t('arrow.red')}</span>
-                </div>
-            </div>
-
             {/* Interactive Card */}
             <motion.div
                 ref={containerRef}
@@ -181,9 +171,6 @@ const ArrowSlider: React.FC<ArrowSliderProps> = ({ seed, onScore, isPlaying }) =
                 {getIcon()}
             </motion.div>
 
-            <p className="mt-12 text-gray-400 animate-pulse text-sm text-center max-w-xs">
-                {t('arrow.instruction')}
-            </p>
         </div>
     );
 };

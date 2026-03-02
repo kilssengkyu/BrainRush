@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { usePanelProgress } from '../../hooks/usePanelProgress';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { SeededRandom } from '../../utils/seededRandom';
@@ -13,7 +14,7 @@ interface MathChallengeProps {
 const MathChallenge: React.FC<MathChallengeProps> = ({ seed, onScore, isPlaying }) => {
     const { t } = useTranslation();
     const { playSound } = useSound();
-    const [panelIndex, setPanelIndex] = useState(0);
+    const [panelIndex, setPanelIndex] = usePanelProgress(seed);
     const [shakeId, setShakeId] = useState<number | null>(null);
     const [animationKey, setAnimationKey] = useState(0);
 
@@ -191,15 +192,6 @@ const MathChallenge: React.FC<MathChallengeProps> = ({ seed, onScore, isPlaying 
 
     return (
         <div className="flex flex-col items-center justify-center w-full h-full gap-8 relative">
-
-            {/* Header Info */}
-            {/* Header Info - REMOVED */}
-
-            <h2 className="text-3xl font-black text-white mb-2 drop-shadow-md">
-                {t('math.title')}
-            </h2>
-            <div className="text-yellow-400 font-bold text-lg mb-8">{t('math.instruction')}</div>
-
             {/* Equation Display */}
             <AnimatePresence mode="popLayout">
                 <motion.div

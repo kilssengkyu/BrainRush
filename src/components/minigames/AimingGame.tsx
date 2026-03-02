@@ -203,12 +203,6 @@ const AimingGame: React.FC<AimingGameProps> = ({ seed, onScore, isPlaying }) => 
 
     return (
         <div className="relative w-full h-full overflow-hidden select-none touch-manipulation">
-            {/* Instruction Overlay (fades out or stays at top) */}
-            <div className="absolute top-4 left-0 w-full text-center pointer-events-none z-0 opacity-50">
-                <h2 className="text-3xl font-black text-white drop-shadow-md">{t('aim.title')}</h2>
-                <p className="text-sm text-gray-300">{t('aim.instruction')}</p>
-            </div>
-
             {/* Game Field */}
             <div className="relative w-full h-full">
                 <AnimatePresence>

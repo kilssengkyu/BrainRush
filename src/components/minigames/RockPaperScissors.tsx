@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { usePanelProgress } from '../../hooks/usePanelProgress';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { SeededRandom } from '../../utils/seededRandom';
@@ -17,7 +18,7 @@ interface RPSProps {
 const RockPaperScissors: React.FC<RPSProps> = ({ seed, onScore, isPlaying }) => {
     const { t } = useTranslation();
     const { playSound } = useSound();
-    const [index, setIndex] = useState(0);
+    const [index, setIndex] = usePanelProgress(seed, 'index');
     const [shake, setShake] = useState<Move | null>(null);
     const [animationKey, setAnimationKey] = useState(0);
     const [combo, setCombo] = useState(0);
@@ -76,13 +77,6 @@ const RockPaperScissors: React.FC<RPSProps> = ({ seed, onScore, isPlaying }) => 
 
     return (
         <div className="flex flex-col items-center justify-center w-full h-full gap-2">
-
-            {/* Instruction / Title overlay */}
-            <h2 className="text-3xl font-black text-white mb-2">{t('rps.title')}</h2>
-            <p className={`text-xl font-bold mb-4 ${isReverse ? 'text-red-500' : 'text-blue-500'}`}>
-                {isReverse ? t('rps.titleLose') : t('rps.titleWin')}
-            </p>
-
             {/* Target Display Area */}
             <div className="relative flex items-center justify-center w-64 h-64">
                 <AnimatePresence mode="popLayout">

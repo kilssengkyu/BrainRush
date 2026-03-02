@@ -43,6 +43,7 @@ import { useUI } from '../contexts/UIContext';
 import ReportReasonModal from '../components/ui/ReportReasonModal';
 import { resolveRoundWinner } from '../effects/roundWinner';
 
+const IS_DEV = import.meta.env.DEV;
 const BOT_EMOJI_POOL = ['🙂', '😭', '😂', '☹️', '❤️', '💔', '👍', '👎'];
 const BOT_EMOJI_BURST = ['😂', '😭', '👍', '👎'];
 const BOT_EMOJI_REACTIVE = {
@@ -63,10 +64,8 @@ const EMOJI_ICON_MAP: Record<string, string> = {
     '👍': '/images/icon/emoji/Cool%20-%20Cartoon.png',
     '👎': '/images/icon/emoji/Shy%20-%20Cartoon.png'
 };
-const ROUND_LEAVE_BLOCK_PREFIX = 'brainrush.round_leave_block.v1';
 
-const makeRoundLeaveBlockKey = (roomId: string, playerId: string, round: number) =>
-    `${ROUND_LEAVE_BLOCK_PREFIX}:${roomId}:${playerId}:${round}`;
+const FINAL_ROUND_FINISHED_MS = 2000;
 
 const Game: React.FC = () => {
     const { t } = useTranslation();
@@ -84,6 +83,12 @@ const Game: React.FC = () => {
     const [opponentProfile, setOpponentProfile] = useState<any>(null);
     const [isReportModalOpen, setIsReportModalOpen] = useState(false);
     const [isResultActionsOpen, setIsResultActionsOpen] = useState(false);
+    const [botRoundDebugPreview, setBotRoundDebugPreview] = useState<{
+        gameType: string;
+        myBestScore: number;
+        botGhostScore: number;
+        gap: number;
+    } | null>(null);
 
     // --- Realtime Score Sync (Broadcast) ---
     const [realtimeOpScore, setRealtimeOpScore] = useState<number | null>(null);
@@ -119,6 +124,7 @@ const Game: React.FC = () => {
     const isPlaying = gameState.status === 'playing';
     const isFinished = gameState.status === 'finished';
     const [resultRevealReady, setResultRevealReady] = useState(false);
+    const [terminalRoundFinishedActive, setTerminalRoundFinishedActive] = useState(false);
     const isWaiting = gameState.status === 'waiting';
     const isCountdown = gameState.status === 'countdown';
     const isCountdownActive = Boolean(
@@ -126,14 +132,7 @@ const Game: React.FC = () => {
     );
     const isUrgentRound = isPlaying && !isCountdownActive && gameState.remainingTime <= 5 && gameState.remainingTime > 0;
     const isGameplayActive = isPlaying && !isCountdownActive && !isTimeUp;
-    const [isRoundLeaveBlocked, setIsRoundLeaveBlocked] = useState(false);
-    const roundLeaveMarkWrittenRef = useRef(false);
-    const gameplayActiveRef = useRef(false);
-    const blockContextRef = useRef<{ roomId: string | null; myId: string | null; round: number }>({
-        roomId: null,
-        myId: null,
-        round: 1
-    });
+
 
     const now = Date.now() + serverOffset;
     const warmupStart = gameState.startAt ? new Date(gameState.startAt).getTime() : 0;
@@ -145,77 +144,27 @@ const Game: React.FC = () => {
     // warmupDiff 0~3: "Game Description" phase (last ~3s)
     // warmupDiff <= 0: Game starts
     const hasCompletedRound = gameState.roundScores.length > 0;
-    const showRoundFinished = isWarmup && warmupDiff > 3 && hasCompletedRound && !isFinished;
+    const showRoundFinished = hasCompletedRound && ((isWarmup && warmupDiff > 3 && !isFinished) || terminalRoundFinishedActive);
     const showFinalResult = isFinished && resultRevealReady;
     const showWarmupOverlay = (isWarmup || isCountdown) && !showRoundFinished;
-    const showEmojiBar = showRoundFinished || isWaiting;
+    const showEmojiBar = (showRoundFinished || isWaiting || showFinalResult) && !terminalRoundFinishedActive;
     const showEmojiOverlay = showEmojiBar;
-    const isRoundBlockFeatureEnabled = gameState.mode !== 'practice';
-    const isGameplayInteractable = isGameplayActive && (!isRoundBlockFeatureEnabled || !isRoundLeaveBlocked);
+    const isGameplayInteractable = isGameplayActive;
+
+
 
     useEffect(() => {
-        gameplayActiveRef.current = isGameplayActive;
-    }, [isGameplayActive]);
-
-    useEffect(() => {
-        blockContextRef.current = {
-            roomId: roomId ?? null,
-            myId: myId ?? null,
-            round: gameState.currentRound
-        };
-    }, [roomId, myId, gameState.currentRound]);
-
-    useEffect(() => {
-        roundLeaveMarkWrittenRef.current = false;
-        if (!isRoundBlockFeatureEnabled || !roomId || !myId) {
-            setIsRoundLeaveBlocked(false);
+        if (!isFinished || gameState.mode === 'practice' || !hasCompletedRound) {
+            setTerminalRoundFinishedActive(false);
             return;
         }
-        try {
-            const key = makeRoundLeaveBlockKey(roomId, myId, gameState.currentRound);
-            setIsRoundLeaveBlocked(localStorage.getItem(key) === '1');
-        } catch {
-            setIsRoundLeaveBlocked(false);
-        }
-    }, [roomId, myId, gameState.currentRound, isRoundBlockFeatureEnabled]);
 
-    useEffect(() => {
-        if (!isRoundBlockFeatureEnabled || !roomId || !myId || !isFinished) return;
-        try {
-            for (let round = 1; round <= Math.max(1, gameState.totalRounds || 0); round += 1) {
-                localStorage.removeItem(makeRoundLeaveBlockKey(roomId, myId, round));
-            }
-        } catch {
-            // noop
-        }
-    }, [isFinished, roomId, myId, gameState.totalRounds, isRoundBlockFeatureEnabled]);
+        setTerminalRoundFinishedActive(true);
+        const timer = window.setTimeout(() => setTerminalRoundFinishedActive(false), FINAL_ROUND_FINISHED_MS);
+        return () => window.clearTimeout(timer);
+    }, [isFinished, gameState.mode, hasCompletedRound, gameState.roundScores.length]);
 
-    useEffect(() => {
-        const markCurrentRoundBlocked = () => {
-            if (roundLeaveMarkWrittenRef.current) return;
-            if (!gameplayActiveRef.current) return;
-            const ctx = blockContextRef.current;
-            if (!isRoundBlockFeatureEnabled || !ctx.roomId || !ctx.myId) return;
-            try {
-                localStorage.setItem(makeRoundLeaveBlockKey(ctx.roomId, ctx.myId, ctx.round), '1');
-                roundLeaveMarkWrittenRef.current = true;
-            } catch {
-                // noop
-            }
-        };
 
-        const onPageHide = () => markCurrentRoundBlocked();
-        const onBeforeUnload = () => markCurrentRoundBlocked();
-
-        window.addEventListener('pagehide', onPageHide);
-        window.addEventListener('beforeunload', onBeforeUnload);
-        return () => {
-            // Route leave from /game is treated as page leave.
-            markCurrentRoundBlocked();
-            window.removeEventListener('pagehide', onPageHide);
-            window.removeEventListener('beforeunload', onBeforeUnload);
-        };
-    }, [isRoundBlockFeatureEnabled]);
 
     // Display scores: during Round Finished, use server's roundScores snapshot (reliable)
     const lastRoundSnapshot = showRoundFinished && gameState.roundScores.length > 0
@@ -264,7 +213,7 @@ const Game: React.FC = () => {
     });
     const [finishRevealDelayMs, setFinishRevealDelayMs] = useState(460);
     const displayedLivesRef = useRef(displayedLives);
-    const roundLifeFxRoundRef = useRef<number>(-1);
+    const roundLifeFxRoundRef = useRef<string>('');
 
     useEffect(() => {
         displayedLivesRef.current = displayedLives;
@@ -272,7 +221,7 @@ const Game: React.FC = () => {
 
     useEffect(() => {
         if (gameState.roundScores.length === 0) {
-            roundLifeFxRoundRef.current = -1;
+            roundLifeFxRoundRef.current = '';
             setDisplayedLives({ my: myLives, op: opLives });
             setBackdropHeartOn({
                 my: buildSideMask('my', myLives),
@@ -301,10 +250,10 @@ const Game: React.FC = () => {
     }, [gameState.mode, isFinished, showRoundFinished, myLives, opLives, requiredWins]);
 
     useEffect(() => {
-        if (isFinished || !showRoundFinished || gameState.mode === 'practice') return;
+        if (!showRoundFinished || gameState.mode === 'practice') return;
         const roundIdx = gameState.roundScores.length - 1;
-        if (roundIdx < 0 || roundLifeFxRoundRef.current === roundIdx) return;
-        roundLifeFxRoundRef.current = roundIdx;
+        const fxKey = `${gameState.currentRound}:${gameState.roundScores.length}:${myLives}:${opLives}`;
+        if (roundLifeFxRoundRef.current === fxKey) return;
 
         const round = gameState.roundScores[roundIdx];
         const winner = resolveRoundWinner(round, player1Id, player2Id);
@@ -317,10 +266,20 @@ const Game: React.FC = () => {
 
         if (winner === 'draw') return;
 
-        const losingSide: 'my' | 'op' =
-            (winner === 'p1' && gameState.isPlayer1) || (winner === 'p2' && !gameState.isPlayer1)
-                ? 'op'
-                : 'my';
+        let losingSide: 'my' | 'op' | null = null;
+        if (winner === 'p1' || winner === 'p2') {
+            losingSide =
+                (winner === 'p1' && gameState.isPlayer1) || (winner === 'p2' && !gameState.isPlayer1)
+                    ? 'op'
+                    : 'my';
+        } else if (myLives < baseLives.my) {
+            losingSide = 'my';
+        } else if (opLives < baseLives.op) {
+            losingSide = 'op';
+        }
+        if (!losingSide) return;
+        roundLifeFxRoundRef.current = fxKey;
+
         const targetIdx = losingSide === 'my'
             ? Math.max(0, baseLives.my - 1)
             : Math.max(0, requiredWins - baseLives.op);
@@ -385,6 +344,8 @@ const Game: React.FC = () => {
             return;
         }
 
+        if (terminalRoundFinishedActive) return;
+
         if (gameState.mode === 'practice' || !gameState.winnerId || !myId) {
             setFinishRevealDelayMs(460);
             return;
@@ -445,7 +406,7 @@ const Game: React.FC = () => {
             timers.forEach((timerId) => window.clearTimeout(timerId));
             forceSideAllOff();
         };
-    }, [isFinished, gameState.mode, gameState.winnerId, myId, opponentId, requiredWins]);
+    }, [isFinished, terminalRoundFinishedActive, gameState.mode, gameState.winnerId, myId, opponentId, requiredWins]);
 
     const renderEmojiVisual = (emoji: string, className: string) => {
         const src = EMOJI_ICON_MAP[emoji];
@@ -483,8 +444,8 @@ const Game: React.FC = () => {
     /* REMOVED: realtimeOpScore declaration was here */
 
     useEffect(() => {
-        showEmojiOverlayRef.current = showEmojiOverlay || (isFinished && gameState.mode !== 'practice');
-    }, [showEmojiOverlay, isFinished, gameState.mode]);
+        showEmojiOverlayRef.current = showEmojiOverlay;
+    }, [showEmojiOverlay]);
 
     useEffect(() => {
         if (!isFinished) {
@@ -497,10 +458,15 @@ const Game: React.FC = () => {
             return;
         }
 
+        if (terminalRoundFinishedActive) {
+            setResultRevealReady(false);
+            return;
+        }
+
         // Delay final popup until loser-side heart flicker/power-down is completed.
         const timer = window.setTimeout(() => setResultRevealReady(true), finishRevealDelayMs);
         return () => window.clearTimeout(timer);
-    }, [isFinished, gameState.mode, finishRevealDelayMs]);
+    }, [isFinished, terminalRoundFinishedActive, gameState.mode, finishRevealDelayMs]);
 
     // Reset realtime score on round change
     useEffect(() => {
@@ -661,6 +627,76 @@ const Game: React.FC = () => {
             navigate('/');
         }
     }, [roomId, navigate]);
+
+    useEffect(() => {
+        const fetchBotRoundDebugPreview = async () => {
+            if (!IS_DEV || !roomId || !myId || !isBotId(opponentId) || !showWarmupOverlay || !gameState.gameType) {
+                setBotRoundDebugPreview(null);
+                return;
+            }
+
+            const { data: session } = await supabase
+                .from('game_sessions')
+                .select('game_type, game_data')
+                .eq('id', roomId)
+                .maybeSingle();
+
+            if (!session?.game_type) {
+                setBotRoundDebugPreview(null);
+                return;
+            }
+
+            const { data: roundHighscore, error: highscoreError } = await supabase
+                .from('player_highscores')
+                .select('best_score')
+                .eq('user_id', myId)
+                .eq('game_type', session.game_type)
+                .maybeSingle();
+
+            if (highscoreError) {
+                setBotRoundDebugPreview(null);
+                return;
+            }
+
+            const { data: ghostRows, error: ghostError } = await supabase
+                .from('ghost_scores' as any)
+                .select('final_score, score_timeline')
+                .eq('game_type', session.game_type);
+
+            if (ghostError || !ghostRows?.length) {
+                setBotRoundDebugPreview(null);
+                return;
+            }
+
+            const targetTimeline = JSON.stringify(session.game_data?.ghost_timeline ?? null);
+            const exactGhost = ghostRows.find((row: any) => JSON.stringify(row.score_timeline ?? null) === targetTimeline);
+            const myBestScore = typeof roundHighscore?.best_score === 'number' ? roundHighscore.best_score : 0;
+            const sumTimelineScore = (timeline: unknown): number => {
+                if (!Array.isArray(timeline)) return 0;
+                return timeline.reduce((total, point) => {
+                    if (!Array.isArray(point) || point.length < 2) return total;
+                    const delta = Number(point[1]);
+                    return Number.isFinite(delta) ? total + delta : total;
+                }, 0);
+            };
+
+            const selectedGhost = exactGhost ?? ghostRows.reduce((best: any, row: any) => {
+                const bestGap = Math.abs(sumTimelineScore(best.score_timeline) - myBestScore);
+                const nextGap = Math.abs(sumTimelineScore(row.score_timeline) - myBestScore);
+                return nextGap < bestGap ? row : best;
+            });
+            const botGhostScore = sumTimelineScore(selectedGhost.score_timeline);
+
+            setBotRoundDebugPreview({
+                gameType: session.game_type,
+                myBestScore,
+                botGhostScore,
+                gap: botGhostScore - myBestScore
+            });
+        };
+
+        fetchBotRoundDebugPreview();
+    }, [roomId, myId, opponentId, showWarmupOverlay, gameState.gameType, gameState.currentRound]);
 
     // Fetch Profiles
     useEffect(() => {
@@ -1033,7 +1069,7 @@ const Game: React.FC = () => {
             {/* Main Game Area */}
             <main className="flex-1 relative flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-black">
                 {/* Background Scoreboard (play tension UI) */}
-                {(isPlaying || showRoundFinished) && !isFinished && (
+                {(isPlaying || showRoundFinished) && (
                     <div className="absolute inset-0 pointer-events-none z-0 select-none overflow-hidden">
                         {/* Score Ratio Background */}
                         <div className="absolute inset-0 pointer-events-none flex opacity-20">
@@ -1178,6 +1214,31 @@ const Game: React.FC = () => {
                         {/* WARM UP OVERLAY */}
                         {showWarmupOverlay && (
                             <div className="absolute inset-0 bg-black/90 z-50 flex flex-col items-center justify-center p-8 text-center backdrop-blur-sm">
+                                {IS_DEV && isBotId(opponentId) && botRoundDebugPreview && (
+                                    <div className="absolute top-4 left-1/2 -translate-x-1/2 w-[min(92vw,28rem)] rounded-2xl border border-amber-400/30 bg-black/55 px-4 py-3 text-xs font-mono text-amber-100 shadow-lg backdrop-blur-sm">
+                                        <div className="mb-1 text-[10px] font-black uppercase tracking-[0.24em] text-amber-300/80">
+                                            Dev Ghost Preview
+                                        </div>
+                                        <div className="flex items-center justify-between gap-3">
+                                            <span className="text-amber-200/80">Game</span>
+                                            <span className="font-black text-white">{botRoundDebugPreview.gameType}</span>
+                                        </div>
+                                        <div className="flex items-center justify-between gap-3">
+                                            <span className="text-amber-200/80">Round Highscore</span>
+                                            <span className="font-black text-blue-300">{botRoundDebugPreview.myBestScore.toLocaleString()}</span>
+                                        </div>
+                                        <div className="flex items-center justify-between gap-3">
+                                            <span className="text-amber-200/80">Bot Ghost</span>
+                                            <span className="font-black text-red-300">{botRoundDebugPreview.botGhostScore.toLocaleString()}</span>
+                                        </div>
+                                        <div className="flex items-center justify-between gap-3">
+                                            <span className="text-amber-200/80">Gap</span>
+                                            <span className={`font-black ${botRoundDebugPreview.gap >= 0 ? 'text-red-200' : 'text-blue-200'}`}>
+                                                {botRoundDebugPreview.gap >= 0 ? '+' : ''}{botRoundDebugPreview.gap.toLocaleString()}
+                                            </span>
+                                        </div>
+                                    </div>
+                                )}
                                 <motion.div
                                     initial={{ scale: 0.5, opacity: 0 }}
                                     animate={{ scale: 1, opacity: 1 }}
@@ -1252,7 +1313,6 @@ const Game: React.FC = () => {
                                         {gameState.gameType === 'STAIRWAY' && t('stairway.instruction', '올바른 방향을 터치해 계단을 올라가세요!')}
                                         {gameState.gameType === 'MAKE_ZERO' && t('zero.instruction', '숫자를 채워 0을 만드세요')}
                                     </p>
-
                                 </motion.div>
                             </div>
                         )}
@@ -1372,16 +1432,7 @@ const Game: React.FC = () => {
                         </div>
                     </motion.div>
                 )}
-                {isRoundLeaveBlocked && isPlaying && !isCountdownActive && !isFinished && gameState.mode !== 'practice' && (
-                    <div className="absolute inset-0 z-[72] flex items-center justify-center bg-black/45 backdrop-blur-[2px] pointer-events-none">
-                        <div className="rounded-2xl border border-amber-300/40 bg-black/70 px-5 py-3 text-center">
-                            <p className="text-sm sm:text-base font-black text-amber-300">라운드 이탈 감지</p>
-                            <p className="text-xs sm:text-sm text-amber-100/90 mt-1">
-                                현재 라운드는 점수를 획득할 수 없습니다.
-                            </p>
-                        </div>
-                    </div>
-                )}
+
 
                 {/* Result Overlay */}
                 {showFinalResult && (
@@ -1589,22 +1640,6 @@ const Game: React.FC = () => {
                                             </motion.div>
                                         )}
 
-                                        {/* Emoji Grid in Result Card */}
-                                        <div className="w-full bg-black/20 rounded-xl p-4 mb-6 border border-white/5">
-                                            {/* Reactions Label Removed */}
-                                            <div className="grid grid-cols-4 gap-3">
-                                                {[...emojiRowTop, ...emojiRowBottom].map((emoji) => (
-                                                    <button
-                                                        key={emoji}
-                                                        onClick={() => handleEmojiSend(emoji)}
-                                                        className="aspect-square rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition active:scale-95 border border-white/5"
-                                                    >
-                                                        {renderEmojiVisual(emoji, 'w-10 h-10 object-contain')}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-
                                         <div className="flex flex-col gap-2">
                                             <motion.button
                                                 initial={{ opacity: 0, y: 20 }}
@@ -1688,7 +1723,7 @@ const Game: React.FC = () => {
                     )}
                 </AnimatePresence>
 
-                {(showEmojiOverlay || (isFinished && gameState.mode !== 'practice')) && (
+                {showEmojiOverlay && (
                     <div className="absolute inset-0 z-[70] pointer-events-none">
                         <AnimatePresence>
                             {emojiBursts.map((item) => (
@@ -1711,7 +1746,7 @@ const Game: React.FC = () => {
                             ))}
                         </AnimatePresence>
                         {showEmojiBar && (
-                            <div className={`absolute ${isFinished ? 'top-24' : 'bottom-6'} left-1/2 -translate-x-1/2 pointer-events-auto`}>
+                            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 pointer-events-auto">
                                 <div className="bg-black/50 border border-white/10 rounded-2xl px-4 py-4 backdrop-blur-md w-[360px] max-w-[92vw]">
                                     <div className="grid grid-cols-4 gap-4 mb-4 justify-items-center">
                                         {emojiRowTop.map((emoji) => (

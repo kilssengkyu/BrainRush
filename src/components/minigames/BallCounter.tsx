@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { usePanelProgress } from '../../hooks/usePanelProgress';
 import { useSound } from '../../contexts/SoundContext';
 import { SeededRandom } from '../../utils/seededRandom';
 
@@ -30,7 +30,6 @@ const SCORE_WRONG = -50;
 const COLOR_PALETTE = ['#7DD3FC', '#FCA5A5', '#FCD34D', '#A7F3D0', '#C4B5FD', '#F9A8D4'];
 
 const BallCounter: React.FC<BallCounterProps> = ({ seed, onScore, isPlaying }) => {
-    const { t } = useTranslation();
     const { playSound } = useSound();
 
     const containerRef = useRef<HTMLDivElement>(null);
@@ -42,7 +41,7 @@ const BallCounter: React.FC<BallCounterProps> = ({ seed, onScore, isPlaying }) =
     const [balls, setBalls] = useState<Ball[]>([]);
     const [options, setOptions] = useState<number[]>([]);
     const [currentCount, setCurrentCount] = useState(0);
-    const [correctCount, setCorrectCount] = useState(0);
+    const [correctCount, setCorrectCount] = usePanelProgress(seed, 'correctCount');
     const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
     const [currentColor, setCurrentColor] = useState(COLOR_PALETTE[0]);
 
@@ -141,15 +140,15 @@ const BallCounter: React.FC<BallCounterProps> = ({ seed, onScore, isPlaying }) =
     useEffect(() => {
         if (!seed) return;
         rngRef.current = new SeededRandom(`${seed}-balls`);
-        speedScaleRef.current = 1;
-        setCorrectCount(0);
+        speedScaleRef.current = Math.min(1 + correctCount * SPEED_SCALE_STEP, SPEED_SCALE_MAX);
         setFeedback(null);
         setCurrentColor(pickNextColor());
         requestAnimationFrame(() => {
             updateBounds();
-            startRound(0);
+            startRound(correctCount);
         });
-    }, [pickNextColor, seed, updateBounds, startRound]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [seed]);
 
     const triggerFeedback = (type: 'correct' | 'wrong') => {
         setFeedback(type);
@@ -240,11 +239,6 @@ const BallCounter: React.FC<BallCounterProps> = ({ seed, onScore, isPlaying }) =
 
     return (
         <div className="w-full h-full flex flex-col items-center justify-center p-4">
-            <div className="text-center mb-3">
-                <h2 className="text-2xl font-black text-white drop-shadow-md">{t('balls.title')}</h2>
-                <p className="text-xs text-gray-400 mt-1">{t('balls.instruction')}</p>
-            </div>
-
             <div
                 ref={containerRef}
                 className={`w-[92vw] max-w-[360px] rounded-2xl border border-white/10 bg-gray-800/50 shadow-2xl relative overflow-hidden transition-shadow ${feedback === 'wrong' ? 'ring-4 ring-red-500/70' : feedback === 'correct' ? 'ring-4 ring-emerald-400/70' : ''}`}

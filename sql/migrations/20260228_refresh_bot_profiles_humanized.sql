@@ -1,20 +1,5 @@
--- Bot profiles for matchmaking (public read)
-CREATE TABLE IF NOT EXISTS public.bot_profiles (
-    id text primary key,
-    nickname text not null,
-    avatar_url text,
-    country text,
-    mmr int default 1000,
-    created_at timestamptz default now()
-);
+-- Humanize bot profiles so they read like regional player profiles instead of obvious bots.
 
-ALTER TABLE public.bot_profiles ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS "Public bot profiles are viewable by everyone" ON public.bot_profiles;
-CREATE POLICY "Public bot profiles are viewable by everyone" ON public.bot_profiles
-    FOR SELECT USING (true);
-
--- Seed a small pool of believable bot profiles (id is internal)
 INSERT INTO public.bot_profiles (id, nickname, avatar_url, country, mmr)
 VALUES
     ('bot_a1f3c9d2', 'nightmilo', NULL, 'US', 700),
@@ -57,4 +42,8 @@ VALUES
     ('bot_al3j6n9z', 'matechill', NULL, 'AU', 1980),
     ('bot_am7l1p4b', 'dashdoce', NULL, 'BR', 1990),
     ('bot_an2n5r8d', '雨后', NULL, 'SG', 2000)
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE
+SET nickname = EXCLUDED.nickname,
+    avatar_url = EXCLUDED.avatar_url,
+    country = EXCLUDED.country,
+    mmr = EXCLUDED.mmr;

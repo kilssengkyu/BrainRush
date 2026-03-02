@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { usePanelProgress } from '../../hooks/usePanelProgress';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import {
@@ -39,7 +40,7 @@ const FindTheSpy: React.FC<FindTheSpyProps> = ({ seed, onScore, isPlaying }) => 
     const { playSound } = useSound();
 
     // Game State
-    const [streak, setStreak] = useState(0);
+    const [streak, setStreak] = usePanelProgress(seed, 'streak');
     const [phase, setPhase] = useState<'memorize' | 'shuffling' | 'guessing'>('memorize');
     const [gridSize, setGridSize] = useState<{ rows: number, cols: number }>({ rows: 2, cols: 2 });
 
@@ -56,9 +57,9 @@ const FindTheSpy: React.FC<FindTheSpyProps> = ({ seed, onScore, isPlaying }) => 
     useEffect(() => {
         if (seed) {
             rng.current = new SeededRandom(seed);
-            setStreak(0);
-            startRound(0);
+            startRound(streak);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [seed]);
 
     const startRound = (currentStreak: number) => {

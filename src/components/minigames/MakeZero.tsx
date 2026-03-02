@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { usePanelProgress } from '../../hooks/usePanelProgress';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { SeededRandom } from '../../utils/seededRandom';
@@ -30,14 +31,6 @@ function getLevelConfig(panelIndex: number): LevelConfig {
     if (panelIndex < 10) return { slotsPerSide: 2, buttonCount: 6, minNum: 1, maxNum: 20 };
     if (panelIndex < 15) return { slotsPerSide: 3, buttonCount: 6, minNum: 1, maxNum: 20 };
     return { slotsPerSide: 3, buttonCount: 8, minNum: 5, maxNum: 30 };
-}
-
-function getLevelNumber(panelIndex: number): number {
-    if (panelIndex < 3) return 1;
-    if (panelIndex < 6) return 2;
-    if (panelIndex < 10) return 3;
-    if (panelIndex < 15) return 4;
-    return 5;
 }
 
 function generatePuzzle(rng: SeededRandom, config: LevelConfig) {
@@ -131,7 +124,7 @@ function generatePuzzle(rng: SeededRandom, config: LevelConfig) {
 const MakeZero: React.FC<MakeZeroProps> = ({ seed, onScore, isPlaying }) => {
     const { t } = useTranslation();
     const { playSound } = useSound();
-    const [panelIndex, setPanelIndex] = useState(0);
+    const [panelIndex, setPanelIndex] = usePanelProgress(seed);
     const [filledSlots, setFilledSlots] = useState<(number | null)[]>([]);
     const [usedButtonIndices, setUsedButtonIndices] = useState<Set<number>>(new Set());
     const [animationKey, setAnimationKey] = useState(0);
@@ -234,7 +227,6 @@ const MakeZero: React.FC<MakeZeroProps> = ({ seed, onScore, isPlaying }) => {
 
     if (!puzzle) return <div className="text-white">{t('common.loading')}</div>;
 
-    const level = getLevelNumber(panelIndex);
     const sps = puzzle.slotsPerSide;
 
     // Build equation display
@@ -243,17 +235,6 @@ const MakeZero: React.FC<MakeZeroProps> = ({ seed, onScore, isPlaying }) => {
 
     return (
         <div className="flex flex-col items-center justify-center w-full h-full gap-4 relative select-none">
-            {/* Header */}
-            <div className="absolute top-0 text-gray-500 font-mono text-sm mt-2">
-                Lv.{level} | #{panelIndex + 1}
-            </div>
-
-            {/* Title */}
-            <h2 className="text-3xl font-black text-white drop-shadow-[0_0_10px_rgba(100,200,255,0.5)]">
-                {t('zero.title', '0을 만들어라')}
-            </h2>
-            <div className="text-gray-400 text-xs mb-1">{t('zero.instruction', '숫자를 채워 0을 만드세요')}</div>
-
             {/* Equation */}
             <AnimatePresence mode="wait">
                 <motion.div

@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { usePanelProgress } from '../../hooks/usePanelProgress';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { SeededRandom } from '../../utils/seededRandom';
@@ -14,7 +15,7 @@ interface FindOperatorProps {
 const FindOperator: React.FC<FindOperatorProps> = ({ seed, onScore, isPlaying }) => {
     const { t } = useTranslation();
     const { playSound } = useSound();
-    const [panelIndex, setPanelIndex] = useState(0);
+    const [panelIndex, setPanelIndex] = usePanelProgress(seed);
     const [shakeId, setShakeId] = useState<string | null>(null);
     const [animationKey, setAnimationKey] = useState(0);
 
@@ -129,14 +130,6 @@ const FindOperator: React.FC<FindOperatorProps> = ({ seed, onScore, isPlaying })
 
     return (
         <div className="flex flex-col items-center justify-center w-full h-full gap-8 relative">
-
-            <h2 className="text-3xl font-black text-white mb-2 drop-shadow-md">
-                {t('findOperator.title')}
-            </h2>
-            <div className="text-yellow-400 font-bold text-lg mb-8">
-                {t('findOperator.instruction')}
-            </div>
-
             {/* Equation Display */}
             <AnimatePresence mode="popLayout">
                 <motion.div

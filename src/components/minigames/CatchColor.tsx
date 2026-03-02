@@ -251,11 +251,6 @@ const CatchColor: React.FC<CatchColorProps> = ({ seed, onScore, isPlaying }) => 
                 onPointerUp={onPointerUp}
                 onPointerLeave={onPointerUp}
             >
-                <div className="absolute top-4 left-0 w-full text-center pointer-events-none z-10">
-                    <h2 className="text-3xl font-black text-white drop-shadow-md">{t('catchColor.title')}</h2>
-                    <p className="text-sm text-gray-300">{t('catchColor.instruction')}</p>
-                </div>
-
                 {warning && (
                     <div className="absolute top-20 left-0 w-full text-center text-xs uppercase tracking-widest text-yellow-200 animate-pulse z-10">
                         {t('catchColor.switchSoon')}

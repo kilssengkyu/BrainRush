@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { usePanelProgress } from '../../hooks/usePanelProgress';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { SeededRandom } from '../../utils/seededRandom';
@@ -48,7 +49,7 @@ const formatExpression = (raw: string) => raw;
 const FindLargest: React.FC<FindLargestProps> = ({ seed, onScore, isPlaying }) => {
     const { t } = useTranslation();
     const { playSound } = useSound();
-    const [panelIndex, setPanelIndex] = useState(0);
+    const [panelIndex, setPanelIndex] = usePanelProgress(seed);
     const [shakeId, setShakeId] = useState<string | null>(null);
     const [animationKey, setAnimationKey] = useState(0);
 
@@ -209,11 +210,6 @@ const FindLargest: React.FC<FindLargestProps> = ({ seed, onScore, isPlaying }) =
 
     return (
         <div className="flex flex-col items-center justify-center w-full h-full gap-6 relative">
-            <h2 className="text-4xl font-black text-white drop-shadow-md mb-2">
-                {t('largest.title')}
-            </h2>
-            <div className="text-gray-400 text-sm mb-4">{t('largest.instruction')}</div>
-
             <AnimatePresence mode="popLayout">
                 <motion.div
                     key={animationKey}

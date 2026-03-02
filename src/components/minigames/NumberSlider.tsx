@@ -223,7 +223,6 @@ const NumberSlider: React.FC<NumberSliderProps> = ({ seed, onScore, isPlaying })
                     );
                 })}
             </div>
-            <p className="mt-6 text-gray-400 animate-pulse text-sm">{t('slider.instruction')}</p>
         </div>
     );
 };

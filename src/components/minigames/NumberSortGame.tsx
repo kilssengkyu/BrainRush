@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { usePanelProgress } from '../../hooks/usePanelProgress';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { SeededRandom } from '../../utils/seededRandom';
@@ -14,7 +15,7 @@ interface NumberSortGameProps {
 const NumberSortGame: React.FC<NumberSortGameProps> = ({ seed, onScore, mode, isPlaying }) => {
     const { t } = useTranslation();
     const { playSound } = useSound();
-    const [panelIndex, setPanelIndex] = useState(0);
+    const [panelIndex, setPanelIndex] = usePanelProgress(seed);
     const [clearedNumbers, setClearedNumbers] = useState<number[]>([]);
     const [shakeId, setShakeId] = useState<number | null>(null);
     const [animationKey, setAnimationKey] = useState(0);
@@ -107,7 +108,6 @@ const NumberSortGame: React.FC<NumberSortGameProps> = ({ seed, onScore, mode, is
     if (!seed) return <div className="text-white">{t('common.loading')}</div>;
 
     // Theme Colors
-    const titleColor = mode === 'asc' ? 'text-blue-300' : 'text-red-300';
     const cellDefaultColor = 'bg-gray-800';
     const cellErrorColor = '#ef4444'; // Red
     const cellSuccessColor = mode === 'asc' ? '#22c55e' : '#f59e0b'; // Green vs Amber for success? Or just Green/Red separation? 
@@ -117,14 +117,6 @@ const NumberSortGame: React.FC<NumberSortGameProps> = ({ seed, onScore, mode, is
 
     return (
         <div className="flex flex-col items-center justify-center w-full h-full gap-6 relative">
-            {/* Header / Instructions */}
-            <h2 className={`text-4xl font-black drop-shadow-md mb-2 ${titleColor}`}>
-                {mode === 'asc' ? t('number.title') : t('number.titleDesc')}
-            </h2>
-            <div className={`text-sm mb-4 font-bold ${mode === 'asc' ? 'text-blue-400' : 'text-red-400'} animate-pulse`}>
-                {mode === 'asc' ? t('number.instruction') : t('number.instructionDesc')}
-            </div>
-
             {/* Grid Area */}
             <div className="w-80 h-80 relative flex items-center justify-center">
                 <AnimatePresence mode="popLayout">

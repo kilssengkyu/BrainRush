@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { usePanelProgress } from '../../hooks/usePanelProgress';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { SeededRandom } from '../../utils/seededRandom';
@@ -13,7 +14,7 @@ interface MakeTenProps {
 const MakeTen: React.FC<MakeTenProps> = ({ seed, onScore, isPlaying }) => {
     const { t } = useTranslation();
     const { playSound } = useSound();
-    const [panelIndex, setPanelIndex] = useState(0);
+    const [panelIndex, setPanelIndex] = usePanelProgress(seed);
     const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
     const [animationKey, setAnimationKey] = useState(0);
     const [isSolved, setIsSolved] = useState(false); // Prevent double scoring
@@ -144,18 +145,6 @@ const MakeTen: React.FC<MakeTenProps> = ({ seed, onScore, isPlaying }) => {
 
     return (
         <div className="flex flex-col items-center justify-center w-full h-full gap-8 relative">
-
-            {/* Header Info */}
-            <div className="absolute top-0 text-gray-500 font-mono text-sm mt-2">
-                Level: {currentPanel.level} | Panel: {panelIndex + 1}
-            </div>
-
-            {/* Title / Help */}
-            <h2 className="text-4xl font-black text-white drop-shadow-[0_0_10px_rgba(255,215,0,0.5)]">
-                {t('ten.title')}
-            </h2>
-            <div className="text-gray-400 text-sm mb-4">{t('ten.instruction')}</div>
-
             {/* Numbers Grid */}
             <div className={`grid gap-6 ${currentPanel.numbers.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
                 <AnimatePresence mode="popLayout">

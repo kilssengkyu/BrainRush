@@ -1653,6 +1653,59 @@ $$;
 
 
 --
+-- Name: pick_ghost_timeline(text, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.pick_ghost_timeline(p_player_id text, p_game_type text) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+    v_target_score int;
+    v_timeline jsonb;
+BEGIN
+    IF p_game_type IS NULL THEN
+        RETURN NULL;
+    END IF;
+
+    IF p_player_id ~ '^[0-9a-fA-F-]{36}$' THEN
+        SELECT ph.best_score
+        INTO v_target_score
+        FROM player_highscores ph
+        WHERE ph.user_id = p_player_id::uuid
+          AND ph.game_type = p_game_type;
+    END IF;
+
+    IF COALESCE(v_target_score, 0) > 0 THEN
+        WITH nearest_ghosts AS (
+            SELECT gs.score_timeline
+            FROM ghost_scores gs
+            WHERE gs.game_type = p_game_type
+            ORDER BY abs((gs.final_score - v_target_score)), random()
+            LIMIT 3
+        )
+        SELECT ng.score_timeline
+        INTO v_timeline
+        FROM nearest_ghosts ng
+        ORDER BY random()
+        LIMIT 1;
+    END IF;
+
+    IF v_timeline IS NULL THEN
+        SELECT gs.score_timeline
+        INTO v_timeline
+        FROM ghost_scores gs
+        WHERE gs.game_type = p_game_type
+        ORDER BY random()
+        LIMIT 1;
+    END IF;
+
+    RETURN v_timeline;
+END;
+$$;
+
+
+--
 -- Name: get_game_highscores(text, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -2444,21 +2497,34 @@ DECLARE
     ];
     v_selected_types text[];
     v_first_type text;
+    v_p1 text;
+    v_p2 text;
+    v_human_player_id text;
+    v_ghost_tl jsonb;
+    v_game_data jsonb := '{}'::jsonb;
 BEGIN
-    SELECT mode, game_type INTO v_mode, v_current_type FROM game_sessions WHERE id = p_room_id;
+    SELECT mode, game_type, player1_id, player2_id INTO v_mode, v_current_type, v_p1, v_p2 FROM game_sessions WHERE id = p_room_id;
     v_seed := md5(random()::text);
 
     IF v_mode = 'practice' THEN
-        -- Get duration for practice game type
         v_duration := get_game_duration(v_current_type);
-        
-        -- PRACTICE: Start immediately
+        v_first_type := v_current_type;
+
+        IF v_p2 LIKE 'bot_%' OR v_p1 LIKE 'bot_%' THEN
+            v_human_player_id := CASE WHEN v_p1 LIKE 'bot_%' THEN v_p2 ELSE v_p1 END;
+            v_ghost_tl := pick_ghost_timeline(v_human_player_id, v_first_type);
+            IF v_ghost_tl IS NOT NULL THEN
+                v_game_data := jsonb_build_object('ghost_timeline', v_ghost_tl);
+            END IF;
+        END IF;
+
         UPDATE game_sessions
         SET status = 'playing',
             game_types = ARRAY[v_current_type],
             current_round_index = 0,
             current_round = 1,
             seed = v_seed,
+            game_data = v_game_data,
             phase_start_at = now(),
             phase_end_at = now() + interval '4 seconds',
             start_at = now() + interval '4 seconds',
@@ -2466,7 +2532,6 @@ BEGIN
             round_scores = '[]'::jsonb
         WHERE id = p_room_id;
     ELSE
-        -- NORMAL/FRIENDLY: BO3, RANK: BO5
         IF v_mode = 'rank' THEN
             v_round_count := 5;
         ELSE
@@ -2483,6 +2548,14 @@ BEGIN
         v_first_type := v_selected_types[1];
         v_duration := get_game_duration(v_first_type);
 
+        IF v_p2 LIKE 'bot_%' OR v_p1 LIKE 'bot_%' THEN
+            v_human_player_id := CASE WHEN v_p1 LIKE 'bot_%' THEN v_p2 ELSE v_p1 END;
+            v_ghost_tl := pick_ghost_timeline(v_human_player_id, v_first_type);
+            IF v_ghost_tl IS NOT NULL THEN
+                v_game_data := jsonb_build_object('ghost_timeline', v_ghost_tl);
+            END IF;
+        END IF;
+
         UPDATE game_sessions
         SET status = 'playing',
             game_types = v_selected_types,
@@ -2490,6 +2563,7 @@ BEGIN
             current_round = 1,
             game_type = v_first_type,
             seed = v_seed,
+            game_data = v_game_data,
             phase_start_at = now(),
             phase_end_at = now() + interval '4 seconds',
             start_at = now() + interval '4 seconds',
@@ -2540,6 +2614,8 @@ DECLARE
   v_fallback_type text;
   v_required_wins int := 2;
   v_max_rounds int := 3;
+  v_human_player_id text;
+  v_ghost_tl jsonb;
 BEGIN
   -- Get current state
   SELECT game_type, status, COALESCE(current_round, 0), player1_score, player2_score, COALESCE(p1_current_score, 0), COALESCE(p2_current_score, 0), mode, player1_id, player2_id, game_types, COALESCE(round_scores, '[]'::jsonb)
@@ -2721,7 +2797,6 @@ BEGIN
   -- Get duration for next game type
   v_duration := get_game_duration(v_next_type);
   
-  -- 5. Setup Game Data
   IF v_next_type = 'RPS' THEN
       v_target := v_opts[floor(random()*3 + 1)];
       v_game_data := '{}';
@@ -2730,7 +2805,14 @@ BEGIN
       v_game_data := jsonb_build_object('seed', floor(random()*10000));
   END IF;
 
-  -- 6. Update Session -> PLAYING with 8s warmup (4s round_finished + 4s game_desc) + game duration
+  IF v_p1_id LIKE 'bot_%' OR v_p2_id LIKE 'bot_%' THEN
+      v_human_player_id := CASE WHEN v_p1_id LIKE 'bot_%' THEN v_p2_id ELSE v_p1_id END;
+      v_ghost_tl := pick_ghost_timeline(v_human_player_id, v_next_type);
+      IF v_ghost_tl IS NOT NULL THEN
+          v_game_data := v_game_data || jsonb_build_object('ghost_timeline', v_ghost_tl);
+      END IF;
+  END IF;
+
   UPDATE game_sessions
   SET status = 'playing',
       current_round = v_next_round,

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { usePanelProgress } from '../../hooks/usePanelProgress';
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp } from 'lucide-react';
 import { useSound } from '../../contexts/SoundContext';
 import { SeededRandom } from '../../utils/seededRandom';
@@ -214,11 +214,10 @@ const buildBoard = (rows: number, cols: number, seed: string, level: number) => 
 };
 
 const BlindPathRunner: React.FC<BlindPathRunnerProps> = ({ seed, onScore, isPlaying }) => {
-    const { t } = useTranslation();
     const { playSound } = useSound();
     const [rows, setRows] = useState(BASE_SIZE);
     const [cols, setCols] = useState(BASE_SIZE);
-    const [level, setLevel] = useState(0);
+    const [level, setLevel] = usePanelProgress(seed, 'level');
     const [expandWidthNext, setExpandWidthNext] = useState(true);
     const [pathSet, setPathSet] = useState<Set<string>>(new Set());
     const [goal, setGoal] = useState<Coord>({ r: 0, c: 0 });
@@ -243,8 +242,12 @@ const BlindPathRunner: React.FC<BlindPathRunnerProps> = ({ seed, onScore, isPlay
 
     useEffect(() => {
         if (!seed) return;
-        setExpandWidthNext(true);
-        resetBoard(BASE_SIZE, BASE_SIZE, 0);
+        // Calculate board dimensions from restored level
+        const startRows = BASE_SIZE + Math.floor(level / 2);
+        const startCols = BASE_SIZE + Math.ceil(level / 2);
+        setExpandWidthNext(level % 2 === 0);
+        resetBoard(startRows, startCols, level);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [seed, resetBoard]);
 
     useEffect(() => {
@@ -331,11 +334,6 @@ const BlindPathRunner: React.FC<BlindPathRunnerProps> = ({ seed, onScore, isPlay
 
     return (
         <div className="w-full h-full flex flex-col items-center justify-center px-4 select-none">
-            <div className="text-center mb-3">
-                <h2 className="text-3xl font-black text-white drop-shadow-md">{t('blindPath.title')}</h2>
-                <p className="text-xs text-gray-400 mt-1">{t('blindPath.instruction')}</p>
-            </div>
-
             <div
                 className={`w-[92vw] max-w-[360px] rounded-2xl border border-white/10 bg-gray-800/40 p-2 shadow-2xl transition-colors ${errorFlash ? 'ring-4 ring-red-500/70' : ''}`}
                 style={containerStyle}

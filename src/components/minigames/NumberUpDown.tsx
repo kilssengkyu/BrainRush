@@ -142,12 +142,6 @@ const NumberUpDown: React.FC<NumberUpDownProps> = ({ seed, onScore, isPlaying })
 
     return (
         <div className="flex flex-col items-center justify-center w-full h-full relative overflow-hidden" ref={containerRef}>
-            {/* Instruction */}
-            <div className="absolute top-10 text-center z-10 pointer-events-none">
-                <h2 className="text-3xl font-black text-white drop-shadow-md mb-2">{t('updown.title')}</h2>
-                <p className="text-white/80 animate-pulse">{t('updown.instruction')}</p>
-            </div>
-
             {/* Previous Number Indicator REMOVED as per user request to enforce memory */
                 /* <div className="absolute bottom-20 ..."> ... </div> */
             }
