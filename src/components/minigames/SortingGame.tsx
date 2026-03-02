@@ -24,10 +24,12 @@ const SYMBOLS = [
 const SortingGame: React.FC<SortingGameProps> = ({ seed, onScore, isPlaying }) => {
     const { playSound } = useSound();
     const controls = useAnimation();
+    const previewControls = useAnimation();
 
     const [streak, setStreak] = usePanelProgress(seed, 'streak');
     const [currentSymbol, setCurrentSymbol] = useState<typeof SYMBOLS[0] | null>(null);
     const [nextSymbol, setNextSymbol] = useState<typeof SYMBOLS[0] | null>(null);
+    const [isPromotingNextCard, setIsPromotingNextCard] = useState(false);
 
     // History: { symbolId, direction ('left' | 'right') }
     const [lastMove, setLastMove] = useState<{ symbolId: string, direction: 'left' | 'right' } | null>(null);
@@ -55,6 +57,8 @@ const SortingGame: React.FC<SortingGameProps> = ({ seed, onScore, isPlaying }) =
 
             setCurrentSymbol(first);
             setNextSymbol(second);
+            controls.set({ x: 0, y: 0, scale: 1, opacity: 1 });
+            previewControls.set({ y: 0, scale: 1, opacity: 1 });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [seed]);
@@ -70,7 +74,7 @@ const SortingGame: React.FC<SortingGameProps> = ({ seed, onScore, isPlaying }) =
     };
 
     const handleDragEnd = async (_: any, info: PanInfo) => {
-        if (!isPlaying) {
+        if (!isPlaying || isPromotingNextCard) {
             controls.start({ x: 0, opacity: 1 });
             return;
         }
@@ -85,7 +89,7 @@ const SortingGame: React.FC<SortingGameProps> = ({ seed, onScore, isPlaying }) =
     };
 
     const processMove = async (direction: 'left' | 'right') => {
-        if (!currentSymbol || !rng.current) return;
+        if (!currentSymbol || !rng.current || isPromotingNextCard) return;
 
         let isCorrect = false;
 
@@ -125,7 +129,7 @@ const SortingGame: React.FC<SortingGameProps> = ({ seed, onScore, isPlaying }) =
 
             // Shift Next -> Current, Generate New Next
             if (!nextSymbol) return;
-            setCurrentSymbol(nextSymbol);
+            const promotedSymbol = nextSymbol;
 
             const pool = getSymbolPool(streak + 1);
             let newNext: typeof SYMBOLS[0];
@@ -144,17 +148,18 @@ const SortingGame: React.FC<SortingGameProps> = ({ seed, onScore, isPlaying }) =
                 }
             }
 
-            setNextSymbol(newNext);
-
-            // Next card moves into current slot: slightly up/smaller -> full size center
-            controls.set({ x: 0, y: -16, scale: 0.9, opacity: 1 });
-            await controls.start({
-                x: 0,
-                y: 0,
-                scale: 1,
+            setIsPromotingNextCard(true);
+            await previewControls.start({
+                y: 180,
+                scale: 1.58,
                 opacity: 1,
-                transition: { duration: 0.18, ease: 'easeOut' }
+                transition: { duration: 0.14, ease: 'easeOut' }
             });
+            setCurrentSymbol(promotedSymbol);
+            setNextSymbol(newNext);
+            controls.set({ x: 0, y: 0, scale: 1, opacity: 1 });
+            previewControls.set({ y: 0, scale: 1, opacity: 1 });
+            setIsPromotingNextCard(false);
 
         } else {
             playSound('error');
@@ -180,26 +185,31 @@ const SortingGame: React.FC<SortingGameProps> = ({ seed, onScore, isPlaying }) =
             <div className="relative w-64 h-80 flex items-center justify-center">
                 {/* Next Card (Preview) - above current card, no overlap */}
                 {nextSymbol && NextIcon && (
-                    <div className="absolute bottom-[95%] left-1/2 -translate-x-1/2 w-40 h-52 bg-gray-800 rounded-2xl border-4 border-white/20 shadow-xl flex flex-col items-center justify-center z-0 pointer-events-none">
+                    <motion.div
+                        animate={previewControls}
+                        className="absolute bottom-[95%] left-1/2 -translate-x-1/2 w-40 h-52 bg-gray-800 rounded-2xl border-4 border-white/20 shadow-xl flex flex-col items-center justify-center z-0 pointer-events-none"
+                    >
                         <NextIcon size={58} className={`${nextSymbol.color} drop-shadow-lg mb-3`} />
                         <div className="text-white/50 font-mono text-[10px] uppercase tracking-widest">{nextSymbol.id}</div>
-                    </div>
+                    </motion.div>
                 )}
 
 
                 {/* Current Card (Draggable) */}
-                <motion.div
-                    className="absolute w-full h-full bg-gray-800 rounded-3xl border-4 border-white/20 shadow-2xl flex flex-col items-center justify-center z-10 cursor-grab active:cursor-grabbing"
-                    drag="x"
-                    dragConstraints={{ left: 0, right: 0 }}
-                    dragElastic={0.7} // Springy feeling
-                    onDragEnd={handleDragEnd}
-                    animate={controls}
-                    whileTap={{ scale: 1.05 }}
-                >
-                    <CurrentIcon size={100} className={`${currentSymbol.color} drop-shadow-lg mb-8`} />
-                    <div className="text-white/50 font-mono text-sm uppercase tracking-widest">{currentSymbol.id}</div>
-                </motion.div>
+                {!isPromotingNextCard && (
+                    <motion.div
+                        className="absolute w-full h-full bg-gray-800 rounded-3xl border-4 border-white/20 shadow-2xl flex flex-col items-center justify-center z-10 cursor-grab active:cursor-grabbing"
+                        drag="x"
+                        dragConstraints={{ left: 0, right: 0 }}
+                        dragElastic={0.7} // Springy feeling
+                        onDragEnd={handleDragEnd}
+                        animate={controls}
+                        whileTap={{ scale: 1.05 }}
+                    >
+                        <CurrentIcon size={100} className={`${currentSymbol.color} drop-shadow-lg mb-8`} />
+                        <div className="text-white/50 font-mono text-sm uppercase tracking-widest">{currentSymbol.id}</div>
+                    </motion.div>
+                )}
             </div>
 
 

@@ -129,7 +129,7 @@ const TapTheColor: React.FC<TapTheColorProps> = ({ seed, onScore, isPlaying }) =
         setRevealedIndices([]);
     };
 
-    if (!gameState) return <div>Loading...</div>;
+    if (!gameState) return <div>{t('common.loading')}</div>;
 
     return (
         <div className="flex flex-col items-center justify-center w-full h-full p-4">

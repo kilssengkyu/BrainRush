@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -24,6 +24,8 @@ const Settings = () => {
     const [isLanguageModalOpen, setIsLanguageModalOpen] = useState(false);
     const [languageSearch, setLanguageSearch] = useState('');
     const [isNotificationsEnabled, setIsNotificationsEnabled] = useState<boolean>(() => getNotificationsEnabled());
+    const edgeSwipeStartRef = useRef<{ x: number; y: number } | null>(null);
+    const edgeSwipeTriggeredRef = useRef(false);
     const appRole = (user?.app_metadata as any)?.role;
     const profileRole = (profile as any)?.role;
     const isAdmin = appRole === 'admin' || profileRole === 'admin';
@@ -115,7 +117,7 @@ const Settings = () => {
 
     const handleToggleNotifications = async () => {
         if (!Capacitor.isNativePlatform()) {
-            showToast(t('settings.notificationNativeOnly', '알림 설정은 모바일 앱에서만 사용할 수 있어요.'), 'info');
+            showToast(t('settings.notificationNativeOnly'), 'info');
             return;
         }
 
@@ -124,7 +126,7 @@ const Settings = () => {
             setIsNotificationsEnabled(false);
             await LocalNotifications.cancel({ notifications: [{ id: 2001 }, { id: 2002 }] });
             await LocalNotifications.removeAllDeliveredNotifications();
-            showToast(t('settings.notificationOff', '알림이 꺼졌습니다.'), 'success');
+            showToast(t('settings.notificationOff'), 'success');
             return;
         }
 
@@ -134,8 +136,8 @@ const Settings = () => {
             setIsNotificationsEnabled(false);
             showToast(
                 Capacitor.getPlatform() === 'ios'
-                    ? t('settings.notificationDeniedIos', 'iPhone 설정 > 알림에서 권한을 허용해 주세요.')
-                    : t('settings.notificationDeniedAndroid', 'Android 설정 > 알림에서 권한을 허용해 주세요.'),
+                    ? t('settings.notificationDeniedIos')
+                    : t('settings.notificationDeniedAndroid'),
                 'error'
             );
             return;
@@ -143,11 +145,54 @@ const Settings = () => {
 
         setNotificationsEnabled(true);
         setIsNotificationsEnabled(true);
-        showToast(t('settings.notificationOn', '알림이 켜졌습니다.'), 'success');
+        showToast(t('settings.notificationOn'), 'success');
+    };
+
+    const handleEdgeSwipeStart = (event: React.TouchEvent<HTMLDivElement>) => {
+        if (isLanguageModalOpen || event.touches.length !== 1) {
+            edgeSwipeStartRef.current = null;
+            edgeSwipeTriggeredRef.current = false;
+            return;
+        }
+
+        const touch = event.touches[0];
+        if (touch.clientX > 24) {
+            edgeSwipeStartRef.current = null;
+            edgeSwipeTriggeredRef.current = false;
+            return;
+        }
+
+        edgeSwipeStartRef.current = { x: touch.clientX, y: touch.clientY };
+        edgeSwipeTriggeredRef.current = false;
+    };
+
+    const handleEdgeSwipeMove = (event: React.TouchEvent<HTMLDivElement>) => {
+        if (!edgeSwipeStartRef.current || edgeSwipeTriggeredRef.current || event.touches.length !== 1) return;
+
+        const touch = event.touches[0];
+        const deltaX = touch.clientX - edgeSwipeStartRef.current.x;
+        const deltaY = touch.clientY - edgeSwipeStartRef.current.y;
+
+        if (deltaX > 72 && deltaX > Math.abs(deltaY) * 1.35) {
+            edgeSwipeTriggeredRef.current = true;
+            playSound('click');
+            navigate(-1);
+        }
+    };
+
+    const handleEdgeSwipeEnd = () => {
+        edgeSwipeStartRef.current = null;
+        edgeSwipeTriggeredRef.current = false;
     };
 
     return (
-        <div className="h-[100dvh] bg-gray-900 text-white relative overflow-hidden flex flex-col items-center">
+        <div
+            className="h-[100dvh] bg-gray-900 text-white relative overflow-hidden flex flex-col items-center"
+            onTouchStart={handleEdgeSwipeStart}
+            onTouchMove={handleEdgeSwipeMove}
+            onTouchEnd={handleEdgeSwipeEnd}
+            onTouchCancel={handleEdgeSwipeEnd}
+        >
             {/* ... (Background & Header code remains same) ... */}
             <div className="absolute top-[-20%] left-[-20%] w-[80%] h-[80%] bg-blue-600/20 rounded-full blur-3xl animate-pulse pointer-events-none" />
             <div className="absolute bottom-[-20%] right-[-20%] w-[80%] h-[80%] bg-purple-600/20 rounded-full blur-3xl animate-pulse pointer-events-none" />
@@ -237,11 +282,11 @@ const Settings = () => {
                     <section className="space-y-4">
                         <div className="flex items-center gap-3 text-indigo-400 mb-2">
                             <Bell size={24} />
-                            <h2 className="text-xl font-semibold">{t('settings.notifications', '알림')}</h2>
+                            <h2 className="text-xl font-semibold">{t('settings.notifications')}</h2>
                         </div>
                         <div className="bg-white/5 p-6 rounded-xl border border-white/10 space-y-3 backdrop-blur-md">
                             <div className="flex items-center justify-between">
-                                <span className="text-lg">{t('settings.pushNotifications', '푸시/로컬 알림')}</span>
+                                <span className="text-lg">{t('settings.pushNotifications')}</span>
                                 <button
                                     onClick={() => { playSound('click'); void handleToggleNotifications(); }}
                                     className={`relative w-14 h-8 rounded-full transition-colors duration-200 ease-in-out focus:outline-none flex items-center p-1 ${isNotificationsEnabled ? 'bg-indigo-600' : 'bg-gray-600'}`}
@@ -253,7 +298,7 @@ const Settings = () => {
                             </div>
                             {!Capacitor.isNativePlatform() && (
                                 <p className="text-xs text-gray-400">
-                                    {t('settings.notificationNativeHint', '웹에서는 알림 토글이 비활성화됩니다.')}
+                                    {t('settings.notificationNativeHint')}
                                 </p>
                             )}
                         </div>

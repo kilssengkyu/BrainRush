@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { usePanelProgress } from '../../hooks/usePanelProgress';
 import { motion } from 'framer-motion';
 import { SeededRandom } from '../../utils/seededRandom';
@@ -15,6 +16,7 @@ interface LadderGameProps {
 type Bridge = [number, number];
 
 const LadderGame: React.FC<LadderGameProps> = ({ seed, onScore, isPlaying }) => {
+    const { t } = useTranslation();
     const { playSound } = useSound();
     const [panelIndex, setPanelIndex] = usePanelProgress(seed);
     const [selectedEnd, setSelectedEnd] = useState<number | null>(null);
@@ -159,7 +161,7 @@ const LadderGame: React.FC<LadderGameProps> = ({ seed, onScore, isPlaying }) => 
         setTracePath(points);
     };
 
-    if (!gameState) return <div className="text-white">Loading...</div>;
+    if (!gameState) return <div className="text-white">{t('common.loading')}</div>;
 
     // Rendering Constants
     const LINE_GAP = CONTAINER_WIDTH / (gameState.lines - 1);

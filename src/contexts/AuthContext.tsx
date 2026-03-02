@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import type { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
 import { App } from '@capacitor/app';
@@ -565,11 +565,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
     };
 
-    const refreshProfile = async () => {
+    const refreshProfile = useCallback(async () => {
         if (user) {
             await fetchProfile(user.id);
         }
-    };
+    }, [user]);
 
     return (
         <AuthContext.Provider value={{ user, session, profile, loading, signInWithGoogle, signInWithApple, signInAnonymously, linkWithGoogle, linkWithApple, signOut, refreshProfile, onlineUsers }}>

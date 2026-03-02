@@ -1,5 +1,6 @@
 import React from 'react';
 import { X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface AvatarModalProps {
     isOpen: boolean;
@@ -9,6 +10,7 @@ interface AvatarModalProps {
 }
 
 const AvatarModal: React.FC<AvatarModalProps> = ({ isOpen, onClose, src, alt }) => {
+    const { t } = useTranslation();
     if (!isOpen || !src) return null;
 
     return (
@@ -20,12 +22,12 @@ const AvatarModal: React.FC<AvatarModalProps> = ({ isOpen, onClose, src, alt }) 
                 <button
                     onClick={onClose}
                     className="absolute top-3 right-3 p-2 rounded-full bg-black/60 hover:bg-black/80 transition-colors text-white"
-                    aria-label="Close"
+                    aria-label={t('common.close')}
                 >
                     <X className="w-5 h-5" />
                 </button>
                 <div className="w-full aspect-square bg-gray-950 flex items-center justify-center">
-                    <img src={src} alt={alt || 'Avatar'} className="w-full h-full object-cover" />
+                    <img src={src} alt={alt || t('profile.title')} className="w-full h-full object-cover" />
                 </div>
             </div>
         </div>

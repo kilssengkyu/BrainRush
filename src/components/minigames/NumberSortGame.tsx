@@ -24,12 +24,14 @@ const NumberSortGame: React.FC<NumberSortGameProps> = ({ seed, onScore, mode, is
     // Level 1: 3 panels (0-2) -> Count 3, Max 9
     // Level 2: 4 panels (3-6) -> Count 3, Max 50
     // Level 3: 5 panels (7-11) -> Count 4, Max 99
-    // Level 4: 6+ panels (12+) -> Count 4, Max 999
+    // Level 4: 4 panels (12-15) -> Count 5, Max 999
+    // Level 5: 4+ panels (16+) -> Count 6, Max 999
     const getDifficulty = (index: number) => {
         if (index < 3) return { count: 3, max: 9, level: 1 };
         if (index < 7) return { count: 3, max: 50, level: 2 };
         if (index < 12) return { count: 4, max: 99, level: 3 };
-        return { count: 4, max: 999, level: 4 };
+        if (index < 16) return { count: 5, max: 999, level: 4 };
+        return { count: 6, max: 999, level: 5 };
     };
 
     // Generate Current Panel Data

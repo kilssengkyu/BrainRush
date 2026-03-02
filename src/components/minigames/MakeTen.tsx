@@ -11,6 +11,20 @@ interface MakeTenProps {
     isPlaying: boolean;
 }
 
+type PanelConfig = {
+    level: number;
+    count: number;
+    minAnswerSize: number;
+    maxAnswerSize: number;
+    allowNegative: boolean;
+};
+
+const TARGET_COMBINATIONS: Record<number, number[][]> = {
+    2: [[1, 9], [2, 8], [3, 7], [4, 6]],
+    3: [[1, 2, 7], [1, 3, 6], [1, 4, 5], [2, 3, 5]],
+    4: [[1, 2, 3, 4]]
+};
+
 const MakeTen: React.FC<MakeTenProps> = ({ seed, onScore, isPlaying }) => {
     const { t } = useTranslation();
     const { playSound } = useSound();
@@ -19,20 +33,23 @@ const MakeTen: React.FC<MakeTenProps> = ({ seed, onScore, isPlaying }) => {
     const [animationKey, setAnimationKey] = useState(0);
     const [isSolved, setIsSolved] = useState(false); // Prevent double scoring
 
-    // Difficulty Configuration
-    // Level 1 (0-4): 3 numbers. Target subset sums to 10.
-    // Level 2 (5-14): 4 numbers. Target subset sums to 10.
-    // Level 3 (15+): 4 numbers. Includes negative numbers.
-    const getLevel = (index: number) => {
-        if (index < 5) return 1;
-        if (index < 15) return 2;
-        return 3;
+    const getPanelConfig = (index: number): PanelConfig => {
+        if (index < 5) {
+            return { level: 1, count: 3, minAnswerSize: 2, maxAnswerSize: 2, allowNegative: false };
+        }
+        if (index < 15) {
+            return { level: 2, count: 4, minAnswerSize: 2, maxAnswerSize: 2, allowNegative: false };
+        }
+        if (index < 30) {
+            return { level: 3, count: 6, minAnswerSize: 2, maxAnswerSize: 3, allowNegative: false };
+        }
+        return { level: 4, count: 8, minAnswerSize: 2, maxAnswerSize: 4, allowNegative: true };
     };
 
     const countTenSolutions = (numbers: number[]) => {
         let totalSolutions = 0;
-        let pairSolutions = 0;
         const n = numbers.length;
+        const solutionSizes: number[] = [];
 
         for (let mask = 1; mask < (1 << n); mask += 1) {
             let sum = 0;
@@ -45,54 +62,59 @@ const MakeTen: React.FC<MakeTenProps> = ({ seed, onScore, isPlaying }) => {
             }
             if (sum === 10) {
                 totalSolutions += 1;
-                if (size === 2) pairSolutions += 1;
+                solutionSizes.push(size);
             }
         }
 
-        return { totalSolutions, pairSolutions };
+        return { totalSolutions, solutionSizes };
     };
 
     const currentPanel = useMemo(() => {
         if (!seed) return null;
 
         const rng = new SeededRandom(`${seed}_ten_${panelIndex} `);
-        const level = getLevel(panelIndex);
-
-        // 1. Determine Count (3 or 4)
-        const count = level === 1 ? 3 : 4;
-
-        // Build panels so "make 10" usually uses exactly two numbers
-        // and the valid combination is unique.
-        const candidatePairs: Array<[number, number]> = [[1, 9], [2, 8], [3, 7], [4, 6]];
-        const distractorPool = level < 3
-            ? [1, 2, 3, 4, 5, 6, 7, 8, 9]
-            : [-5, -4, -3, -2, -1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15];
+        const config = getPanelConfig(panelIndex);
+        const distractorPool = config.allowNegative
+            ? [-5, -4, -3, -2, -1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17]
+            : [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15];
 
         let validNumbers: number[] | null = null;
-        for (let attempt = 0; attempt < 500; attempt += 1) {
-            const [a, b] = candidatePairs[Math.floor(rng.next() * candidatePairs.length)];
-            const picked = new Set<number>([a, b]);
+        let answerSize = config.minAnswerSize;
+        for (let attempt = 0; attempt < 1200; attempt += 1) {
+            answerSize = config.minAnswerSize + Math.floor(rng.next() * (config.maxAnswerSize - config.minAnswerSize + 1));
+            const candidates = TARGET_COMBINATIONS[answerSize];
+            const targetCombo = candidates[Math.floor(rng.next() * candidates.length)];
+            const picked = new Set<number>(targetCombo);
 
-            while (picked.size < count) {
+            while (picked.size < config.count) {
                 const candidate = distractorPool[Math.floor(rng.next() * distractorPool.length)];
                 if (candidate === 10 || picked.has(candidate)) continue;
                 picked.add(candidate);
             }
 
             const numbers = Array.from(picked);
-            const { totalSolutions, pairSolutions } = countTenSolutions(numbers);
-            if (pairSolutions === 1 && totalSolutions === 1) {
+            const { totalSolutions, solutionSizes } = countTenSolutions(numbers);
+            if (totalSolutions === 1 && solutionSizes[0] === answerSize) {
                 validNumbers = numbers;
                 break;
             }
         }
 
-        const fallback = count === 3 ? [1, 9, 4] : [1, 9, 4, 7];
+        const fallbackByCount: Record<number, number[]> = {
+            3: [1, 9, 4],
+            4: [1, 9, 4, 7],
+            6: [1, 2, 7, 4, 11, 13],
+            8: [1, 2, 3, 4, -2, 11, 14, 16]
+        };
+        const fallback = fallbackByCount[config.count] ?? [1, 9, 4];
         const shuffled = rng.shuffle(validNumbers ?? fallback);
 
         return {
             numbers: shuffled,
-            level
+            level: config.level,
+            count: config.count,
+            allowNegative: config.allowNegative,
+            answerSize
         };
 
     }, [seed, panelIndex]);
@@ -133,7 +155,7 @@ const MakeTen: React.FC<MakeTenProps> = ({ seed, onScore, isPlaying }) => {
                 setAnimationKey(prev => prev + 1);
             }, 150);
         } else if (sum > 10) {
-            if (currentPanel.level < 3) {
+            if (!currentPanel.allowNegative) {
                 onScore(-80);
                 playSound('error');
                 setSelectedIndices(new Set()); // Reset to force retry
@@ -146,7 +168,7 @@ const MakeTen: React.FC<MakeTenProps> = ({ seed, onScore, isPlaying }) => {
     return (
         <div className="flex flex-col items-center justify-center w-full h-full gap-8 relative">
             {/* Numbers Grid */}
-            <div className={`grid gap-6 ${currentPanel.numbers.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+            <div className={`grid gap-4 md:gap-6 ${currentPanel.count === 8 ? 'grid-cols-4' : currentPanel.count === 6 ? 'grid-cols-3' : currentPanel.numbers.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
                 <AnimatePresence mode="popLayout">
                     {currentPanel.numbers.map((num, idx) => (
                         <motion.button
@@ -172,7 +194,8 @@ const MakeTen: React.FC<MakeTenProps> = ({ seed, onScore, isPlaying }) => {
                                 }
                                 toggleSelection(idx);
                             }}
-                            className={`w-28 h-28 rounded-3xl flex items-center justify-center text-5xl font-bold text-white border-4 border-gray-700 transition-colors shadow-xl`}
+                            className={`rounded-3xl flex items-center justify-center font-bold text-white border-4 border-gray-700 transition-colors shadow-xl
+                                ${currentPanel.count >= 8 ? 'w-20 h-20 md:w-24 md:h-24 text-3xl md:text-4xl' : currentPanel.count >= 6 ? 'w-[5.5rem] h-[5.5rem] md:w-[6.5rem] md:h-[6.5rem] text-4xl md:text-[2.7rem]' : 'w-28 h-28 text-5xl'}`}
                         >
                             {num}
                         </motion.button>

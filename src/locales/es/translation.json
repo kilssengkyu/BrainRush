@@ -154,13 +154,19 @@
     "purchaseRewardDesc": "Los artículos comprados se han entregado.",
     "removeAdsApplied": "La eliminación de anuncios se ha aplicado.",
     "purchaseFail": "La compra falló.",
-    "billingUnavailable": "La facturación no es compatible en este dispositivo."
+    "billingUnavailable": "La facturación no es compatible en este dispositivo.",
+    "sessionRefreshFailed": "Failed to refresh session: {{message}}",
+    "sessionExpired": "Your login session has expired. Please sign in again.",
+    "purchaseFailWithReason": "Purchase failed: {{message}}"
   },
   "leaderboard": {
     "button": "Ranking",
     "title": "Ranking",
     "global": "Global",
-    "country": "País"
+    "country": "País",
+    "myRank": "MY RANK",
+    "mmrLabel": "MMR",
+    "avatarPreview": "{{nickname}} avatar"
   },
   "ad": {
     "remaining": "Restante hoy: {{count}}/{{limit}}",
@@ -215,7 +221,15 @@
     "viewPrivacyPolicy": "Ver política de privacidad",
     "tutorial": "Tutorial",
     "tutorialDesc": "Si quieres revisar cómo usar la app, vuelve a ver el tutorial.",
-    "viewTutorial": "Ver tutorial de nuevo"
+    "viewTutorial": "Ver tutorial de nuevo",
+    "notificationNativeOnly": "Notification settings are only available in the mobile app.",
+    "notificationOff": "Notifications turned off.",
+    "notificationDeniedIos": "Please allow notifications in iPhone Settings > Notifications.",
+    "notificationDeniedAndroid": "Please allow notifications in Android Settings > Notifications.",
+    "notificationOn": "Notifications turned on.",
+    "notifications": "Notifications",
+    "pushNotifications": "Push/Local Notifications",
+    "notificationNativeHint": "Notification toggle is disabled on the web."
   },
   "report": {
     "button": "Reportar",
@@ -270,7 +284,9 @@
     "updateSuccess": "¡Perfil actualizado con éxito!",
     "updateFail": "No se pudo actualizar el perfil",
     "deleteSuccess": "Cuenta eliminada con éxito.",
-    "deleteFail": "No se pudo eliminar la cuenta."
+    "deleteFail": "No se pudo eliminar la cuenta.",
+    "guestDescIOS": "Guest accounts can be lost if you sign out, delete the app, or change devices. Link an Apple or Google account to keep your progress. Also, guest accounts may be deleted after 7 days of inactivity.",
+    "linkApple": "Link Apple Account"
   },
   "game": {
     "waiting": "Esperando partida...",
@@ -303,7 +319,19 @@
       "win": "GANAR",
       "lose": "PERDER",
       "draw": "EMPATE"
-    }
+    },
+    "timeLeft": "Time Left",
+    "connectionLost": "Connection lost. Reconnecting...",
+    "connectionUnstable": "Connection is unstable...",
+    "connecting": "Connecting...",
+    "aiBot": "AI Bot",
+    "me": "Me",
+    "disconnected": "DISCONNECT",
+    "devGhostPreview": "Dev Ghost Preview",
+    "devGhostPreviewGame": "Game",
+    "devGhostPreviewRoundHighscore": "Round Highscore",
+    "devGhostPreviewBotGhost": "Bot Ghost",
+    "devGhostPreviewGap": "Gap"
   },
   "matchmaking": {
     "searching": "Buscando...",
@@ -490,6 +518,24 @@
     "title": "Actualización necesaria",
     "message": "Hay una nueva versión disponible. Actualiza para la mejor experiencia.",
     "button": "Actualizar",
-    "storeNotReady": "La tienda se está preparando."
+    "storeNotReady": "La tienda se está preparando.",
+    "versionInfo": "Current: {{current}} / Minimum: {{min}}"
+  },
+  "home": {
+    "resumeMatchTitle": "You have a game in progress",
+    "resumeMatchDesc": "You came back home. Do you want to return to your ongoing match?",
+    "resumeLater": "Later",
+    "resumeNow": "Resume",
+    "levelProgressLevel": "Lv. {{level}}",
+    "levelUp": "LEVEL UP!"
+  },
+  "login": {
+    "bannedTitle": "Account Suspended",
+    "bannedMessage": "Your account has been suspended.",
+    "bannedUntil": "Suspension ends: {{date}}",
+    "bannedDurationUnknown": "The suspension period is determined by the administrator.",
+    "bannedAppeal": "If you want to appeal the suspension, please contact support.",
+    "contactSupport": "Contact Support",
+    "tryLaterKeyword": "later"
   }
 }

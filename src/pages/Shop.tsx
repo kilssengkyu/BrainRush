@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -39,6 +39,8 @@ const Shop = () => {
         iconSrc: string;
         iconAlt: string;
     } | null>(null);
+    const edgeSwipeStartRef = useRef<{ x: number; y: number } | null>(null);
+    const edgeSwipeTriggeredRef = useRef(false);
 
     const items = useMemo<ShopItem[]>(() => ([
         {
@@ -157,6 +159,42 @@ const Shop = () => {
         navigate('/');
     };
 
+    const handleEdgeSwipeStart = (event: React.TouchEvent<HTMLDivElement>) => {
+        if (purchasing || purchaseReward || event.touches.length !== 1) {
+            edgeSwipeStartRef.current = null;
+            edgeSwipeTriggeredRef.current = false;
+            return;
+        }
+
+        const touch = event.touches[0];
+        if (touch.clientX > 24) {
+            edgeSwipeStartRef.current = null;
+            edgeSwipeTriggeredRef.current = false;
+            return;
+        }
+
+        edgeSwipeStartRef.current = { x: touch.clientX, y: touch.clientY };
+        edgeSwipeTriggeredRef.current = false;
+    };
+
+    const handleEdgeSwipeMove = (event: React.TouchEvent<HTMLDivElement>) => {
+        if (!edgeSwipeStartRef.current || edgeSwipeTriggeredRef.current || event.touches.length !== 1) return;
+
+        const touch = event.touches[0];
+        const deltaX = touch.clientX - edgeSwipeStartRef.current.x;
+        const deltaY = touch.clientY - edgeSwipeStartRef.current.y;
+
+        if (deltaX > 72 && deltaX > Math.abs(deltaY) * 1.35) {
+            edgeSwipeTriggeredRef.current = true;
+            handleBack();
+        }
+    };
+
+    const handleEdgeSwipeEnd = () => {
+        edgeSwipeStartRef.current = null;
+        edgeSwipeTriggeredRef.current = false;
+    };
+
     const handlePurchase = async (item: ShopItem) => {
         playSound('click');
         if (!user) {
@@ -187,7 +225,7 @@ const Shop = () => {
             // iOS purchase flow can outlive existing access token and trigger Invalid JWT.
             const refreshed = await supabase.auth.refreshSession();
             if (refreshed.error) {
-                throw new Error(`세션 갱신 실패: ${refreshed.error.message}`);
+                throw new Error(t('shop.sessionRefreshFailed', { message: refreshed.error.message }));
             }
             let accessToken = refreshed.data.session?.access_token ?? null;
             if (!accessToken) {
@@ -196,7 +234,7 @@ const Shop = () => {
             }
 
             if (!accessToken) {
-                throw new Error('로그인 세션이 만료되었습니다. 다시 로그인해 주세요.');
+                throw new Error(t('shop.sessionExpired'));
             }
 
             const { data, error: verifyError } = await supabase.functions.invoke('verify-purchase', {
@@ -232,7 +270,7 @@ const Shop = () => {
 
                 console.error('Edge Function Error Detail:', realErrorMsg, verifyError);
                 if (String(realErrorMsg).toLowerCase().includes('invalid jwt')) {
-                    throw new Error('로그인 세션이 만료되었습니다. 다시 로그인해 주세요.');
+                    throw new Error(t('shop.sessionExpired'));
                 }
                 throw new Error(`Function Error: ${realErrorMsg}`);
             }
@@ -262,7 +300,7 @@ const Shop = () => {
                     unitLabel: reward.unitLabel,
                     description: t('shop.purchaseRewardDesc', '구매하신 아이템이 지급되었습니다.'),
                     iconSrc: isPracticeNoteReward ? '/images/icon/icon_note.png' : '/images/icon/icon_pen.png',
-                    iconAlt: isPracticeNoteReward ? 'Practice Note' : 'Pencil'
+                    iconAlt: isPracticeNoteReward ? t('ad.practiceNotes') : t('ad.pencils')
                 });
             } else {
                 setPurchaseReward({
@@ -270,7 +308,7 @@ const Shop = () => {
                     unitLabel: t('shop.purchased', '구매 완료'),
                     description: t('shop.removeAdsApplied', '광고 제거가 적용되었습니다.'),
                     iconSrc: '/images/icon/icon_pen.png',
-                    iconAlt: 'Pencil'
+                    iconAlt: t('ad.pencils')
                 });
             }
         } catch (err: any) {
@@ -278,7 +316,7 @@ const Shop = () => {
             const errMsg = err?.message || String(err);
             const message = err?.message?.includes('Billing not supported')
                 ? t('shop.billingUnavailable', 'Billing not supported on this device.')
-                : `구매 실패: ${errMsg}`;
+                : t('shop.purchaseFailWithReason', { message: errMsg });
             showToast(message, 'error');
         } finally {
             setPurchasing(false);
@@ -301,7 +339,13 @@ const Shop = () => {
     };
 
     return (
-        <div className="h-[100dvh] bg-gray-900 text-white flex flex-col relative overflow-hidden">
+        <div
+            className="h-[100dvh] bg-gray-900 text-white flex flex-col relative overflow-hidden"
+            onTouchStart={handleEdgeSwipeStart}
+            onTouchMove={handleEdgeSwipeMove}
+            onTouchEnd={handleEdgeSwipeEnd}
+            onTouchCancel={handleEdgeSwipeEnd}
+        >
             <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-800 via-gray-900 to-black pointer-events-none" />
 
             {/* Header - Fixed to top */}

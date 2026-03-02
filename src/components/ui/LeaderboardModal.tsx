@@ -180,7 +180,7 @@ const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onClose }) 
                             {/* My Rank (Sticky Bottom) */}
                             {myRank && !topPlayers.some(p => p.id === myRank.id) && (
                                 <div className="p-4 border-t border-gray-800 bg-gray-900/95 shadow-[0_-10px_20px_rgba(0,0,0,0.5)] z-10">
-                                    <div className="text-xs text-gray-500 mb-2 font-bold px-2">MY RANK</div>
+                                    <div className="text-xs text-gray-500 mb-2 font-bold px-2">{t('leaderboard.myRank')}</div>
                                     <RankItem
                                         player={myRank}
                                         isMe={true}
@@ -223,6 +223,7 @@ const RankItem = ({
     onClick?: () => void;
     onAvatarClick?: () => void;
 }) => {
+    const { t } = useTranslation();
     const TierIcon = getTierIcon(player.tier);
     const tierColor = getTierColor(player.tier);
 
@@ -259,7 +260,7 @@ const RankItem = ({
                     event.stopPropagation();
                     onAvatarClick?.();
                 }}
-                aria-label={`${player.nickname} avatar`}
+                aria-label={t('leaderboard.avatarPreview', { nickname: player.nickname })}
             >
                 {player.avatar_url ? (
                     <img src={player.avatar_url} alt={player.nickname} className="w-full h-full object-cover" />
@@ -293,7 +294,7 @@ const RankItem = ({
                 <div className="font-mono font-bold text-white text-sm">
                     {player.mmr.toLocaleString()}
                 </div>
-                <div className="text-[10px] text-gray-500">MMR</div>
+                <div className="text-[10px] text-gray-500">{t('leaderboard.mmrLabel')}</div>
             </div>
         </div>
     );

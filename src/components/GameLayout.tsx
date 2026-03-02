@@ -1,5 +1,5 @@
 import React from 'react';
-
+import { useTranslation } from 'react-i18next';
 import { User, Trophy } from 'lucide-react';
 
 interface PlayerProfile {
@@ -20,6 +20,7 @@ interface GameLayoutProps {
 }
 
 const PlayerSection = ({ player }: { player: PlayerProfile }) => {
+    const { t } = useTranslation();
     // Calculate Win Rate
     const totalGames = (player.wins || 0) + (player.losses || 0);
     const winRate = totalGames > 0 ? Math.round(((player.wins || 0) / totalGames) * 100) : 0;
@@ -45,7 +46,7 @@ const PlayerSection = ({ player }: { player: PlayerProfile }) => {
             <div className={`flex flex-col ${player.isOpponent ? 'items-end' : 'items-start'} flex-1`}>
                 <div className="flex flex-col">
                     <span className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">
-                        {player.isOpponent ? 'Opponent' : 'You'}
+                        {player.isOpponent ? t('game.opponent') : t('game.you')}
                     </span>
                     <h3 className="text-xl font-bold text-white leading-none mb-2 hidden sm:block">{player.name}</h3>
 
@@ -59,7 +60,7 @@ const PlayerSection = ({ player }: { player: PlayerProfile }) => {
                         </div>
                     )}
                     {player.isGuest && (
-                        <span className="text-xs text-gray-500 font-mono">Guest Player</span>
+                        <span className="text-xs text-gray-500 font-mono">{t('game.guest')}</span>
                     )}
                 </div>
             </div>

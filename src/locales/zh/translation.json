@@ -1,5 +1,4 @@
 {
-  "title": "BrainRush",
   "common": {
     "cancel": "取消",
     "confirm": "确认",
@@ -55,7 +54,8 @@
     "settings": "设置",
     "login": "登录",
     "logout": "登出",
-    "profile": "个人资料"
+    "profile": "个人资料",
+    "all": "All"
   },
   "shop": {
     "title": "商店",
@@ -101,7 +101,10 @@
     "purchaseRewardDesc": "已发放您购买的道具。",
     "removeAdsApplied": "已应用去广告。",
     "purchaseFail": "购买失败。",
-    "billingUnavailable": "此设备不支持购买。"
+    "billingUnavailable": "此设备不支持购买。",
+    "sessionRefreshFailed": "Failed to refresh session: {{message}}",
+    "sessionExpired": "Your login session has expired. Please sign in again.",
+    "purchaseFailWithReason": "Purchase failed: {{message}}"
   },
   "social": {
     "friends": "好友",
@@ -156,7 +159,10 @@
     "button": "排行榜",
     "title": "排行榜",
     "global": "全体",
-    "country": "国家"
+    "country": "国家",
+    "myRank": "MY RANK",
+    "mmrLabel": "MMR",
+    "avatarPreview": "{{nickname}} avatar"
   },
   "ad": {
     "remaining": "今日剩余：{{count}}/{{limit}}",
@@ -193,8 +199,6 @@
     "sound": "音效",
     "masterVolume": "主音量",
     "vibration": "振动",
-    "volume": "音量",
-    "back": "返回",
     "deleteAccount": "删除账户",
     "deleteAccountConfirm": "确定要删除账户吗？账户将被永久删除且无法撤销。",
     "logoutConfirm": "您确定要登出吗？",
@@ -209,7 +213,15 @@
     "viewPrivacyPolicy": "查看隐私政策",
     "tutorial": "教程",
     "tutorialDesc": "如果你想再次确认应用使用方法，请重新查看教程。",
-    "viewTutorial": "重新查看教程"
+    "viewTutorial": "重新查看教程",
+    "notificationNativeOnly": "Notification settings are only available in the mobile app.",
+    "notificationOff": "Notifications turned off.",
+    "notificationDeniedIos": "Please allow notifications in iPhone Settings > Notifications.",
+    "notificationDeniedAndroid": "Please allow notifications in Android Settings > Notifications.",
+    "notificationOn": "Notifications turned on.",
+    "notifications": "Notifications",
+    "pushNotifications": "Push/Local Notifications",
+    "notificationNativeHint": "Notification toggle is disabled on the web."
   },
   "report": {
     "button": "举报",
@@ -231,7 +243,6 @@
     "myTime": "我的记录",
     "rank": "排位",
     "normal": "普通",
-    "rankScore": "排位分数",
     "unknownPlayer": "未知玩家",
     "guest": "游客",
     "you": "你",
@@ -253,7 +264,19 @@
       "win": "胜",
       "lose": "负",
       "draw": "平"
-    }
+    },
+    "timeLeft": "Time Left",
+    "connectionLost": "Connection lost. Reconnecting...",
+    "connectionUnstable": "Connection is unstable...",
+    "connecting": "Connecting...",
+    "aiBot": "AI Bot",
+    "me": "Me",
+    "disconnected": "DISCONNECT",
+    "devGhostPreview": "Dev Ghost Preview",
+    "devGhostPreviewGame": "Game",
+    "devGhostPreviewRoundHighscore": "Round Highscore",
+    "devGhostPreviewBotGhost": "Bot Ghost",
+    "devGhostPreviewGap": "Gap"
   },
   "user": {
     "level": "等级",
@@ -300,7 +323,11 @@
     "updateSuccess": "更新成功",
     "updateFail": "更新失败",
     "deleteSuccess": "账户已删除",
-    "deleteFail": "删除失败"
+    "deleteFail": "删除失败",
+    "selectCountry": "Select Country",
+    "guestDescIOS": "Guest accounts can be lost if you sign out, delete the app, or change devices. Link an Apple or Google account to keep your progress. Also, guest accounts may be deleted after 7 days of inactivity.",
+    "linkApple": "Link Apple Account",
+    "noRecord": "No match history."
   },
   "matchmaking": {
     "searching": "搜索中...",
@@ -487,6 +514,28 @@
     "title": "需要更新",
     "message": "新版本已发布，请更新以获得最佳体验。",
     "button": "更新",
-    "storeNotReady": "商店准备中。"
+    "storeNotReady": "商店准备中。",
+    "versionInfo": "Current: {{current}} / Minimum: {{min}}"
+  },
+  "home": {
+    "resumeMatchTitle": "You have a game in progress",
+    "resumeMatchDesc": "You came back home. Do you want to return to your ongoing match?",
+    "resumeLater": "Later",
+    "resumeNow": "Resume",
+    "levelProgressLevel": "Lv. {{level}}",
+    "levelUp": "LEVEL UP!"
+  },
+  "login": {
+    "bannedTitle": "Account Suspended",
+    "bannedMessage": "Your account has been suspended.",
+    "bannedUntil": "Suspension ends: {{date}}",
+    "bannedDurationUnknown": "The suspension period is determined by the administrator.",
+    "bannedAppeal": "If you want to appeal the suspension, please contact support.",
+    "contactSupport": "Contact Support",
+    "tryLaterKeyword": "later"
+  },
+  "app": {
+    "title": "BrainRush",
+    "subtitle": "Speed & Intelligence"
   }
 }

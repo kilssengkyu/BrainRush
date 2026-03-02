@@ -154,13 +154,19 @@
     "purchaseRewardDesc": "มอบไอเท็มที่ซื้อเรียบร้อยแล้ว",
     "removeAdsApplied": "เปิดใช้งานการลบโฆษณาแล้ว",
     "purchaseFail": "ซื้อไม่สำเร็จ",
-    "billingUnavailable": "อุปกรณ์นี้ไม่รองรับการชำระเงิน"
+    "billingUnavailable": "อุปกรณ์นี้ไม่รองรับการชำระเงิน",
+    "sessionRefreshFailed": "Failed to refresh session: {{message}}",
+    "sessionExpired": "Your login session has expired. Please sign in again.",
+    "purchaseFailWithReason": "Purchase failed: {{message}}"
   },
   "leaderboard": {
     "button": "อันดับ",
     "title": "อันดับ",
     "global": "ทั่วโลก",
-    "country": "ประเทศ"
+    "country": "ประเทศ",
+    "myRank": "MY RANK",
+    "mmrLabel": "MMR",
+    "avatarPreview": "{{nickname}} avatar"
   },
   "ad": {
     "remaining": "คงเหลือวันนี้: {{count}}/{{limit}}",
@@ -215,7 +221,15 @@
     "viewPrivacyPolicy": "ดูนโยบายความเป็นส่วนตัว",
     "tutorial": "บทแนะนำ",
     "tutorialDesc": "หากต้องการทบทวนวิธีใช้งานแอป สามารถดูบทแนะนำอีกครั้งได้",
-    "viewTutorial": "ดูบทแนะนำอีกครั้ง"
+    "viewTutorial": "ดูบทแนะนำอีกครั้ง",
+    "notificationNativeOnly": "Notification settings are only available in the mobile app.",
+    "notificationOff": "Notifications turned off.",
+    "notificationDeniedIos": "Please allow notifications in iPhone Settings > Notifications.",
+    "notificationDeniedAndroid": "Please allow notifications in Android Settings > Notifications.",
+    "notificationOn": "Notifications turned on.",
+    "notifications": "Notifications",
+    "pushNotifications": "Push/Local Notifications",
+    "notificationNativeHint": "Notification toggle is disabled on the web."
   },
   "report": {
     "button": "รายงาน",
@@ -270,7 +284,9 @@
     "updateSuccess": "อัปเดตโปรไฟล์สำเร็จ!",
     "updateFail": "อัปเดตโปรไฟล์ไม่สำเร็จ",
     "deleteSuccess": "ลบบัญชีสำเร็จ",
-    "deleteFail": "ลบบัญชีไม่สำเร็จ"
+    "deleteFail": "ลบบัญชีไม่สำเร็จ",
+    "guestDescIOS": "Guest accounts can be lost if you sign out, delete the app, or change devices. Link an Apple or Google account to keep your progress. Also, guest accounts may be deleted after 7 days of inactivity.",
+    "linkApple": "Link Apple Account"
   },
   "game": {
     "waiting": "กำลังรอเกม...",
@@ -303,7 +319,19 @@
       "win": "ชนะ",
       "lose": "แพ้",
       "draw": "เสมอ"
-    }
+    },
+    "timeLeft": "Time Left",
+    "connectionLost": "Connection lost. Reconnecting...",
+    "connectionUnstable": "Connection is unstable...",
+    "connecting": "Connecting...",
+    "aiBot": "AI Bot",
+    "me": "Me",
+    "disconnected": "DISCONNECT",
+    "devGhostPreview": "Dev Ghost Preview",
+    "devGhostPreviewGame": "Game",
+    "devGhostPreviewRoundHighscore": "Round Highscore",
+    "devGhostPreviewBotGhost": "Bot Ghost",
+    "devGhostPreviewGap": "Gap"
   },
   "matchmaking": {
     "searching": "กำลังค้นหา...",
@@ -490,6 +518,24 @@
     "title": "จำเป็นต้องอัปเดต",
     "message": "มีเวอร์ชันใหม่แล้ว กรุณาอัปเดตเพื่อประสบการณ์ที่ดีที่สุด",
     "button": "อัปเดต",
-    "storeNotReady": "กำลังเตรียมร้านค้า"
+    "storeNotReady": "กำลังเตรียมร้านค้า",
+    "versionInfo": "Current: {{current}} / Minimum: {{min}}"
+  },
+  "home": {
+    "resumeMatchTitle": "You have a game in progress",
+    "resumeMatchDesc": "You came back home. Do you want to return to your ongoing match?",
+    "resumeLater": "Later",
+    "resumeNow": "Resume",
+    "levelProgressLevel": "Lv. {{level}}",
+    "levelUp": "LEVEL UP!"
+  },
+  "login": {
+    "bannedTitle": "Account Suspended",
+    "bannedMessage": "Your account has been suspended.",
+    "bannedUntil": "Suspension ends: {{date}}",
+    "bannedDurationUnknown": "The suspension period is determined by the administrator.",
+    "bannedAppeal": "If you want to appeal the suspension, please contact support.",
+    "contactSupport": "Contact Support",
+    "tryLaterKeyword": "later"
   }
 }

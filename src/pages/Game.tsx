@@ -40,8 +40,10 @@ import Flag from '../components/ui/Flag';
 import HexRadar from '../components/ui/HexRadar';
 import { isBotId } from '../constants/bot';
 import { useUI } from '../contexts/UIContext';
+import { useAuth } from '../contexts/AuthContext';
 import ReportReasonModal from '../components/ui/ReportReasonModal';
 import { resolveRoundWinner } from '../effects/roundWinner';
+import { getLevelFromXp, getXpSnapshotStorageKey } from '../utils/levelUtils';
 
 const IS_DEV = import.meta.env.DEV;
 const BOT_EMOJI_POOL = ['🙂', '😭', '😂', '☹️', '❤️', '💔', '👍', '👎'];
@@ -54,16 +56,6 @@ const BOT_EMOJI_REACTIVE = {
 type BotEmojiPattern = 'burst' | 'silent' | 'reactive';
 const CROWN_ICON = '/images/icon/Crown%20(Border).png';
 const CUP_ICON = '/images/icon/Cup%20(Border).png';
-const EMOJI_ICON_MAP: Record<string, string> = {
-    '🙂': '/images/icon/emoji/Big%20Smile%20-%20Cartoon.png',
-    '😂': '/images/icon/emoji/Heavy%20Smile%20-%20Cartoon.png',
-    '😭': '/images/icon/emoji/Sad%20-%20Cartoon.png',
-    '☹️': '/images/icon/emoji/Fear%20-%20Cartoon.png',
-    '❤️': '/images/icon/emoji/Heart%20-%20Pink.png',
-    '💔': '/images/icon/emoji/Heart%20-%20Broken.png',
-    '👍': '/images/icon/emoji/Cool%20-%20Cartoon.png',
-    '👎': '/images/icon/emoji/Shy%20-%20Cartoon.png'
-};
 
 const FINAL_ROUND_FINISHED_MS = 2000;
 
@@ -73,6 +65,7 @@ const Game: React.FC = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const { showToast } = useUI();
+    const { user, profile } = useAuth();
 
     // Route state check
     const { roomId: stateRoomId, myId, opponentId, skipWaiting } = location.state || {};
@@ -120,6 +113,39 @@ const Game: React.FC = () => {
     );
     const canAddFriendOpponent = canReportOpponent;
 
+    useEffect(() => {
+        console.log('[XP-SAVE] effect fired', { roomId, userId: user?.id, myId, hasProfile: !!profile, profileXp: profile?.xp });
+        if (!roomId || !user || myId !== user.id || !profile) {
+            console.log('[XP-SAVE] bailed: guard failed', { roomId: !!roomId, user: !!user, myIdMatch: myId === user?.id, profile: !!profile });
+            return;
+        }
+
+        const xp = Math.max(0, Math.floor(Number(profile.xp ?? 0)));
+        const level = typeof profile.level === 'number'
+            ? Math.max(1, Math.floor(profile.level))
+            : getLevelFromXp(xp);
+        const storageKey = getXpSnapshotStorageKey(user.id);
+
+        try {
+            const raw = window.sessionStorage.getItem(storageKey);
+            const existing = raw ? JSON.parse(raw) : null;
+            if (existing?.roomId === roomId) {
+                console.log('[XP-SAVE] skipped: same roomId already saved');
+                return;
+            }
+
+            window.sessionStorage.setItem(storageKey, JSON.stringify({
+                roomId,
+                beforeXp: xp,
+                beforeLevel: level,
+                capturedAt: Date.now()
+            }));
+            console.log('[XP-SAVE] ✅ snapshot saved', { roomId, xp, level, storageKey });
+        } catch (error) {
+            console.error('[XP-SAVE] Failed to store xp snapshot', error);
+        }
+    }, [roomId, user, myId, profile]);
+
     // Determine Status Logic
     const isPlaying = gameState.status === 'playing';
     const isFinished = gameState.status === 'finished';
@@ -147,8 +173,8 @@ const Game: React.FC = () => {
     const showRoundFinished = hasCompletedRound && ((isWarmup && warmupDiff > 3 && !isFinished) || terminalRoundFinishedActive);
     const showFinalResult = isFinished && resultRevealReady;
     const showWarmupOverlay = (isWarmup || isCountdown) && !showRoundFinished;
-    const showEmojiBar = (showRoundFinished || isWaiting || showFinalResult) && !terminalRoundFinishedActive;
-    const showEmojiOverlay = showEmojiBar;
+    const showEmojiBar = (showRoundFinished || isWaiting) && !showFinalResult;
+    const showEmojiOverlay = showEmojiBar || showFinalResult;
     const isGameplayInteractable = isGameplayActive;
 
 
@@ -178,6 +204,12 @@ const Game: React.FC = () => {
         : (lastRoundSnapshot
             ? (gameState.isPlayer1 ? lastRoundSnapshot.p2_score : lastRoundSnapshot.p1_score)
             : gameState.opScore);
+    const [isMyBackdropScoreFlashing, setIsMyBackdropScoreFlashing] = useState(false);
+    const [isOpBackdropScoreFlashing, setIsOpBackdropScoreFlashing] = useState(false);
+    const prevDisplayMyScoreRef = useRef(displayMyScore);
+    const prevDisplayOpScoreRef = useRef(displayOpScore);
+    const myBackdropFlashTimerRef = useRef<number | null>(null);
+    const opBackdropFlashTimerRef = useRef<number | null>(null);
     const requiredWins = gameState.mode === 'rank' ? 3 : 2;
     const player1Id = gameState.isPlayer1 ? myId : opponentId;
     const player2Id = gameState.isPlayer1 ? opponentId : myId;
@@ -248,6 +280,37 @@ const Game: React.FC = () => {
             op: buildSideMask('op', opLives)
         });
     }, [gameState.mode, isFinished, showRoundFinished, myLives, opLives, requiredWins]);
+
+    useEffect(() => {
+        const prevScore = prevDisplayMyScoreRef.current;
+        if (displayMyScore > prevScore) {
+            if (myBackdropFlashTimerRef.current) window.clearTimeout(myBackdropFlashTimerRef.current);
+            setIsMyBackdropScoreFlashing(true);
+            myBackdropFlashTimerRef.current = window.setTimeout(() => {
+                setIsMyBackdropScoreFlashing(false);
+                myBackdropFlashTimerRef.current = null;
+            }, 320);
+        }
+        prevDisplayMyScoreRef.current = displayMyScore;
+    }, [displayMyScore]);
+
+    useEffect(() => {
+        const prevScore = prevDisplayOpScoreRef.current;
+        if (displayOpScore > prevScore) {
+            if (opBackdropFlashTimerRef.current) window.clearTimeout(opBackdropFlashTimerRef.current);
+            setIsOpBackdropScoreFlashing(true);
+            opBackdropFlashTimerRef.current = window.setTimeout(() => {
+                setIsOpBackdropScoreFlashing(false);
+                opBackdropFlashTimerRef.current = null;
+            }, 320);
+        }
+        prevDisplayOpScoreRef.current = displayOpScore;
+    }, [displayOpScore]);
+
+    useEffect(() => () => {
+        if (myBackdropFlashTimerRef.current) window.clearTimeout(myBackdropFlashTimerRef.current);
+        if (opBackdropFlashTimerRef.current) window.clearTimeout(opBackdropFlashTimerRef.current);
+    }, []);
 
     useEffect(() => {
         if (!showRoundFinished || gameState.mode === 'practice') return;
@@ -408,10 +471,22 @@ const Game: React.FC = () => {
         };
     }, [isFinished, terminalRoundFinishedActive, gameState.mode, gameState.winnerId, myId, opponentId, requiredWins]);
 
-    const renderEmojiVisual = (emoji: string, className: string) => {
-        const src = EMOJI_ICON_MAP[emoji];
-        if (!src) return <span className={className}>{emoji}</span>;
-        return <img src={src} alt={emoji} className={className} />;
+    const renderEmojiButton = (emoji: string, className: string) => {
+        return (
+            <span className={`inline-flex items-center justify-center leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.35)] ${className}`}>
+                {emoji}
+            </span>
+        );
+    };
+
+    const renderEmojiBurst = (emoji: string, className: string) => {
+        return (
+            <span className={`inline-flex aspect-square items-center justify-center rounded-full bg-white/15 border border-white/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_10px_24px_rgba(0,0,0,0.24)] backdrop-blur-sm ${className}`}>
+                <span className="text-[4.25rem] leading-none drop-shadow-[0_3px_6px_rgba(0,0,0,0.4)]">
+                    {emoji}
+                </span>
+            </span>
+        );
     };
     const radarLabels = {
         speed: t('profile.stats.speed'),
@@ -559,10 +634,10 @@ const Game: React.FC = () => {
     const emojiRowBottom = ['❤️', '💔', '👍', '👎'];
     const isConnectionUnstable = connectionStatus !== 'connected';
     const connectionLabel = connectionStatus === 'disconnected'
-        ? '연결이 끊어졌어요. 재연결 중...'
+        ? t('game.connectionLost')
         : connectionStatus === 'reconnecting'
-            ? '연결 상태가 불안정합니다...'
-            : '연결 중...';
+            ? t('game.connectionUnstable')
+            : t('game.connecting');
 
     const botEmojiPatternRef = useRef<BotEmojiPattern | null>(null);
     const botBurstEmojiRef = useRef<string>('🙂');
@@ -703,14 +778,14 @@ const Game: React.FC = () => {
         const fetchProfiles = async () => {
             if (myId) {
                 const { data } = await supabase.from('profiles').select('*').eq('id', myId).single();
-                setMyProfile(data || { nickname: 'Me', avatar_url: null });
+                setMyProfile(data || { nickname: t('game.me'), avatar_url: null });
             }
             if (opponentId) {
                 if (opponentId === 'practice_solo') {
                     setOpponentProfile(null); // No opponent
                 } else if (opponentId === 'practice_bot') {
                     setOpponentProfile({
-                        nickname: 'AI Bot',
+                        nickname: t('game.aiBot'),
                         avatar_url: 'https://api.dicebear.com/9.x/bottts-neutral/svg?seed=BrainRushBot',
                         country: 'KR' // Or generic
                     });
@@ -727,16 +802,16 @@ const Game: React.FC = () => {
                             country: data.country
                         });
                     } else {
-                        setOpponentProfile({ nickname: 'Player', avatar_url: null });
+                        setOpponentProfile({ nickname: t('game.unknownPlayer'), avatar_url: null });
                     }
                 } else {
                     const { data } = await supabase.from('profiles').select('*').eq('id', opponentId).single();
-                    setOpponentProfile(data || { nickname: 'Opponent', avatar_url: null });
+                    setOpponentProfile(data || { nickname: t('game.opponent'), avatar_url: null });
                 }
             }
         };
         fetchProfiles();
-    }, [myId, opponentId]);
+    }, [myId, opponentId, t]);
 
     // Handle Timeout / Exit
     useEffect(() => {
@@ -985,7 +1060,7 @@ const Game: React.FC = () => {
                                 <Flag code={myProfile?.country} />
                                 <span className="hidden sm:inline truncate">{myProfile?.nickname}</span>
                             </div>
-                            <AnimatedScore value={displayMyScore} className="text-2xl font-black text-blue-400 font-mono" />
+                            <AnimatedScore value={displayMyScore} useGrouping={false} className="text-2xl font-black text-blue-400 font-mono" />
                         </div>
                     </div>
 
@@ -994,7 +1069,7 @@ const Game: React.FC = () => {
                         {gameState.mode !== 'practice' && (
                             <div className="flex flex-col items-center mb-0.5">
                                 <div className="text-xs font-bold text-blue-300 tracking-wider uppercase whitespace-nowrap">
-                                    Round {gameState.currentRound}/{gameState.totalRounds}
+                                    {t('game.table.round')} {gameState.currentRound}/{gameState.totalRounds}
                                 </div>
                             </div>
                         )}
@@ -1004,7 +1079,7 @@ const Game: React.FC = () => {
                         >
                             {Math.floor(gameState.remainingTime)}
                         </div>
-                        <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Time Left</div>
+                        <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{t('game.timeLeft')}</div>
                     </div>
 
                     {/* Opponent Profile - Hide in Solo Practice */}
@@ -1016,7 +1091,7 @@ const Game: React.FC = () => {
                                         <span className="hidden sm:inline truncate">{opponentProfile?.nickname}</span>
                                         <Flag code={opponentProfile?.country} />
                                     </div>
-                                    <AnimatedScore value={displayOpScore} className="text-2xl font-black text-red-400 font-mono" />
+                                    <AnimatedScore value={displayOpScore} useGrouping={false} className="text-2xl font-black text-red-400 font-mono" />
                                 </div>
                                 <div className="relative flex-shrink-0">
                                     {opponentProfile?.avatar_url ? (
@@ -1028,7 +1103,7 @@ const Game: React.FC = () => {
                                     )}
                                     {!isOpponentOnline && gameState.status !== 'finished' && (
                                         <div className="absolute -bottom-2 -right-2 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded animate-pulse border border-red-400 whitespace-nowrap z-50">
-                                            DISCONNECT
+                                            {t('game.disconnected')}
                                         </div>
                                     )}
                                 </div>
@@ -1075,34 +1150,44 @@ const Game: React.FC = () => {
                         <div className="absolute inset-0 pointer-events-none flex opacity-20">
                             {/* Blue Side (My Score) */}
                             <div
-                                className="h-full bg-blue-500/30 transition-all duration-1000 ease-out"
+                                className={`relative h-full overflow-hidden transition-all duration-500 ease-out ${isMyBackdropScoreFlashing ? 'bg-blue-400/55' : 'bg-blue-500/30'}`}
                                 style={{
                                     width: `${displayMyScore === 0 && displayOpScore === 0 ? 50 : (displayMyScore / (displayMyScore + displayOpScore)) * 100}%`
                                 }}
-                            />
+                            >
+                                <div
+                                    className={`absolute inset-y-0 right-0 w-32 bg-[radial-gradient(circle_at_center,rgba(191,219,254,0.7)_0%,rgba(96,165,250,0.32)_45%,rgba(59,130,246,0)_78%)] blur-2xl transition-all duration-500 ${isMyBackdropScoreFlashing ? 'opacity-100 scale-125' : 'opacity-0 scale-90'}`}
+                                />
+                            </div>
                             {/* Red Side (Op Score) */}
                             <div
-                                className="h-full bg-red-500/30 transition-all duration-1000 ease-out"
+                                className={`relative h-full overflow-hidden transition-all duration-500 ease-out ${isOpBackdropScoreFlashing ? 'bg-red-400/55' : 'bg-red-500/30'}`}
                                 style={{
                                     width: `${displayMyScore === 0 && displayOpScore === 0 ? 50 : (displayOpScore / (displayMyScore + displayOpScore)) * 100}%`
                                 }}
-                            />
+                            >
+                                <div
+                                    className={`absolute inset-y-0 left-0 w-32 bg-[radial-gradient(circle_at_center,rgba(254,202,202,0.7)_0%,rgba(248,113,113,0.32)_45%,rgba(239,68,68,0)_78%)] blur-2xl transition-all duration-500 ${isOpBackdropScoreFlashing ? 'opacity-100 scale-125' : 'opacity-0 scale-90'}`}
+                                />
+                            </div>
                         </div>
 
                         <div className="absolute inset-0 flex items-start justify-between px-4 sm:px-8 pt-32">
                             <div
-                                className={`w-[42%] font-black font-mono tabular-nums tracking-tight leading-none transition-opacity duration-500 ${backdropScoreSizeClass}
+                                className={`w-[42%] font-black font-mono tabular-nums tracking-tight leading-none transition-all duration-300 ${backdropScoreSizeClass}
                                     ${displayMyScore >= displayOpScore ? 'text-blue-400' : 'text-blue-400'}
-                                    ${showRoundFinished ? 'opacity-90' : 'opacity-10'}`}
+                                    ${showRoundFinished ? 'opacity-90' : 'opacity-10'}
+                                    ${isMyBackdropScoreFlashing ? 'scale-[1.06] brightness-125 drop-shadow-[0_0_26px_rgba(96,165,250,0.9)]' : ''}`}
                             >
-                                {displayMyScore}
+                                <AnimatedScore value={displayMyScore} duration={360} useGrouping={false} />
                             </div>
                             <div
-                                className={`w-[42%] font-black font-mono tabular-nums tracking-tight leading-none text-right transition-opacity duration-500 ${backdropScoreSizeClass}
+                                className={`w-[42%] font-black font-mono tabular-nums tracking-tight leading-none text-right transition-all duration-300 ${backdropScoreSizeClass}
                                     ${displayOpScore > displayMyScore ? 'text-red-400' : 'text-red-400'}
-                                    ${showRoundFinished ? 'opacity-90' : 'opacity-10'}`}
+                                    ${showRoundFinished ? 'opacity-90' : 'opacity-10'}
+                                    ${isOpBackdropScoreFlashing ? 'scale-[1.06] brightness-125 drop-shadow-[0_0_26px_rgba(248,113,113,0.9)]' : ''}`}
                             >
-                                {displayOpScore}
+                                <AnimatedScore value={displayOpScore} duration={360} useGrouping={false} />
                             </div>
                         </div>
                     </div>
@@ -1217,22 +1302,22 @@ const Game: React.FC = () => {
                                 {IS_DEV && isBotId(opponentId) && botRoundDebugPreview && (
                                     <div className="absolute top-4 left-1/2 -translate-x-1/2 w-[min(92vw,28rem)] rounded-2xl border border-amber-400/30 bg-black/55 px-4 py-3 text-xs font-mono text-amber-100 shadow-lg backdrop-blur-sm">
                                         <div className="mb-1 text-[10px] font-black uppercase tracking-[0.24em] text-amber-300/80">
-                                            Dev Ghost Preview
+                                            {t('game.devGhostPreview')}
                                         </div>
                                         <div className="flex items-center justify-between gap-3">
-                                            <span className="text-amber-200/80">Game</span>
+                                            <span className="text-amber-200/80">{t('game.devGhostPreviewGame')}</span>
                                             <span className="font-black text-white">{botRoundDebugPreview.gameType}</span>
                                         </div>
                                         <div className="flex items-center justify-between gap-3">
-                                            <span className="text-amber-200/80">Round Highscore</span>
+                                            <span className="text-amber-200/80">{t('game.devGhostPreviewRoundHighscore')}</span>
                                             <span className="font-black text-blue-300">{botRoundDebugPreview.myBestScore.toLocaleString()}</span>
                                         </div>
                                         <div className="flex items-center justify-between gap-3">
-                                            <span className="text-amber-200/80">Bot Ghost</span>
+                                            <span className="text-amber-200/80">{t('game.devGhostPreviewBotGhost')}</span>
                                             <span className="font-black text-red-300">{botRoundDebugPreview.botGhostScore.toLocaleString()}</span>
                                         </div>
                                         <div className="flex items-center justify-between gap-3">
-                                            <span className="text-amber-200/80">Gap</span>
+                                            <span className="text-amber-200/80">{t('game.devGhostPreviewGap')}</span>
                                             <span className={`font-black ${botRoundDebugPreview.gap >= 0 ? 'text-red-200' : 'text-blue-200'}`}>
                                                 {botRoundDebugPreview.gap >= 0 ? '+' : ''}{botRoundDebugPreview.gap.toLocaleString()}
                                             </span>
@@ -1247,7 +1332,7 @@ const Game: React.FC = () => {
                                 >
                                     {/* Previous round result removed */}
                                     <h2 className="w-full max-w-[94vw] font-black text-yellow-400 mb-6 drop-shadow-lg flex flex-col items-center">
-                                        <span className="text-3xl text-white mb-2">Round {gameState.currentRound}</span>
+                                        <span className="text-3xl text-white mb-2">{t('game.table.round')} {gameState.currentRound}</span>
                                         <span className="block w-full text-center whitespace-nowrap text-[clamp(1.4rem,8vw,3.75rem)] leading-none px-3">
                                             {gameState.gameType === 'RPS' && t('rps.title')}
                                             {gameState.gameType === 'NUMBER' && t('number.title')}
@@ -1640,6 +1725,20 @@ const Game: React.FC = () => {
                                             </motion.div>
                                         )}
 
+                                        <div className="w-full bg-black/20 rounded-xl p-4 mb-6 border border-white/5">
+                                            <div className="grid grid-cols-4 gap-3">
+                                                {[...emojiRowTop, ...emojiRowBottom].map((emoji) => (
+                                                    <button
+                                                        key={emoji}
+                                                        onClick={() => handleEmojiSend(emoji)}
+                                                        className="aspect-square rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition active:scale-95 border border-white/5"
+                                                    >
+                                                        {renderEmojiButton(emoji, 'text-[2.35rem]')}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+
                                         <div className="flex flex-col gap-2">
                                             <motion.button
                                                 initial={{ opacity: 0, y: 20 }}
@@ -1730,7 +1829,7 @@ const Game: React.FC = () => {
                                 <motion.span
                                     key={item.id}
                                     style={{ top: `${item.baseY}%` }}
-                                    className={`absolute -translate-y-1/2 ${item.side === 'left' ? 'left-6' : 'right-6'} inline-flex items-center justify-center w-24 h-24 drop-shadow-[0_8px_18px_rgba(0,0,0,0.35)]`}
+                                    className={`absolute -translate-y-1/2 ${item.side === 'left' ? 'left-6' : 'right-6'} inline-flex items-center justify-center w-28 h-28 drop-shadow-[0_8px_18px_rgba(0,0,0,0.35)]`}
                                     initial={{ opacity: 0, y: 0, x: item.side === 'left' ? -6 : 6, scale: 0.7 }}
                                     animate={{
                                         opacity: 1,
@@ -1741,7 +1840,7 @@ const Game: React.FC = () => {
                                     exit={{ opacity: 0, scale: 0.8 }}
                                     transition={{ duration: 1.1, ease: 'easeOut' }}
                                 >
-                                    {renderEmojiVisual(item.emoji, 'w-11 h-11 object-contain')}
+                                    {renderEmojiBurst(item.emoji, 'w-28 h-28')}
                                 </motion.span>
                             ))}
                         </AnimatePresence>
@@ -1755,7 +1854,7 @@ const Game: React.FC = () => {
                                                 onClick={() => handleEmojiSend(emoji)}
                                                 className="w-16 h-16 rounded-2xl bg-white/5 hover:bg-white/10 transition active:scale-95 flex items-center justify-center"
                                             >
-                                                {renderEmojiVisual(emoji, 'w-10 h-10 object-contain')}
+                                                {renderEmojiButton(emoji, 'text-[2.35rem]')}
                                             </button>
                                         ))}
                                     </div>
@@ -1766,7 +1865,7 @@ const Game: React.FC = () => {
                                                 onClick={() => handleEmojiSend(emoji)}
                                                 className="w-16 h-16 rounded-2xl bg-white/5 hover:bg-white/10 transition active:scale-95 flex items-center justify-center"
                                             >
-                                                {renderEmojiVisual(emoji, 'w-10 h-10 object-contain')}
+                                                {renderEmojiButton(emoji, 'text-[2.35rem]')}
                                             </button>
                                         ))}
                                     </div>

@@ -15,7 +15,7 @@ import LeaderboardModal from '../components/ui/LeaderboardModal';
 import { supabase } from '../lib/supabaseClient';
 import { getTierFromMMR, getTierColor, getTierIcon } from '../utils/rankUtils';
 import LevelBadge from '../components/ui/LevelBadge';
-import { getLevelFromXp } from '../utils/levelUtils';
+import { getLevelFromXp, getLevelProgress, getXpSnapshotStorageKey } from '../utils/levelUtils';
 import { useTutorial } from '../contexts/TutorialContext';
 import SpotlightOverlay from '../components/ui/SpotlightOverlay';
 
@@ -26,6 +26,15 @@ type RadarStats = {
     calculation: number;
     accuracy: number;
     observation: number;
+};
+
+type XpAnimationPayload = {
+    roomId: string;
+    beforeXp: number;
+    beforeLevel: number;
+    afterXp: number;
+    afterLevel: number;
+    xpGain: number;
 };
 
 // Simple Timer Component
@@ -76,6 +85,14 @@ const Home = () => {
     const { showToast } = useUI();
     const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
     const [unreadChatCount, setUnreadChatCount] = useState(0);
+    const [xpAnimation, setXpAnimation] = useState<XpAnimationPayload | null>(null);
+    const [animatedXpValue, setAnimatedXpValue] = useState<number | null>(null);
+    const [levelUpPulse, setLevelUpPulse] = useState(false);
+    const lastHandledXpRoomRef = useRef<string | null>(null);
+    const xpRefreshRetryRef = useRef(0);
+    const [longPressXpExpanded, setLongPressXpExpanded] = useState(false);
+    const longPressTimerRef = useRef<number | null>(null);
+    const longPressTouchRef = useRef(false);
 
     // Refresh profile on mount to get latest MMR after game
     useEffect(() => {
@@ -166,6 +183,124 @@ const Home = () => {
     const countryCode = profile?.country;
     const hasSocialNotifications = pendingRequestsCount > 0 || unreadChatCount > 0;
 
+    // Stable ref for refreshProfile to avoid effect dependency issues
+    const refreshProfileRef = useRef(refreshProfile);
+    useEffect(() => { refreshProfileRef.current = refreshProfile; }, [refreshProfile]);
+
+    useEffect(() => {
+        console.log('[XP-READ] effect fired', { userId: user?.id, hasProfile: !!profile, profileXp: profile?.xp });
+        if (!user || !profile) return;
+
+        const storageKey = getXpSnapshotStorageKey(user.id);
+        let retryTimer: number | null = null;
+
+        const tryProcess = () => {
+            try {
+                const raw = window.sessionStorage.getItem(storageKey);
+                console.log('[XP-READ] raw from storage:', raw);
+                if (!raw) { console.log('[XP-READ] no snapshot in storage'); return; }
+
+                const snapshot = JSON.parse(raw) as { roomId?: string; beforeXp?: number; beforeLevel?: number; capturedAt?: number } | null;
+                if (!snapshot?.roomId || typeof snapshot.beforeXp !== 'number') { console.log('[XP-READ] invalid snapshot'); return; }
+                if (lastHandledXpRoomRef.current === snapshot.roomId) { console.log('[XP-READ] already handled this roomId'); return; }
+
+                const afterXp = Math.max(0, Math.floor(Number(profile.xp ?? 0)));
+                const afterLevel = typeof profile.level === 'number'
+                    ? Math.max(1, Math.floor(profile.level))
+                    : getLevelFromXp(afterXp);
+
+                console.log('[XP-READ] comparing', { beforeXp: snapshot.beforeXp, afterXp, beforeLevel: snapshot.beforeLevel, afterLevel });
+
+                if (afterXp <= snapshot.beforeXp && afterLevel <= (snapshot.beforeLevel ?? 1)) {
+                    const ageMs = Date.now() - Number(snapshot.capturedAt ?? Date.now());
+                    console.log('[XP-READ] xp not yet increased. ageMs:', ageMs, 'retryCount:', xpRefreshRetryRef.current);
+                    // Games last 30-40s+, so allow retries for up to 5 minutes
+                    if (ageMs < 300000 && xpRefreshRetryRef.current < 8) {
+                        xpRefreshRetryRef.current += 1;
+                        console.log('[XP-READ] scheduling retry #', xpRefreshRetryRef.current);
+                        retryTimer = window.setTimeout(() => {
+                            refreshProfileRef.current();
+                        }, 700);
+                        return;
+                    }
+                    // Only expire after 10 minutes
+                    if (ageMs > 600000) {
+                        console.log('[XP-READ] snapshot too old, removing');
+                        window.sessionStorage.removeItem(storageKey);
+                    }
+                    return;
+                }
+
+                console.log('[XP-READ] ✅ XP increased! Triggering animation', { gain: afterXp - snapshot.beforeXp });
+                xpRefreshRetryRef.current = 0;
+                window.sessionStorage.removeItem(storageKey);
+                lastHandledXpRoomRef.current = snapshot.roomId;
+                setXpAnimation({
+                    roomId: snapshot.roomId,
+                    beforeXp: snapshot.beforeXp,
+                    beforeLevel: Math.max(1, Math.floor(snapshot.beforeLevel ?? getLevelFromXp(snapshot.beforeXp))),
+                    afterXp,
+                    afterLevel,
+                    xpGain: Math.max(0, afterXp - snapshot.beforeXp)
+                });
+                setAnimatedXpValue(snapshot.beforeXp);
+            } catch (error) {
+                console.error('[XP-READ] Failed to restore xp snapshot', error);
+            }
+        };
+
+        tryProcess();
+
+        return () => {
+            if (retryTimer) window.clearTimeout(retryTimer);
+        };
+    }, [user, profile]);
+
+    useEffect(() => {
+        if (!xpAnimation) return;
+
+        let frameId = 0;
+        let hideTimer: number | null = null;
+        let lastLevel = xpAnimation.beforeLevel;
+        const duration = Math.min(2600, 1100 + (xpAnimation.xpGain * 18));
+        const startTime = performance.now();
+
+        const tick = (now: number) => {
+            const progress = Math.min((now - startTime) / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            const nextXp = Math.round(xpAnimation.beforeXp + ((xpAnimation.afterXp - xpAnimation.beforeXp) * eased));
+            const nextLevel = getLevelFromXp(nextXp);
+
+            setAnimatedXpValue(nextXp);
+
+            if (nextLevel > lastLevel) {
+                lastLevel = nextLevel;
+                setLevelUpPulse(true);
+                playSound('level_complete');
+                window.setTimeout(() => setLevelUpPulse(false), 850);
+            }
+
+            if (progress < 1) {
+                frameId = window.requestAnimationFrame(tick);
+                return;
+            }
+
+            setAnimatedXpValue(xpAnimation.afterXp);
+            hideTimer = window.setTimeout(() => {
+                setXpAnimation(null);
+                setAnimatedXpValue(null);
+                setLevelUpPulse(false);
+            }, xpAnimation.afterLevel > xpAnimation.beforeLevel ? 2600 : 1800);
+        };
+
+        frameId = window.requestAnimationFrame(tick);
+
+        return () => {
+            if (frameId) window.cancelAnimationFrame(frameId);
+            if (hideTimer) window.clearTimeout(hideTimer);
+        };
+    }, [xpAnimation, playSound]);
+
     // Streak timer
     const streakCount = profile?.rank_win_streak ?? 0;
     const streakUpdatedAt = profile?.rank_streak_updated_at;
@@ -186,6 +321,34 @@ const Home = () => {
     const streakActive = streakCount >= 1 && streakSecondsLeft > 0;
     const streakMinutes = Math.floor(streakSecondsLeft / 60);
     const streakSeconds = streakSecondsLeft % 60;
+    const displayedXp = animatedXpValue ?? Math.max(0, Math.floor(Number(profile?.xp ?? 0)));
+    const displayedLevel = typeof profile?.level === 'number' && animatedXpValue === null
+        ? Math.max(1, Math.floor(profile.level))
+        : getLevelFromXp(displayedXp);
+    const displayedXpProgress = getLevelProgress(displayedXp);
+    const shouldShowXpPanel = Boolean(xpAnimation) || longPressXpExpanded;
+    const didLevelUpInAnimation = Boolean(xpAnimation && xpAnimation.afterLevel > xpAnimation.beforeLevel);
+    const staticXp = Math.max(0, Math.floor(Number(profile?.xp ?? 0)));
+    const staticLevel = typeof profile?.level === 'number' ? Math.max(1, Math.floor(profile.level)) : getLevelFromXp(staticXp);
+    const staticXpProgress = getLevelProgress(staticXp);
+
+    const handleProfilePressStart = () => {
+        if (xpAnimation) return; // animation already showing
+        longPressTouchRef.current = true;
+        longPressTimerRef.current = window.setTimeout(() => {
+            if (longPressTouchRef.current) {
+                setLongPressXpExpanded(true);
+            }
+        }, 300);
+    };
+    const handleProfilePressEnd = () => {
+        longPressTouchRef.current = false;
+        if (longPressTimerRef.current) {
+            window.clearTimeout(longPressTimerRef.current);
+            longPressTimerRef.current = null;
+        }
+        setLongPressXpExpanded(false);
+    };
     // Next milestone: 3 -> +5, 6 -> +10, 9 -> +15
     const nextMilestone = streakCount < 3 ? 3 : streakCount < 6 ? 6 : streakCount < 9 ? 9 : 0;
     const nextBonusMMR = nextMilestone === 3 ? 5 : nextMilestone === 6 ? 10 : nextMilestone === 9 ? 15 : 0;
@@ -225,15 +388,15 @@ const Home = () => {
                 if (data) {
                     setMatchedOpProfile({ nickname: data.nickname, avatar_url: data.avatar_url, country: data.country, mmr: data.mmr });
                 } else {
-                    setMatchedOpProfile({ nickname: 'Player', avatar_url: null });
+                    setMatchedOpProfile({ nickname: t('game.unknownPlayer'), avatar_url: null });
                 }
             } else {
                 const { data } = await supabase.from('profiles').select('*').eq('id', matchedOpponentId).single();
-                setMatchedOpProfile(data || { nickname: 'Opponent', avatar_url: null });
+                setMatchedOpProfile(data || { nickname: t('game.opponent'), avatar_url: null });
             }
         };
         fetchOpProfile();
-    }, [matchedOpponentId]);
+    }, [matchedOpponentId, t]);
 
     useEffect(() => {
         if (!matchedOpponentId?.startsWith('bot_') || !profile) {
@@ -518,48 +681,123 @@ const Home = () => {
                         animate={{ opacity: 1, y: 0 }}
                         className="absolute top-[calc(env(safe-area-inset-top)+0.5rem+var(--home-top-offset))] left-4 z-50 flex items-center"
                     >
-                        <div className="flex items-center gap-4 bg-gray-800/80 backdrop-blur-md p-2 pr-6 rounded-full border border-gray-700 shadow-lg cursor-pointer hover:bg-gray-800 transition-colors" onClick={() => navigate('/profile')}>
-                            <div className="relative w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 p-[2px]">
-                                <div className="w-full h-full rounded-full bg-gray-900 flex items-center justify-center overflow-hidden">
-                                    {avatarUrl ? (
-                                        <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-                                    ) : (
-                                        <User className="w-6 h-6 md:w-7 md:h-7 text-gray-400" />
+                        <motion.div
+                            layout
+                            transition={{ type: 'spring', stiffness: 240, damping: 24 }}
+                            className={`bg-gray-800/80 backdrop-blur-md border shadow-lg cursor-pointer hover:bg-gray-800 transition-colors select-none ${shouldShowXpPanel
+                                ? 'w-[min(22rem,calc(100vw-2rem))] rounded-[1.75rem] border-blue-400/35 px-4 py-3 shadow-[0_0_28px_rgba(59,130,246,0.22)]'
+                                : 'rounded-full border-gray-700 p-2 pr-6'
+                                }`}
+                            onClick={() => { if (!longPressXpExpanded) navigate('/profile'); }}
+                            onTouchStart={handleProfilePressStart}
+                            onTouchEnd={handleProfilePressEnd}
+                            onTouchCancel={handleProfilePressEnd}
+                            onMouseDown={handleProfilePressStart}
+                            onMouseUp={handleProfilePressEnd}
+                            onMouseLeave={handleProfilePressEnd}
+                        >
+                            <div className="flex items-center gap-4">
+                                <div className="relative w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 p-[2px]">
+                                    <div className="w-full h-full rounded-full bg-gray-900 flex items-center justify-center overflow-hidden">
+                                        {avatarUrl ? (
+                                            <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <User className="w-6 h-6 md:w-7 md:h-7 text-gray-400" />
+                                        )}
+                                    </div>
+                                    <motion.div
+                                        animate={levelUpPulse ? { scale: [1, 1.24, 1], rotate: [0, -8, 8, 0] } : { scale: 1, rotate: 0 }}
+                                        transition={{ duration: 0.7, ease: 'easeOut' }}
+                                        className="absolute -bottom-1 -right-1"
+                                    >
+                                        <LevelBadge level={shouldShowXpPanel ? displayedLevel : level} size="sm" className="ring-2 ring-gray-900" />
+                                    </motion.div>
+                                    {hasSocialNotifications && (
+                                        <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-gray-900" aria-hidden="true"></span>
                                     )}
                                 </div>
-                                <LevelBadge level={level} size="sm" className="absolute -bottom-1 -right-1 ring-2 ring-gray-900" />
-                                {hasSocialNotifications && (
-                                    <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-gray-900" aria-hidden="true"></span>
-                                )}
-                            </div>
-                            <div>
-                                <div className="font-bold text-white text-base md:text-lg leading-none flex items-center gap-2">
-                                    <Flag code={countryCode} />
-                                    {nickname}
-                                    {shouldSuggestNicknameSetup && (
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                playSound('click');
-                                                handleOpenNicknameModal();
-                                            }}
-                                            className="relative w-4 h-4 rounded-full bg-red-500 ring-2 ring-gray-900 animate-pulse hover:scale-110 transition-transform"
-                                            aria-label={t('profile.nicknameSetupTitle', '닉네임 설정')}
-                                        >
-                                            <span className="absolute inset-0 rounded-full bg-red-400/60 animate-ping" />
-                                        </button>
-                                    )}
-                                </div>
-                                <div className="mt-1.5 flex gap-3 items-center">
-                                    <div className={`px-2 py-0.5 md:px-2.5 md:py-1 rounded-lg text-xs md:text-sm font-black bg-gradient-to-r ${tierColor} text-black flex items-center gap-1 shadow-md transform hover:scale-105 transition-transform`}>
-                                        <TierIcon className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                                        <span>{tier}</span>
-                                        <span className="opacity-60">|</span>
-                                        <span className="font-mono">{rank}</span>
+                                <div className="min-w-0 flex-1">
+                                    <div className="font-bold text-white text-base md:text-lg leading-none flex items-center gap-2">
+                                        <Flag code={countryCode} />
+                                        <span className="truncate">{nickname}</span>
+                                        {shouldSuggestNicknameSetup && (
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    playSound('click');
+                                                    handleOpenNicknameModal();
+                                                }}
+                                                className="relative w-4 h-4 rounded-full bg-red-500 ring-2 ring-gray-900 animate-pulse hover:scale-110 transition-transform"
+                                                aria-label={t('profile.nicknameSetupTitle', '닉네임 설정')}
+                                            >
+                                                <span className="absolute inset-0 rounded-full bg-red-400/60 animate-ping" />
+                                            </button>
+                                        )}
+                                    </div>
+                                    <div className="mt-1.5 flex gap-3 items-center">
+                                        <div className={`px-2 py-0.5 md:px-2.5 md:py-1 rounded-lg text-xs md:text-sm font-black bg-gradient-to-r ${tierColor} text-black flex items-center gap-1 shadow-md transform hover:scale-105 transition-transform`}>
+                                            <TierIcon className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                                            <span>{tier}</span>
+                                            <span className="opacity-60">|</span>
+                                            <span className="font-mono">{rank}</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+
+                            <AnimatePresence initial={false}>
+                                {shouldShowXpPanel && (
+                                    <motion.div
+                                        key="xp-feedback"
+                                        initial={{ opacity: 0, y: -8, height: 0 }}
+                                        animate={{ opacity: 1, y: 0, height: 'auto' }}
+                                        exit={{ opacity: 0, y: -8, height: 0 }}
+                                        transition={{ duration: 0.28, ease: 'easeOut' }}
+                                        className="overflow-hidden"
+                                    >
+                                        <div className="mt-3 border-t border-white/10 pt-3">
+                                            <div className="mb-2 flex items-center justify-between gap-3">
+                                                <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.22em] text-blue-200/80">
+                                                    <span>XP</span>
+                                                    <span className="text-white/70 normal-case tracking-normal">
+                                                        {t('home.levelProgressLevel', 'Lv. {{level}}', { level: xpAnimation ? displayedLevel : staticLevel })}
+                                                    </span>
+                                                </div>
+                                                {xpAnimation && (
+                                                    <div className="text-sm font-black text-emerald-300">
+                                                        +{xpAnimation.xpGain} XP
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="h-3 overflow-hidden rounded-full bg-white/10">
+                                                <motion.div
+                                                    className={`h-full rounded-full ${didLevelUpInAnimation ? 'bg-gradient-to-r from-emerald-300 via-blue-400 to-violet-400' : 'bg-gradient-to-r from-blue-400 to-cyan-300'}`}
+                                                    animate={{ width: `${Math.max(6, (xpAnimation ? displayedXpProgress.ratio : staticXpProgress.ratio) * 100)}%` }}
+                                                    transition={{ duration: 0.18, ease: 'easeOut' }}
+                                                />
+                                            </div>
+                                            <div className="mt-2 flex items-center justify-between text-[11px] font-mono text-gray-300">
+                                                <span>{(xpAnimation ? displayedXpProgress : staticXpProgress).progressXp} / {(xpAnimation ? displayedXpProgress : staticXpProgress).requiredXp}</span>
+                                                <span>{xpAnimation ? displayedXp : staticXp}</span>
+                                            </div>
+                                            <AnimatePresence>
+                                                {levelUpPulse && (
+                                                    <motion.div
+                                                        initial={{ opacity: 0, y: 6, scale: 0.96 }}
+                                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                        exit={{ opacity: 0, y: -6, scale: 0.96 }}
+                                                        transition={{ duration: 0.3, ease: 'easeOut' }}
+                                                        className="mt-3 inline-flex items-center rounded-full border border-yellow-300/40 bg-yellow-300/15 px-3 py-1 text-xs font-black uppercase tracking-[0.24em] text-yellow-200 shadow-[0_0_18px_rgba(250,204,21,0.2)]"
+                                                    >
+                                                        {t('home.levelUp', 'LEVEL UP!')}
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </motion.div>
                     </motion.div>
 
                     {/* Pencil Display (Top Right) */}
@@ -651,10 +889,10 @@ const Home = () => {
                 <div className="fixed inset-0 z-[125] bg-black/75 backdrop-blur-sm flex items-center justify-center px-4">
                     <div className="w-full max-w-md rounded-3xl border border-yellow-400/30 bg-gray-900/95 p-6 shadow-2xl">
                         <h2 className="text-xl font-black text-white mb-2">
-                            진행 중인 게임이 있습니다
+                            {t('home.resumeMatchTitle')}
                         </h2>
                         <p className="text-sm text-gray-300 mb-5">
-                            홈으로 돌아왔어요. 진행 중이던 매치로 복귀할까요?
+                            {t('home.resumeMatchDesc')}
                         </p>
                         <div className="grid grid-cols-2 gap-2">
                             <button
@@ -665,7 +903,7 @@ const Home = () => {
                                 }}
                                 className="rounded-xl border border-gray-600 bg-transparent py-3 font-semibold text-gray-300 transition-colors hover:bg-gray-800"
                             >
-                                나중에
+                                {t('home.resumeLater')}
                             </button>
                             <button
                                 onClick={() => {
@@ -680,7 +918,7 @@ const Home = () => {
                                 }}
                                 className="rounded-xl bg-yellow-500 py-3 font-black text-black transition-colors hover:bg-yellow-400"
                             >
-                                복귀
+                                {t('home.resumeNow')}
                             </button>
                         </div>
                     </div>

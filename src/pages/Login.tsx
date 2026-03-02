@@ -24,7 +24,7 @@ const Login = () => {
         if (!lower.includes('banned') && !lower.includes('정지')) return false;
         const untilMatch = message.match(/until\\s+([0-9]{4}-[0-9]{2}-[0-9]{2}(?:[ t][0-9:.+-zZ]+)?)/i);
         setBanModal({
-            message: '계정이 정지되었습니다.',
+            message: t('login.bannedMessage'),
             bannedUntil: untilMatch?.[1] || null
         });
         return true;
@@ -45,14 +45,14 @@ const Login = () => {
             const parsed = JSON.parse(raw);
             if (parsed?.isBanned || String(parsed?.message || '').toLowerCase().includes('banned')) {
                 setBanModal({
-                    message: '계정이 정지되었습니다.',
+                    message: t('login.bannedMessage'),
                     bannedUntil: parsed?.bannedUntil || null
                 });
             }
         } catch {
             // ignore
         }
-    }, []);
+    }, [t]);
 
     const handleGoogleLogin = async () => {
         playSound('click');
@@ -96,7 +96,7 @@ const Login = () => {
             console.error(error);
             const message = (error as any)?.message || t('common.error');
             if (!openBanModalIfNeeded(message)) {
-                showToast(message, message.includes('잠시 후') ? 'info' : 'error');
+                showToast(message, message.includes(t('login.tryLaterKeyword')) ? 'info' : 'error');
             }
             setIsLoggingIn(false);
         }
@@ -206,15 +206,15 @@ const Login = () => {
             {banModal && (
                 <div className="fixed inset-0 z-[130] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
                     <div className="w-full max-w-md rounded-2xl border border-red-500/30 bg-gray-900 p-5 shadow-2xl">
-                        <h3 className="text-xl font-bold text-red-300 mb-2">계정 정지 안내</h3>
+                        <h3 className="text-xl font-bold text-red-300 mb-2">{t('login.bannedTitle')}</h3>
                         <p className="text-sm text-white/85">{banModal.message}</p>
                         <p className="text-sm text-white/80 mt-2">
                             {banModal.bannedUntil
-                                ? `정지 만료 예정: ${new Date(banModal.bannedUntil).toLocaleString()}`
-                                : '정지 기간은 관리자 판단에 따라 결정됩니다.'}
+                                ? t('login.bannedUntil', { date: new Date(banModal.bannedUntil).toLocaleString() })
+                                : t('login.bannedDurationUnknown')}
                         </p>
                         <p className="text-xs text-white/60 mt-3">
-                            정지 해제 요청(이의제기)은 고객센터로 문의해 주세요.
+                            {t('login.bannedAppeal')}
                         </p>
                         <div className="mt-4 flex gap-2">
                             <button
@@ -224,7 +224,7 @@ const Login = () => {
                                 }}
                                 className="flex-1 rounded-xl bg-blue-600 hover:bg-blue-500 px-4 py-2.5 text-sm font-semibold"
                             >
-                                문의하기
+                                {t('login.contactSupport')}
                             </button>
                             <button
                                 onClick={() => {

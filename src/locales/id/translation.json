@@ -154,13 +154,19 @@
     "purchaseRewardDesc": "Item yang dibeli sudah diberikan.",
     "removeAdsApplied": "Penghapusan iklan telah diterapkan.",
     "purchaseFail": "Pembelian gagal.",
-    "billingUnavailable": "Penagihan tidak didukung di perangkat ini."
+    "billingUnavailable": "Penagihan tidak didukung di perangkat ini.",
+    "sessionRefreshFailed": "Failed to refresh session: {{message}}",
+    "sessionExpired": "Your login session has expired. Please sign in again.",
+    "purchaseFailWithReason": "Purchase failed: {{message}}"
   },
   "leaderboard": {
     "button": "Peringkat",
     "title": "Peringkat",
     "global": "Global",
-    "country": "Negara"
+    "country": "Negara",
+    "myRank": "MY RANK",
+    "mmrLabel": "MMR",
+    "avatarPreview": "{{nickname}} avatar"
   },
   "ad": {
     "remaining": "Sisa hari ini: {{count}}/{{limit}}",
@@ -215,7 +221,15 @@
     "viewPrivacyPolicy": "Lihat Kebijakan Privasi",
     "tutorial": "Tutorial",
     "tutorialDesc": "Jika ingin melihat kembali cara menggunakan aplikasi, buka lagi tutorialnya.",
-    "viewTutorial": "Lihat tutorial lagi"
+    "viewTutorial": "Lihat tutorial lagi",
+    "notificationNativeOnly": "Notification settings are only available in the mobile app.",
+    "notificationOff": "Notifications turned off.",
+    "notificationDeniedIos": "Please allow notifications in iPhone Settings > Notifications.",
+    "notificationDeniedAndroid": "Please allow notifications in Android Settings > Notifications.",
+    "notificationOn": "Notifications turned on.",
+    "notifications": "Notifications",
+    "pushNotifications": "Push/Local Notifications",
+    "notificationNativeHint": "Notification toggle is disabled on the web."
   },
   "report": {
     "button": "Laporkan",
@@ -270,7 +284,9 @@
     "updateSuccess": "Profil berhasil diperbarui!",
     "updateFail": "Gagal memperbarui profil",
     "deleteSuccess": "Akun berhasil dihapus.",
-    "deleteFail": "Gagal menghapus akun."
+    "deleteFail": "Gagal menghapus akun.",
+    "guestDescIOS": "Guest accounts can be lost if you sign out, delete the app, or change devices. Link an Apple or Google account to keep your progress. Also, guest accounts may be deleted after 7 days of inactivity.",
+    "linkApple": "Link Apple Account"
   },
   "game": {
     "waiting": "Menunggu game...",
@@ -303,7 +319,19 @@
       "win": "MENANG",
       "lose": "KALAH",
       "draw": "SERI"
-    }
+    },
+    "timeLeft": "Time Left",
+    "connectionLost": "Connection lost. Reconnecting...",
+    "connectionUnstable": "Connection is unstable...",
+    "connecting": "Connecting...",
+    "aiBot": "AI Bot",
+    "me": "Me",
+    "disconnected": "DISCONNECT",
+    "devGhostPreview": "Dev Ghost Preview",
+    "devGhostPreviewGame": "Game",
+    "devGhostPreviewRoundHighscore": "Round Highscore",
+    "devGhostPreviewBotGhost": "Bot Ghost",
+    "devGhostPreviewGap": "Gap"
   },
   "matchmaking": {
     "searching": "Mencari...",
@@ -490,6 +518,24 @@
     "title": "Pembaruan Diperlukan",
     "message": "Versi baru telah tersedia. Silakan perbarui untuk pengalaman terbaik.",
     "button": "Perbarui",
-    "storeNotReady": "Toko sedang disiapkan."
+    "storeNotReady": "Toko sedang disiapkan.",
+    "versionInfo": "Current: {{current}} / Minimum: {{min}}"
+  },
+  "home": {
+    "resumeMatchTitle": "You have a game in progress",
+    "resumeMatchDesc": "You came back home. Do you want to return to your ongoing match?",
+    "resumeLater": "Later",
+    "resumeNow": "Resume",
+    "levelProgressLevel": "Lv. {{level}}",
+    "levelUp": "LEVEL UP!"
+  },
+  "login": {
+    "bannedTitle": "Account Suspended",
+    "bannedMessage": "Your account has been suspended.",
+    "bannedUntil": "Suspension ends: {{date}}",
+    "bannedDurationUnknown": "The suspension period is determined by the administrator.",
+    "bannedAppeal": "If you want to appeal the suspension, please contact support.",
+    "contactSupport": "Contact Support",
+    "tryLaterKeyword": "later"
   }
 }

@@ -154,13 +154,19 @@
     "purchaseRewardDesc": "Purchased items have been delivered.",
     "removeAdsApplied": "Ad removal has been applied.",
     "purchaseFail": "Purchase failed.",
-    "billingUnavailable": "Billing not supported on this device."
+    "billingUnavailable": "Billing not supported on this device.",
+    "sessionRefreshFailed": "Failed to refresh session: {{message}}",
+    "sessionExpired": "Your login session has expired. Please sign in again.",
+    "purchaseFailWithReason": "Purchase failed: {{message}}"
   },
   "leaderboard": {
     "button": "Ranking",
     "title": "Ranking",
     "global": "Global",
-    "country": "Country"
+    "country": "Country",
+    "myRank": "MY RANK",
+    "mmrLabel": "MMR",
+    "avatarPreview": "{{nickname}} avatar"
   },
   "ad": {
     "remaining": "Remaining today: {{count}}/{{limit}}",
@@ -210,12 +216,20 @@
     "restorePurchasesFail": "Failed to restore purchases.",
     "restorePurchasesUnavailable": "Billing not supported on this device.",
     "restorePurchasesEmpty": "No purchases to restore.",
+    "notificationNativeOnly": "Notification settings are only available in the mobile app.",
+    "notificationOff": "Notifications turned off.",
+    "notificationDeniedIos": "Please allow notifications in iPhone Settings > Notifications.",
+    "notificationDeniedAndroid": "Please allow notifications in Android Settings > Notifications.",
+    "notificationOn": "Notifications turned on.",
     "privacyPolicy": "Privacy Policy",
     "privacyPolicyDesc": "Review how we handle personal data for the service.",
     "viewPrivacyPolicy": "View Privacy Policy",
     "tutorial": "Tutorial",
     "tutorialDesc": "If you want to review how to use the app, watch the tutorial again.",
-    "viewTutorial": "View Tutorial Again"
+    "viewTutorial": "View Tutorial Again",
+    "notifications": "Notifications",
+    "pushNotifications": "Push/Local Notifications",
+    "notificationNativeHint": "Notification toggle is disabled on the web."
   },
   "report": {
     "button": "Report",
@@ -297,6 +311,18 @@
     "total": "TOTAL",
     "great": "Great!",
     "tier": "Tier",
+    "timeLeft": "Time Left",
+    "connectionLost": "Connection lost. Reconnecting...",
+    "connectionUnstable": "Connection is unstable...",
+    "connecting": "Connecting...",
+    "aiBot": "AI Bot",
+    "me": "Me",
+    "disconnected": "DISCONNECT",
+    "devGhostPreview": "Dev Ghost Preview",
+    "devGhostPreviewGame": "Game",
+    "devGhostPreviewRoundHighscore": "Round Highscore",
+    "devGhostPreviewBotGhost": "Bot Ghost",
+    "devGhostPreviewGap": "Gap",
     "table": {
       "round": "Round",
       "myScore": "My Score",
@@ -318,6 +344,14 @@
     "range": "Range",
     "rankLevelRequired": "Reach level {{level}} to unlock Rank.",
     "searchingOpponent": "Searching for opponent..."
+  },
+  "home": {
+    "resumeMatchTitle": "You have a game in progress",
+    "resumeMatchDesc": "You came back home. Do you want to return to your ongoing match?",
+    "resumeLater": "Later",
+    "resumeNow": "Resume",
+    "levelProgressLevel": "Lv. {{level}}",
+    "levelUp": "LEVEL UP!"
   },
   "rps": {
     "ready": "READY...",
@@ -492,6 +526,16 @@
     "title": "Update Required",
     "message": "A new version is available. Please update for the best experience.",
     "button": "Update",
-    "storeNotReady": "Store is being prepared."
+    "storeNotReady": "Store is being prepared.",
+    "versionInfo": "Current: {{current}} / Minimum: {{min}}"
+  },
+  "login": {
+    "bannedTitle": "Account Suspended",
+    "bannedMessage": "Your account has been suspended.",
+    "bannedUntil": "Suspension ends: {{date}}",
+    "bannedDurationUnknown": "The suspension period is determined by the administrator.",
+    "bannedAppeal": "If you want to appeal the suspension, please contact support.",
+    "contactSupport": "Contact Support",
+    "tryLaterKeyword": "later"
   }
 }

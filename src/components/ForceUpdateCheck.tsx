@@ -87,7 +87,7 @@ const ForceUpdateCheck = () => {
                     {t('update.message', '새로운 버전이 출시되었습니다. 원활한 플레이를 위해 업데이트해주세요.')}
                 </p>
                 <p className="text-gray-500 text-xs mb-6">
-                    현재: {debugInfo?.current || '?'} / 최소: {debugInfo?.min || '?'}
+                    {t('update.versionInfo', { current: debugInfo?.current || '?', min: debugInfo?.min || '?' })}
                 </p>
                 {storeUrl ? (
                     <button

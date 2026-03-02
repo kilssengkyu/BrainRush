@@ -154,13 +154,19 @@
     "purchaseRewardDesc": "Vật phẩm đã mua đã được cấp.",
     "removeAdsApplied": "Đã áp dụng xóa quảng cáo.",
     "purchaseFail": "Mua thất bại.",
-    "billingUnavailable": "Thiết bị này không hỗ trợ thanh toán."
+    "billingUnavailable": "Thiết bị này không hỗ trợ thanh toán.",
+    "sessionRefreshFailed": "Failed to refresh session: {{message}}",
+    "sessionExpired": "Your login session has expired. Please sign in again.",
+    "purchaseFailWithReason": "Purchase failed: {{message}}"
   },
   "leaderboard": {
     "button": "Bảng xếp hạng",
     "title": "Bảng xếp hạng",
     "global": "Toàn cầu",
-    "country": "Quốc gia"
+    "country": "Quốc gia",
+    "myRank": "MY RANK",
+    "mmrLabel": "MMR",
+    "avatarPreview": "{{nickname}} avatar"
   },
   "ad": {
     "remaining": "Còn lại hôm nay: {{count}}/{{limit}}",
@@ -215,7 +221,15 @@
     "viewPrivacyPolicy": "Xem chính sách quyền riêng tư",
     "tutorial": "Hướng dẫn",
     "tutorialDesc": "Nếu muốn xem lại cách sử dụng ứng dụng, hãy mở lại phần hướng dẫn.",
-    "viewTutorial": "Xem lại hướng dẫn"
+    "viewTutorial": "Xem lại hướng dẫn",
+    "notificationNativeOnly": "Notification settings are only available in the mobile app.",
+    "notificationOff": "Notifications turned off.",
+    "notificationDeniedIos": "Please allow notifications in iPhone Settings > Notifications.",
+    "notificationDeniedAndroid": "Please allow notifications in Android Settings > Notifications.",
+    "notificationOn": "Notifications turned on.",
+    "notifications": "Notifications",
+    "pushNotifications": "Push/Local Notifications",
+    "notificationNativeHint": "Notification toggle is disabled on the web."
   },
   "report": {
     "button": "Báo cáo",
@@ -270,7 +284,9 @@
     "updateSuccess": "Cập nhật hồ sơ thành công!",
     "updateFail": "Cập nhật hồ sơ thất bại",
     "deleteSuccess": "Đã xóa tài khoản thành công.",
-    "deleteFail": "Xóa tài khoản thất bại."
+    "deleteFail": "Xóa tài khoản thất bại.",
+    "guestDescIOS": "Guest accounts can be lost if you sign out, delete the app, or change devices. Link an Apple or Google account to keep your progress. Also, guest accounts may be deleted after 7 days of inactivity.",
+    "linkApple": "Link Apple Account"
   },
   "game": {
     "waiting": "Đang chờ trận...",
@@ -303,7 +319,19 @@
       "win": "THẮNG",
       "lose": "THUA",
       "draw": "HÒA"
-    }
+    },
+    "timeLeft": "Time Left",
+    "connectionLost": "Connection lost. Reconnecting...",
+    "connectionUnstable": "Connection is unstable...",
+    "connecting": "Connecting...",
+    "aiBot": "AI Bot",
+    "me": "Me",
+    "disconnected": "DISCONNECT",
+    "devGhostPreview": "Dev Ghost Preview",
+    "devGhostPreviewGame": "Game",
+    "devGhostPreviewRoundHighscore": "Round Highscore",
+    "devGhostPreviewBotGhost": "Bot Ghost",
+    "devGhostPreviewGap": "Gap"
   },
   "matchmaking": {
     "searching": "Đang tìm...",
@@ -490,6 +518,24 @@
     "title": "Cần cập nhật",
     "message": "Phiên bản mới đã có sẵn. Vui lòng cập nhật để có trải nghiệm tốt nhất.",
     "button": "Cập nhật",
-    "storeNotReady": "Cửa hàng đang được chuẩn bị."
+    "storeNotReady": "Cửa hàng đang được chuẩn bị.",
+    "versionInfo": "Current: {{current}} / Minimum: {{min}}"
+  },
+  "home": {
+    "resumeMatchTitle": "You have a game in progress",
+    "resumeMatchDesc": "You came back home. Do you want to return to your ongoing match?",
+    "resumeLater": "Later",
+    "resumeNow": "Resume",
+    "levelProgressLevel": "Lv. {{level}}",
+    "levelUp": "LEVEL UP!"
+  },
+  "login": {
+    "bannedTitle": "Account Suspended",
+    "bannedMessage": "Your account has been suspended.",
+    "bannedUntil": "Suspension ends: {{date}}",
+    "bannedDurationUnknown": "The suspension period is determined by the administrator.",
+    "bannedAppeal": "If you want to appeal the suspension, please contact support.",
+    "contactSupport": "Contact Support",
+    "tryLaterKeyword": "later"
   }
 }

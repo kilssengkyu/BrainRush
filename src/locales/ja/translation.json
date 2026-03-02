@@ -1,5 +1,4 @@
 {
-  "title": "BrainRush",
   "common": {
     "cancel": "キャンセル",
     "confirm": "確認",
@@ -55,7 +54,8 @@
     "settings": "設定",
     "login": "ログイン",
     "logout": "ログアウト",
-    "profile": "プロフィール"
+    "profile": "プロフィール",
+    "all": "All"
   },
   "shop": {
     "title": "ショップ",
@@ -101,7 +101,10 @@
     "purchaseRewardDesc": "購入したアイテムが支給されました。",
     "removeAdsApplied": "広告削除が適用されました。",
     "purchaseFail": "購入に失敗しました。",
-    "billingUnavailable": "この端末では購入に対応していません。"
+    "billingUnavailable": "この端末では購入に対応していません。",
+    "sessionRefreshFailed": "Failed to refresh session: {{message}}",
+    "sessionExpired": "Your login session has expired. Please sign in again.",
+    "purchaseFailWithReason": "Purchase failed: {{message}}"
   },
   "social": {
     "friends": "フレンド",
@@ -156,7 +159,10 @@
     "button": "ランキング",
     "title": "ランキング",
     "global": "全体",
-    "country": "国別"
+    "country": "国別",
+    "myRank": "MY RANK",
+    "mmrLabel": "MMR",
+    "avatarPreview": "{{nickname}} avatar"
   },
   "ad": {
     "remaining": "本日の残り: {{count}}/{{limit}}",
@@ -193,8 +199,6 @@
     "sound": "効果音",
     "masterVolume": "マスターボリューム",
     "vibration": "バイブ",
-    "volume": "音量",
-    "back": "戻る",
     "deleteAccount": "アカウント削除",
     "deleteAccountConfirm": "本当にアカウントを削除しますか？永久に削除され、取り消せません。",
     "logoutConfirm": "本当にログアウトしますか？",
@@ -209,7 +213,15 @@
     "viewPrivacyPolicy": "プライバシーポリシーを見る",
     "tutorial": "チュートリアル",
     "tutorialDesc": "アプリの使い方をもう一度確認したい場合は、チュートリアルを再表示してください。",
-    "viewTutorial": "チュートリアルをもう一度見る"
+    "viewTutorial": "チュートリアルをもう一度見る",
+    "notificationNativeOnly": "Notification settings are only available in the mobile app.",
+    "notificationOff": "Notifications turned off.",
+    "notificationDeniedIos": "Please allow notifications in iPhone Settings > Notifications.",
+    "notificationDeniedAndroid": "Please allow notifications in Android Settings > Notifications.",
+    "notificationOn": "Notifications turned on.",
+    "notifications": "Notifications",
+    "pushNotifications": "Push/Local Notifications",
+    "notificationNativeHint": "Notification toggle is disabled on the web."
   },
   "report": {
     "button": "通報",
@@ -231,7 +243,6 @@
     "myTime": "タイム",
     "rank": "ランク",
     "normal": "ノーマル",
-    "rankScore": "ランクスコア",
     "unknownPlayer": "不明なプレイヤー",
     "guest": "ゲスト",
     "you": "あなた",
@@ -253,7 +264,19 @@
       "win": "勝",
       "lose": "負",
       "draw": "分"
-    }
+    },
+    "timeLeft": "Time Left",
+    "connectionLost": "Connection lost. Reconnecting...",
+    "connectionUnstable": "Connection is unstable...",
+    "connecting": "Connecting...",
+    "aiBot": "AI Bot",
+    "me": "Me",
+    "disconnected": "DISCONNECT",
+    "devGhostPreview": "Dev Ghost Preview",
+    "devGhostPreviewGame": "Game",
+    "devGhostPreviewRoundHighscore": "Round Highscore",
+    "devGhostPreviewBotGhost": "Bot Ghost",
+    "devGhostPreviewGap": "Gap"
   },
   "user": {
     "level": "レベル",
@@ -301,7 +324,10 @@
     "updateSuccess": "更新成功",
     "updateFail": "更新失敗",
     "deleteSuccess": "削除成功",
-    "deleteFail": "削除失敗"
+    "deleteFail": "削除失敗",
+    "guestDescIOS": "Guest accounts can be lost if you sign out, delete the app, or change devices. Link an Apple or Google account to keep your progress. Also, guest accounts may be deleted after 7 days of inactivity.",
+    "linkApple": "Link Apple Account",
+    "noRecord": "No match history."
   },
   "matchmaking": {
     "searching": "検索中...",
@@ -488,6 +514,28 @@
     "title": "アップデートが必要です",
     "message": "新しいバージョンがリリースされました。快適なプレイのためアップデートしてください。",
     "button": "アップデート",
-    "storeNotReady": "ストア準備中です。"
+    "storeNotReady": "ストア準備中です。",
+    "versionInfo": "Current: {{current}} / Minimum: {{min}}"
+  },
+  "home": {
+    "resumeMatchTitle": "You have a game in progress",
+    "resumeMatchDesc": "You came back home. Do you want to return to your ongoing match?",
+    "resumeLater": "Later",
+    "resumeNow": "Resume",
+    "levelProgressLevel": "Lv. {{level}}",
+    "levelUp": "LEVEL UP!"
+  },
+  "login": {
+    "bannedTitle": "Account Suspended",
+    "bannedMessage": "Your account has been suspended.",
+    "bannedUntil": "Suspension ends: {{date}}",
+    "bannedDurationUnknown": "The suspension period is determined by the administrator.",
+    "bannedAppeal": "If you want to appeal the suspension, please contact support.",
+    "contactSupport": "Contact Support",
+    "tryLaterKeyword": "later"
+  },
+  "app": {
+    "title": "BrainRush",
+    "subtitle": "Speed & Intelligence"
   }
 }
