@@ -329,6 +329,7 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
                         const finalScore = scoreRef.current;
                         if (currentGameType && finalScore > 0 && timeline.length > 0) {
                             supabase.rpc('save_ghost_score', {
+                                p_room_id: roomId,
                                 p_game_type: currentGameType,
                                 p_timeline: timeline,
                                 p_final_score: finalScore

@@ -358,9 +358,14 @@ END;
 $_$;
 
 -- =============================
--- 3. save_ghost_score: Add auth check + score validation
+-- 3. save_ghost_score: Session-validated ghost score saving
 -- =============================
+-- Add session tracking column to prevent duplicate saves
+ALTER TABLE ghost_scores ADD COLUMN IF NOT EXISTS session_id uuid;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_ghost_session_unique ON ghost_scores(session_id) WHERE session_id IS NOT NULL;
+
 CREATE OR REPLACE FUNCTION save_ghost_score(
+  p_room_id uuid,
   p_game_type text,
   p_timeline jsonb,
   p_final_score int
@@ -368,24 +373,51 @@ CREATE OR REPLACE FUNCTION save_ghost_score(
 LANGUAGE plpgsql SECURITY DEFINER
 SET search_path TO 'public'
 AS $$
+DECLARE
+  v_caller text;
+  v_p1 text;
+  v_p2 text;
+  v_session_type text;
+  v_status text;
 BEGIN
-  -- Must be authenticated
-  IF auth.uid() IS NULL THEN
+  -- 1. Must be authenticated
+  v_caller := auth.uid()::text;
+  IF v_caller IS NULL THEN
     RAISE EXCEPTION 'Not authorized';
   END IF;
 
-  -- Only save meaningful scores within reasonable range
+  -- 2. Validate score range
   IF p_final_score <= 0 OR p_final_score > 50000 THEN
     RETURN;
   END IF;
 
-  -- Validate timeline is a non-empty array
+  -- 3. Validate timeline format
   IF p_timeline IS NULL OR jsonb_typeof(p_timeline) <> 'array' OR jsonb_array_length(p_timeline) = 0 THEN
     RETURN;
   END IF;
 
-  INSERT INTO ghost_scores (game_type, score_timeline, final_score)
-  VALUES (p_game_type, p_timeline, p_final_score);
+  -- 4. Verify session exists and caller is a participant
+  SELECT player1_id, player2_id, game_type, status
+  INTO v_p1, v_p2, v_session_type, v_status
+  FROM game_sessions WHERE id = p_room_id;
+
+  IF v_p1 IS NULL THEN
+    RETURN; -- session not found, silently reject
+  END IF;
+
+  IF v_caller <> v_p1 AND v_caller <> v_p2 THEN
+    RETURN; -- caller not a participant
+  END IF;
+
+  -- 5. Game type must match the session's current game type
+  IF v_session_type <> p_game_type THEN
+    RETURN;
+  END IF;
+
+  -- 6. One ghost save per session (unique index will also catch this)
+  INSERT INTO ghost_scores (game_type, score_timeline, final_score, session_id)
+  VALUES (p_game_type, p_timeline, p_final_score, p_room_id)
+  ON CONFLICT (session_id) DO NOTHING;
 END;
 $$;
 
@@ -408,4 +440,5 @@ REVOKE INSERT ON ghost_scores FROM anon;
 -- 5. Drop email column from profiles (PII exposure fix)
 -- Email is already stored in auth.users, no need to duplicate in public profiles
 -- =============================
+DROP VIEW IF EXISTS public.profiles_safe;
 ALTER TABLE profiles DROP COLUMN IF EXISTS email;
