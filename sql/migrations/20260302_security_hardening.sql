@@ -424,21 +424,148 @@ $$;
 -- =============================
 -- 4. Revoke anon from sensitive functions
 -- =============================
--- Revoke anon from game control RPCs (only authenticated users should call these)
 REVOKE EXECUTE ON FUNCTION start_game FROM anon;
 REVOKE EXECUTE ON FUNCTION start_next_round FROM anon;
 REVOKE EXECUTE ON FUNCTION update_score FROM anon;
 REVOKE EXECUTE ON FUNCTION save_ghost_score FROM anon;
+REVOKE EXECUTE ON FUNCTION trigger_game_start FROM anon;
 
--- Revoke anon insert on ghost_scores (only authenticated users should write)
 REVOKE INSERT ON ghost_scores FROM anon;
-
--- Keep SELECT for ghost_scores (needed for bot matches via SECURITY DEFINER functions)
--- Keep authenticated and service_role grants as-is
 
 -- =============================
 -- 5. Drop email column from profiles (PII exposure fix)
--- Email is already stored in auth.users, no need to duplicate in public profiles
 -- =============================
 DROP VIEW IF EXISTS public.profiles_safe;
 ALTER TABLE profiles DROP COLUMN IF EXISTS email;
+
+-- =============================
+-- 6. trigger_game_start: Add auth.uid() participant check
+-- =============================
+CREATE OR REPLACE FUNCTION public.trigger_game_start(p_room_id uuid) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+AS $$
+DECLARE
+    v_caller text;
+    v_p1 text;
+    v_p2 text;
+BEGIN
+    v_caller := COALESCE(auth.uid()::text, '');
+
+    SELECT player1_id, player2_id INTO v_p1, v_p2
+    FROM game_sessions WHERE id = p_room_id AND status = 'countdown';
+
+    IF v_p1 IS NULL THEN
+        RETURN; -- room not found or not in countdown
+    END IF;
+
+    IF v_caller <> v_p1 AND v_caller <> v_p2 THEN
+        RAISE EXCEPTION 'Not authorized: caller is not a participant';
+    END IF;
+
+    UPDATE game_sessions
+    SET status = 'playing',
+        phase_start_at = now(),
+        phase_end_at = COALESCE(end_at, now() + interval '30 seconds')
+    WHERE id = p_room_id AND status = 'countdown';
+END;
+$$;
+
+-- =============================
+-- 7. update_score: Fix auth - caller must be the player they claim to be
+-- =============================
+CREATE OR REPLACE FUNCTION public.update_score(p_room_id uuid, p_player_id text, p_score integer) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+AS $$
+DECLARE
+    v_p1 text;
+    v_p2 text;
+    v_status text;
+    v_start_at timestamptz;
+    v_end_at timestamptz;
+    v_p1_points int;
+    v_p2_points int;
+    v_bot_target int;
+    v_game_data jsonb;
+    v_ghost jsonb;
+    v_elapsed numeric;
+    v_caller text;
+BEGIN
+    v_caller := COALESCE(auth.uid()::text, '');
+
+    SELECT player1_id, player2_id, status, start_at, end_at, COALESCE(p1_current_score, 0), COALESCE(p2_current_score, 0), COALESCE(game_data, '{}'::jsonb)
+    INTO v_p1, v_p2, v_status, v_start_at, v_end_at, v_p1_points, v_p2_points, v_game_data
+    FROM game_sessions WHERE id = p_room_id;
+
+    IF v_p1 IS NULL THEN
+        RAISE EXCEPTION 'Room not found';
+    END IF;
+
+    IF v_status <> 'playing' THEN
+        RETURN;
+    END IF;
+
+    IF v_start_at IS NULL OR v_end_at IS NULL THEN
+        RETURN;
+    END IF;
+
+    IF now() < v_start_at OR now() > (v_end_at + interval '1 second') THEN
+        RETURN;
+    END IF;
+
+    -- Auth check: caller must be the player they claim to be
+    -- Exception: bot players have no auth.uid(), so skip check for bot IDs
+    IF p_player_id NOT LIKE 'bot_%' THEN
+        IF v_caller <> p_player_id THEN
+            RAISE EXCEPTION 'Not authorized: caller does not match player_id';
+        END IF;
+    END IF;
+
+    -- Verify p_player_id is actually a participant
+    IF p_player_id <> v_p1 AND p_player_id <> v_p2 THEN
+        RAISE EXCEPTION 'Not authorized: player is not a participant';
+    END IF;
+
+    -- Ghost timeline from game_data: [[elapsed_secs, delta], ...]
+    v_ghost := v_game_data->'ghost_timeline';
+
+    IF p_player_id = v_p1 THEN
+        UPDATE game_sessions SET p1_current_score = p_score WHERE id = p_room_id;
+
+        IF v_p2 LIKE 'bot_%' THEN
+            IF v_ghost IS NOT NULL AND jsonb_array_length(v_ghost) > 0 THEN
+                v_elapsed := EXTRACT(EPOCH FROM (now() - v_start_at));
+                SELECT GREATEST(0, COALESCE(SUM((elem->>1)::int), 0))
+                INTO v_bot_target
+                FROM jsonb_array_elements(v_ghost) AS elem
+                WHERE (elem->>0)::numeric <= v_elapsed;
+            ELSE
+                v_bot_target := GREATEST(0, LEAST(p_score - 20, floor(p_score * 0.9)));
+            END IF;
+            IF v_bot_target < v_p2_points THEN
+                v_bot_target := v_p2_points;
+            END IF;
+            UPDATE game_sessions SET p2_current_score = v_bot_target WHERE id = p_room_id;
+        END IF;
+    ELSIF p_player_id = v_p2 THEN
+        UPDATE game_sessions SET p2_current_score = p_score WHERE id = p_room_id;
+
+        IF v_p1 LIKE 'bot_%' THEN
+            IF v_ghost IS NOT NULL AND jsonb_array_length(v_ghost) > 0 THEN
+                v_elapsed := EXTRACT(EPOCH FROM (now() - v_start_at));
+                SELECT GREATEST(0, COALESCE(SUM((elem->>1)::int), 0))
+                INTO v_bot_target
+                FROM jsonb_array_elements(v_ghost) AS elem
+                WHERE (elem->>0)::numeric <= v_elapsed;
+            ELSE
+                v_bot_target := GREATEST(0, LEAST(p_score - 20, floor(p_score * 0.9)));
+            END IF;
+            IF v_bot_target < v_p1_points THEN
+                v_bot_target := v_p1_points;
+            END IF;
+            UPDATE game_sessions SET p1_current_score = v_bot_target WHERE id = p_room_id;
+        END IF;
+    END IF;
+END;
+$$;
