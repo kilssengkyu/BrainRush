@@ -189,6 +189,8 @@ const CatchColor: React.FC<CatchColorProps> = ({ seed, onScore, isPlaying }) => 
             const barXNow = barXRef.current;
             const targetNow = targetColorRef.current;
 
+            let scoreDelta = 0;
+            let feedback: 'wrong' | 'correct' | null = null;
             setBalls(prev => {
                 const next: Ball[] = [];
                 prev.forEach(ball => {
@@ -201,15 +203,12 @@ const CatchColor: React.FC<CatchColorProps> = ({ seed, onScore, isPlaying }) => 
 
                     if (hit) {
                         if (ball.color === targetNow) {
-                            playSound('correct');
-                            onScore(60);
-                            setHitFeedback('correct');
+                            scoreDelta += 60;
+                            feedback = 'correct';
                         } else {
-                            playSound('error');
-                            onScore(-60);
-                            setHitFeedback('wrong');
+                            scoreDelta -= 60;
+                            feedback = 'wrong';
                         }
-                        window.setTimeout(() => setHitFeedback(null), 140);
                         return;
                     }
 
@@ -221,6 +220,13 @@ const CatchColor: React.FC<CatchColorProps> = ({ seed, onScore, isPlaying }) => 
                 });
                 return next;
             });
+
+            if (feedback) {
+                playSound(feedback === 'correct' ? 'correct' : 'error');
+                onScore(scoreDelta);
+                setHitFeedback(feedback);
+                window.setTimeout(() => setHitFeedback(null), 140);
+            }
 
             frameId = requestAnimationFrame(tick);
         };

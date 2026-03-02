@@ -360,9 +360,11 @@ $_$;
 -- =============================
 -- 3. save_ghost_score: Session-validated ghost score saving
 -- =============================
--- Add session tracking column to prevent duplicate saves
+-- Add session tracking column to prevent duplicate saves per round
 ALTER TABLE ghost_scores ADD COLUMN IF NOT EXISTS session_id uuid;
-CREATE UNIQUE INDEX IF NOT EXISTS idx_ghost_session_unique ON ghost_scores(session_id) WHERE session_id IS NOT NULL;
+DROP INDEX IF EXISTS idx_ghost_session_unique;
+DROP INDEX IF EXISTS idx_ghost_session_gametype;
+CREATE UNIQUE INDEX idx_ghost_session_gametype ON ghost_scores(session_id, game_type);
 
 CREATE OR REPLACE FUNCTION save_ghost_score(
   p_room_id uuid,
@@ -414,10 +416,10 @@ BEGIN
     RETURN;
   END IF;
 
-  -- 6. One ghost save per session (unique index will also catch this)
+  -- 6. One ghost save per round per session
   INSERT INTO ghost_scores (game_type, score_timeline, final_score, session_id)
   VALUES (p_game_type, p_timeline, p_final_score, p_room_id)
-  ON CONFLICT (session_id) DO NOTHING;
+  ON CONFLICT (session_id, game_type) DO NOTHING;
 END;
 $$;
 
@@ -427,8 +429,11 @@ $$;
 REVOKE EXECUTE ON FUNCTION start_game FROM anon;
 REVOKE EXECUTE ON FUNCTION start_next_round FROM anon;
 REVOKE EXECUTE ON FUNCTION update_score FROM anon;
-REVOKE EXECUTE ON FUNCTION save_ghost_score FROM anon;
 REVOKE EXECUTE ON FUNCTION trigger_game_start FROM anon;
+
+-- Drop old 3-param save_ghost_score if it exists (replaced by 4-param version with p_room_id)
+DROP FUNCTION IF EXISTS save_ghost_score(text, jsonb, int);
+REVOKE EXECUTE ON FUNCTION save_ghost_score(uuid, text, jsonb, int) FROM anon;
 
 REVOKE INSERT ON ghost_scores FROM anon;
 
