@@ -11,36 +11,36 @@ import AdModal from '../components/ui/AdModal';
 
 // Minigame Metadata
 const MINIGAMES = [
-    { id: 'RANDOM', title: 'practice.random', icon: null, defaultIcon: <Shuffle className="w-8 h-8 text-white" />, type: 'random' },
-    { id: 'RPS', title: 'rps.title', icon: <img src="/icons/rps.png" alt="RPS" className="w-12 h-12 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <MousePointer2 className="w-8 h-8 text-yellow-400" />, type: 'speed' },
-    { id: 'NUMBER', title: 'number.title', icon: <img src="/icons/number_asc.png" alt="Number Asc" className="w-12 h-12 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Hash className="w-8 h-8 text-blue-400" />, type: 'speed' },
-    { id: 'NUMBER_DESC', title: 'number.titleDesc', icon: <img src="/icons/number_desc.png" alt="Number Desc" className="w-12 h-12 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Hash className="w-8 h-8 text-red-400" />, type: 'speed' },
-    { id: 'MATH', title: 'math.title', icon: <img src="/icons/math.png" alt="Math" className="w-12 h-12 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Brain className="w-8 h-8 text-purple-400" />, type: 'brain' },
-    { id: 'TEN', title: 'ten.title', icon: <img src="/icons/make_ten.png" alt="Make Ten" className="w-12 h-12 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Hash className="w-8 h-8 text-green-400" />, type: 'brain' },
-    { id: 'COLOR', title: 'color.title', icon: <img src="/icons/color_match.png" alt="Color" className="w-12 h-12 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Zap className="w-8 h-8 text-pink-400" />, type: 'speed' },
-    { id: 'MEMORY', title: 'memory.title', icon: <img src="/icons/memory.png" alt="Memory" className="w-12 h-12 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Brain className="w-8 h-8 text-orange-400" />, type: 'brain' },
-    { id: 'SEQUENCE', title: 'sequence.title', icon: <img src="/icons/sequence.png" alt="Sequence" className="w-12 h-12 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Hash className="w-8 h-8 text-cyan-400" />, type: 'brain' },
-    { id: 'SEQUENCE_NORMAL', title: 'sequence.titleNormal', icon: <img src="/icons/sequence.png" alt="Sequence Normal" className="w-12 h-12 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Hash className="w-8 h-8 text-blue-300" />, type: 'brain' },
-    { id: 'LARGEST', title: 'largest.title', icon: <img src="/icons/find_largest.png" alt="Largest" className="w-12 h-12 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Hash className="w-8 h-8 text-indigo-400" />, type: 'speed' },
-    { id: 'PAIR', title: 'pair.title', icon: <img src="/icons/find_pair.png" alt="Pair" className="w-12 h-12 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Brain className="w-8 h-8 text-teal-400" />, type: 'brain' },
-    { id: 'UPDOWN', title: 'updown.title', icon: <img src="/icons/up_down.png" alt="Up Down" className="w-12 h-12 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Hash className="w-8 h-8 text-lime-400" />, type: 'brain' },
-    { id: 'SLIDER', title: 'slider.title', icon: <img src="/icons/slider.png" alt="Slider" className="w-12 h-12 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Hash className="w-8 h-8 text-amber-400" />, type: 'brain' },
-    { id: 'ARROW', title: 'arrow.title', icon: <img src="/icons/arrow.png" alt="Arrow" className="w-12 h-12 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <MousePointer2 className="w-8 h-8 text-sky-400" />, type: 'speed' },
-    { id: 'BLANK', title: 'fillBlanks.title', icon: <img src="/icons/fill_blank.png" alt="Blank" className="w-12 h-12 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Brain className="w-8 h-8 text-teal-300" />, type: 'brain' },
-    { id: 'OPERATOR', title: 'findOperator.title', icon: <img src="/icons/operator.png" alt="Operator" className="w-12 h-12 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Brain className="w-8 h-8 text-indigo-300" />, type: 'brain' },
-    { id: 'LADDER', title: 'ladder.title', icon: <img src="/icons/ladder.png" alt="Ladder" className="w-12 h-12 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Brain className="w-8 h-8 text-yellow-300" />, type: 'brain' },
-    { id: 'PATH', title: 'path.title', icon: <img src="/icons/path.png" alt="Path" className="w-12 h-12 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Route className="w-8 h-8 text-emerald-300" />, type: 'brain' },
-    { id: 'BLIND_PATH', title: 'blindPath.title', icon: <img src="/icons/blind_path.png" alt="Blind Path" className="w-12 h-12 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <EyeOff className="w-8 h-8 text-rose-300" />, type: 'brain' },
-    { id: 'BALLS', title: 'balls.title', icon: <img src="/icons/balls.png" alt="Balls" className="w-12 h-12 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <CircleDot className="w-8 h-8 text-sky-300" />, type: 'brain' },
-    { id: 'CATCH_COLOR', title: 'catchColor.title', icon: <img src="/icons/catch_color.png" alt="Catch Color" className="w-12 h-12 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <CircleDot className="w-8 h-8 text-blue-300" />, type: 'speed' },
-    { id: 'TAP_COLOR', title: 'tapTheColor.title', icon: <img src="/icons/tap_color.png" alt="Tap Color" className="w-12 h-12 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Brain className="w-8 h-8 text-pink-300" />, type: 'brain' },
-    { id: 'AIM', title: 'aim.title', icon: <img src="/icons/aim.png" alt="Aim" className="w-12 h-12 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <MousePointer2 className="w-8 h-8 text-red-500" />, type: 'speed' },
-    { id: 'MOST_COLOR', title: 'mostColor.title', icon: <img src="/icons/most_color.png" alt="Most Color" className="w-12 h-12 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Zap className="w-8 h-8 text-yellow-500" />, type: 'speed' },
-    { id: 'SORTING', title: 'sorting.title', icon: <img src="/icons/sorting.png" alt="Sorting" className="w-12 h-12 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Star className="w-8 h-8 text-purple-500" />, type: 'brain' },
-    { id: 'SPY', title: 'spy.title', icon: <img src="/icons/spy.png" alt="Spy" className="w-12 h-12 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Ghost className="w-8 h-8 text-gray-500" />, type: 'brain' },
-    { id: 'COLOR_TIMING', title: 'colorTiming.title', icon: <img src="/icons/timing.png" alt="Color Timing" className="w-12 h-12 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <BookOpen className="w-8 h-8 text-emerald-400" />, type: 'speed' },
-    { id: 'STAIRWAY', title: 'stairway.title', icon: <img src="/icons/stairway.png" alt="Stairway" className="w-12 h-12 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Star className="w-8 h-8 text-amber-400" />, type: 'speed' },
-    { id: 'MAKE_ZERO', title: 'zero.title', icon: <img src="/icons/make_zero.png" alt="Make Zero" className="w-12 h-12 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Hash className="w-8 h-8 text-cyan-300" />, type: 'brain' },
+    { id: 'RANDOM', title: 'practice.random', icon: null, defaultIcon: <Shuffle className="w-12 h-12 text-white" />, type: 'random' },
+    { id: 'RPS', title: 'rps.title', icon: <img src="/icons/rps.png" alt="RPS" className="w-full h-full object-cover" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <MousePointer2 className="w-12 h-12 text-yellow-400" />, type: 'speed' },
+    { id: 'NUMBER', title: 'number.title', icon: <img src="/icons/number_asc.png" alt="Number Asc" className="w-full h-full object-cover" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Hash className="w-12 h-12 text-blue-400" />, type: 'speed' },
+    { id: 'NUMBER_DESC', title: 'number.titleDesc', icon: <img src="/icons/number_desc.png" alt="Number Desc" className="w-full h-full object-cover" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Hash className="w-12 h-12 text-red-400" />, type: 'speed' },
+    { id: 'MATH', title: 'math.title', icon: <img src="/icons/math.png" alt="Math" className="w-full h-full object-cover" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Brain className="w-12 h-12 text-purple-400" />, type: 'brain' },
+    { id: 'TEN', title: 'ten.title', icon: <img src="/icons/make_ten.png" alt="Make Ten" className="w-full h-full object-cover" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Hash className="w-12 h-12 text-green-400" />, type: 'brain' },
+    { id: 'COLOR', title: 'color.title', icon: <img src="/icons/color_match.png" alt="Color" className="w-full h-full object-cover" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Zap className="w-12 h-12 text-pink-400" />, type: 'speed' },
+    { id: 'MEMORY', title: 'memory.title', icon: <img src="/icons/memory.png" alt="Memory" className="w-full h-full object-cover" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Brain className="w-12 h-12 text-orange-400" />, type: 'brain' },
+    { id: 'SEQUENCE', title: 'sequence.title', icon: <img src="/icons/sequence.png" alt="Sequence" className="w-full h-full object-cover" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Hash className="w-12 h-12 text-cyan-400" />, type: 'brain' },
+    { id: 'SEQUENCE_NORMAL', title: 'sequence.titleNormal', icon: <img src="/icons/sequence.png" alt="Sequence Normal" className="w-full h-full object-cover" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Hash className="w-12 h-12 text-blue-300" />, type: 'brain' },
+    { id: 'LARGEST', title: 'largest.title', icon: <img src="/icons/find_largest.png" alt="Largest" className="w-full h-full object-cover" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Hash className="w-12 h-12 text-indigo-400" />, type: 'speed' },
+    { id: 'PAIR', title: 'pair.title', icon: <img src="/icons/find_pair.png" alt="Pair" className="w-full h-full object-cover" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Brain className="w-12 h-12 text-teal-400" />, type: 'brain' },
+    { id: 'UPDOWN', title: 'updown.title', icon: <img src="/icons/up_down.png" alt="Up Down" className="w-full h-full object-cover" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Hash className="w-12 h-12 text-lime-400" />, type: 'brain' },
+    { id: 'SLIDER', title: 'slider.title', icon: <img src="/icons/slider.png" alt="Slider" className="w-full h-full object-cover" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Hash className="w-12 h-12 text-amber-400" />, type: 'brain' },
+    { id: 'ARROW', title: 'arrow.title', icon: <img src="/icons/arrow.png" alt="Arrow" className="w-full h-full object-cover" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <MousePointer2 className="w-12 h-12 text-sky-400" />, type: 'speed' },
+    { id: 'BLANK', title: 'fillBlanks.title', icon: <img src="/icons/fill_blank.png" alt="Blank" className="w-full h-full object-cover" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Brain className="w-12 h-12 text-teal-300" />, type: 'brain' },
+    { id: 'OPERATOR', title: 'findOperator.title', icon: <img src="/icons/operator.png" alt="Operator" className="w-full h-full object-cover" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Brain className="w-12 h-12 text-indigo-300" />, type: 'brain' },
+    { id: 'LADDER', title: 'ladder.title', icon: <img src="/icons/ladder.png" alt="Ladder" className="w-full h-full object-cover" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Brain className="w-12 h-12 text-yellow-300" />, type: 'brain' },
+    { id: 'PATH', title: 'path.title', icon: <img src="/icons/path.png" alt="Path" className="w-full h-full object-cover" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Route className="w-12 h-12 text-emerald-300" />, type: 'brain' },
+    { id: 'BLIND_PATH', title: 'blindPath.title', icon: <img src="/icons/blind_path.png" alt="Blind Path" className="w-full h-full object-cover" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <EyeOff className="w-12 h-12 text-rose-300" />, type: 'brain' },
+    { id: 'BALLS', title: 'balls.title', icon: <img src="/icons/balls.png" alt="Balls" className="w-full h-full object-cover" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <CircleDot className="w-12 h-12 text-sky-300" />, type: 'brain' },
+    { id: 'CATCH_COLOR', title: 'catchColor.title', icon: <img src="/icons/catch_color.png" alt="Catch Color" className="w-full h-full object-cover" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <CircleDot className="w-12 h-12 text-blue-300" />, type: 'speed' },
+    { id: 'TAP_COLOR', title: 'tapTheColor.title', icon: <img src="/icons/tap_color.png" alt="Tap Color" className="w-full h-full object-cover" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Brain className="w-12 h-12 text-pink-300" />, type: 'brain' },
+    { id: 'AIM', title: 'aim.title', icon: <img src="/icons/aim.png" alt="Aim" className="w-full h-full object-cover" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <MousePointer2 className="w-12 h-12 text-red-500" />, type: 'speed' },
+    { id: 'MOST_COLOR', title: 'mostColor.title', icon: <img src="/icons/most_color.png" alt="Most Color" className="w-full h-full object-cover" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Zap className="w-12 h-12 text-yellow-500" />, type: 'speed' },
+    { id: 'SORTING', title: 'sorting.title', icon: <img src="/icons/sorting.png" alt="Sorting" className="w-full h-full object-cover" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Star className="w-12 h-12 text-purple-500" />, type: 'brain' },
+    { id: 'SPY', title: 'spy.title', icon: <img src="/icons/spy.png" alt="Spy" className="w-full h-full object-cover" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Ghost className="w-12 h-12 text-gray-500" />, type: 'brain' },
+    { id: 'COLOR_TIMING', title: 'colorTiming.title', icon: <img src="/icons/timing.png" alt="Color Timing" className="w-full h-full object-cover" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <BookOpen className="w-12 h-12 text-emerald-400" />, type: 'speed' },
+    { id: 'STAIRWAY', title: 'stairway.title', icon: <img src="/icons/stairway.png" alt="Stairway" className="w-full h-full object-cover" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Star className="w-12 h-12 text-amber-400" />, type: 'speed' },
+    { id: 'MAKE_ZERO', title: 'zero.title', icon: <img src="/icons/make_zero.png" alt="Make Zero" className="w-full h-full object-cover" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Hash className="w-12 h-12 text-cyan-300" />, type: 'brain' }
 ];
 
 const PracticeMode = () => {
@@ -225,25 +225,27 @@ const PracticeMode = () => {
                             onClick={() => handleGameSelect(game.id)}
                             onMouseEnter={() => playSound('hover')}
                             disabled={loading}
-                            className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 hover:border-green-500 hover:bg-gray-700/80 rounded-2xl p-6 flex flex-col items-center gap-4 transition-all group relative overflow-hidden"
+                            className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 hover:border-green-500 hover:bg-gray-700/80 rounded-2xl p-0 flex flex-col items-center justify-between transition-all group relative overflow-hidden"
                         >
-                            <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity z-0" />
 
-                            <div className="p-4 rounded-full bg-gray-900/50 group-hover:scale-110 transition-transform duration-300">
-                                {game.icon || game.defaultIcon}
+                            <div className="w-full aspect-[4/3] bg-gray-900/50 flex items-center justify-center overflow-hidden z-0">
+                                <div className="w-full h-full group-hover:scale-105 transition-transform duration-300 flex items-center justify-center">
+                                    {game.icon || game.defaultIcon}
+                                </div>
                             </div>
 
-                            <div className="text-center">
-                                <h3 className="font-bold text-lg text-gray-200 group-hover:text-white transition-colors">
+                            <div className="text-center p-3 w-full bg-black/20 backdrop-blur-md z-10 border-t border-white/5">
+                                <h3 className="font-bold text-base text-gray-200 group-hover:text-white transition-colors truncate w-full">
                                     {t(game.title)}
                                 </h3>
-                                <p className="text-xs text-gray-500 uppercase tracking-widest mt-1">
+                                <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-0.5">
                                     {game.type}
                                 </p>
                             </div>
 
-                            <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0 text-green-400">
-                                <Play size={20} fill="currentColor" />
+                            <div className="absolute top-2 right-2 p-1.5 rounded-full bg-black/40 backdrop-blur opacity-0 group-hover:opacity-100 transition-opacity transform -translate-y-2 group-hover:translate-y-0 text-green-400 z-20 shadow-lg border border-white/10">
+                                <Play size={16} fill="currentColor" />
                             </div>
                         </motion.button>
                     ))}

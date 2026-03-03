@@ -94,6 +94,7 @@ import Admin from './pages/Admin';
 import AdminMember from './pages/AdminMember';
 
 import GameInviteListener from './components/social/GameInviteListener';
+import RematchListener from './components/social/RematchListener';
 import ChatNotificationListener from './components/social/ChatNotificationListener';
 import LocalNotificationScheduler from './components/notifications/LocalNotificationScheduler';
 
@@ -153,6 +154,7 @@ function App() {
               <AuthErrorRelay />
               <BGMManager />
               <GameInviteListener />
+              <RematchListener />
               <ChatNotificationListener />
               <LocalNotificationScheduler />
               <ForceLogoutListener />

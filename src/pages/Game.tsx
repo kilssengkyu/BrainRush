@@ -54,17 +54,16 @@ const BOT_EMOJI_REACTIVE = {
     close: ['🙂', '👍', '👎']
 };
 type BotEmojiPattern = 'burst' | 'silent' | 'reactive';
-const CROWN_ICON = '/images/icon/Crown%20(Border).png';
-const CUP_ICON = '/images/icon/Cup%20(Border).png';
 
 const FINAL_ROUND_FINISHED_MS = 2000;
+const REMATCH_WINDOW_MS = 30000;
 
 const Game: React.FC = () => {
     const { t } = useTranslation();
     const { roomId: routeRoomId } = useParams<{ roomId: string }>();
     const location = useLocation();
     const navigate = useNavigate();
-    const { showToast } = useUI();
+    const { showToast, confirm } = useUI();
     const { user, profile } = useAuth();
 
     // Route state check
@@ -76,6 +75,12 @@ const Game: React.FC = () => {
     const [opponentProfile, setOpponentProfile] = useState<any>(null);
     const [isReportModalOpen, setIsReportModalOpen] = useState(false);
     const [isResultActionsOpen, setIsResultActionsOpen] = useState(false);
+    const [rematchSourceSessionId, setRematchSourceSessionId] = useState<string | null>(null);
+    const [pendingRematchInviteId, setPendingRematchInviteId] = useState<string | null>(null);
+    const [isRematchClosed, setIsRematchClosed] = useState(false);
+    const [rematchDeadlineMs, setRematchDeadlineMs] = useState<number | null>(null);
+    const [rematchSecondsLeft, setRematchSecondsLeft] = useState<number>(30);
+    const [isSubmittingRematch, setIsSubmittingRematch] = useState(false);
     const [botRoundDebugPreview, setBotRoundDebugPreview] = useState<{
         gameType: string;
         myBestScore: number;
@@ -87,6 +92,7 @@ const Game: React.FC = () => {
     const [realtimeOpScore, setRealtimeOpScore] = useState<number | null>(null);
     const lastBroadcastScore = useRef<number>(0);
     const lastBroadcastTime = useRef<number>(0);
+    const botRematchRejectTimeoutRef = useRef<number | null>(null);
 
     // Game Hook
     const { gameState, incrementScore, serverOffset, isWaitingTimeout, isTimeUp, onlineUsers, connectionStatus } = useGameState(roomId!, myId, opponentId);
@@ -112,6 +118,48 @@ const Game: React.FC = () => {
         !isBotId(opponentId)
     );
     const canAddFriendOpponent = canReportOpponent;
+    const canRematchOpponent = Boolean(
+        opponentId &&
+        myId &&
+        opponentId !== myId &&
+        !opponentId.startsWith('guest_') &&
+        !opponentId.startsWith('practice')
+    );
+    const myPencils = typeof myProfile?.pencils === 'number'
+        ? myProfile.pencils
+        : typeof profile?.pencils === 'number'
+            ? profile.pencils
+            : null;
+    const hasRematchPencils = typeof myPencils === 'number' && myPencils > 0;
+    const canShowRematch = Boolean(
+        roomId &&
+        user &&
+        myId === user.id &&
+        (gameState.mode === 'rank' || gameState.mode === 'normal') &&
+        canRematchOpponent &&
+        !rematchSourceSessionId
+    );
+
+    useEffect(() => {
+        if (!roomId) return;
+        let active = true;
+        supabase
+            .from('game_sessions')
+            .select('rematch_source_session_id')
+            .eq('id', roomId)
+            .maybeSingle()
+            .then(({ data, error }) => {
+                if (!active) return;
+                if (error) {
+                    console.error('Failed to load rematch source session', error);
+                    return;
+                }
+                setRematchSourceSessionId((data as any)?.rematch_source_session_id ?? null);
+            });
+        return () => {
+            active = false;
+        };
+    }, [roomId]);
 
     useEffect(() => {
         if (!roomId || !user || myId !== user.id || !profile) return;
@@ -827,6 +875,40 @@ const Game: React.FC = () => {
         }
     }, [showFinalResult]);
 
+    useEffect(() => {
+        if (!showFinalResult) {
+            setRematchDeadlineMs(null);
+            setRematchSecondsLeft(30);
+            setIsRematchClosed(false);
+            setPendingRematchInviteId(null);
+            return;
+        }
+
+        const deadline = Date.now() + REMATCH_WINDOW_MS;
+        setRematchDeadlineMs(deadline);
+        setRematchSecondsLeft(Math.ceil(REMATCH_WINDOW_MS / 1000));
+        setIsRematchClosed(false);
+    }, [showFinalResult, roomId]);
+
+    useEffect(() => {
+        if (!showFinalResult || !rematchDeadlineMs || isRematchClosed) return;
+
+        const updateRemaining = () => {
+            const remainingMs = rematchDeadlineMs - Date.now();
+            const remainingSec = Math.max(0, Math.ceil(remainingMs / 1000));
+            setRematchSecondsLeft(remainingSec);
+
+            if (remainingMs <= 0) {
+                setIsRematchClosed(true);
+                setPendingRematchInviteId(null);
+            }
+        };
+
+        updateRemaining();
+        const timer = window.setInterval(updateRemaining, 250);
+        return () => window.clearInterval(timer);
+    }, [isRematchClosed, rematchDeadlineMs, showFinalResult]);
+
     const handleReturnMenu = useCallback(async () => {
         if (isReturningToMenu) return;
         setIsReturningToMenu(true);
@@ -840,6 +922,86 @@ const Game: React.FC = () => {
             navigate('/');
         }
     }, [isReturningToMenu, myProfile, navigate]);
+
+    const handleRequestRematch = useCallback(async () => {
+        if (!canShowRematch || !roomId || !opponentId || isSubmittingRematch || pendingRematchInviteId) return;
+        if (isRematchClosed || rematchSecondsLeft <= 0) {
+            setIsRematchClosed(true);
+            showToast(t('game.rematchExpired', '재대결 신청 시간이 종료되었습니다.'), 'info');
+            return;
+        }
+        if (myPencils !== null && myPencils < 1) {
+            showToast(t('game.rematchNoPencils', '연필이 부족합니다'), 'error');
+            return;
+        }
+
+        const confirmed = await confirm(
+            t('game.rematchConfirmTitle', '재대결 신청'),
+            t('game.rematchConfirmBody', '재대결을 요청하시겠습니까?') + '\n\n' + t('game.rematchRequesterCostNotice', '신청 시에만 연필 1개가 차감됩니다.')
+        );
+        if (!confirmed) return;
+
+        const inviteId = `rematch_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+        if (isBotId(opponentId)) {
+            setPendingRematchInviteId(inviteId);
+            showToast(t('game.rematchWaiting', '재대결 요청을 보냈습니다.'), 'info');
+
+            const delay = 1000 + Math.random() * 4000;
+            botRematchRejectTimeoutRef.current = window.setTimeout(() => {
+                setPendingRematchInviteId(null);
+                setIsRematchClosed(true);
+                showToast(t('game.rematchRejected', '상대가 재대결을 거절했습니다.'), 'info');
+            }, delay);
+            return;
+        }
+
+        setIsSubmittingRematch(true);
+        try {
+            const { error } = await supabase
+                .from('chat_messages')
+                .insert({
+                    sender_id: myId,
+                    receiver_id: opponentId,
+                    content: `REMATCH_REQUEST:${inviteId}:${roomId}`
+                });
+
+            if (error) throw error;
+            setPendingRematchInviteId(inviteId);
+            showToast(t('game.rematchWaiting', '재대결 요청을 보냈습니다.'), 'info');
+        } catch (error: any) {
+            console.error('Failed to request rematch', error);
+            showToast(error?.message || t('game.rematchRequestFail', '재대결 요청 중 오류가 발생했습니다.'), 'error');
+        } finally {
+            setIsSubmittingRematch(false);
+        }
+    }, [canShowRematch, confirm, isRematchClosed, isSubmittingRematch, myId, myPencils, navigate, opponentId, pendingRematchInviteId, rematchSecondsLeft, roomId, showToast, t]);
+
+    useEffect(() => {
+        return () => {
+            if (botRematchRejectTimeoutRef.current) {
+                window.clearTimeout(botRematchRejectTimeoutRef.current);
+            }
+        };
+    }, []);
+
+    useEffect(() => {
+        const handleRematchResponse = (event: Event) => {
+            const detail = (event as CustomEvent<{ type?: string; inviteId?: string }>).detail;
+            if (!pendingRematchInviteId || !detail?.inviteId || detail.inviteId !== pendingRematchInviteId) return;
+
+            if (detail.type === 'REMATCH_ACCEPTED' || detail.type === 'REMATCH_REJECTED') {
+                setPendingRematchInviteId(null);
+            }
+            if (detail.type === 'REMATCH_REJECTED') {
+                setIsRematchClosed(true);
+            }
+        };
+
+        window.addEventListener('brainrush:rematch-response', handleRematchResponse as EventListener);
+        return () => {
+            window.removeEventListener('brainrush:rematch-response', handleRematchResponse as EventListener);
+        };
+    }, [pendingRematchInviteId]);
 
     const handleSubmitReport = useCallback(async (reason: string) => {
         if (!canReportOpponent || !opponentId || !roomId) return;
@@ -940,10 +1102,8 @@ const Game: React.FC = () => {
         }
     }, [showFinalResult, gameState.mode, myProfile]);
 
-    const getWinnerMessage = () => {
-        if (!gameState.winnerId) return t('game.draw');
-        return gameState.winnerId === myId ? t('game.victory') : t('game.defeat');
-    };
+    const isMatchWin = Boolean(gameState.winnerId && gameState.winnerId === myId);
+    const isMatchLoss = Boolean(gameState.winnerId && gameState.winnerId !== myId);
 
     const getRoundGameTitle = (gameType: string | null | undefined) => {
         switch (gameType) {
@@ -1518,7 +1678,13 @@ const Game: React.FC = () => {
                             <motion.div
                                 initial={{ scale: 0.9, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
-                                className="relative bg-gray-800 p-8 rounded-3xl border-4 border-white/10 shadow-2xl text-center max-w-2xl w-full"
+                                className={`relative p-8 rounded-3xl border-4 shadow-2xl text-center max-w-2xl w-full overflow-hidden ${
+                                    isMatchWin
+                                        ? 'bg-[radial-gradient(circle_at_top,_rgba(96,165,250,0.32),_transparent_42%),linear-gradient(180deg,_rgba(30,58,138,0.92),_rgba(15,23,42,0.96))] border-blue-300/25'
+                                        : isMatchLoss
+                                            ? 'bg-[radial-gradient(circle_at_top,_rgba(248,113,113,0.28),_transparent_42%),linear-gradient(180deg,_rgba(127,29,29,0.92),_rgba(24,24,27,0.96))] border-red-300/20'
+                                            : 'bg-[radial-gradient(circle_at_top,_rgba(148,163,184,0.18),_transparent_42%),linear-gradient(180deg,_rgba(31,41,55,0.94),_rgba(15,23,42,0.96))] border-white/10'
+                                }`}
                             >
                                 {/* PRACTICE MODE RESULT */}
                                 {gameState.mode === 'practice' ? (
@@ -1589,28 +1755,30 @@ const Game: React.FC = () => {
                                             }}
                                             className="mb-8 flex flex-col items-center"
                                         >
-                                            <img
-                                                src={CROWN_ICON}
-                                                alt="Crown"
-                                                className={`w-12 h-12 md:w-14 md:h-14 object-contain mb-2 ${getWinnerMessage() === t('game.victory') ? '' : 'opacity-50 grayscale'}`}
-                                            />
-                                            <h3 className={`text-3xl md:text-5xl font-black drop-shadow-2xl ${getWinnerMessage() === t('game.victory') ? 'text-blue-500' : 'text-red-500'}`}>
-                                                {getWinnerMessage()}
+                                            <h3 className={`text-4xl md:text-6xl font-black tracking-[0.08em] drop-shadow-2xl ${
+                                                isMatchWin
+                                                    ? 'text-blue-300'
+                                                    : isMatchLoss
+                                                        ? 'text-red-300'
+                                                        : 'text-slate-200'
+                                            }`}>
+                                                {myWinsForLives} : {opWinsForLives}
                                             </h3>
+                                            <p className="mt-2 text-xs md:text-sm font-semibold tracking-[0.2em] text-white/60">
+                                                {t('game.setScore', '세트 스코어')}
+                                            </p>
                                         </motion.div>
 
                                         {/* Scoreboard Table */}
                                         <div className="w-full bg-gray-900/50 rounded-xl overflow-hidden mb-4 md:mb-8 border border-white/5">
-                                            <div className="grid grid-cols-4 bg-gray-800 p-2 md:p-3 text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest">
+                                            <div className="grid grid-cols-3 bg-gray-800 p-2 md:p-3 text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest">
                                                 <div className="text-left pl-4">{t('game.table.round')}</div>
                                                 <div>{t('game.table.myScore')}</div>
                                                 <div>{t('game.table.opScore')}</div>
-                                                <div>{t('game.table.result')}</div>
                                             </div>
                                             {gameState.roundScores.map((round, idx) => {
                                                 const myS = gameState.isPlayer1 ? round.p1_score : round.p2_score;
                                                 const opS = gameState.isPlayer1 ? round.p2_score : round.p1_score;
-                                                const win = myS > opS;
                                                 const totalS = myS + opS;
                                                 const myRatio = totalS > 0 ? (myS / totalS) * 100 : 50;
 
@@ -1620,7 +1788,7 @@ const Game: React.FC = () => {
                                                         initial={{ opacity: 0, x: -50 }}
                                                         animate={{ opacity: 1, x: 0 }}
                                                         transition={{ delay: 0.5 + idx * 0.4 }}
-                                                        className="grid grid-cols-4 p-2 md:p-4 border-t border-white/5 items-center font-mono relative overflow-hidden"
+                                                        className="grid grid-cols-3 p-2 md:p-4 border-t border-white/5 items-center font-mono relative overflow-hidden"
                                                     >
                                                         {/* Background Bar */}
                                                         <div className="absolute inset-0 z-0 opacity-10">
@@ -1643,21 +1811,6 @@ const Game: React.FC = () => {
                                                         <div className="text-left pl-2 md:pl-4 text-white font-bold relative z-10 text-xs md:text-sm truncate pr-2">{getRoundGameTitle(round?.game_type)}</div>
                                                         <div className="text-blue-400 font-bold text-base md:text-lg relative z-10">{myS}</div>
                                                         <div className="text-red-400 font-bold text-base md:text-lg relative z-10">{opS}</div>
-                                                        <div className="relative z-10">
-                                                            <motion.div
-                                                                initial={{ scale: 0 }}
-                                                                animate={{ scale: 1 }}
-                                                                transition={{ delay: 0.8 + idx * 0.4, type: "spring" }}
-                                                            >
-                                                                {win ? (
-                                                                    <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">{t('game.table.win')}</span>
-                                                                ) : myS === opS ? (
-                                                                    <span className="text-xs bg-gray-500/20 text-gray-400 px-2 py-1 rounded">{t('game.table.draw')}</span>
-                                                                ) : (
-                                                                    <span className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded">{t('game.table.lose')}</span>
-                                                                )}
-                                                            </motion.div>
-                                                        </div>
                                                     </motion.div>
                                                 );
                                             })}
@@ -1666,18 +1819,11 @@ const Game: React.FC = () => {
                                                 initial={{ opacity: 0, y: 20 }}
                                                 animate={{ opacity: 1, y: 0 }}
                                                 transition={{ delay: 0.5 + gameState.roundScores.length * 0.4 }}
-                                                className="grid grid-cols-4 p-2 md:p-4 bg-white/5 border-t-2 border-white/10 items-center font-mono"
+                                                className="grid grid-cols-3 p-2 md:p-4 bg-white/5 border-t-2 border-white/10 items-center font-mono"
                                             >
                                                 <div className="text-left pl-2 md:pl-4 text-yellow-400 font-black text-sm md:text-base">{t('game.total')}</div>
                                                 <div className="text-blue-400 font-black text-base md:text-xl">{totalScores.my}</div>
                                                 <div className="text-red-400 font-black text-base md:text-xl">{totalScores.op}</div>
-                                                <div>
-                                                    {totalScores.my > totalScores.op ? (
-                                                        <img src={CUP_ICON} alt="Cup" className="w-7 h-7 object-contain mx-auto animate-bounce" />
-                                                    ) : (
-                                                        <span className="text-gray-500">-</span>
-                                                    )}
-                                                </div>
                                             </motion.div>
                                         </div>
 
@@ -1731,7 +1877,52 @@ const Game: React.FC = () => {
                                             </div>
                                         </div>
 
-                                        <div className="flex flex-col gap-2">
+                                        <div className={`grid gap-2 ${canShowRematch ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                                            {canShowRematch && (
+                                                <motion.button
+                                                    initial={{ opacity: 0, y: 20 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    transition={{ delay: 1.5 + (gameState.roundScores.length + 1) * 0.4 }}
+                                                    onClick={handleRequestRematch}
+                                                    disabled={!isButtonEnabled || isSubmittingRematch || isReturningToMenu || !!pendingRematchInviteId || isRematchClosed || !hasRematchPencils}
+                                                    className={`w-full rounded-xl px-4 py-3 text-white transition-all ${!isButtonEnabled || isSubmittingRematch || isReturningToMenu || !!pendingRematchInviteId || isRematchClosed
+                                                        ? 'bg-gray-700 text-gray-400 cursor-not-allowed opacity-60'
+                                                        : !hasRematchPencils
+                                                            ? 'bg-red-500 hover:bg-red-600'
+                                                            : 'bg-emerald-500 hover:bg-emerald-600'
+                                                        }`}
+                                                >
+                                                    <div className="flex items-center justify-between gap-3">
+                                                        <div className="text-left">
+                                                            <div className="font-bold text-lg">
+                                                                {!isButtonEnabled
+                                                                    ? t('common.loading')
+                                                                    : pendingRematchInviteId
+                                                                        ? t('game.rematchPending', '응답 대기중')
+                                                                        : isRematchClosed
+                                                                            ? t('game.rematchClosed', '재대결 종료')
+                                                                        : isSubmittingRematch
+                                                                            ? t('common.loading')
+                                                                            : t('game.rematchRequest', '재대결 신청')}
+                                                            </div>
+                                                            <div className="mt-1 flex items-center gap-2 text-xs text-white/85">
+                                                                <img
+                                                                    src="/images/icon/icon_pen.png"
+                                                                    alt={t('ad.pencils', '연필')}
+                                                                    className="h-4 w-4 object-contain"
+                                                                />
+                                                                <span>
+                                                                    {isRematchClosed
+                                                                        ? t('game.rematchExpiredShort', '종료')
+                                                                        : myPencils !== null && myPencils < 1
+                                                                        ? t('game.rematchNoPencilsShort', '부족')
+                                                                        : t('game.rematchCostCountdownShort', '신청 1개 · {{seconds}}초', { seconds: rematchSecondsLeft })}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </motion.button>
+                                            )}
                                             <motion.button
                                                 initial={{ opacity: 0, y: 20 }}
                                                 animate={{ opacity: 1, y: 0 }}

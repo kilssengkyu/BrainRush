@@ -36,7 +36,10 @@ const ChatNotificationListener = () => {
                         msg.content.startsWith('INVITE_ACCEPTED:') ||
                         msg.content.startsWith('INVITE_REJECTED:') ||
                         msg.content.startsWith('INVITE_BUSY:') ||
-                        msg.content.startsWith('INVITE_CANCELLED:')
+                        msg.content.startsWith('INVITE_CANCELLED:') ||
+                        msg.content.startsWith('REMATCH_REQUEST:') ||
+                        msg.content.startsWith('REMATCH_ACCEPTED:') ||
+                        msg.content.startsWith('REMATCH_REJECTED:')
                     ) {
                         return;
                     }

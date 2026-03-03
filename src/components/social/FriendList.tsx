@@ -198,7 +198,10 @@ const FriendList: React.FC<FriendListProps> = ({ onChatClick, onChallengeClick, 
                 .not('content', 'like', 'INVITE_ACCEPTED:%')
                 .not('content', 'like', 'INVITE_REJECTED:%')
                 .not('content', 'like', 'INVITE_BUSY:%')
-                .not('content', 'like', 'INVITE_CANCELLED:%');
+                .not('content', 'like', 'INVITE_CANCELLED:%')
+                .not('content', 'like', 'REMATCH_REQUEST:%')
+                .not('content', 'like', 'REMATCH_ACCEPTED:%')
+                .not('content', 'like', 'REMATCH_REJECTED:%');
 
             if (error) throw error;
 

@@ -14,6 +14,7 @@ export const useMatchmaking = (
     const searchInterval = useRef<ReturnType<typeof setInterval> | null>(null);
     const searchStartTime = useRef<number>(0);
     const botMatchTriggered = useRef<boolean>(false);
+    const pencilConsumed = useRef<boolean>(false);
 
     // Generate a transient Guest ID if not logged in
     const guestId = useRef(`guest_${Math.random().toString(36).substring(2, 9)}`);
@@ -66,6 +67,7 @@ export const useMatchmaking = (
         searchStartTime.current = Date.now();
         setElapsedTime(0);
         botMatchTriggered.current = false;
+        pencilConsumed.current = false;
 
         // If Normal Mode, Start with huge range immediately (Ignore Elo)
         const initialRange = mode === 'normal' ? 100 : 50;
@@ -116,7 +118,8 @@ export const useMatchmaking = (
                         console.log('Bot Match Found! Room:', data.room_id);
                         if (searchInterval.current) clearInterval(searchInterval.current);
                         try {
-                            if (user) {
+                            if (user && !pencilConsumed.current) {
+                                pencilConsumed.current = true;
                                 const { data: consumed } = await supabase.rpc('consume_pencil', { user_id: user.id });
                                 if (!consumed) {
                                     console.error('Failed to consume pencil (Bot Match)!');
@@ -142,6 +145,20 @@ export const useMatchmaking = (
             if (passiveMatch) {
                 console.log('Passive Match Detected! Reconnecting/Matching:', passiveMatch.room_id);
                 if (searchInterval.current) clearInterval(searchInterval.current);
+
+                // Consume pencil for passive match (same as active match)
+                try {
+                    if (user && !pencilConsumed.current) {
+                        pencilConsumed.current = true;
+                        const { data: consumed } = await supabase.rpc('consume_pencil', { user_id: user.id });
+                        if (!consumed) {
+                            console.error('Failed to consume pencil (Passive Match)!');
+                        }
+                    }
+                } catch (e) {
+                    console.error('Pencil consumption error (Passive Match):', e);
+                }
+
                 setMatchedOpponentId(passiveMatch.opponent_id);
                 setStatus('matched');
                 setTimeout(() => {
@@ -192,7 +209,8 @@ export const useMatchmaking = (
 
                 try {
                     // Only Authenticated users consume pencils
-                    if (user) {
+                    if (user && !pencilConsumed.current) {
+                        pencilConsumed.current = true;
                         const { data: consumed } = await supabase.rpc('consume_pencil', { user_id: user.id });
                         if (!consumed) {
                             console.error('Failed to consume pencil! Maybe ran out during search?');

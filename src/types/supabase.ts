@@ -146,11 +146,16 @@ export type Database = {
           phase_end_at: string | null
           phase_start_at: string | null
           player1_id: string
+          player1_lose_pencil: boolean | null
           player1_ready: boolean | null
+          player1_streak_bonus: number | null
           player1_score: number | null
           player2_id: string
+          player2_lose_pencil: boolean | null
           player2_ready: boolean | null
+          player2_streak_bonus: number | null
           player2_score: number | null
+          rematch_source_session_id: string | null
           round_scores: Json | null
           seed: string | null
           start_at: string | null
@@ -173,11 +178,16 @@ export type Database = {
           phase_end_at?: string | null
           phase_start_at?: string | null
           player1_id: string
+          player1_lose_pencil?: boolean | null
           player1_ready?: boolean | null
+          player1_streak_bonus?: number | null
           player1_score?: number | null
           player2_id: string
+          player2_lose_pencil?: boolean | null
           player2_ready?: boolean | null
+          player2_streak_bonus?: number | null
           player2_score?: number | null
+          rematch_source_session_id?: string | null
           round_scores?: Json | null
           seed?: string | null
           start_at?: string | null
@@ -200,11 +210,16 @@ export type Database = {
           phase_end_at?: string | null
           phase_start_at?: string | null
           player1_id?: string
+          player1_lose_pencil?: boolean | null
           player1_ready?: boolean | null
+          player1_streak_bonus?: number | null
           player1_score?: number | null
           player2_id?: string
+          player2_lose_pencil?: boolean | null
           player2_ready?: boolean | null
+          player2_streak_bonus?: number | null
           player2_score?: number | null
+          rematch_source_session_id?: string | null
           round_scores?: Json | null
           seed?: string | null
           start_at?: string | null
@@ -541,6 +556,10 @@ export type Database = {
       }
       create_practice_session: {
         Args: { p_game_type: string; p_player_id: string }
+        Returns: string
+      }
+      create_rematch_session: {
+        Args: { p_requester_id: string; p_source_session_id: string }
         Returns: string
       }
       create_session: {

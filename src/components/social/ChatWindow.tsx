@@ -25,7 +25,10 @@ const SYSTEM_INVITE_PREFIXES = [
     'INVITE_ACCEPTED:',
     'INVITE_REJECTED:',
     'INVITE_BUSY:',
-    'INVITE_CANCELLED:'
+    'INVITE_CANCELLED:',
+    'REMATCH_REQUEST:',
+    'REMATCH_ACCEPTED:',
+    'REMATCH_REJECTED:'
 ];
 
 const isSystemInviteMessage = (content?: string | null) =>
@@ -111,6 +114,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ friendId, friendNickname, onClo
                 .not('content', 'like', 'INVITE_REJECTED:%')
                 .not('content', 'like', 'INVITE_BUSY:%')
                 .not('content', 'like', 'INVITE_CANCELLED:%')
+                .not('content', 'like', 'REMATCH_REQUEST:%')
+                .not('content', 'like', 'REMATCH_ACCEPTED:%')
+                .not('content', 'like', 'REMATCH_REJECTED:%')
                 .order('created_at', { ascending: true })
                 .limit(50); // Pagination later
 

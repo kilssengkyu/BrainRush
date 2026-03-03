@@ -37,38 +37,55 @@ type XpAnimationPayload = {
     xpGain: number;
 };
 
+const MAX_PENCILS = 5;
+const PENCIL_RECHARGE_MS = 30 * 60 * 1000;
+
+const getLivePencilState = (
+    pencils: number | null | undefined,
+    lastRechargeAt: string | null | undefined,
+    nowMs: number
+) => {
+    const basePencils = typeof pencils === 'number' ? pencils : 0;
+
+    if (!lastRechargeAt || basePencils >= MAX_PENCILS) {
+        return { pencils: Math.min(MAX_PENCILS, basePencils), remainingMs: 0 };
+    }
+
+    const lastMs = new Date(lastRechargeAt).getTime();
+    if (!Number.isFinite(lastMs)) {
+        return { pencils: Math.min(MAX_PENCILS, basePencils), remainingMs: 0 };
+    }
+
+    const elapsedMs = Math.max(0, nowMs - lastMs);
+    const regenerated = Math.floor(elapsedMs / PENCIL_RECHARGE_MS);
+    const livePencils = Math.min(MAX_PENCILS, basePencils + regenerated);
+
+    if (livePencils >= MAX_PENCILS) {
+        return { pencils: MAX_PENCILS, remainingMs: 0 };
+    }
+
+    return {
+        pencils: livePencils,
+        remainingMs: PENCIL_RECHARGE_MS - (elapsedMs % PENCIL_RECHARGE_MS)
+    };
+};
+
 // Simple Timer Component
-const RechargeTimer = ({ lastRecharge }: { lastRecharge: string }) => {
+const RechargeTimer = ({ remainingMs }: { remainingMs: number }) => {
     const [timeLeft, setTimeLeft] = useState<string>('');
 
     useEffect(() => {
         const calculateTime = () => {
-            if (!lastRecharge) return;
-            const last = new Date(lastRecharge).getTime();
-            const now = new Date().getTime();
-            const diff = now - last;
-            const thirtyMinutes = 30 * 60 * 1000;
-
-            // Time passed since last recharge
-            // If we have < 5 pencils, the next one comes at (last_recharge + 30min)
-            // Wait, if multiple intervals passed but not synced? 
-            // The DB syncs on load. We assume 'lastRecharge' is the start of the CURRENT 10m cycle.
-
-            const remaining = thirtyMinutes - diff;
-
-            if (remaining <= 0) {
-                setTimeLeft('00:00'); // Ready to sync?
-            } else {
-                const m = Math.floor(remaining / 60000);
-                const s = Math.floor((remaining % 60000) / 1000);
-                setTimeLeft(`${m}:${s.toString().padStart(2, '0')}`);
-            }
+            const safeRemaining = Math.max(0, remainingMs);
+            const m = Math.floor(safeRemaining / 60000);
+            const s = Math.floor((safeRemaining % 60000) / 1000);
+            setTimeLeft(`${m}:${s.toString().padStart(2, '0')}`);
         };
 
         calculateTime();
         const interval = setInterval(calculateTime, 1000);
         return () => clearInterval(interval);
-    }, [lastRecharge]);
+    }, [remainingMs]);
 
     return (
         <span className="ml-0 text-[10px] text-gray-400 font-mono">
@@ -93,10 +110,20 @@ const Home = () => {
     const [longPressXpExpanded, setLongPressXpExpanded] = useState(false);
     const longPressTimerRef = useRef<number | null>(null);
     const longPressTouchRef = useRef(false);
+    const suppressProfileClickRef = useRef(false);
+    const [nowMs, setNowMs] = useState(() => Date.now());
+    const lastPencilRefreshAttemptRef = useRef(0);
 
     // Refresh profile on mount to get latest MMR after game
     useEffect(() => {
         refreshProfile();
+    }, []);
+
+    useEffect(() => {
+        const timer = window.setInterval(() => {
+            setNowMs(Date.now());
+        }, 1000);
+        return () => window.clearInterval(timer);
     }, []);
 
     useEffect(() => {
@@ -182,10 +209,23 @@ const Home = () => {
     const avatarUrl = profile?.avatar_url;
     const countryCode = profile?.country;
     const hasSocialNotifications = pendingRequestsCount > 0 || unreadChatCount > 0;
+    const livePencilState = getLivePencilState(profile?.pencils, profile?.last_recharge_at, nowMs);
+    const displayedPencils = livePencilState.pencils;
+    const displayedRechargeMs = livePencilState.remainingMs;
 
     // Stable ref for refreshProfile to avoid effect dependency issues
     const refreshProfileRef = useRef(refreshProfile);
     useEffect(() => { refreshProfileRef.current = refreshProfile; }, [refreshProfile]);
+
+    useEffect(() => {
+        const profilePencils = typeof profile?.pencils === 'number' ? profile.pencils : null;
+        if (profilePencils === null || displayedPencils <= profilePencils) return;
+
+        const now = Date.now();
+        if (now - lastPencilRefreshAttemptRef.current < 5000) return;
+        lastPencilRefreshAttemptRef.current = now;
+        void refreshProfileRef.current();
+    }, [displayedPencils, profile?.pencils]);
 
     useEffect(() => {
         if (!user || !profile) return;
@@ -327,8 +367,10 @@ const Home = () => {
     const handleProfilePressStart = () => {
         if (xpAnimation) return; // animation already showing
         longPressTouchRef.current = true;
+        suppressProfileClickRef.current = false;
         longPressTimerRef.current = window.setTimeout(() => {
             if (longPressTouchRef.current) {
+                suppressProfileClickRef.current = true;
                 setLongPressXpExpanded(true);
             }
         }, 300);
@@ -340,6 +382,13 @@ const Home = () => {
             longPressTimerRef.current = null;
         }
         setLongPressXpExpanded(false);
+    };
+    const handleProfileClick = () => {
+        if (suppressProfileClickRef.current || longPressXpExpanded) {
+            suppressProfileClickRef.current = false;
+            return;
+        }
+        navigate('/profile');
     };
     // Next milestone: 3 -> +5, 6 -> +10, 9 -> +15
     const nextMilestone = streakCount < 3 ? 3 : streakCount < 6 ? 6 : streakCount < 9 ? 9 : 0;
@@ -593,7 +642,7 @@ const Home = () => {
                 return;
             }
 
-            const pencils = profile?.pencils ?? 0;
+            const pencils = displayedPencils;
             if (pencils < 1) {
                 playSound('error');
                 setShowAdModal(true);
@@ -680,7 +729,7 @@ const Home = () => {
                                 ? 'w-[min(22rem,calc(100vw-2rem))] rounded-[1.75rem] border-blue-400/35 px-4 py-3 shadow-[0_0_28px_rgba(59,130,246,0.22)]'
                                 : 'rounded-full border-gray-700 p-2 pr-6'
                                 }`}
-                            onClick={() => { if (!longPressXpExpanded) navigate('/profile'); }}
+                            onClick={handleProfileClick}
                             onTouchStart={handleProfilePressStart}
                             onTouchEnd={handleProfilePressEnd}
                             onTouchCancel={handleProfilePressEnd}
@@ -800,15 +849,15 @@ const Home = () => {
                         >
                             <div className="flex flex-col items-end leading-none">
                                 <div className="flex items-center gap-1.5">
-                                    <span className={`text-lg md:text-xl font-black ${profile?.pencils < 1 ? "text-red-400" : "text-yellow-400"}`}>
-                                        {profile?.pencils ?? 5}
+                                    <span className={`text-lg md:text-xl font-black ${displayedPencils < 1 ? "text-red-400" : "text-yellow-400"}`}>
+                                        {displayedPencils}
                                     </span>
                                     <span className="text-gray-500 text-sm font-bold">/ 5</span>
                                 </div>
-                                {profile?.pencils < 5 && (
+                                {displayedPencils < MAX_PENCILS && (
                                     <div className="text-xs text-gray-400 font-mono flex items-center gap-1.5 mt-0.5">
                                         <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                                        <RechargeTimer lastRecharge={profile?.last_recharge_at} />
+                                        <RechargeTimer remainingMs={displayedRechargeMs} />
                                     </div>
                                 )}
                             </div>
