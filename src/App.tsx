@@ -1,4 +1,5 @@
 import { App as CapacitorApp } from '@capacitor/app';
+import { AdMob } from '@capacitor-community/admob';
 import { Capacitor } from '@capacitor/core';
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
@@ -39,6 +40,41 @@ const BackButtonHandler = () => {
 
   return null;
 };
+
+const AuthErrorRelay = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const search = new URLSearchParams(location.search || '');
+    const hash = new URLSearchParams((location.hash || '').replace(/^#/, ''));
+
+    const errorCode = search.get('error_code') || hash.get('error_code');
+    const errorDescription = search.get('error_description') || hash.get('error_description') || '';
+    const isUserBanned = errorCode === 'user_banned' || String(errorDescription).toLowerCase().includes('banned');
+
+    if (!isUserBanned) return;
+
+    try {
+      localStorage.setItem('brainrush_auth_error', JSON.stringify({
+        message: errorDescription || 'User is banned',
+        isBanned: true,
+        bannedUntil: null,
+        at: Date.now()
+      }));
+    } catch {
+      // no-op
+    }
+
+    if (location.pathname !== '/login') {
+      navigate('/login', { replace: true });
+    } else if (location.search || location.hash) {
+      navigate('/login', { replace: true });
+    }
+  }, [location.pathname, location.search, location.hash, navigate]);
+
+  return null;
+};
 import Game from './pages/Game';
 import Settings from './pages/Settings';
 import { SoundProvider } from './contexts/SoundContext';
@@ -53,6 +89,8 @@ import PracticeMode from './pages/PracticeMode';
 import Shop from './pages/Shop';
 import Privacy from './pages/Privacy';
 import Support from './pages/Support';
+import Admin from './pages/Admin';
+import AdminMember from './pages/AdminMember';
 
 import GameInviteListener from './components/social/GameInviteListener';
 import ChatNotificationListener from './components/social/ChatNotificationListener';
@@ -66,6 +104,22 @@ function App() {
     const isAndroid = Capacitor.getPlatform() === 'android';
     const offset = isAndroid ? '12px' : '0px';
     document.documentElement.style.setProperty('--home-top-offset', offset);
+
+    // Request App Tracking Transparency on iOS
+    const requestTracking = async () => {
+      if (Capacitor.getPlatform() === 'ios') {
+        try {
+          await AdMob.requestTrackingAuthorization();
+        } catch (e) {
+          console.error('ATT Request failed:', e);
+        }
+      }
+      // Initialize AdMob globally
+      if (Capacitor.isNativePlatform()) {
+        AdMob.initialize().catch(e => console.error('Global AdMob init failed:', e));
+      }
+    };
+    requestTracking();
   }, []);
 
   return (
@@ -75,6 +129,7 @@ function App() {
           <TutorialProvider>
             <BrowserRouter>
               <BackButtonHandler />
+              <AuthErrorRelay />
               <BGMManager />
               <GameInviteListener />
               <ChatNotificationListener />
@@ -89,6 +144,8 @@ function App() {
                 <Route path="/shop" element={<Shop />} />
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/support" element={<Support />} />
+                <Route path="/admin" element={<Admin />} />
+                <Route path="/admin/member" element={<AdminMember />} />
               </Routes>
             </BrowserRouter>
           </TutorialProvider>

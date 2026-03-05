@@ -28,6 +28,29 @@ const MakeTen: React.FC<MakeTenProps> = ({ seed, onScore, isPlaying }) => {
         return 3;
     };
 
+    const countTenSolutions = (numbers: number[]) => {
+        let totalSolutions = 0;
+        let pairSolutions = 0;
+        const n = numbers.length;
+
+        for (let mask = 1; mask < (1 << n); mask += 1) {
+            let sum = 0;
+            let size = 0;
+            for (let i = 0; i < n; i += 1) {
+                if (mask & (1 << i)) {
+                    sum += numbers[i];
+                    size += 1;
+                }
+            }
+            if (sum === 10) {
+                totalSolutions += 1;
+                if (size === 2) pairSolutions += 1;
+            }
+        }
+
+        return { totalSolutions, pairSolutions };
+    };
+
     const currentPanel = useMemo(() => {
         if (!seed) return null;
 
@@ -37,42 +60,34 @@ const MakeTen: React.FC<MakeTenProps> = ({ seed, onScore, isPlaying }) => {
         // 1. Determine Count (3 or 4)
         const count = level === 1 ? 3 : 4;
 
-        // 2. Generate a valid "Target Subset" that sums to 10
-        const subsetSize = Math.floor(rng.next() * (count - 1)) + 2; // 2 to count
+        // Build panels so "make 10" usually uses exactly two numbers
+        // and the valid combination is unique.
+        const candidatePairs: Array<[number, number]> = [[1, 9], [2, 8], [3, 7], [4, 6]];
+        const distractorPool = level < 3
+            ? [1, 2, 3, 4, 5, 6, 7, 8, 9]
+            : [-5, -4, -3, -2, -1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15];
 
-        // Generate Numbers summing to 10
-        let currentSum = 0;
-        const targetNumbers: number[] = [];
+        let validNumbers: number[] | null = null;
+        for (let attempt = 0; attempt < 500; attempt += 1) {
+            const [a, b] = candidatePairs[Math.floor(rng.next() * candidatePairs.length)];
+            const picked = new Set<number>([a, b]);
 
-        if (level < 3) {
-            // Positive Integers only
-            let remaining = 10;
-            for (let i = 0; i < subsetSize - 1; i++) {
-                const maxVal = remaining - (subsetSize - 1 - i);
-                const n = Math.floor(rng.next() * (maxVal - 1)) + 1;
-                targetNumbers.push(n);
-                remaining -= n;
+            while (picked.size < count) {
+                const candidate = distractorPool[Math.floor(rng.next() * distractorPool.length)];
+                if (candidate === 10 || picked.has(candidate)) continue;
+                picked.add(candidate);
             }
-            targetNumbers.push(remaining);
-        } else {
-            // Level 3: Negatives allowed
-            for (let i = 0; i < subsetSize - 1; i++) {
-                const n = Math.floor(rng.next() * 20) - 5; // -5 to 14
-                targetNumbers.push(n);
-                currentSum += n;
+
+            const numbers = Array.from(picked);
+            const { totalSolutions, pairSolutions } = countTenSolutions(numbers);
+            if (pairSolutions === 1 && totalSolutions === 1) {
+                validNumbers = numbers;
+                break;
             }
-            targetNumbers.push(10 - currentSum);
         }
 
-        // 3. Fill remaining slots with distractors
-        const finalNumbers = [...targetNumbers];
-        while (finalNumbers.length < count) {
-            const distractor = Math.floor(rng.next() * 9) + 1;
-            finalNumbers.push(distractor);
-        }
-
-        // 4. Shuffle position
-        const shuffled = rng.shuffle(finalNumbers);
+        const fallback = count === 3 ? [1, 9, 4] : [1, 9, 4, 7];
+        const shuffled = rng.shuffle(validNumbers ?? fallback);
 
         return {
             numbers: shuffled,

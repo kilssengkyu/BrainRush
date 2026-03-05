@@ -45,7 +45,7 @@ export const UIProvider = ({ children }: { children: ReactNode }) => {
     const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
         const id = Math.random().toString(36).substr(2, 9);
         setToasts((prev) => [...prev, { id, message, type }]);
-        setTimeout(() => removeToast(id), 3000);
+        setTimeout(() => removeToast(id), 3800);
     };
 
     const removeToast = (id: string) => {
@@ -75,7 +75,11 @@ export const UIProvider = ({ children }: { children: ReactNode }) => {
             {children}
 
             {/* Toast Container */}
-            <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 flex flex-col gap-2 pointer-events-none">
+            <div
+                className="fixed z-50 flex flex-col gap-2 pointer-events-none px-3 w-full max-w-xl left-1/2 -translate-x-1/2 top-[max(12px,env(safe-area-inset-top))] md:top-auto md:bottom-4"
+                aria-live="polite"
+                aria-atomic="true"
+            >
                 <AnimatePresence>
                     {toasts.map((toast) => (
                         <Toast key={toast.id} message={toast.message} type={toast.type} onClose={() => removeToast(toast.id)} />

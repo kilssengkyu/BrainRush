@@ -1,0 +1,469 @@
+{
+    "app": {
+        "title": "BrainRush",
+        "subtitle": "Velocidad e Inteligencia"
+    },
+    "common": {
+        "cancel": "Cancelar",
+        "confirm": "Confirmar",
+        "close": "Cerrar",
+        "retry": "Reintentar",
+        "loading": "Cargando...",
+        "noResults": "Sin resultados",
+        "add": "Agregar",
+        "error": "Ocurrió un error.",
+        "google": "Google",
+        "or": "O",
+        "timeAgo": {
+            "justNow": "Justo ahora",
+            "minute": "hace {{count}} m",
+            "hour": "hace {{count}} h",
+            "day": "hace {{count}} d",
+            "longAgo": "Hace mucho tiempo"
+        }
+    },
+    "auth": {
+        "loginRequired": "Se requiere iniciar sesión.",
+        "guestMode": "Modo Invitado",
+        "guestWarning": "Los invitados pueden perder el progreso guardado.",
+        "terms": "Al continuar, aceptas nuestros Términos de Servicio."
+    },
+    "social": {
+        "friends": "Amigos",
+        "friendList": "Lista de amigos",
+        "friendRequests": "Solicitudes de amistad",
+        "addFriend": "Agregar amigo",
+        "searchNickname": "Buscar apodo",
+        "searchError": "Ocurrió un error durante la búsqueda.",
+        "userNotFound": "Usuario no encontrado.",
+        "cannotAddSelf": "No puedes agregarte a ti mismo.",
+        "alreadyFriends": "Ya son amigos.",
+        "requestPending": "La solicitud ya fue enviada o está pendiente.",
+        "blocked": "El usuario está bloqueado o te ha bloqueado.",
+        "requestSent": "¡Solicitud de amistad enviada!",
+        "requestFail": "No se pudo enviar la solicitud de amistad.",
+        "loadingFriends": "Cargando lista de amigos...",
+        "noFriends": "No se encontraron amigos.",
+        "deleteFriend": "Eliminar amigo",
+        "deleteFriendConfirm": "¿Seguro que quieres eliminar a '{{nickname}}'?",
+        "deleteFriendFail": "No se pudo eliminar al amigo",
+        "online": "En línea",
+        "ingame": "En partida",
+        "offline": "Desconectado",
+        "challengeTitle": "Desafiar amigo",
+        "challengeConfirm": "¿Quieres desafiar a este amigo?",
+        "challengeFail": "No se pudo desafiar: ",
+        "challengeWaiting": "Invitación enviada. Esperando aceptación...",
+        "challengeWaitingTitle": "Esperando partida amistosa",
+        "challengeWaitingDesc": "Esperando a que tu amigo acepte.",
+        "challengeWaitingTime": "Tiempo restante: {{seconds}} s",
+        "challengeAccepted": "¡Partida amistosa aceptada!",
+        "challengeRejected": "Partida amistosa rechazada.",
+        "challengeTimeout": "La invitación expiró.",
+        "challengeCancelled": "Invitación cancelada.",
+        "challengeAlreadyPending": "Ya tienes una invitación pendiente.",
+        "challengeInGame": "No puedes invitar a un amigo que está en una partida.",
+        "challengeOffline": "Solo puedes invitar a amigos en línea.",
+        "inviteSenderFallback": "Amigo",
+        "inviteTitle": "Solicitud de partida amistosa",
+        "inviteBody": "'{{nickname}}' te ha desafiado a una partida amistosa. ¿Aceptar?",
+        "inviteInvalidSession": "La sesión de juego no es válida o ya comenzó.",
+        "inviteJoinFail": "No se pudo entrar a la partida.",
+        "typeMessage": "Escribe un mensaje...",
+        "sendFail": "No se pudo enviar el mensaje",
+        "chat": "Chat",
+        "challenge": "Desafiar",
+        "accept": "Aceptar",
+        "reject": "Rechazar",
+        "newMessage": "Nuevo mensaje de {{nickname}}"
+    },
+    "menu": {
+        "normal": {
+            "title": "Modo normal",
+            "subtitle": "Entrenamiento cerebral básico"
+        },
+        "rank": {
+            "title": "Modo ranked",
+            "subtitle": "Compite globalmente"
+        },
+        "all": "Todo",
+        "friendly": {
+            "title": "Modo amistoso",
+            "subtitle": "1vs1 con amigos"
+        },
+        "practice": {
+            "title": "Modo práctica",
+            "subtitle": "Practica minijuegos libremente"
+        },
+        "shop": "Tienda",
+        "settings": "Configuración",
+        "login": "Iniciar sesión",
+        "logout": "Cerrar sesión",
+        "profile": "Perfil"
+    },
+    "shop": {
+        "title": "Tienda",
+        "subtitle": "Juega por más tiempo",
+        "removeAds": {
+            "title": "Paquete sin anuncios",
+            "desc": "Sin anuncios. Obtén lápices al instante al tocar recompensas de anuncios."
+        },
+        "pencils5": {
+            "title": "Lápices x5",
+            "desc": "Pequeño impulso para una sesión corta."
+        },
+        "pencils20": {
+            "title": "Lápices x20",
+            "desc": "Ideal para jugar a diario."
+        },
+        "pencils100": {
+            "title": "Lápices x100",
+            "desc": "La mejor relación valor para juego a largo plazo."
+        },
+        "practiceNotes5": {
+            "title": "10 notas de práctica",
+            "desc": "Bueno para una sesión rápida de práctica."
+        },
+        "practiceNotes20": {
+            "title": "Notas de práctica x20",
+            "desc": "Buen impulso para prácticas más largas."
+        },
+        "practiceNotes100": {
+            "title": "Notas de práctica x100",
+            "desc": "La mejor relación valor para práctica intensa."
+        },
+        "buy": "Comprar",
+        "premium": "Premium",
+        "popular": "Popular",
+        "bestValue": "Mejor valor",
+        "notice": "Los pagos se procesan mediante App Store / Google Play.",
+        "comingSoon": "Preparando flujo de compra...",
+        "priceTbd": "Por definir",
+        "loading": "Cargando...",
+        "purchased": "Comprado",
+        "purchaseSuccess": "Compra completada.",
+        "purchaseFail": "La compra falló.",
+        "billingUnavailable": "La facturación no es compatible en este dispositivo."
+    },
+    "leaderboard": {
+        "button": "Ranking",
+        "title": "Ranking",
+        "global": "Global",
+        "country": "País"
+    },
+    "ad": {
+        "remaining": "Restante hoy: {{count}}/{{limit}}",
+        "limitReached": "Límite diario de anuncios alcanzado.",
+        "limitReachedDesc": "Vuelve mañana para ver más anuncios.",
+        "adFreeDesc": "Recompensa sin anuncios. Obtén 1 lápiz al instante.",
+        "adFreeDescPracticeNotes": "Recompensa sin anuncios. Obtén 2 notas de práctica al instante.",
+        "claimBtn": "Obtener lápices",
+        "claimBtnPracticeNotes": "Obtener notas de práctica",
+        "granting": "Otorgando recompensa...",
+        "rewardFailed": "La recompensa falló.",
+        "rewardFailedDesc": "Inténtalo de nuevo más tarde.",
+        "title": "Obtener lápices",
+        "titlePracticeNotes": "Obtener notas de práctica",
+        "loading": "Cargando anuncio...",
+        "watchDesc": "¡Mira un anuncio corto para obtener 1 lápiz!",
+        "watchDescPracticeNotes": "¡Mira un anuncio corto para obtener 2 notas de práctica!",
+        "watchBtn": "Ver anuncio",
+        "watching": "Viendo anuncio...",
+        "playing": "El anuncio se está reproduciendo...",
+        "pencils": "Lápices",
+        "practiceNotes": "Notas de práctica",
+        "success": "Recompensa obtenida correctamente."
+    },
+    "notifications": {
+        "fullTitle": "Lápices al máximo",
+        "fullBody": "Los lápices están llenos. ¡Es hora de usar tu cerebro!",
+        "reminderTitle": "Hora de usar tu cerebro",
+        "reminderBody": "Han pasado 24 horas. ¡Vuelve y juega!"
+    },
+    "user": {
+        "level": "Nivel",
+        "rank": "Rango"
+    },
+    "settings": {
+        "title": "Configuración",
+        "language": "Idioma",
+        "sound": "Sonido",
+        "masterVolume": "Volumen principal",
+        "vibration": "Vibración",
+        "deleteAccount": "Eliminar cuenta",
+        "deleteAccountConfirm": "¿Seguro que quieres eliminar tu cuenta? Es permanente y no se puede deshacer.",
+        "logoutConfirm": "¿Seguro que quieres cerrar sesión?",
+        "restorePurchases": "Restaurar compras",
+        "restorePurchasesDesc": "Restaura compras no consumibles como eliminar anuncios.",
+        "restorePurchasesSuccess": "Compras restauradas.",
+        "restorePurchasesFail": "No se pudieron restaurar las compras.",
+        "restorePurchasesUnavailable": "La facturación no es compatible en este dispositivo.",
+        "restorePurchasesEmpty": "No hay compras para restaurar.",
+        "privacyPolicy": "Política de privacidad",
+        "privacyPolicyDesc": "Revisa cómo manejamos los datos personales del servicio.",
+        "viewPrivacyPolicy": "Ver política de privacidad",
+        "tutorial": "Tutorial",
+        "tutorialDesc": "Si quieres revisar cómo usar la app, vuelve a ver el tutorial.",
+        "viewTutorial": "Ver tutorial de nuevo"
+    },
+    "report": {
+        "button": "Reportar",
+        "title": "Reportar jugador",
+        "description": "Ingresa el motivo del reporte.",
+        "descriptionWithTarget": "Ingresa un motivo para reportar a {{target}}.",
+        "placeholder": "Escribe el motivo del reporte.",
+        "submit": "Enviar reporte",
+        "success": "Tu reporte fue enviado.",
+        "fail": "No se pudo enviar el reporte."
+    },
+    "profile": {
+        "nicknameSetupTitle": "Configurar apodo",
+        "nicknameSetupDesc": "Ingresa el apodo que usarás en el juego.",
+        "nicknamePlaceholder": "Ingresa apodo",
+        "selectCountry": "Seleccionar país",
+        "edit": "Editar",
+        "highscoresTitle": "Puntajes máximos",
+        "highscoresColumns": {
+            "game": "Juego",
+            "highscore": "Puntaje máximo",
+            "rankWinRate": "Tasa de victoria ranked"
+        },
+        "highscoreLeaderboardTitle": "Top 10",
+        "highscoreLeaderboardEmpty": "Aún no hay registros.",
+        "highscoreLeaderboardColumns": {
+            "rank": "#",
+            "player": "Jugador",
+            "score": "Puntaje"
+        },
+        "guestTitle": "Cuenta de invitado",
+        "guestDesc": "Las cuentas de invitado pueden perderse si cierras sesión, borras la app o cambias de dispositivo. Vincula una cuenta de Google para conservar tu progreso.",
+        "linkGoogle": "Vincular cuenta de Google",
+        "statsTitle": "Habilidades",
+        "stats": {
+            "speed": "Velocidad",
+            "memory": "Memoria",
+            "judgment": "Juicio",
+            "calculation": "Cálculo",
+            "accuracy": "Precisión",
+            "observation": "Observación"
+        },
+        "changeAvatar": "Cambiar foto",
+        "avatarUploading": "Subiendo...",
+        "avatarInvalidType": "Tipo de imagen no compatible.",
+        "avatarTooLarge": "El archivo es demasiado grande.",
+        "avatarUploadSuccess": "Foto de perfil actualizada.",
+        "avatarUploadFail": "No se pudo subir la foto de perfil",
+        "record": "Historial",
+        "noRecord": "No hay historial de partidas.",
+        "disconnects": "Desconexiones",
+        "updateSuccess": "¡Perfil actualizado con éxito!",
+        "updateFail": "No se pudo actualizar el perfil",
+        "deleteSuccess": "Cuenta eliminada con éxito.",
+        "deleteFail": "No se pudo eliminar la cuenta."
+    },
+    "game": {
+        "waiting": "Esperando partida...",
+        "victory": "VICTORIA",
+        "defeat": "DERROTA",
+        "returnMenu": "Volver al menú",
+        "reconnecting": "Esperando al oponente...",
+        "reconnectingDesc": "El oponente se desconectó. Victoria automática en:",
+        "myTime": "Mi tiempo",
+        "rank": "RANKED",
+        "normal": "NORMAL",
+        "unknownPlayer": "Jugador desconocido",
+        "guest": "Invitado",
+        "you": "Tú",
+        "opponent": "Oponente",
+        "opponentWaiting": "El oponente está esperando...",
+        "draw": "EMPATE",
+        "roundResult": "Resultado de la ronda {{round}}",
+        "matchResult": "RESULTADO FINAL",
+        "startingIn": "Comienza en",
+        "roundFinished": "RONDA TERMINADA",
+        "total": "TOTAL",
+        "great": "¡Genial!",
+        "tier": "Tier",
+        "table": {
+            "round": "Ronda",
+            "myScore": "Mi puntaje",
+            "opScore": "Puntaje op.",
+            "result": "Resultado",
+            "win": "GANAR",
+            "lose": "PERDER",
+            "draw": "EMPATE"
+        }
+    },
+    "matchmaking": {
+        "searching": "Buscando...",
+        "description": "Buscando un oponente digno",
+        "cancel": "Cancelar",
+        "found": "¡Partida encontrada!",
+        "entering": "Entrando a la arena...",
+        "timeout": "No se encontró partida",
+        "timeoutDesc": "No pudimos encontrar un oponente a tiempo.",
+        "range": "Rango",
+        "rankLevelRequired": "Alcanza el nivel {{level}} para desbloquear Ranked."
+    },
+    "rps": {
+        "ready": "LISTO...",
+        "beatIt": "¡GÁNALE!",
+        "lose": "¡PIERDE!",
+        "reverse": "AL REVÉS",
+        "round": "Ronda",
+        "titleWin": "RPS Ganador",
+        "titleLose": "RPS Perdedor",
+        "title": "PIEDRA PAPEL TIJERA",
+        "instruction": "¡Elige la jugada para ganar o perder según la instrucción!"
+    },
+    "number": {
+        "title": "ORDEN NUMÉRICO",
+        "instruction": "Orden ascendente",
+        "asc": "¡Toca los números de menor a mayor!",
+        "desc": "¡Toca los números de mayor a menor!",
+        "ready": "LISTO",
+        "panel": "PANEL",
+        "titleDesc": "ORDEN INVERSO",
+        "instructionDesc": "¡Toca de mayor a menor!"
+    },
+    "math": {
+        "title": "DESAFÍO MATEMÁTICO",
+        "instruction": "Calcula la expresión y elige la respuesta correcta"
+    },
+    "ten": {
+        "title": "HACER 10",
+        "instruction": "Haz que la suma de los números seleccionados sea 10."
+    },
+    "color": {
+        "title": "COINCIDENCIA DE COLOR",
+        "instruction": "Selecciona botones donde el color coincide con el texto",
+        "red": "ROJO",
+        "blue": "AZUL",
+        "green": "VERDE",
+        "yellow": "AMARILLO"
+    },
+    "memory": {
+        "title": "MEMORIA",
+        "instruction": "Memoriza la posición de las cartas y pulsa el botón de memorizado. Luego elige las parejas correctas.",
+        "btn_memorized": "¡Memorizado!",
+        "memorize_hint": "¡Memoriza las cartas!",
+        "find_pairs": "¡Encuentra las parejas!"
+    },
+    "sequence": {
+        "title": "ORDEN INVERSO",
+        "instruction": "¡Toca en orden INVERSO!",
+        "titleNormal": "SECUENCIA",
+        "instructionNormal": "¡Toca en ORDEN!"
+    },
+    "largest": {
+        "title": "RESULTADO MAYOR",
+        "instruction": "Toca la expresión con el valor más grande"
+    },
+    "pair": {
+        "title": "ENCONTRAR PAREJA",
+        "instruction": "¡Encuentra la única pareja coincidente!"
+    },
+    "updown": {
+        "title": "ARRIBA ABAJO",
+        "instruction": "Si es mayor que el número anterior, desliza hacia arriba. Si es menor, desliza hacia abajo.",
+        "prev": "ANTERIOR",
+        "start": "INICIO"
+    },
+    "slider": {
+        "title": "Deslizador numérico",
+        "instruction": "¡Desliza para sumar números adyacentes al objetivo!",
+        "target": "Suma objetivo"
+    },
+    "arrow": {
+        "title": "Deslizador de flechas",
+        "blue": "Azul = Igual",
+        "red": "Rojo = Opuesto",
+        "instruction": "¡Desliza en dirección azul, o la opuesta para rojo!"
+    },
+    "fillBlanks": {
+        "title": "COMPLETAR ESPACIOS",
+        "instruction": "Elige el número que complete el espacio en blanco para que sea correcto."
+    },
+    "findOperator": {
+        "title": "ENCONTRAR OPERADOR",
+        "instruction": "Elige el operador correcto para que la respuesta sea correcta."
+    },
+    "ladder": {
+        "title": "Juego de escalera",
+        "instruction": "¡Sigue el camino!"
+    },
+    "path": {
+        "title": "Path Runner",
+        "instruction": "Usa los botones para mover el bloque verde hasta el bloque azul. Atención, la posición de los botones puede cambiar.",
+        "shuffle": "Mezclar"
+    },
+    "blindPath": {
+        "title": "Camino ciego",
+        "instruction": "Memoriza el camino blanco y luego usa los botones para mover el bloque verde hasta el bloque azul. Al empezar a moverte, el camino desaparece. Si chocas con una pared, pierdes puntos, pero el camino vuelve a mostrarse.",
+        "memorizeHint": "¡Memoriza el camino!",
+        "runHint": "¡Sigue el camino!",
+        "memorized": "¡Memorizado!"
+    },
+    "balls": {
+        "title": "Contador de bolas",
+        "instruction": "Cuenta las bolas en movimiento y toca el número correcto."
+    },
+    "catchColor": {
+        "title": "Atrapa el color",
+        "instruction": "Desliza la barra para atrapar bolas del mismo color que la barra. Atrapar otro color resta puntos y el color de la barra cambia continuamente.",
+        "switchSoon": "Cambio de color pronto"
+    },
+    "tapTheColor": {
+        "title": "Toca el color",
+        "instruction": "Memoriza la posición de los colores y luego pulsa el botón de memorizado. Selecciona los botones recordados en el orden de colores que aparece arriba.",
+        "memorize": "¡Memoriza los colores!",
+        "remembered": "¡Listo!"
+    },
+    "aim": {
+        "title": "Juego de puntería",
+        "instruction": "Toca rápidamente los objetivos rojos para eliminarlos. No elimines los objetivos azules."
+    },
+    "mostColor": {
+        "title": "Encuentra el color más frecuente",
+        "instruction": "Selecciona el color que más aparece en la pantalla."
+    },
+    "sorting": {
+        "title": "Juego de clasificación",
+        "instruction": "Envía la primera carta en la dirección que quieras. Después, desliza las cartas con el mismo símbolo en la misma dirección que antes, y las de símbolo distinto en la dirección opuesta. Puedes prepararte viendo la siguiente carta en la parte superior.",
+        "firstMoveHint": "Primera carta: ¡cualquier dirección!"
+    },
+    "spy": {
+        "title": "Encuentra al espía",
+        "instruction": "Memoriza los símbolos y luego pulsa el botón de memorizado. Después, encuentra el símbolo que cambió. La cantidad de espías puede aumentar gradualmente.",
+        "memorize": "¡Memoriza estos!",
+        "find": "¿Quién es nuevo?",
+        "ready": "¡Listo!"
+    },
+    "timingBar": {
+        "title": "Barra de timing",
+        "instruction": "Toca cuando la barra que cae se superponga con la barra objetivo."
+    },
+    "colorTiming": {
+        "title": "Tiempo de color",
+        "instruction": "Toca cuando las bolas azules entren en el círculo izquierdo y las rojas en el derecho. Los colores opuestos restan puntos."
+    },
+    "stairway": {
+        "title": "Escalera al cielo",
+        "instruction": "Pulsa la dirección donde están las escaleras para subir.",
+        "scoreLabel": "Pasos"
+    },
+    "tutorial": {
+        "normal": "🌍 ¡Compite con jugadores de todo el mundo en minijuegos divertidos!",
+        "rank": "🏆 ¡Compite en ranked con jugadores de nivel similar!",
+        "practice": "💪 ¡Practica cualquier juego que quieras!",
+        "ranking": "👑 ¡Mira a los jugadores más inteligentes del mundo!",
+        "shop": "🛒 ¡Compra lápices o elimina anuncios!",
+        "settings": "⚙️ ¡Cambia sonido, idioma y otras opciones!",
+        "login": "👤 ¡Vincula tu cuenta para jugar de forma segura!",
+        "profile": "📊 ¡Revisa tus habilidades, estadísticas y mejores puntajes!",
+        "next": "Siguiente",
+        "done": "Listo",
+        "skip": "Saltar",
+        "loginNow": "Iniciar sesión ahora"
+    }
+}

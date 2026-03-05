@@ -6,6 +6,7 @@
         "close": "关闭",
         "retry": "重试",
         "loading": "加载中...",
+        "noResults": "搜索结果为空",
         "add": "添加",
         "error": "发生错误。",
         "google": "Google",
@@ -49,7 +50,7 @@
     },
     "shop": {
         "title": "商店",
-        "subtitle": "提升你的游戏体验",
+        "subtitle": "玩得更久一点",
         "removeAds": {
             "title": "去广告包",
             "desc": "无需看广告，立刻获得铅笔。"
@@ -142,7 +143,9 @@
     },
     "leaderboard": {
         "button": "排行榜",
-        "title": "排行榜"
+        "title": "排行榜",
+        "global": "全体",
+        "country": "国家"
     },
     "ad": {
         "remaining": "今日剩余：{{count}}/{{limit}}",
@@ -178,6 +181,7 @@
         "language": "语言",
         "sound": "音效",
         "masterVolume": "主音量",
+        "vibration": "振动",
         "volume": "音量",
         "back": "返回",
         "deleteAccount": "删除账户",
@@ -191,7 +195,20 @@
         "restorePurchasesEmpty": "没有可恢复的购买。",
         "privacyPolicy": "隐私政策",
         "privacyPolicyDesc": "查看我们如何处理服务所需的个人数据。",
-        "viewPrivacyPolicy": "查看隐私政策"
+        "viewPrivacyPolicy": "查看隐私政策",
+        "tutorial": "教程",
+        "tutorialDesc": "如果你想再次确认应用使用方法，请重新查看教程。",
+        "viewTutorial": "重新查看教程"
+    },
+    "report": {
+        "button": "举报",
+        "title": "举报玩家",
+        "description": "请输入举报原因。",
+        "descriptionWithTarget": "请输入举报 {{target}} 的原因。",
+        "placeholder": "填写举报原因。",
+        "submit": "提交举报",
+        "success": "举报已提交。",
+        "fail": "举报提交失败。"
     },
     "game": {
         "waiting": "等待游戏...",
@@ -232,6 +249,8 @@
         "rank": "排名"
     },
     "profile": {
+        "nicknameSetupTitle": "设置昵称",
+        "nicknameSetupDesc": "请输入你在游戏中要使用的昵称。",
         "nicknamePlaceholder": "输入昵称",
         "edit": "编辑",
         "highscoresTitle": "最高分",
@@ -292,7 +311,7 @@
         "titleWin": "胜者猜拳",
         "titleLose": "败者猜拳",
         "title": "剪刀石头布",
-        "instruction": "根据指示赢、输或平局！"
+        "instruction": "请根据指示选择要赢或要输的出拳！"
     },
     "number": {
         "title": "数字排序",
@@ -306,11 +325,11 @@
     },
     "math": {
         "title": "心算挑战",
-        "instruction": "计算公式"
+        "instruction": "计算算式并选择正确答案"
     },
     "ten": {
         "title": "凑十",
-        "instruction": "选择总和为10的数字"
+        "instruction": "让所选数字的总和变成10。"
     },
     "color": {
         "title": "颜色匹配",
@@ -322,7 +341,7 @@
     },
     "memory": {
         "title": "记忆匹配",
-        "instruction": "记住卡片位置并找出配对",
+        "instruction": "记住卡片位置后点击“已记住”按钮，然后选择配对。",
         "btn_memorized": "记住了!",
         "memorize_hint": "记住卡片!",
         "find_pairs": "找出配对!"
@@ -343,7 +362,7 @@
     },
     "updown": {
         "title": "上下",
-        "instruction": "数字更大向上滑，更小向下滑!",
+        "instruction": "比前一个数字更大就上滑，更小就下滑。",
         "prev": "上一个数字",
         "start": "开始"
     },
@@ -360,11 +379,11 @@
     },
     "fillBlanks": {
         "title": "填空",
-        "instruction": "找出空缺的数字"
+        "instruction": "请选择填入空缺后能成为正确答案的数字。"
     },
     "findOperator": {
         "title": "寻找符号",
-        "instruction": "选择正确的运算符号"
+        "instruction": "请选择合适的运算符号，使答案正确。"
     },
     "ladder": {
         "title": "爬梯子",
@@ -372,12 +391,12 @@
     },
     "path": {
         "title": "路径冲刺",
-        "instruction": "把绿色移动到蓝色目标，按钮布局可能会变。",
+        "instruction": "使用按钮将绿色方块移动到蓝色方块。请注意，按钮位置可能会变化。",
         "shuffle": "打乱"
     },
     "blindPath": {
         "title": "盲行路径",
-        "instruction": "找到看不见的道路并前进。",
+        "instruction": "先记住白色路径，再用按钮把绿色方块移动到蓝色方块。开始移动后路径会消失。撞到墙会扣分，但路径会再次显示。",
         "memorizeHint": "记住路线！",
         "runHint": "沿路前进！",
         "memorized": "记住了！"
@@ -388,30 +407,31 @@
     },
     "catchColor": {
         "title": "颜色接球",
-        "instruction": "接住同色小球得分，接错颜色 -10 分。",
+        "instruction": "滑动挡板接住与挡板同色的小球。接到不同颜色会扣分，而且挡板颜色会持续变化。",
         "switchSoon": "颜色即将切换"
     },
     "tapTheColor": {
         "title": "点击颜色",
+        "instruction": "记住颜色位置后点击“已记住”按钮。然后按上方显示的颜色顺序选择你记住的按钮。",
         "memorize": "记住颜色的位置!",
         "remembered": "记住了!"
     },
     "aim": {
         "title": "瞄准游戏",
-        "instruction": "击中红色，避开蓝色！"
+        "instruction": "快速点击红色目标并将其消除。不要消除蓝色目标。"
     },
     "mostColor": {
         "title": "寻找最多颜色",
-        "instruction": "点击出现最多的颜色！"
+        "instruction": "请选择屏幕上出现次数最多的颜色。"
     },
     "sorting": {
         "title": "分类游戏",
-        "instruction": "符号相同同向滑，不同反向滑！",
+        "instruction": "第一张卡可滑向任意方向。之后，相同符号的卡按与上一张相同方向滑动，不同符号的卡按相反方向滑动。你可以先看上方的下一张卡来提前准备。",
         "firstMoveHint": "第一张随意滑！"
     },
     "spy": {
         "title": "寻找间谍",
-        "instruction": "记住符号，找出变的一个！",
+        "instruction": "记住符号后点击“已记住”按钮。然后找出变化的符号。间谍数量可能会逐渐增加。",
         "memorize": "记住这些！",
         "find": "哪个变了？",
         "ready": "记住了！"
@@ -420,9 +440,13 @@
         "title": "节奏条",
         "instruction": "下落条与目标条重合时点击即可。"
     },
+    "colorTiming": {
+        "title": "颜色时机",
+        "instruction": "当蓝球进入左侧圆圈、红球进入右侧圆圈时点击。点击相反颜色会扣分。"
+    },
     "stairway": {
         "title": "天国阶梯",
-        "instruction": "点击正确方向踏上阶梯！",
+        "instruction": "按下有楼梯的方向，沿着楼梯向上。",
         "scoreLabel": "阶梯"
     },
     "tutorial": {

@@ -47,23 +47,26 @@ const ColorMatch: React.FC<ColorMatchProps> = ({ seed, onScore, isPlaying }) => 
         // Each item has a VISUAL color and a TEXT meaning
         const keys = Object.keys(COLORS) as ColorType[];
         const items: { visual: ColorType; text: ColorType; isMatch: boolean; id: number }[] = [];
-        let correctCount = 0;
+        const maxCorrectCount = Math.min(2, count - 1);
+        const targetCorrectCount = maxCorrectCount === 1
+            ? 1
+            : (rng.next() < 0.5 ? 1 : 2);
 
-        // Ensure at least one match
-        while (items.length < count) {
-            const visual = keys[Math.floor(rng.next() * keys.length)];
-            const text = keys[Math.floor(rng.next() * keys.length)];
-            const isMatch = visual === text;
-
-            items.push({ visual, text, isMatch, id: items.length });
-            if (isMatch) correctCount++;
+        const indices = Array.from({ length: count }, (_, i) => i);
+        for (let i = indices.length - 1; i > 0; i--) {
+            const j = Math.floor(rng.next() * (i + 1));
+            [indices[i], indices[j]] = [indices[j], indices[i]];
         }
+        const matchIndexSet = new Set(indices.slice(0, targetCorrectCount));
 
-        // If no matches (very rare but possible), force one
-        if (correctCount === 0) {
-            const idx = Math.floor(rng.next() * count);
-            items[idx].text = items[idx].visual;
-            items[idx].isMatch = true;
+        for (let i = 0; i < count; i++) {
+            const visual = keys[Math.floor(rng.next() * keys.length)];
+            const isMatch = matchIndexSet.has(i);
+            const text = isMatch
+                ? visual
+                : keys.filter((key) => key !== visual)[Math.floor(rng.next() * (keys.length - 1))];
+
+            items.push({ visual, text, isMatch, id: i });
         }
 
         return { items, level };

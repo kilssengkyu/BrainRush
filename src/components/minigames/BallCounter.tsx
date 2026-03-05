@@ -165,7 +165,7 @@ const BallCounter: React.FC<BallCounterProps> = ({ seed, onScore, isPlaying }) =
         if (!isPlaying) return;
         if (value === currentCount) {
             playSound('correct');
-            onScore(currentCount * 10);
+            onScore(currentCount * 18);
             const next = correctCount + 1;
             setCorrectCount(next);
             speedScaleRef.current = Math.min(speedScaleRef.current + SPEED_SCALE_STEP, SPEED_SCALE_MAX);

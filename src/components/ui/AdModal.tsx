@@ -58,6 +58,10 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
             )
         };
 
+    const resetForcedAdCounter = useCallback(() => {
+        import('../../utils/AdLogic').then(({ AdLogic }) => AdLogic.resetAdCounter());
+    }, []);
+
     const grantReward = useCallback(async () => {
         try {
             const result = await onReward();
@@ -92,6 +96,8 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
         const setupListeners = async () => {
             rewardListener = await AdMob.addListener(RewardAdPluginEvents.Rewarded, (reward) => {
                 console.log('AdMob Reward:', reward);
+                // Fair Ad Logic: reset as soon as the ad watch is completed.
+                resetForcedAdCounter();
                 grantReward();
             });
 
@@ -118,7 +124,7 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
             if (dismissListener) dismissListener.remove();
             if (failedLoadListener) failedLoadListener.remove();
         };
-    }, [grantReward]);
+    }, [grantReward, resetForcedAdCounter]);
 
     // Reset state on open/close
     useEffect(() => {
@@ -150,6 +156,7 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
                 setTimeLeft(timer);
                 if (timer <= 0) {
                     clearInterval(interval);
+                    resetForcedAdCounter();
                     grantReward();
                 }
             }, 1000);
@@ -207,8 +214,8 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
                                 onClick={onClose}
                                 disabled={adState === 'loading' || adState === 'playing'}
                                 className={`p-2 rounded-full transition-colors ${(adState === 'loading' || adState === 'playing')
-                                        ? 'opacity-30 cursor-not-allowed'
-                                        : 'hover:bg-gray-700'
+                                    ? 'opacity-30 cursor-not-allowed'
+                                    : 'hover:bg-gray-700'
                                     }`}
                             >
                                 <X className="w-5 h-5 text-gray-400" />

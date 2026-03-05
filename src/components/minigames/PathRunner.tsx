@@ -15,8 +15,7 @@ type ButtonPos = 'up' | 'down' | 'left' | 'right';
 type Coord = { r: number; c: number };
 
 const BASE_SIZE = 8;
-const MOVE_SCORE = 15;
-const GOAL_SCORE = 100;
+const MOVE_SCORE = 25;
 const WALL_PENALTY = -20;
 const SHUFFLE_STEP = 0.1;
 const SHUFFLE_MAX = 1;
@@ -167,7 +166,8 @@ const PathRunner: React.FC<PathRunnerProps> = ({ seed, onScore, isPlaying }) => 
                 return nextVisited;
             });
             if (next.r === goal.r && next.c === goal.c) {
-                onScore(GOAL_SCORE);
+                const goalScore = 50 + (level * 50);
+                onScore(goalScore);
                 playSound('correct');
                 const nextLevel = level + 1;
                 const nextRows = expandWidthNext ? rows : rows + 1;

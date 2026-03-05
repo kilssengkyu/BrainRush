@@ -18,7 +18,6 @@ interface Step {
     hasTrap: boolean; // whether the opposite side has a red trap platform
 }
 
-const STEP_SCORE = 20;
 const FALL_PENALTY = -30;
 const FALL_RESPAWN_MS = 500;
 const VISIBLE_STEPS = 8;
@@ -109,7 +108,8 @@ const StairwayGame: React.FC<StairwayGameProps> = ({ seed, onScore, isPlaying })
         if (inputSide === nextStep.direction) {
             // Correct!
             playSound('tick');
-            onScore(STEP_SCORE);
+            const stepScore = 10 + Math.floor(score / 30);
+            onScore(stepScore);
             setScore(prev => prev + 1);
             setPlayerStepIndex(nextIndex);
         } else {

@@ -87,7 +87,6 @@ const TapTheColor: React.FC<TapTheColorProps> = ({ seed, onScore, isPlaying }) =
         // Bug fix: prevent clicking the same button twice (even if color matches)
         if (revealedIndices.includes(index)) {
             // Already used this tile - show error feedback
-            onScore(-10);
             playSound('error');
             setShakeId(index);
             setTimeout(() => setShakeId(null), 500);
@@ -98,6 +97,9 @@ const TapTheColor: React.FC<TapTheColorProps> = ({ seed, onScore, isPlaying }) =
         const clickedColor = gameState.tileColors[index];
 
         if (clickedColor === targetColor) {
+            const hitScore = 50 + (currentStep * 10);
+            onScore(hitScore);
+
             // Correct
             const newRevealed = [...revealedIndices, index];
             setRevealedIndices(newRevealed);
@@ -105,7 +107,6 @@ const TapTheColor: React.FC<TapTheColorProps> = ({ seed, onScore, isPlaying }) =
             // Advance step
             if (currentStep + 1 >= gameState.sequenceColors.length) {
                 // Round Complete
-                onScore(30 + panelIndex * 5);
                 setPhase('result');
                 handleNextRound();
             } else {
@@ -113,7 +114,7 @@ const TapTheColor: React.FC<TapTheColorProps> = ({ seed, onScore, isPlaying }) =
             }
         } else {
             // Wrong
-            onScore(-10);
+            onScore(-50);
             playSound('error');
             setShakeId(index);
             setTimeout(() => setShakeId(null), 500);

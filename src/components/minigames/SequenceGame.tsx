@@ -89,16 +89,16 @@ const SequenceGame: React.FC<SequenceGameProps> = ({ seed, onScore, isPlaying, m
                 setSeqStep(prev => {
                     const next = prev + 1;
                     if (next > sequence.length) {
-                        // End of sequence -> Wait 250ms then Switch to INPUT
+                        // End of sequence -> Wait 150ms then Switch to INPUT
                         clearInterval(interval);
                         setTimeout(() => {
                             setPhase('INPUT');
-                        }, 250);
+                        }, 150);
                         return prev;
                     }
                     return next;
                 });
-            }, 250); // fast interval (tak tak tak)
+            }, 150); // fast interval (tak tak tak)
 
             return () => clearInterval(interval);
         }
@@ -121,11 +121,14 @@ const SequenceGame: React.FC<SequenceGameProps> = ({ seed, onScore, isPlaying, m
             targetIndex = sequence[currentIndex];
         }
 
+        const difficultyBonus = Math.floor((stage - 1) / 3) * 15;
+        const scoreAmount = 45 + difficultyBonus;
+
         if (index === targetIndex) {
             // Correct
             const newInput = [...userInput, index];
             setUserInput(newInput);
-            onScore(15);
+            onScore(scoreAmount);
             playSound('correct'); // Added correct sound here
 
             if (newInput.length === sequence.length) {
@@ -137,7 +140,7 @@ const SequenceGame: React.FC<SequenceGameProps> = ({ seed, onScore, isPlaying, m
             }
         } else {
             // Wrong
-            onScore(-15);
+            onScore(-scoreAmount);
             playSound('error');
             // Visual feedback
             const btn = document.getElementById(`pad-${index}`);

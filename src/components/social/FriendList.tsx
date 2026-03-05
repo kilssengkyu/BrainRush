@@ -239,7 +239,7 @@ const FriendList: React.FC<FriendListProps> = ({ onChatClick, onChallengeClick, 
 
         } catch (err) {
             console.error("Error deleting friend:", err);
-            alert(t('social.deleteFriendFail'));
+            showToast(t('social.deleteFriendFail'), 'error');
         }
     };
 

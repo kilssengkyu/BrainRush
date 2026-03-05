@@ -9,6 +9,7 @@
         "close": "Close",
         "retry": "Retry",
         "loading": "Loading...",
+        "noResults": "No results",
         "add": "Add",
         "error": "An error occurred.",
         "google": "Google",
@@ -102,7 +103,7 @@
     },
     "shop": {
         "title": "Shop",
-        "subtitle": "Boost your play",
+        "subtitle": "Play longer",
         "removeAds": {
             "title": "Ad Removal Pack",
             "desc": "No ads. Get pencils instantly when you tap ad rewards."
@@ -146,7 +147,9 @@
     },
     "leaderboard": {
         "button": "Ranking",
-        "title": "Ranking"
+        "title": "Ranking",
+        "global": "Global",
+        "country": "Country"
     },
     "ad": {
         "remaining": "Remaining today: {{count}}/{{limit}}",
@@ -186,6 +189,7 @@
         "language": "Language",
         "sound": "Sound",
         "masterVolume": "Master Volume",
+        "vibration": "Vibration",
         "deleteAccount": "Delete Account",
         "deleteAccountConfirm": "Are you sure you want to delete your account? This is permanent and cannot be undone.",
         "logoutConfirm": "Are you sure you want to logout?",
@@ -197,9 +201,24 @@
         "restorePurchasesEmpty": "No purchases to restore.",
         "privacyPolicy": "Privacy Policy",
         "privacyPolicyDesc": "Review how we handle personal data for the service.",
-        "viewPrivacyPolicy": "View Privacy Policy"
+        "viewPrivacyPolicy": "View Privacy Policy",
+        "tutorial": "Tutorial",
+        "tutorialDesc": "If you want to review how to use the app, watch the tutorial again.",
+        "viewTutorial": "View Tutorial Again"
+    },
+    "report": {
+        "button": "Report",
+        "title": "Report Player",
+        "description": "Please enter the reason for this report.",
+        "descriptionWithTarget": "Please enter a reason to report {{target}}.",
+        "placeholder": "Write the report reason.",
+        "submit": "Submit Report",
+        "success": "Your report has been submitted.",
+        "fail": "Failed to submit report."
     },
     "profile": {
+        "nicknameSetupTitle": "Set Nickname",
+        "nicknameSetupDesc": "Please enter a nickname to use in the game.",
         "nicknamePlaceholder": "Enter nickname",
         "selectCountry": "Select Country",
         "edit": "Edit",
@@ -217,8 +236,10 @@
             "score": "Score"
         },
         "guestTitle": "Guest Account",
-        "guestDesc": "Guest accounts can be lost if you sign out, delete the app, or change devices. Link a Google account to keep your progress.",
+        "guestDesc": "Guest accounts can be lost if you sign out, delete the app, or change devices. Link a Google account to keep your progress. Also, guest accounts may be deleted after 7 days of inactivity.",
+        "guestDescIOS": "Guest accounts can be lost if you sign out, delete the app, or change devices. Link an Apple or Google account to keep your progress. Also, guest accounts may be deleted after 7 days of inactivity.",
         "linkGoogle": "Link Google Account",
+        "linkApple": "Link Apple Account",
         "statsTitle": "Skills",
         "stats": {
             "speed": "Speed",
@@ -295,7 +316,7 @@
         "titleWin": "Winning RPS",
         "titleLose": "Losing RPS",
         "title": "ROCK PAPER SCISSORS",
-        "instruction": "Win, Lose, or Draw!"
+        "instruction": "Choose the winning or losing move as instructed."
     },
     "number": {
         "title": "NUMBER ORDER",
@@ -309,11 +330,11 @@
     },
     "math": {
         "title": "MATH CHALLENGE",
-        "instruction": "Solve the equation"
+        "instruction": "Calculate the expression and choose the correct answer."
     },
     "ten": {
         "title": "MAKE 10",
-        "instruction": "Select numbers to sum to 10"
+        "instruction": "Make the sum of the selected numbers equal to 10."
     },
     "color": {
         "title": "COLOR MATCH",
@@ -325,7 +346,7 @@
     },
     "memory": {
         "title": "MEMORY MATCH",
-        "instruction": "Memorize and match the pairs",
+        "instruction": "Memorize card positions and tap the Memorized button. Then select matching pairs.",
         "btn_memorized": "Memorized!",
         "memorize_hint": "Memorize the cards!",
         "find_pairs": "Find the pairs!"
@@ -346,7 +367,7 @@
     },
     "updown": {
         "title": "UP DOWN",
-        "instruction": "Swipe UP if bigger, DOWN if smaller!",
+        "instruction": "If it is bigger than the previous number, slide up. If smaller, slide down.",
         "prev": "PREVIOUS",
         "start": "START"
     },
@@ -363,11 +384,11 @@
     },
     "fillBlanks": {
         "title": "FILL BLANKS",
-        "instruction": "Find the missing number"
+        "instruction": "Choose the number that fills the blank to make the correct answer."
     },
     "findOperator": {
         "title": "FIND OPERATOR",
-        "instruction": "Choose the correct sign"
+        "instruction": "Choose the correct operator to make the answer correct."
     },
     "ladder": {
         "title": "Ladder Game",
@@ -375,12 +396,12 @@
     },
     "path": {
         "title": "Path Runner",
-        "instruction": "Move the green block to the blue goal. Buttons may shuffle.",
+        "instruction": "Use the buttons to move the green block to the blue block. Watch out, button positions may change.",
         "shuffle": "Shuffle"
     },
     "blindPath": {
         "title": "Blind Path",
-        "instruction": "Find your way on the unseen path.",
+        "instruction": "Memorize the white path, then use the buttons to move the green block to the blue block. The path disappears when you start moving. Hitting a wall costs points, but the path appears again.",
         "memorizeHint": "Memorize the path!",
         "runHint": "Follow the path!",
         "memorized": "Memorized!"
@@ -391,30 +412,31 @@
     },
     "catchColor": {
         "title": "Color Catch",
-        "instruction": "Move the bar to catch the same color. Wrong color = -10.",
+        "instruction": "Slide the bar to catch balls with the same color as the bar. Catching a different color costs points, and the bar color keeps changing.",
         "switchSoon": "Color switch soon"
     },
     "tapTheColor": {
         "title": "Tap the Color",
+        "instruction": "Memorize the color positions, then tap the Memorized button. Select the remembered buttons in the color order shown at the top.",
         "memorize": "Memorize the colors!",
         "remembered": "Ready!"
     },
     "aim": {
         "title": "Aiming Game",
-        "instruction": "Hit Red, Avoid Blue!"
+        "instruction": "Tap the red targets quickly to remove them. Do not remove the blue targets."
     },
     "mostColor": {
         "title": "Find Most Color",
-        "instruction": "Tap the most frequent color!"
+        "instruction": "Select the color that appears the most on the screen."
     },
     "sorting": {
         "title": "Sorting Game",
-        "instruction": "Same symbol = Same direction, Diff symbol = Opposite!",
+        "instruction": "Send the first card in any direction you want. After that, slide cards with the same symbol in the same direction as before, and different symbols in the opposite direction. You can prepare in advance by checking the next card at the top.",
         "firstMoveHint": "First card: Any direction!"
     },
     "spy": {
         "title": "Find The Spy",
-        "instruction": "Memorize symbols and find the changed one!",
+        "instruction": "Memorize the symbols, then tap the Memorized button. After that, find the changed symbol. The number of spies can increase over time.",
         "memorize": "Memorize these!",
         "find": "Who is new?",
         "ready": "Ready!"
@@ -423,9 +445,13 @@
         "title": "Timing Bar",
         "instruction": "Tap when the falling bar overlaps the target bar."
     },
+    "colorTiming": {
+        "title": "Color Timing",
+        "instruction": "Tap when blue balls enter the left circle and red balls enter the right circle. Opposite colors deduct points."
+    },
     "stairway": {
         "title": "Stairway to Heaven",
-        "instruction": "Tap the correct side to climb the stairs!",
+        "instruction": "Press the direction where the stairs are to climb up.",
         "scoreLabel": "Steps"
     },
     "tutorial": {

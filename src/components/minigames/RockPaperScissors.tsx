@@ -20,6 +20,7 @@ const RockPaperScissors: React.FC<RPSProps> = ({ seed, onScore, isPlaying }) => 
     const [index, setIndex] = useState(0);
     const [shake, setShake] = useState<Move | null>(null);
     const [animationKey, setAnimationKey] = useState(0);
+    const [combo, setCombo] = useState(0);
 
     // Initialize RNG
     // We strictly depend on `seed` and `index` to be deterministic.
@@ -51,14 +52,18 @@ const RockPaperScissors: React.FC<RPSProps> = ({ seed, onScore, isPlaying }) => 
 
         if (move === correctMove) {
             // Correct!
-            onScore(20);
+            const nextCombo = combo + 1;
+            const comboBonus = Math.min(nextCombo * 5, 40);
+            onScore(60 + comboBonus);
             playSound('correct');
+            setCombo(nextCombo);
             setIndex(prev => prev + 1);
             setAnimationKey(prev => prev + 1);
         } else {
             // Wrong!
-            onScore(-20); // Penalty
+            onScore(-60); // Penalty
             playSound('error');
+            setCombo(0);
             // Shake effect
             setShake(move);
             setTimeout(() => setShake(null), 400);
@@ -70,11 +75,11 @@ const RockPaperScissors: React.FC<RPSProps> = ({ seed, onScore, isPlaying }) => 
     const { target, isReverse } = currentProblem;
 
     return (
-        <div className="flex flex-col items-center justify-center w-full h-full gap-8">
+        <div className="flex flex-col items-center justify-center w-full h-full gap-2">
 
             {/* Instruction / Title overlay */}
             <h2 className="text-3xl font-black text-white mb-2">{t('rps.title')}</h2>
-            <p className={`text-xl font-bold mb-8 ${isReverse ? 'text-red-500' : 'text-blue-500'}`}>
+            <p className={`text-xl font-bold mb-4 ${isReverse ? 'text-red-500' : 'text-blue-500'}`}>
                 {isReverse ? t('rps.titleLose') : t('rps.titleWin')}
             </p>
 
@@ -102,7 +107,7 @@ const RockPaperScissors: React.FC<RPSProps> = ({ seed, onScore, isPlaying }) => 
             </div>
 
             {/* Input Buttons */}
-            <div className="flex gap-6 mt-8">
+            <div className="flex gap-6 mt-4">
                 {MOVES.map((move) => (
                     <motion.button
                         key={move}

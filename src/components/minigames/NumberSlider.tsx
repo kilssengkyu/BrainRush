@@ -148,7 +148,7 @@ const NumberSlider: React.FC<NumberSliderProps> = ({ seed, onScore, isPlaying })
         setFeedback(type);
 
         if (type === 'correct') {
-            onScore(15 * cells.length); // Score scales with tiles used
+            onScore(75 * cells.length); // Score scales with tiles used (5x)
             playSound('correct');
 
             setTimeout(() => {
@@ -169,7 +169,7 @@ const NumberSlider: React.FC<NumberSliderProps> = ({ seed, onScore, isPlaying })
                 resetSelection();
             }, 100);
         } else {
-            onScore(-10); // Light penalty for wrong sum
+            onScore(-100); // Light penalty for wrong sum
             playSound('error');
             setTimeout(() => {
                 resetSelection();

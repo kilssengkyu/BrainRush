@@ -16,8 +16,7 @@ type Coord = { r: number; c: number };
 type Turn = 'left' | 'right' | 'straight' | 'back';
 
 const BASE_SIZE = 8;
-const MOVE_SCORE = 15;
-const GOAL_SCORE = 100;
+const MOVE_SCORE = 10;
 const WALL_PENALTY = -50;
 
 const coordKey = (r: number, c: number) => `${r},${c}`;
@@ -296,7 +295,8 @@ const BlindPathRunner: React.FC<BlindPathRunnerProps> = ({ seed, onScore, isPlay
                 return nextVisited;
             });
             if (next.r === goal.r && next.c === goal.c) {
-                onScore(GOAL_SCORE);
+                const goalScore = 50 + (level * 25);
+                onScore(goalScore);
                 playSound('correct');
                 const nextLevel = level + 1;
                 const nextRows = expandWidthNext ? rows : rows + 1;

@@ -9,6 +9,7 @@
     "close": "닫기",
     "retry": "재시도",
     "loading": "로딩 중...",
+    "noResults": "검색 결과가 없습니다.",
     "add": "추가",
     "error": "오류가 발생했습니다.",
     "google": "Google",
@@ -101,7 +102,7 @@
   },
   "shop": {
     "title": "상점",
-    "subtitle": "플레이를 강화하세요",
+    "subtitle": "더 오래 플레이해보세요",
     "removeAds": {
       "title": "광고 제거 패키지",
       "desc": "광고 없이 바로 연필을 받습니다."
@@ -145,7 +146,9 @@
   },
   "leaderboard": {
     "button": "랭킹",
-    "title": "랭킹"
+    "title": "랭킹",
+    "global": "전체",
+    "country": "국가별"
   },
   "ad": {
     "remaining": "오늘 남은 광고: {{count}}/{{limit}}",
@@ -185,6 +188,7 @@
     "language": "언어",
     "sound": "소리",
     "masterVolume": "마스터 볼륨",
+    "vibration": "진동",
     "deleteAccount": "회원 탈퇴",
     "deleteAccountConfirm": "정말로 탈퇴하시겠습니까? 계정은 영구 삭제되며 절대 되돌릴 수 없습니다.",
     "logoutConfirm": "정말로 로그아웃 하시겠습니까?",
@@ -196,9 +200,24 @@
     "restorePurchasesEmpty": "복구할 구매 내역이 없습니다.",
     "privacyPolicy": "개인정보 처리방침",
     "privacyPolicyDesc": "서비스 이용에 필요한 개인정보 처리 내용을 확인할 수 있습니다.",
-    "viewPrivacyPolicy": "개인정보 처리방침 보기"
+    "viewPrivacyPolicy": "개인정보 처리방침 보기",
+    "tutorial": "튜토리얼",
+    "tutorialDesc": "앱 사용 방법을 다시 확인하고 싶다면 튜토리얼을 다시 보세요.",
+    "viewTutorial": "튜토리얼 다시 보기"
+  },
+  "report": {
+    "button": "신고",
+    "title": "신고하기",
+    "description": "신고 사유를 입력해 주세요.",
+    "descriptionWithTarget": "{{target}} 신고 사유를 입력해 주세요.",
+    "placeholder": "신고 사유를 입력해 주세요.",
+    "submit": "신고하기",
+    "success": "신고가 접수되었습니다.",
+    "fail": "신고 접수 중 오류가 발생했습니다."
   },
   "profile": {
+    "nicknameSetupTitle": "닉네임 설정",
+    "nicknameSetupDesc": "게임에서 사용할 닉네임을 입력해주세요.",
     "nicknamePlaceholder": "닉네임을 입력하세요",
     "selectCountry": "국가 선택",
     "edit": "수정",
@@ -216,8 +235,10 @@
       "score": "점수"
     },
     "guestTitle": "게스트 계정",
-    "guestDesc": "게스트 계정은 로그아웃/앱 삭제/기기 변경 시 데이터가 사라질 수 있어요. 구글 계정으로 연동해 주세요.",
+    "guestDesc": "게스트 계정은 로그아웃/앱 삭제/기기 변경 시 데이터가 사라질 수 있어요. 구글 계정으로 연동해 주세요. 또한 7일 동안 접속 기록이 없으면 계정이 삭제될 수 있습니다.",
+    "guestDescIOS": "게스트 계정은 로그아웃/앱 삭제/기기 변경 시 데이터가 사라질 수 있어요. Apple 또는 Google 계정으로 연동해 주세요. 또한 7일 동안 접속 기록이 없으면 계정이 삭제될 수 있습니다.",
     "linkGoogle": "구글 계정 연동",
+    "linkApple": "Apple 계정 연동",
     "statsTitle": "능력치",
     "stats": {
       "speed": "스피드",
@@ -293,7 +314,7 @@
     "titleWin": "이기는 가위바위보",
     "titleLose": "지는 가위바위보",
     "title": "가위 바위 보",
-    "instruction": "지시에 따라 이기거나, 지거나, 비기세요!"
+    "instruction": "지시에 따라 이기거나 지는 가위바위보를 선택하세요."
   },
   "number": {
     "title": "숫자 정렬",
@@ -307,11 +328,11 @@
   },
   "math": {
     "title": "암산 챌린지",
-    "instruction": "수식을 계산하세요"
+    "instruction": "수식을 계산하여 정답을 선택하세요."
   },
   "ten": {
     "title": "10 만들기",
-    "instruction": "합이 10이 되는 숫자를 선택하세요"
+    "instruction": "선택한 숫자의 합이 10이 되도록 만드세요."
   },
   "color": {
     "title": "색깔 맞추기",
@@ -323,7 +344,7 @@
   },
   "memory": {
     "title": "기억력 매칭",
-    "instruction": "카드의 위치를 기억하고 짝을 맞추세요",
+    "instruction": "카드의 위치를 기억하고 기억함 버튼을 누르세요. 그 뒤 짝을 맞춰 선택하세요.",
     "btn_memorized": "기억함!",
     "memorize_hint": "카드를 기억하세요!",
     "find_pairs": "짝을 찾으세요!"
@@ -344,7 +365,7 @@
   },
   "updown": {
     "title": "숫자 업 다운",
-    "instruction": "숫자가 크면 위로, 작으면 아래로!",
+    "instruction": "이전 숫자보다 커졌으면 위로, 작으면 아래로 슬라이드 하세요.",
     "prev": "이전 숫자",
     "start": "시작"
   },
@@ -361,11 +382,11 @@
   },
   "fillBlanks": {
     "title": "빈칸 채우기",
-    "instruction": "빈칸에 들어갈 숫자를 찾으세요"
+    "instruction": "정답이 되도록 빈칸에 들어갈 숫자를 선택하세요."
   },
   "findOperator": {
     "title": "기호 채우기",
-    "instruction": "알맞은 연산 기호를 고르세요"
+    "instruction": "정답이 되도록 알맞은 연산 기호를 선택하세요."
   },
   "ladder": {
     "title": "사다리 타기",
@@ -373,12 +394,12 @@
   },
   "path": {
     "title": "패스 러너",
-    "instruction": "초록색을 파란 목표까지 이동하세요. 버튼 배치가 바뀔 수 있어요.",
+    "instruction": "초록색 칸을 버튼으로 이동해 파란색 칸에 도달하세요. 버튼의 위치가 바뀔 수 있으니 주의하세요.",
     "shuffle": "셔플"
   },
   "blindPath": {
     "title": "블라인드 패스",
-    "instruction": "보이지 않는 길을 찾아가세요.",
+    "instruction": "하얀색 길을 외운 뒤, 버튼으로 초록색 칸을 이동해 파란색 칸에 도달하세요. 이동을 시작하면 길이 사라집니다. 벽에 부딪치면 감점되지만 길이 다시 보입니다.",
     "memorizeHint": "길을 외우세요!",
     "runHint": "길을 따라가세요!",
     "memorized": "기억함!"
@@ -389,30 +410,31 @@
   },
   "catchColor": {
     "title": "컬러 캐치",
-    "instruction": "같은 색 공을 받아 점수를 올리세요. 다른 색은 -10점.",
+    "instruction": "막대를 슬라이드해서 막대와 같은 색 공을 받으세요. 다른 색 공을 받으면 감점되며, 막대의 색은 계속 바뀝니다.",
     "switchSoon": "곧 색이 바뀝니다"
   },
   "tapTheColor": {
     "title": "색깔 터치",
+    "instruction": "색깔의 위치를 기억한 뒤 기억함 버튼을 누르세요. 상단에 표시되는 색 순서대로 기억한 버튼을 선택하세요.",
     "memorize": "색깔의 위치를 기억하세요!",
     "remembered": "기억 했음!"
   },
   "aim": {
     "title": "조준 사격",
-    "instruction": "빨간색은 맞추고, 파란색은 피하세요!"
+    "instruction": "빨간색 표적을 빠르게 터치해 제거하세요. 파란색 표적은 제거하면 안 됩니다."
   },
   "mostColor": {
     "title": "색깔 탐색",
-    "instruction": "가장 많이 보이는 색을 찾으세요!"
+    "instruction": "화면에서 가장 많이 나타난 색을 선택하세요."
   },
   "sorting": {
     "title": "정의의 분류",
-    "instruction": "이전과 같으면 같은 방향, 다르면 반대로!",
+    "instruction": "첫 카드는 원하는 방향으로 보내세요. 이후 같은 기호 카드는 이전과 같은 방향으로, 다른 기호 카드는 반대 방향으로 슬라이드하세요. 상단의 다음 카드를 미리 보고 준비할 수 있습니다.",
     "firstMoveHint": "첫 카드는 아무 방향이나 OK!"
   },
   "spy": {
     "title": "스파이 찾기",
-    "instruction": "기호를 기억하고 바뀐 하나를 찾아내세요!",
+    "instruction": "기호를 기억한 뒤 기억함 버튼을 누르세요. 이후 바뀐 기호를 찾으세요. 스파이는 점점 많아질 수 있습니다.",
     "memorize": "기호를 기억하세요!",
     "find": "달라진 것은?",
     "ready": "기억함!"
@@ -421,9 +443,13 @@
     "title": "타이밍바",
     "instruction": "떨어지는 바가 타겟 바와 겹칠 때 아무 곳이나 탭하세요."
   },
+  "colorTiming": {
+      "title": "컬러 타이밍",
+      "instruction": "왼쪽 원에는 파란 공, 오른쪽 원에는 빨간 공이 들어올 때 터치하세요. 반대 색이면 감점됩니다."
+  },
   "stairway": {
     "title": "천국의 계단",
-    "instruction": "올바른 방향을 터치해 계단을 올라가세요!",
+    "instruction": "계단이 있는 방향을 눌러 계단을 올라가세요.",
     "scoreLabel": "계단"
   },
   "tutorial": {

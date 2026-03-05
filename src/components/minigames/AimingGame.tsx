@@ -143,7 +143,7 @@ const AimingGame: React.FC<AimingGameProps> = ({ seed, onScore, isPlaying }) => 
                     // Handle expiration logic
                     if (t.type === 'penalty') {
                         // Blue circle disappeared without being clicked -> Bonus!
-                        onScore(10);
+                        onScore(5);
                         // Optional: play sound or visual effect for "Safe"
                     }
                     return false; // Remove
@@ -177,13 +177,13 @@ const AimingGame: React.FC<AimingGameProps> = ({ seed, onScore, isPlaying }) => 
             if (age < 600) {
                 // Perfect Hit
                 playSound('correct');
-                onScore(50); // 30 base + 20 bonus
-                showPopup(target.x, target.y, 'PERFECT!! +50', 'perfect');
+                onScore(40); // 20 base + 20 bonus
+                showPopup(target.x, target.y, 'PERFECT!! +40', 'perfect');
             } else {
                 // Good Hit
                 playSound('correct');
-                onScore(30);
-                showPopup(target.x, target.y, '+30', 'good');
+                onScore(20);
+                showPopup(target.x, target.y, '+20', 'good');
             }
         } else {
             // Bad click

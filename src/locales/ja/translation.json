@@ -6,6 +6,7 @@
         "close": "閉じる",
         "retry": "再試行",
         "loading": "読み込み中...",
+        "noResults": "検索結果がありません",
         "add": "追加",
         "error": "エラーが発生しました。",
         "google": "Google",
@@ -49,7 +50,7 @@
     },
     "shop": {
         "title": "ショップ",
-        "subtitle": "プレイを強化",
+        "subtitle": "もっと長くプレイしよう",
         "removeAds": {
             "title": "広告削除パック",
             "desc": "広告なしで鉛筆をすぐに獲得。"
@@ -142,7 +143,9 @@
     },
     "leaderboard": {
         "button": "ランキング",
-        "title": "ランキング"
+        "title": "ランキング",
+        "global": "全体",
+        "country": "国別"
     },
     "ad": {
         "remaining": "本日の残り: {{count}}/{{limit}}",
@@ -178,6 +181,7 @@
         "language": "言語",
         "sound": "効果音",
         "masterVolume": "マスターボリューム",
+        "vibration": "バイブ",
         "volume": "音量",
         "back": "戻る",
         "deleteAccount": "アカウント削除",
@@ -191,7 +195,20 @@
         "restorePurchasesEmpty": "復元できる購入がありません。",
         "privacyPolicy": "プライバシーポリシー",
         "privacyPolicyDesc": "サービスにおける個人情報の取り扱いを確認できます。",
-        "viewPrivacyPolicy": "プライバシーポリシーを見る"
+        "viewPrivacyPolicy": "プライバシーポリシーを見る",
+        "tutorial": "チュートリアル",
+        "tutorialDesc": "アプリの使い方をもう一度確認したい場合は、チュートリアルを再表示してください。",
+        "viewTutorial": "チュートリアルをもう一度見る"
+    },
+    "report": {
+        "button": "通報",
+        "title": "プレイヤーを通報",
+        "description": "通報理由を入力してください。",
+        "descriptionWithTarget": "{{target}} を通報する理由を入力してください。",
+        "placeholder": "通報理由を入力してください。",
+        "submit": "通報する",
+        "success": "通報を受け付けました。",
+        "fail": "通報の送信に失敗しました。"
     },
     "game": {
         "waiting": "ゲーム待機中...",
@@ -232,6 +249,8 @@
         "rank": "ランク"
     },
     "profile": {
+        "nicknameSetupTitle": "ニックネーム設定",
+        "nicknameSetupDesc": "ゲームで使うニックネームを入力してください。",
         "nicknamePlaceholder": "ニックネーム入力",
         "selectCountry": "国を選択",
         "edit": "編集",
@@ -293,7 +312,7 @@
         "titleWin": "勝つじゃんけん",
         "titleLose": "負けるじゃんけん",
         "title": "じゃんけん",
-        "instruction": "指示に従って勝つか負けるか引き分けて！"
+        "instruction": "指示に従って、勝つか負ける手を選んで！"
     },
     "number": {
         "title": "数字の順序",
@@ -307,11 +326,11 @@
     },
     "math": {
         "title": "暗算チャレンジ",
-        "instruction": "式を計算してください"
+        "instruction": "式を計算して正解を選んでください"
     },
     "ten": {
         "title": "10作り",
-        "instruction": "足して10になる数字を選んでください"
+        "instruction": "選んだ数字の合計が10になるようにしてください。"
     },
     "color": {
         "title": "色合わせ",
@@ -323,7 +342,7 @@
     },
     "memory": {
         "title": "記憶力マッチ",
-        "instruction": "カードの位置を覚えてペアを見つけてください",
+        "instruction": "カードの位置を覚えて「記憶完了」ボタンを押してください。その後、ペアを選んでください。",
         "btn_memorized": "覚えた！",
         "memorize_hint": "カードを覚えてください！",
         "find_pairs": "ペアを見つけてください！"
@@ -344,7 +363,7 @@
     },
     "updown": {
         "title": "アップダウン",
-        "instruction": "数字が大きければ上へ、小さければ下へスワイプ！",
+        "instruction": "前の数字より大きければ上に、小さければ下にスライドしてください。",
         "prev": "前の数字",
         "start": "開始"
     },
@@ -361,11 +380,11 @@
     },
     "fillBlanks": {
         "title": "空欄埋め",
-        "instruction": "空欄に入る数字を見つけてください"
+        "instruction": "正解になるように、空欄に入る数字を選んでください。"
     },
     "findOperator": {
         "title": "記号埋め",
-        "instruction": "正しい演算記号を選んでください"
+        "instruction": "正解になるように、適切な演算記号を選んでください。"
     },
     "ladder": {
         "title": "あみだくじ",
@@ -373,12 +392,12 @@
     },
     "path": {
         "title": "パスランナー",
-        "instruction": "緑を青いゴールまで移動。ボタン配置が変わることがあります。",
+        "instruction": "ボタンを使って緑のマスを青いマスまで移動してください。ボタンの位置が変わるので注意してください。",
         "shuffle": "シャッフル"
     },
     "blindPath": {
         "title": "ブラインドパス",
-        "instruction": "見えない道を見つけて進もう。",
+        "instruction": "白い道を覚えてから、ボタンで緑のマスを動かして青いマスに到達してください。動き始めると道は消えます。壁にぶつかると減点されますが、道は再び表示されます。",
         "memorizeHint": "道を覚えて！",
         "runHint": "道を進め！",
         "memorized": "覚えた！"
@@ -389,30 +408,31 @@
     },
     "catchColor": {
         "title": "カラーキャッチ",
-        "instruction": "同じ色のボールを受け取ろう。違う色は-10点。",
+        "instruction": "バーをスライドして、バーと同じ色のボールを受け取りましょう。違う色を取ると減点され、バーの色は変化し続けます。",
         "switchSoon": "まもなく色が切り替わります"
     },
     "tapTheColor": {
         "title": "カラータップ",
+        "instruction": "色の位置を覚えたら「記憶完了」ボタンを押してください。上部に表示される色の順番どおりに、覚えたボタンを選んでください。",
         "memorize": "色の位置を覚えてください！",
         "remembered": "覚えた！"
     },
     "aim": {
         "title": "エイムゲーム",
-        "instruction": "赤を撃て！青は避けて！"
+        "instruction": "赤いターゲットを素早くタップして消してください。青いターゲットは消してはいけません。"
     },
     "mostColor": {
         "title": "最多色探し",
-        "instruction": "一番多い色をタップ！"
+        "instruction": "画面で最も多く表示された色を選んでください。"
     },
     "sorting": {
         "title": "仕分けゲーム",
-        "instruction": "同じなら同じ方向、違うなら逆方向へ！",
+        "instruction": "最初のカードは好きな方向へ送ってください。その後は、同じ記号のカードは前と同じ方向に、違う記号のカードは反対方向にスライドしてください。上部の次のカードを先に見て準備できます。",
         "firstMoveHint": "最初はどちらでもOK！"
     },
     "spy": {
         "title": "スパイ探し",
-        "instruction": "記号を覚えて、変わった一つを見つけよう！",
+        "instruction": "記号を覚えたら「記憶完了」ボタンを押してください。その後、変わった記号を見つけてください。スパイの数は徐々に増えることがあります。",
         "memorize": "覚えて！",
         "find": "変わったのは？",
         "ready": "覚えた！"
@@ -421,9 +441,13 @@
         "title": "タイミングバー",
         "instruction": "落ちてくるバーがターゲットに重なったらタップ！"
     },
+    "colorTiming": {
+        "title": "カラータイミング",
+        "instruction": "青いボールが左の円に、赤いボールが右の円に入ったタイミングでタップしてください。逆の色は減点です。"
+    },
     "stairway": {
         "title": "天国の階段",
-        "instruction": "正しい方向をタップして階段を登ろう！",
+        "instruction": "階段がある方向を押して、階段を登ってください。",
         "scoreLabel": "階段"
     },
     "tutorial": {

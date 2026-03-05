@@ -78,16 +78,16 @@ const ReverseSequence: React.FC<ReverseSequenceProps> = ({ seed, onScore, isPlay
                 setSeqStep(prev => {
                     const next = prev + 1;
                     if (next > sequence.length) {
-                        // End of sequence -> Wait 250ms then Switch to INPUT
+                        // End of sequence -> Wait 150ms then Switch to INPUT
                         clearInterval(interval);
                         setTimeout(() => {
                             setPhase('INPUT');
-                        }, 250);
+                        }, 150);
                         return prev;
                     }
                     return next;
                 });
-            }, 250); // fast interval (tak tak tak)
+            }, 150); // fast interval (tak tak tak)
 
             return () => clearInterval(interval);
         }
@@ -105,11 +105,14 @@ const ReverseSequence: React.FC<ReverseSequenceProps> = ({ seed, onScore, isPlay
         // Current Step to match: sequence[sequence.length - 1 - userInput.length]
         const targetIndex = sequence[sequence.length - 1 - userInput.length];
 
+        const difficultyBonus = Math.floor((stage - 1) / 3) * 15;
+        const scoreAmount = 45 + difficultyBonus;
+
         if (index === targetIndex) {
             // Correct
             const newInput = [...userInput, index];
             setUserInput(newInput);
-            onScore(15);
+            onScore(scoreAmount);
             playSound('correct');
 
             if (newInput.length === sequence.length) {
@@ -121,7 +124,7 @@ const ReverseSequence: React.FC<ReverseSequenceProps> = ({ seed, onScore, isPlay
             }
         } else {
             // Wrong
-            onScore(-15);
+            onScore(-scoreAmount);
             playSound('error');
             // Shake effect or feedback?
             // Maybe reset user input to try again? Or just penalty?

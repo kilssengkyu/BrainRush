@@ -14,6 +14,7 @@ interface AuthContextType {
     signInWithApple: () => Promise<void>;
     signInAnonymously: () => Promise<void>;
     linkWithGoogle: () => Promise<void>;
+    linkWithApple: () => Promise<void>;
     signOut: () => Promise<void>;
     refreshProfile: () => Promise<void>;
     onlineUsers: Set<string>;
@@ -28,6 +29,7 @@ const AuthContext = createContext<AuthContextType>({
     signInWithApple: async () => { },
     signInAnonymously: async () => { },
     linkWithGoogle: async () => { },
+    linkWithApple: async () => { },
     signOut: async () => { },
     refreshProfile: async () => { },
     onlineUsers: new Set(),
@@ -40,6 +42,54 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [session, setSession] = useState<Session | null>(null);
     const [profile, setProfile] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
+    const AUTH_ERROR_STORAGE_KEY = 'brainrush_auth_error';
+
+    const persistAuthError = (error: any) => {
+        try {
+            const rawMessage = String(error?.message || error?.error_description || error?.msg || '');
+            if (!rawMessage) return;
+            const lower = rawMessage.toLowerCase();
+            const isBanned = lower.includes('banned');
+            const untilMatch = rawMessage.match(/until\\s+([0-9]{4}-[0-9]{2}-[0-9]{2}(?:[ t][0-9:.+-zZ]+)?)/i);
+            const payload = {
+                message: rawMessage,
+                isBanned,
+                bannedUntil: untilMatch?.[1] || null,
+                at: Date.now()
+            };
+            localStorage.setItem(AUTH_ERROR_STORAGE_KEY, JSON.stringify(payload));
+        } catch {
+            // no-op
+        }
+    };
+
+    const getGuestDeviceId = () => {
+        const key = 'brainrush_guest_device_id';
+        try {
+            const existing = localStorage.getItem(key);
+            if (existing) return existing;
+            const generated = (typeof crypto !== 'undefined' && 'randomUUID' in crypto)
+                ? crypto.randomUUID()
+                : `gd_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+            localStorage.setItem(key, generated);
+            return generated;
+        } catch {
+            return `gd_fallback_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+        }
+    };
+
+    const isAlreadyRegisteredIdentityError = (error: any) => {
+        const code = String(error?.code || '').toLowerCase();
+        const msg = String(error?.message || '').toLowerCase();
+        return (
+            code.includes('identity_already_exists') ||
+            code.includes('already_exists') ||
+            msg.includes('already registered') ||
+            msg.includes('already exists') ||
+            msg.includes('identity is already linked') ||
+            msg.includes('account exists')
+        );
+    };
 
     useEffect(() => {
         // 1. Get initial session
@@ -93,124 +143,75 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const fetchProfile = async (userId: string) => {
         try {
-            // Use RPC to get profile AND trigger potential auto-recharge
-            const { error } = await supabase
-                .rpc('get_profile_with_pencils', { user_id: userId });
+            const isTemporaryNickname = (nickname?: string | null) => /^player_[0-9]{4}$/i.test((nickname || '').trim());
 
-            if (error) {
-                // If profile misses, fallback to create
-                // Note: get_profile_with_pencils might fail if row missing entirely? 
-                // Actually the RPC tries to select. If empty, it returns empty?
-                // Let's check error code. If just 'PGRST116' (no rows) or similar.
-
-                console.log('Profile RPC returned error or no data, checking plain fetch...', error);
-
-                // Fallback: Check if profile exists manually to differentiate corruption vs missing
-                const { error: plainError } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', userId)
-                    .single();
-
-                if (plainError && plainError.code === 'PGRST116') {
-                    // Create new profile
-                    console.log('Creating new profile for:', userId);
-                    const { data: userData } = await supabase.auth.getUser();
-                    if (userData.user) {
-                        const newProfile = {
-                            id: userId,
-                            email: userData.user.email,
-                            nickname: 'Player_' + Math.floor(Math.random() * 9000 + 1000),
-                            avatar_url: null,
-                            created_at: new Date().toISOString(),
-                            pencils: 5,
-                            last_recharge_at: new Date().toISOString(),
-                            practice_notes: 5,
-                            practice_last_recharge_at: new Date().toISOString(),
-                            practice_ad_reward_count: 0,
-                            practice_ad_reward_day: new Date().toISOString().slice(0, 10),
-                            country: getDefaultCountry(),
-                            xp: 0,
-                            level: 1
-                        };
-
-                        const { error: insertError } = await supabase
-                            .from('profiles')
-                            .insert([newProfile]);
-
-                        if (!insertError) {
-                            setProfile(newProfile);
-                            return;
-                        }
-                    }
-                }
-            } else {
-                // The RPC returns a table of inputs. 
-                // Wait, get_profile_with_pencils returns TABLE(pencils, last_recharge). 
-                // It does NOT return the FULL profile.
-                // We need to merge this with full profile usage.
-
-                // Better approach: Call RPC to sync, THEN select full profile?
-                // OR Update RPC to return full profile.
-                // Modifying RPC is cleaner but 'select *' inside RPC usually returns specific columns unless SETOF profiles.
-
-                // Let's do:
-                // 1. Call RPC to Ensure Sync.
-                // 2. Select * from profiles.
-
-                // Reuse existing logic actually.
-            }
-
-            // Revised Logic:
-            // 1. Just select * first.
-            // 2. If present, setProfile.
-            // 3. Then trigger background, non-blocking recharge check?
-            // "get_profile_with_pencils" does READ and WRITE.
-
-            // Let's try:
             const { error: rpcError } = await supabase.rpc('get_profile_with_pencils', { user_id: userId });
-
             if (rpcError) {
-                console.error('RPC Error:', rpcError);
-                // Fallback to normal fetch/create logic below
+                console.warn('get_profile_with_pencils failed, fallback to direct profile fetch', rpcError);
             }
 
-            // Now fetch full profile (which should have updated values)
-            const { data: fullProfile, error: fetchError } = await supabase
+            let { data: fullProfile, error: fetchError } = await supabase
                 .from('profiles')
                 .select('*')
                 .eq('id', userId)
-                .single();
+                .maybeSingle();
 
             if (fetchError) {
-                if (fetchError.code === 'PGRST116') {
-                    // Create logic
-                    const { data: userData } = await supabase.auth.getUser();
-                    if (userData.user) {
-                        const newProfile = {
-                            id: userId,
-                            email: userData.user.email,
-                            nickname: 'Player_' + Math.floor(Math.random() * 9000 + 1000),
-                            avatar_url: null,
-                            created_at: new Date().toISOString(),
-                            pencils: 5,
-                            last_recharge_at: new Date().toISOString(),
-                            practice_notes: 5,
-                            practice_last_recharge_at: new Date().toISOString(),
-                            practice_ad_reward_count: 0,
-                            practice_ad_reward_day: new Date().toISOString().slice(0, 10),
-                            country: getDefaultCountry(),
-                            xp: 0,
-                            level: 1
-                        };
-                        const { error: insertError } = await supabase.from('profiles').insert([newProfile]);
-                        if (!insertError) {
-                            setProfile(newProfile);
-                            return;
-                        }
+                throw fetchError;
+            }
+
+            if (!fullProfile) {
+                const { data: userData } = await supabase.auth.getUser();
+                const baseUser = userData.user;
+
+                if (baseUser) {
+                    const newProfile = {
+                        id: userId,
+                        email: baseUser.email,
+                        nickname: 'Player_' + Math.floor(Math.random() * 9000 + 1000),
+                        needs_nickname_setup: true,
+                        nickname_set_at: null,
+                        avatar_url: null,
+                        created_at: new Date().toISOString(),
+                        pencils: 5,
+                        last_recharge_at: new Date().toISOString(),
+                        practice_notes: 5,
+                        practice_last_recharge_at: new Date().toISOString(),
+                        practice_ad_reward_count: 0,
+                        practice_ad_reward_day: new Date().toISOString().slice(0, 10),
+                        country: getDefaultCountry(),
+                        xp: 0,
+                        level: 1
+                    };
+
+                    const { error: insertError } = await supabase.from('profiles').insert([newProfile]);
+                    if (insertError && insertError.code !== '23505') {
+                        throw insertError;
+                    }
+
+                    const refetch = await supabase
+                        .from('profiles')
+                        .select('*')
+                        .eq('id', userId)
+                        .maybeSingle();
+
+                    if (refetch.error) throw refetch.error;
+                    fullProfile = refetch.data ?? newProfile;
+                }
+            }
+
+            if (fullProfile) {
+                if (!fullProfile.needs_nickname_setup && isTemporaryNickname(fullProfile.nickname)) {
+                    const { error: setupFlagError } = await supabase
+                        .from('profiles')
+                        .update({ needs_nickname_setup: true })
+                        .eq('id', userId);
+
+                    if (!setupFlagError) {
+                        fullProfile = { ...fullProfile, needs_nickname_setup: true };
                     }
                 }
-            } else {
+
                 const defaultCountry = getDefaultCountry();
                 if (!fullProfile.country && defaultCountry) {
                     const { error: updateError } = await supabase
@@ -226,7 +227,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     setProfile(fullProfile);
                 }
             }
-
         } catch (error) {
             console.error('Error in fetchProfile:', error);
         } finally {
@@ -260,6 +260,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     });
                     if (error) {
                         console.error('Session Error:', error.message);
+                        persistAuthError(error);
                         throw error;
                     }
                     console.log('Login Success! Session Restored.');
@@ -267,12 +268,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     const { error } = await supabase.auth.exchangeCodeForSession(code);
                     if (error) {
                         console.error('PKCE Exchange Error:', error.message);
+                        persistAuthError(error);
                         throw error;
                     }
                     console.log('Login Success! Session Exchanged.');
                 }
             } catch (err) {
                 console.error('Deep link logic error:', err);
+                persistAuthError(err);
             }
         };
 
@@ -362,7 +365,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             if (error) throw error;
         } catch (error) {
             console.error('Google Sign-in Error:', error);
-            alert('구글 로그인 중 오류가 발생했습니다.');
+            persistAuthError(error);
+            throw new Error((error as any)?.message || '구글 로그인 중 오류가 발생했습니다.');
         }
     };
 
@@ -385,17 +389,83 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             if (error) throw error;
         } catch (error) {
             console.error('Google Link Error:', error);
-            alert('구글 계정 연동 중 오류가 발생했습니다.');
+            if (isAlreadyRegisteredIdentityError(error)) {
+                throw new Error('이미 가입된 구글 계정입니다.');
+            } else {
+                throw new Error('구글 계정 연동 중 오류가 발생했습니다.');
+            }
+        }
+    };
+
+    const linkWithApple = async () => {
+        try {
+            const isNative = Boolean((window as any).Capacitor?.isNativePlatform?.());
+            let error: any = null;
+
+            if (isNative) {
+                const result = await SignInWithApple.authorize({
+                    clientId: 'com.kilssengkyu.brainrush',
+                    redirectURI: '',
+                    // iOS plugin runtime can expect an array for scopes.
+                    // The current TS definition is narrower (string), so cast is required.
+                    scopes: ['email', 'name'] as any,
+                    state: '',
+                    nonce: '',
+                } as any);
+
+                const identityToken = result.response?.identityToken;
+                if (!identityToken) {
+                    throw new Error('Apple Link: No identity token received');
+                }
+
+                const linkResult = await supabase.auth.linkIdentity({
+                    provider: 'apple',
+                    token: identityToken,
+                });
+                error = linkResult.error;
+            } else {
+                const redirectUrl = window.location.origin;
+                const linkResult = await supabase.auth.linkIdentity({
+                    provider: 'apple',
+                    options: {
+                        redirectTo: redirectUrl,
+                        skipBrowserRedirect: false
+                    }
+                });
+                error = linkResult.error;
+            }
+
+            if (error) throw error;
+        } catch (error) {
+            console.error('Apple Link Error:', error);
+            if (isAlreadyRegisteredIdentityError(error)) {
+                throw new Error('이미 가입된 Apple 계정입니다.');
+            } else {
+                throw new Error('Apple 계정 연동 중 오류가 발생했습니다.');
+            }
         }
     };
 
     const signInAnonymously = async () => {
         try {
+            const deviceId = getGuestDeviceId();
+            const { error: limitError } = await supabase.rpc('register_guest_signup', {
+                p_device_id: deviceId
+            });
+            if (limitError) {
+                throw limitError;
+            }
             const { error } = await supabase.auth.signInAnonymously();
             if (error) throw error;
         } catch (error) {
             console.error('Anonymous Sign-in Error:', error);
-            alert('게스트 로그인 중 오류가 발생했습니다. (Supabase 설정에서 Anonymous Sign-ins가 켜져있는지 확인해주세요)');
+            persistAuthError(error);
+            const msg = String((error as any)?.message || '').toLowerCase();
+            if (msg.includes('guest signup limit exceeded')) {
+                throw new Error('이 기기에서는 잠시 후 다시 게스트 로그인이 가능합니다.');
+            } else {
+                throw new Error('게스트 로그인 중 오류가 발생했습니다. (Supabase 설정에서 Anonymous Sign-ins가 켜져있는지 확인해주세요)');
+            }
         }
     };
 
@@ -404,10 +474,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             const result = await SignInWithApple.authorize({
                 clientId: 'com.kilssengkyu.brainrush',
                 redirectURI: '',
-                scopes: 'email name',
+                // iOS plugin runtime can expect an array for scopes.
+                // The current TS definition is narrower (string), so cast is required.
+                scopes: ['email', 'name'] as any,
                 state: '',
                 nonce: '',
-            });
+            } as any);
 
             const identityToken = result.response?.identityToken;
             if (!identityToken) {
@@ -428,7 +500,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 return;
             }
             console.error('Apple Sign-in Error:', error);
-            alert('Apple 로그인 중 오류가 발생했습니다.');
+            persistAuthError(error);
+            throw new Error((error as any)?.message || 'Apple 로그인 중 오류가 발생했습니다.');
         }
     };
 
@@ -458,7 +531,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, session, profile, loading, signInWithGoogle, signInWithApple, signInAnonymously, linkWithGoogle, signOut, refreshProfile, onlineUsers }}>
+        <AuthContext.Provider value={{ user, session, profile, loading, signInWithGoogle, signInWithApple, signInAnonymously, linkWithGoogle, linkWithApple, signOut, refreshProfile, onlineUsers }}>
             {children}
         </AuthContext.Provider>
     );
