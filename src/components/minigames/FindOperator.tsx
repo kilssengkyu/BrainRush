@@ -126,7 +126,7 @@ const FindOperator: React.FC<FindOperatorProps> = ({ seed, onScore, isPlaying })
         }
     };
 
-    if (!currentProblem) return <div className="text-white">{t('common.loading')}</div>;
+    if (!currentProblem) return <div className="text-slate-900 dark:text-white">{t('common.loading')}</div>;
 
     return (
         <div className="flex flex-col items-center justify-center w-full h-full gap-8 relative">
@@ -140,11 +140,11 @@ const FindOperator: React.FC<FindOperatorProps> = ({ seed, onScore, isPlaying })
                     transition={{ duration: 0.2 }}
                     className="flex items-center justify-center w-full h-40"
                 >
-                    <div className="text-6xl font-black text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] tracking-wider flex items-center gap-4">
+                    <div className="text-6xl font-black text-slate-900 dark:text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] tracking-wider flex items-center gap-4">
                         <span>{currentProblem.a}</span>
                         <span className="text-yellow-400 border-b-4 border-yellow-400 px-2 bg-white/10 rounded w-16 h-20 flex items-center justify-center">?</span>
                         <span>{currentProblem.b}</span>
-                        <span className="text-gray-400">=</span>
+                        <span className="text-slate-500 dark:text-gray-400">=</span>
                         <span>{currentProblem.c}</span>
                     </div>
                 </motion.div>
@@ -168,7 +168,7 @@ const FindOperator: React.FC<FindOperatorProps> = ({ seed, onScore, isPlaying })
                         }}
                         animate={shakeId === opt ? { x: [-5, 5, -5, 5, 0], backgroundColor: '#ef4444' } : {}}
                         whileTap={{ scale: 0.95 }}
-                        className={`h-24 rounded-2xl flex items-center justify-center text-5xl font-bold bg-gray-800 border-b-4 border-gray-950 active:border-b-0 active:translate-y-1 hover:bg-gray-700 transition-all ${opt === '×' || opt === '÷' ? 'text-blue-400' : 'text-white'
+                        className={`h-24 rounded-2xl flex items-center justify-center text-5xl font-bold bg-white dark:bg-gray-800 border-b-4 border-slate-300 dark:border-gray-950 active:border-b-0 active:translate-y-1 hover:bg-slate-100 dark:hover:bg-gray-700 transition-all ${opt === '×' || opt === '÷' ? 'text-blue-500 dark:text-blue-400' : 'text-slate-900 dark:text-white'
                             }`}
                     >
                         {opt}

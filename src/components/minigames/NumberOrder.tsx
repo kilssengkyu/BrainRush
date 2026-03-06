@@ -97,7 +97,7 @@ const NumberOrder: React.FC<NumberOrderProps> = ({ seed, onScore, isPlaying }) =
         }
     };
 
-    if (!seed) return <div className="text-white">{t('common.loading')}</div>;
+    if (!seed) return <div className="text-slate-900 dark:text-white">{t('common.loading')}</div>;
 
     return (
         <div className="flex flex-col items-center justify-center w-full h-full gap-6 relative">
@@ -142,7 +142,7 @@ const NumberOrder: React.FC<NumberOrderProps> = ({ seed, onScore, isPlaying }) =
                                         opacity: clearedNumbers.includes(num) ? 0.2 : 1,
                                         pointerEvents: clearedNumbers.includes(num) ? 'none' : 'auto'
                                     }}
-                                    className="w-full h-full rounded-2xl flex items-center justify-center text-4xl font-bold text-white border-2 border-gray-600 bg-gray-800 hover:border-white shadow-lg active:scale-95 transition-colors"
+                                    className="w-full h-full rounded-2xl flex items-center justify-center text-4xl font-bold text-slate-900 dark:text-white border-2 border-gray-600 bg-white dark:bg-gray-800 hover:border-white shadow-lg active:scale-95 transition-colors"
                                 >
                                     {num}
                                 </motion.button>

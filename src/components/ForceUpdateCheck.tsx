@@ -78,12 +78,12 @@ const ForceUpdateCheck = () => {
 
     return (
         <div className="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-6">
-            <div className="bg-gray-900 rounded-2xl p-8 max-w-sm w-full text-center border border-yellow-500/30 shadow-2xl">
+            <div className="bg-slate-50 dark:bg-gray-900 rounded-2xl p-8 max-w-sm w-full text-center border border-yellow-500/30 shadow-2xl">
                 <div className="text-5xl mb-4">🚀</div>
-                <h2 className="text-xl font-bold text-white mb-3">
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-3">
                     {t('update.title', '업데이트 필요')}
                 </h2>
-                <p className="text-gray-300 text-sm mb-4 leading-relaxed">
+                <p className="text-slate-600 dark:text-gray-300 text-sm mb-4 leading-relaxed">
                     {t('update.message', '새로운 버전이 출시되었습니다. 원활한 플레이를 위해 업데이트해주세요.')}
                 </p>
                 <p className="text-gray-500 text-xs mb-6">

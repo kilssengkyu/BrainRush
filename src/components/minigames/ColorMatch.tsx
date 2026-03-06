@@ -134,7 +134,7 @@ const ColorMatch: React.FC<ColorMatchProps> = ({ seed, onScore, isPlaying }) => 
         }
     };
 
-    if (!currentPanel) return <div className="text-white">{t('common.loading')}</div>;
+    if (!currentPanel) return <div className="text-slate-900 dark:text-white">{t('common.loading')}</div>;
 
     return (
         <div className="flex flex-col items-center justify-center w-full h-full gap-8 relative">
@@ -153,7 +153,7 @@ const ColorMatch: React.FC<ColorMatchProps> = ({ seed, onScore, isPlaying }) => 
                             }
                             handleItemClick(idx);
                         }}
-                        className={`w-36 h-36 rounded-2xl flex items-center justify-center text-4xl font-bold bg-gray-900 border-8 shadow-lg transition-colors active:scale-95 ${shakeId === idx ? 'animate-shake' : ''} ${selectedIndices.has(idx) ? 'ring-4 ring-white/30' : ''} ${COLORS[item.visual].tailwind}`}
+                        className={`w-36 h-36 rounded-2xl flex items-center justify-center text-4xl font-bold bg-slate-50 dark:bg-gray-900 border-8 shadow-lg transition-colors active:scale-95 ${shakeId === idx ? 'animate-shake' : ''} ${selectedIndices.has(idx) ? 'ring-4 ring-white/30' : ''} ${COLORS[item.visual].tailwind}`}
                         style={{
                             borderColor: COLORS[item.visual].hex,
                             backgroundColor: selectedIndices.has(idx) ? '#ffffff33' : '#111827'

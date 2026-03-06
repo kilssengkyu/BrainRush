@@ -141,6 +141,11 @@
       "title": "Practice Notes x100",
       "desc": "Best value for heavy practice."
     },
+    "nicknameChangeTicket": {
+      "title": "Nickname Change Ticket",
+      "desc": "Instantly change your nickname before the 30-day cooldown.",
+      "unit": "Nickname Change Ticket"
+    },
     "buy": "Buy",
     "premium": "Premium",
     "popular": "Popular",
@@ -221,6 +226,9 @@
     "notificationDeniedIos": "Please allow notifications in iPhone Settings > Notifications.",
     "notificationDeniedAndroid": "Please allow notifications in Android Settings > Notifications.",
     "notificationOn": "Notifications turned on.",
+    "support": "Contact Support",
+    "supportDesc": "Check help for bug reports, issues, and other inquiries.",
+    "goToSupport": "Open Support",
     "privacyPolicy": "Privacy Policy",
     "privacyPolicyDesc": "Review how we handle personal data for the service.",
     "viewPrivacyPolicy": "View Privacy Policy",
@@ -245,6 +253,11 @@
     "nicknameSetupTitle": "Set Nickname",
     "nicknameSetupDesc": "Please enter a nickname to use in the game.",
     "nicknamePlaceholder": "Enter nickname",
+    "nicknameTicketsLabel": "Nickname Change Tickets",
+    "nicknameChangeAvailableNow": "Nickname can be changed now",
+    "nicknameChangeUnavailableNow": "Nickname cannot be changed now",
+    "nicknameFreeChangeNow": "Free change available: now",
+    "nicknameFreeChangeAt": "Free change available: {{date}}",
     "selectCountry": "Select Country",
     "edit": "Edit",
     "highscoresTitle": "High Scores",
@@ -275,6 +288,10 @@
       "observation": "Observation"
     },
     "changeAvatar": "Change Photo",
+    "removeAvatar": "Remove Photo",
+    "removeAvatarConfirm": "Do you want to remove your current profile photo?",
+    "avatarRemoveSuccess": "Profile photo removed.",
+    "avatarRemoveFail": "Failed to remove profile photo",
     "avatarUploading": "Uploading...",
     "avatarInvalidType": "Unsupported image type.",
     "avatarTooLarge": "File is too large.",
@@ -284,6 +301,7 @@
     "noRecord": "No match history.",
     "disconnects": "Disconnects",
     "updateSuccess": "Profile updated successfully!",
+    "nicknameCooldownOrTicket": "Nickname changes are free every 30 days. Use a ticket for instant changes.",
     "updateFail": "Failed to update profile",
     "deleteSuccess": "Account deleted successfully.",
     "deleteFail": "Failed to delete account."

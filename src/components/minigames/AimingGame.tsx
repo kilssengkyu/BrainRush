@@ -201,7 +201,7 @@ const AimingGame: React.FC<AimingGameProps> = ({ seed, onScore, isPlaying }) => 
         setTimeout(() => setScorePopup(null), type === 'perfect' ? 800 : 500);
     };
 
-    if (!seed) return <div className="text-white">{t('common.loading')}</div>;
+    if (!seed) return <div className="text-slate-900 dark:text-white">{t('common.loading')}</div>;
 
     return (
         <div className="relative w-full h-full overflow-hidden select-none touch-manipulation">

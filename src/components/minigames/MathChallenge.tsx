@@ -188,7 +188,7 @@ const MathChallenge: React.FC<MathChallengeProps> = ({ seed, onScore, isPlaying 
         }
     };
 
-    if (!currentProblem) return <div className="text-white">{t('common.loading')}</div>;
+    if (!currentProblem) return <div className="text-slate-900 dark:text-white">{t('common.loading')}</div>;
 
     return (
         <div className="flex flex-col items-center justify-center w-full h-full gap-8 relative">
@@ -202,10 +202,10 @@ const MathChallenge: React.FC<MathChallengeProps> = ({ seed, onScore, isPlaying 
                     transition={{ duration: 0.2 }}
                     className="flex items-center justify-center w-full h-40"
                 >
-                    <div className="text-6xl font-black text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] tracking-wider">
+                    <div className="text-6xl font-black text-slate-900 dark:text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] tracking-wider">
                         {currentProblem.expression.replace(/\*/g, '×').replace(/\-/g, '−')}
                         {/* Use nicer unicode symbols if needed */}
-                        <span className="ml-4 text-gray-400">= ?</span>
+                        <span className="ml-4 text-slate-500 dark:text-gray-400">= ?</span>
                     </div>
                 </motion.div>
             </AnimatePresence>
@@ -228,7 +228,7 @@ const MathChallenge: React.FC<MathChallengeProps> = ({ seed, onScore, isPlaying 
                         }}
                         animate={shakeId === opt ? { x: [-5, 5, -5, 5, 0], backgroundColor: '#ef4444' } : {}}
                         whileTap={{ scale: 0.95 }}
-                        className={`h-24 rounded-2xl flex items-center justify-center text-4xl font-bold bg-gray-800 border-b-4 border-gray-950 active:border-b-0 active:translate-y-1 hover:bg-gray-700 transition-all ${currentProblem.options.length === 4 ? 'text-3xl' : 'text-4xl'
+                        className={`h-24 rounded-2xl flex items-center justify-center text-4xl font-bold text-slate-900 dark:text-white bg-white dark:bg-gray-800 border-b-4 border-slate-300 dark:border-gray-950 active:border-b-0 active:translate-y-1 hover:bg-slate-100 dark:hover:bg-gray-700 transition-all ${currentProblem.options.length === 4 ? 'text-3xl' : 'text-4xl'
                             }`}
                     >
                         {opt}

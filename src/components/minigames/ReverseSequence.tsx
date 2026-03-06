@@ -168,7 +168,7 @@ const ReverseSequence: React.FC<ReverseSequenceProps> = ({ seed, onScore, isPlay
                     // INPUT: isSequenceMember? -> Color. Clicked? -> Dimmed or Checkmark?
                     // Let's keep them colored until clicked? Or just always colored?
 
-                    let bgClass = 'bg-gray-800';
+                    let bgClass = 'bg-white dark:bg-gray-800';
                     let style: React.CSSProperties = {};
 
                     if (phase === 'SHOWING') {
@@ -183,7 +183,7 @@ const ReverseSequence: React.FC<ReverseSequenceProps> = ({ seed, onScore, isPlay
                             // "생긴 반대순으로 누르면" -> usually they disappear or dim.
                             const isClicked = userInput.includes(i);
                             if (isClicked) {
-                                bgClass = 'bg-gray-900 opacity-30';
+                                bgClass = 'bg-slate-200 dark:bg-gray-900 opacity-30';
                             } else {
                                 style = { backgroundColor: color || '#fff' };
                                 bgClass = 'shadow-lg hover:brightness-110';

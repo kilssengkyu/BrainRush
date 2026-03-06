@@ -189,27 +189,27 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ friendId, friendNickname, onClo
     };
 
     return (
-        <div className="fixed bottom-4 right-4 w-80 h-96 bg-slate-800 rounded-lg shadow-2xl flex flex-col border border-slate-600 z-50 overflow-hidden">
+        <div className="fixed bottom-4 right-4 w-80 h-96 bg-white dark:bg-slate-800 rounded-lg shadow-2xl flex flex-col border border-slate-200 dark:border-slate-600 z-50 overflow-hidden">
             {/* Header */}
-            <div className="bg-slate-900 p-3 flex justify-between items-center border-b border-slate-700">
-                <div className="font-bold text-white flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-green-500"></div>
+            <div className="bg-slate-50 dark:bg-slate-900 p-3 flex justify-between items-center border-b border-slate-200 dark:border-slate-700">
+                <div className="font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-green-500 shadow-sm"></div>
                     {friendNickname}
                 </div>
-                <button onClick={onClose} className="text-gray-400 hover:text-white">
+                <button onClick={onClose} className="p-1.5 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-400 dark:text-gray-400 hover:text-slate-600 dark:hover:text-white transition">
                     <X size={18} />
                 </button>
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-slate-800">
-                {loading && <div className="text-center text-gray-500 text-sm">{t('common.loading')}</div>}
+            <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-slate-50/50 dark:bg-slate-800">
+                {loading && <div className="text-center text-slate-400 dark:text-gray-500 text-sm">{t('common.loading')}</div>}
 
                 {messages.map((msg) => {
                     const isMe = msg.sender_id === user?.id;
                     return (
                         <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`max-w-[75%] rounded-lg px-3 py-2 text-sm ${isMe ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-slate-700 text-gray-200 rounded-tl-none'
+                            <div className={`max-w-[75%] rounded-lg px-3 py-2 text-sm shadow-sm ${isMe ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-white dark:bg-slate-700 text-slate-800 dark:text-gray-200 rounded-tl-none border border-slate-200 dark:border-transparent'
                                 }`}>
                                 {msg.content}
                             </div>
@@ -220,18 +220,18 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ friendId, friendNickname, onClo
             </div>
 
             {/* Input */}
-            <form onSubmit={handleSend} className="p-3 bg-slate-900 border-t border-slate-700 flex gap-2">
+            <form onSubmit={handleSend} className="p-3 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 flex gap-2">
                 <input
                     type="text"
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     placeholder={t('social.typeMessage')}
-                    className="flex-1 bg-slate-800 border border-slate-600 rounded-full px-4 py-1.5 text-white text-sm focus:outline-none focus:border-blue-500"
+                    className="flex-1 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-full px-4 py-1.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 shadow-sm dark:shadow-none"
                 />
                 <button
                     type="submit"
                     disabled={!newMessage.trim()}
-                    className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm dark:shadow-none"
                 >
                     <Send size={16} />
                 </button>

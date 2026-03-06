@@ -26,18 +26,18 @@ const PlayerSection = ({ player }: { player: PlayerProfile }) => {
     const winRate = totalGames > 0 ? Math.round(((player.wins || 0) / totalGames) * 100) : 0;
 
     return (
-        <div className={`flex items-center gap-4 p-4 rounded-xl bg-gray-800/50 backdrop-blur-md border border-gray-700 w-full max-w-md ${player.isOpponent ? 'flex-row-reverse text-right' : 'text-left'}`}>
+        <div className={`flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-gray-800/50 backdrop-blur-md border border-gray-700 w-full max-w-md ${player.isOpponent ? 'flex-row-reverse text-right' : 'text-left'}`}>
             <div className="relative">
                 <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center overflow-hidden border-2 border-white/20 shadow-lg">
                     {player.avatar ? (
                         <img src={player.avatar} alt={player.name} className="w-full h-full object-cover" />
                     ) : (
-                        <User className="w-8 h-8 text-white" />
+                        <User className="w-8 h-8 text-slate-900 dark:text-white" />
                     )}
                 </div>
                 {/* Level Badge (Optional Placeholder) */}
                 {!player.isGuest && (
-                    <div className="absolute -bottom-1 -right-1 bg-gray-900 text-xs font-bold px-2 py-0.5 rounded-full border border-gray-600">
+                    <div className="absolute -bottom-1 -right-1 bg-slate-50 dark:bg-gray-900 text-xs font-bold px-2 py-0.5 rounded-full border border-gray-600">
                         {Math.floor((player.mmr || 1000) / 100)}
                     </div>
                 )}
@@ -45,14 +45,14 @@ const PlayerSection = ({ player }: { player: PlayerProfile }) => {
 
             <div className={`flex flex-col ${player.isOpponent ? 'items-end' : 'items-start'} flex-1`}>
                 <div className="flex flex-col">
-                    <span className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">
+                    <span className="text-slate-500 dark:text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">
                         {player.isOpponent ? t('game.opponent') : t('game.you')}
                     </span>
-                    <h3 className="text-xl font-bold text-white leading-none mb-2 hidden sm:block">{player.name}</h3>
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white leading-none mb-2 hidden sm:block">{player.name}</h3>
 
                     {/* Stats Display */}
                     {!player.isGuest && (
-                        <div className="flex flex-col gap-0.5 text-xs text-gray-300 font-mono">
+                        <div className="flex flex-col gap-0.5 text-xs text-slate-600 dark:text-gray-300 font-mono">
                             <span className="text-yellow-400 font-bold">MMR {player.mmr || 1000}</span>
                             <span>
                                 {player.wins}W {player.losses}L <span className="text-blue-400">({winRate}%)</span>
@@ -77,7 +77,7 @@ const PlayerSection = ({ player }: { player: PlayerProfile }) => {
 
 const GameLayout: React.FC<GameLayoutProps> = ({ opponent, me, children }) => {
     return (
-        <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-between p-4 relative overflow-hidden">
+        <div className="min-h-screen bg-slate-50 dark:bg-gray-900 text-slate-900 dark:text-white flex flex-col items-center justify-between p-4 relative overflow-hidden">
             {/* Background Effects */}
             <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-800 via-gray-900 to-black pointer-events-none -z-10" />
 

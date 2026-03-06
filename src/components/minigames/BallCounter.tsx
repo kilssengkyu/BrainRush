@@ -241,7 +241,7 @@ const BallCounter: React.FC<BallCounterProps> = ({ seed, onScore, isPlaying }) =
         <div className="w-full h-full flex flex-col items-center justify-center p-4">
             <div
                 ref={containerRef}
-                className={`w-[92vw] max-w-[360px] rounded-2xl border border-white/10 bg-gray-800/50 shadow-2xl relative overflow-hidden transition-shadow ${feedback === 'wrong' ? 'ring-4 ring-red-500/70' : feedback === 'correct' ? 'ring-4 ring-emerald-400/70' : ''}`}
+                className={`w-[92vw] max-w-[360px] rounded-2xl border border-white/10 bg-white dark:bg-gray-800/50 shadow-2xl relative overflow-hidden transition-shadow ${feedback === 'wrong' ? 'ring-4 ring-red-500/70' : feedback === 'correct' ? 'ring-4 ring-emerald-400/70' : ''}`}
                 style={containerStyle}
             >
                 {balls.map(ball => (
@@ -264,7 +264,7 @@ const BallCounter: React.FC<BallCounterProps> = ({ seed, onScore, isPlaying }) =
                     <button
                         key={value}
                         onClick={() => handleAnswer(value)}
-                        className="px-6 py-3 rounded-xl bg-gray-800/70 border border-white/10 text-white font-bold text-lg hover:bg-gray-700/80 active:scale-95 transition-transform"
+                        className="px-6 py-3 rounded-xl bg-white dark:bg-gray-800/70 border border-white/10 text-slate-900 dark:text-white font-bold text-lg hover:bg-slate-100 dark:bg-gray-700/80 active:scale-95 transition-transform"
                     >
                         {value}
                     </button>

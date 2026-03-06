@@ -172,7 +172,7 @@ const FindTheSpy: React.FC<FindTheSpyProps> = ({ seed, onScore, isPlaying }) => 
 
     return (
         <div className="w-full h-full flex flex-col items-center justify-center relative">
-            <h2 className="text-2xl font-bold text-white mb-8 drop-shadow-md">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-8 drop-shadow-md">
                 {phase === 'memorize' ? t('spy.memorize') : phase === 'guessing' ? t('spy.find') : '...'}
             </h2>
 
@@ -249,7 +249,7 @@ const FindTheSpy: React.FC<FindTheSpyProps> = ({ seed, onScore, isPlaying }) => 
                             }
                             handleReady();
                         }}
-                        className="absolute bottom-10 px-8 py-3 bg-red-500 hover:bg-red-600 text-white font-black rounded-full shadow-lg text-xl z-20"
+                        className="absolute bottom-10 px-8 py-3 bg-red-500 hover:bg-red-600 text-slate-900 dark:text-white font-black rounded-full shadow-lg text-xl z-20"
                     >
                         {t('spy.ready')}
                     </motion.button>

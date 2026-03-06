@@ -215,7 +215,7 @@ const PathRunner: React.FC<PathRunnerProps> = ({ seed, onScore, isPlaying }) => 
     return (
         <div className="w-full h-full flex flex-col items-center justify-center px-4 select-none">
             <div
-                className={`w-[92vw] max-w-[360px] rounded-2xl border border-white/10 bg-gray-800/40 p-2 shadow-2xl transition-colors ${errorFlash ? 'ring-4 ring-red-500/70' : ''}`}
+                className={`w-[92vw] max-w-[360px] rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-gray-800/40 p-2 shadow-2xl transition-colors ${errorFlash ? 'ring-4 ring-red-500/70' : ''}`}
                 style={containerStyle}
             >
                 <div className="grid w-full h-full gap-[2px]" style={boardStyle}>
@@ -227,8 +227,8 @@ const PathRunner: React.FC<PathRunnerProps> = ({ seed, onScore, isPlaying }) => 
                             const isPath = pathSet.has(key);
                             const isVisited = visited.has(key);
 
-                            let cellClass = 'bg-red-600/80';
-                            if (isPath) cellClass = 'bg-white/90';
+                            let cellClass = 'bg-red-500/80 dark:bg-red-600/80';
+                            if (isPath) cellClass = 'bg-white dark:bg-white/90 border border-slate-200 dark:border-transparent';
                             if (isPath && isVisited) cellClass = 'bg-yellow-300/90';
                             if (isGoal) cellClass = 'bg-blue-500';
                             if (isPlayer) cellClass = 'bg-emerald-500';
@@ -248,7 +248,7 @@ const PathRunner: React.FC<PathRunnerProps> = ({ seed, onScore, isPlaying }) => 
                 <div />
                 <button
                     onClick={() => handlePress('up')}
-                    className="w-14 h-14 rounded-xl bg-gray-800/70 border border-white/10 text-white flex items-center justify-center active:scale-95 transition-transform"
+                    className="w-14 h-14 rounded-xl bg-white dark:bg-gray-800/70 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white flex items-center justify-center active:scale-95 transition-transform shadow-sm"
                 >
                     {renderDirectionIcon(mapping.up)}
                 </button>
@@ -256,19 +256,19 @@ const PathRunner: React.FC<PathRunnerProps> = ({ seed, onScore, isPlaying }) => 
 
                 <button
                     onClick={() => handlePress('left')}
-                    className="w-14 h-14 rounded-xl bg-gray-800/70 border border-white/10 text-white flex items-center justify-center active:scale-95 transition-transform"
+                    className="w-14 h-14 rounded-xl bg-white dark:bg-gray-800/70 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white flex items-center justify-center active:scale-95 transition-transform shadow-sm"
                 >
                     {renderDirectionIcon(mapping.left)}
                 </button>
                 <button
                     onClick={() => handlePress('down')}
-                    className="w-14 h-14 rounded-xl bg-gray-800/70 border border-white/10 text-white flex items-center justify-center active:scale-95 transition-transform"
+                    className="w-14 h-14 rounded-xl bg-white dark:bg-gray-800/70 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white flex items-center justify-center active:scale-95 transition-transform shadow-sm"
                 >
                     {renderDirectionIcon(mapping.down)}
                 </button>
                 <button
                     onClick={() => handlePress('right')}
-                    className="w-14 h-14 rounded-xl bg-gray-800/70 border border-white/10 text-white flex items-center justify-center active:scale-95 transition-transform"
+                    className="w-14 h-14 rounded-xl bg-white dark:bg-gray-800/70 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white flex items-center justify-center active:scale-95 transition-transform shadow-sm"
                 >
                     {renderDirectionIcon(mapping.right)}
                 </button>

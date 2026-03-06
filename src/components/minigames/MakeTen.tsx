@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { SeededRandom } from '../../utils/seededRandom';
 import { useSound } from '../../contexts/SoundContext';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface MakeTenProps {
     seed: string | null;
@@ -28,6 +29,8 @@ const TARGET_COMBINATIONS: Record<number, number[][]> = {
 const MakeTen: React.FC<MakeTenProps> = ({ seed, onScore, isPlaying }) => {
     const { t } = useTranslation();
     const { playSound } = useSound();
+    const { themeMode } = useTheme();
+    const isDark = themeMode === 'dark';
     const [panelIndex, setPanelIndex] = usePanelProgress(seed);
     const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
     const [animationKey, setAnimationKey] = useState(0);
@@ -163,7 +166,7 @@ const MakeTen: React.FC<MakeTenProps> = ({ seed, onScore, isPlaying }) => {
         }
     }, [selectedIndices, currentPanel, panelIndex, onScore, isSolved, isPlaying]);
 
-    if (!currentPanel) return <div className="text-white">{t('common.loading')}</div>;
+    if (!currentPanel) return <div className="text-slate-900 dark:text-white">{t('common.loading')}</div>;
 
     return (
         <div className="flex flex-col items-center justify-center w-full h-full gap-8 relative">
@@ -178,8 +181,8 @@ const MakeTen: React.FC<MakeTenProps> = ({ seed, onScore, isPlaying }) => {
                             animate={{
                                 scale: selectedIndices.has(idx) ? 1.1 : 1,
                                 opacity: 1,
-                                backgroundColor: selectedIndices.has(idx) ? '#3b82f6' : '#1f2937',
-                                boxShadow: selectedIndices.has(idx) ? '0 0 20px rgba(59, 130, 246, 0.5)' : 'none'
+                                backgroundColor: selectedIndices.has(idx) ? '#3b82f6' : (isDark ? '#1f2937' : '#f1f5f9'),
+                                boxShadow: selectedIndices.has(idx) ? '0 0 20px rgba(59, 130, 246, 0.5)' : (isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.1)')
                             }}
                             exit={{ scale: 0, opacity: 0 }}
                             whileTap={{ scale: 0.95 }}
@@ -194,7 +197,7 @@ const MakeTen: React.FC<MakeTenProps> = ({ seed, onScore, isPlaying }) => {
                                 }
                                 toggleSelection(idx);
                             }}
-                            className={`rounded-3xl flex items-center justify-center font-bold text-white border-4 border-gray-700 transition-colors shadow-xl
+                            className={`rounded-3xl flex items-center justify-center font-bold ${selectedIndices.has(idx) ? 'text-white' : 'text-slate-900 dark:text-white'} border-4 border-slate-300 dark:border-gray-700 transition-colors shadow-xl
                                 ${currentPanel.count >= 8 ? 'w-20 h-20 md:w-24 md:h-24 text-3xl md:text-4xl' : currentPanel.count >= 6 ? 'w-[5.5rem] h-[5.5rem] md:w-[6.5rem] md:h-[6.5rem] text-4xl md:text-[2.7rem]' : 'w-28 h-28 text-5xl'}`}
                         >
                             {num}
@@ -206,7 +209,7 @@ const MakeTen: React.FC<MakeTenProps> = ({ seed, onScore, isPlaying }) => {
             {/* Current Sum Indicator */}
             <div className="mt-8 text-xl font-mono text-gray-500">
                 Sum: <span className={
-                    Array.from(selectedIndices).reduce((a, b) => a + currentPanel.numbers[b], 0) === 10 ? 'text-green-400 font-bold' : 'text-white'
+                    Array.from(selectedIndices).reduce((a, b) => a + currentPanel.numbers[b], 0) === 10 ? 'text-green-500 dark:text-green-400 font-bold' : 'text-slate-900 dark:text-white'
                 }>
                     {Array.from(selectedIndices).reduce((a, b) => a + currentPanel.numbers[b], 0)}
                 </span>

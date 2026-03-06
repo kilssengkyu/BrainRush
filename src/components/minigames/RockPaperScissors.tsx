@@ -71,7 +71,7 @@ const RockPaperScissors: React.FC<RPSProps> = ({ seed, onScore, isPlaying }) => 
         }
     };
 
-    if (!currentProblem) return <div className="text-white">{t('common.loading')}</div>;
+    if (!currentProblem) return <div className="text-slate-900 dark:text-white">{t('common.loading')}</div>;
 
     const { target, isReverse } = currentProblem;
 
@@ -119,7 +119,7 @@ const RockPaperScissors: React.FC<RPSProps> = ({ seed, onScore, isPlaying }) => 
                         animate={shake === move ? { x: [-10, 10, -10, 10, 0], backgroundColor: "#ef4444" } : {}}
                         transition={{ duration: 0.4 }}
                         whileTap={{ scale: 0.9 }}
-                        className="w-24 h-24 rounded-2xl border-4 border-gray-600 bg-gray-800 hover:border-white hover:bg-gray-700 flex items-center justify-center text-4xl shadow-xl"
+                        className="w-24 h-24 rounded-2xl border-4 border-gray-600 bg-white dark:bg-gray-800 hover:border-white hover:bg-slate-100 dark:bg-gray-700 flex items-center justify-center text-4xl shadow-xl"
                     >
                         {move === 'rock' && '✊'}
                         {move === 'paper' && '✋'}

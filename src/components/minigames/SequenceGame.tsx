@@ -3,6 +3,7 @@ import { usePanelProgress } from '../../hooks/usePanelProgress';
 import { motion } from 'framer-motion';
 import { SeededRandom } from '../../utils/seededRandom';
 import { useSound } from '../../contexts/SoundContext';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface SequenceGameProps {
     seed: string | null;
@@ -31,6 +32,8 @@ const FORWARD_COLORS = [
 
 const SequenceGame: React.FC<SequenceGameProps> = ({ seed, onScore, isPlaying, mode }) => {
     const { playSound } = useSound();
+    const { themeMode } = useTheme();
+    const isDark = themeMode === 'dark';
     const [stage, setStage] = usePanelProgress(seed, 'stage', 1);
     const [sequence, setSequence] = useState<number[]>([]);
     const [phase, setPhase] = useState<'IDLE' | 'SHOWING' | 'INPUT' | 'SUCCESS' | 'FAILURE'>('IDLE');
@@ -167,16 +170,16 @@ const SequenceGame: React.FC<SequenceGameProps> = ({ seed, onScore, isPlaying, m
                     const seqIndex = sequence.indexOf(i);
                     const color = isSequenceMember ? targetColors[seqIndex] : null;
 
-                    let bgClass = 'bg-gray-800';
+                    let bgClass = 'bg-white dark:bg-gray-800';
                     let style: React.CSSProperties = {};
 
                     if (phase === 'SHOWING') {
                         if (isSequenceMember && seqIndex < seqStep) {
                             bgClass = 'scale-110 z-10';
                             style = {
-                                backgroundColor: '#F8FAFC',
-                                borderColor: 'rgba(255,255,255,0.9)',
-                                boxShadow: 'none'
+                                backgroundColor: color || (isDark ? '#F8FAFC' : '#1e293b'),
+                                borderColor: isDark ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.2)',
+                                boxShadow: isDark ? 'none' : '0 4px 12px rgba(0,0,0,0.15)'
                             };
                         }
                     } else if (phase === 'INPUT' || phase === 'SUCCESS') {
@@ -184,7 +187,7 @@ const SequenceGame: React.FC<SequenceGameProps> = ({ seed, onScore, isPlaying, m
                             // If clicked, dim it?
                             const isClicked = userInput.includes(i);
                             if (isClicked) {
-                                bgClass = 'bg-gray-900 opacity-30';
+                                bgClass = 'bg-slate-200 dark:bg-gray-900 opacity-30';
                             } else {
                                 style = { backgroundColor: color || '#fff' };
                                 bgClass = 'shadow-lg hover:brightness-110';

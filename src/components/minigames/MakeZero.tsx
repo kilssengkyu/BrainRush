@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { SeededRandom } from '../../utils/seededRandom';
 import { useSound } from '../../contexts/SoundContext';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface MakeZeroProps {
     seed: string | null;
@@ -124,6 +125,8 @@ function generatePuzzle(rng: SeededRandom, config: LevelConfig) {
 const MakeZero: React.FC<MakeZeroProps> = ({ seed, onScore, isPlaying }) => {
     const { t } = useTranslation();
     const { playSound } = useSound();
+    const { themeMode } = useTheme();
+    const isDark = themeMode === 'dark';
     const [panelIndex, setPanelIndex] = usePanelProgress(seed);
     const [filledSlots, setFilledSlots] = useState<(number | null)[]>([]);
     const [usedButtonIndices, setUsedButtonIndices] = useState<Set<number>>(new Set());
@@ -225,7 +228,7 @@ const MakeZero: React.FC<MakeZeroProps> = ({ seed, onScore, isPlaying }) => {
         }
     }, [filledSlots, puzzle, isSolved, showWrong, onScore, playSound, totalSlots]);
 
-    if (!puzzle) return <div className="text-white">{t('common.loading')}</div>;
+    if (!puzzle) return <div className="text-slate-900 dark:text-white">{t('common.loading')}</div>;
 
     const sps = puzzle.slotsPerSide;
 
@@ -242,10 +245,10 @@ const MakeZero: React.FC<MakeZeroProps> = ({ seed, onScore, isPlaying }) => {
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 10 }}
-                    className="flex items-center gap-1 text-white font-bold text-lg flex-wrap justify-center"
+                    className="flex items-center gap-1 text-slate-900 dark:text-white font-bold text-lg flex-wrap justify-center"
                     onClick={handleSlotTap}
                 >
-                    <span className="text-gray-400 text-2xl">(</span>
+                    <span className="text-slate-500 dark:text-gray-400 text-2xl">(</span>
                     {leftSlots.map((val, i) => (
                         <React.Fragment key={`l${i}`}>
                             {i > 0 && <span className="text-blue-400 text-xl mx-0.5">+</span>}
@@ -253,21 +256,21 @@ const MakeZero: React.FC<MakeZeroProps> = ({ seed, onScore, isPlaying }) => {
                                 animate={{
                                     backgroundColor: val !== null
                                         ? (showWrong ? '#ef4444' : '#3b82f6')
-                                        : '#374151',
+                                        : (isDark ? '#374151' : '#e2e8f0'),
                                     scale: val !== null ? [1, 1.1, 1] : 1,
                                 }}
                                 transition={{ duration: 0.15 }}
-                                className="inline-flex items-center justify-center w-12 h-12 rounded-xl text-2xl font-black border-2 border-gray-600"
+                                className={`inline-flex items-center justify-center w-12 h-12 rounded-xl text-2xl font-black border-2 border-slate-300 dark:border-gray-600 ${val !== null ? 'text-white' : 'text-slate-500 dark:text-gray-400'}`}
                             >
                                 {val !== null ? val : '?'}
                             </motion.span>
                         </React.Fragment>
                     ))}
-                    <span className="text-gray-400 text-2xl">)</span>
+                    <span className="text-slate-500 dark:text-gray-400 text-2xl">)</span>
 
                     <span className="text-red-400 text-3xl font-black mx-1">−</span>
 
-                    <span className="text-gray-400 text-2xl">(</span>
+                    <span className="text-slate-500 dark:text-gray-400 text-2xl">(</span>
                     {rightSlots.map((val, i) => (
                         <React.Fragment key={`r${i}`}>
                             {i > 0 && <span className="text-blue-400 text-xl mx-0.5">+</span>}
@@ -275,30 +278,30 @@ const MakeZero: React.FC<MakeZeroProps> = ({ seed, onScore, isPlaying }) => {
                                 animate={{
                                     backgroundColor: val !== null
                                         ? (showWrong ? '#ef4444' : '#3b82f6')
-                                        : '#374151',
+                                        : (isDark ? '#374151' : '#e2e8f0'),
                                     scale: val !== null ? [1, 1.1, 1] : 1,
                                 }}
                                 transition={{ duration: 0.15 }}
-                                className="inline-flex items-center justify-center w-12 h-12 rounded-xl text-2xl font-black border-2 border-gray-600"
+                                className={`inline-flex items-center justify-center w-12 h-12 rounded-xl text-2xl font-black border-2 border-slate-300 dark:border-gray-600 ${val !== null ? 'text-white' : 'text-slate-500 dark:text-gray-400'}`}
                             >
                                 {val !== null ? val : '?'}
                             </motion.span>
                         </React.Fragment>
                     ))}
-                    <span className="text-gray-400 text-2xl">)</span>
+                    <span className="text-slate-500 dark:text-gray-400 text-2xl">)</span>
 
                     <span className="text-yellow-400 text-2xl font-black mx-1">=</span>
                     <span className="text-yellow-400 text-3xl font-black">0</span>
                 </motion.div>
-            </AnimatePresence>
+            </AnimatePresence >
 
             {/* Hint: tap to undo — always takes space to prevent layout shift */}
-            <div className={`text-xs h-4 ${usedButtonIndices.size > 0 && !isSolved ? 'text-gray-600' : 'text-transparent'}`}>
+            < div className={`text-xs h-4 ${usedButtonIndices.size > 0 && !isSolved ? 'text-gray-600' : 'text-transparent'}`}>
                 {t('zero.undoHint', '수식을 터치하면 되돌립니다')}
-            </div>
+            </div >
 
             {/* Number Buttons */}
-            <div className={`grid gap-3 mt-4 ${puzzle.buttons.length <= 4 ? 'grid-cols-4' :
+            < div className={`grid gap-3 mt-4 ${puzzle.buttons.length <= 4 ? 'grid-cols-4' :
                 puzzle.buttons.length <= 6 ? 'grid-cols-3' :
                     'grid-cols-4'
                 }`}>
@@ -311,9 +314,8 @@ const MakeZero: React.FC<MakeZeroProps> = ({ seed, onScore, isPlaying }) => {
                                 layout
                                 initial={{ scale: 0.8, opacity: 0 }}
                                 animate={{
-                                    scale: isUsed ? 0.85 : 1,
                                     opacity: isUsed ? 0.3 : 1,
-                                    backgroundColor: isUsed ? '#111827' : '#1f2937',
+                                    backgroundColor: isUsed ? (isDark ? '#111827' : '#cbd5e1') : (isDark ? '#1f2937' : '#f1f5f9'),
                                 }}
                                 exit={{ scale: 0, opacity: 0 }}
                                 whileTap={{ scale: 0.9 }}
@@ -325,15 +327,15 @@ const MakeZero: React.FC<MakeZeroProps> = ({ seed, onScore, isPlaying }) => {
                                     handleButtonPress(idx);
                                 }}
                                 disabled={isUsed}
-                                className="w-20 h-20 rounded-2xl flex items-center justify-center text-3xl font-bold text-white border-2 border-gray-700 shadow-lg transition-colors"
+                                className="w-20 h-20 rounded-2xl flex items-center justify-center text-3xl font-bold text-slate-900 dark:text-white border-2 border-slate-300 dark:border-gray-700 shadow-lg transition-colors"
                             >
                                 {num}
                             </motion.button>
                         );
                     })}
                 </AnimatePresence>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 };
 

@@ -88,7 +88,7 @@ const RechargeTimer = ({ remainingMs }: { remainingMs: number }) => {
     }, [remainingMs]);
 
     return (
-        <span className="ml-0 text-[10px] text-gray-400 font-mono">
+        <span className="ml-0 text-[10px] text-slate-500 dark:text-gray-400 font-mono">
             +{timeLeft}
         </span>
     );
@@ -110,7 +110,9 @@ const Home = () => {
     const [longPressXpExpanded, setLongPressXpExpanded] = useState(false);
     const longPressTimerRef = useRef<number | null>(null);
     const longPressTouchRef = useRef(false);
+    const longPressTriggeredRef = useRef(false);
     const suppressProfileClickRef = useRef(false);
+    const suppressProfileClickUntilRef = useRef(0);
     const [nowMs, setNowMs] = useState(() => Date.now());
     const lastPencilRefreshAttemptRef = useRef(0);
 
@@ -351,6 +353,7 @@ const Home = () => {
     }, [streakUpdatedAt, streakCount]);
 
     const streakActive = streakCount >= 1 && streakSecondsLeft > 0;
+    const shouldHighlightRankButton = streakActive && canPlayRank;
     const streakMinutes = Math.floor(streakSecondsLeft / 60);
     const streakSeconds = streakSecondsLeft % 60;
     const displayedXp = animatedXpValue ?? Math.max(0, Math.floor(Number(profile?.xp ?? 0)));
@@ -367,9 +370,12 @@ const Home = () => {
     const handleProfilePressStart = () => {
         if (xpAnimation) return; // animation already showing
         longPressTouchRef.current = true;
+        longPressTriggeredRef.current = false;
         suppressProfileClickRef.current = false;
+        suppressProfileClickUntilRef.current = 0;
         longPressTimerRef.current = window.setTimeout(() => {
             if (longPressTouchRef.current) {
+                longPressTriggeredRef.current = true;
                 suppressProfileClickRef.current = true;
                 setLongPressXpExpanded(true);
             }
@@ -381,10 +387,20 @@ const Home = () => {
             window.clearTimeout(longPressTimerRef.current);
             longPressTimerRef.current = null;
         }
+        if (longPressTriggeredRef.current) {
+            suppressProfileClickRef.current = true;
+            suppressProfileClickUntilRef.current = Date.now() + 700;
+        }
         setLongPressXpExpanded(false);
     };
-    const handleProfileClick = () => {
-        if (suppressProfileClickRef.current || longPressXpExpanded) {
+    const handleProfileClick = (event: React.MouseEvent | React.PointerEvent) => {
+        if (
+            suppressProfileClickRef.current
+            || longPressXpExpanded
+            || Date.now() < suppressProfileClickUntilRef.current
+        ) {
+            event.preventDefault();
+            event.stopPropagation();
             suppressProfileClickRef.current = false;
             return;
         }
@@ -710,9 +726,9 @@ const Home = () => {
     }, [user, profile?.needs_nickname_setup]);
 
     return (
-        <div className="min-h-[100dvh] bg-gray-900 text-white flex flex-col items-center p-4 relative overflow-hidden">
+        <div className={`min-h-[100dvh] bg-slate-50 dark:bg-gray-900 text-slate-900 dark:text-white flex flex-col items-center p-4 relative overflow-hidden`}>
             {/* Background Effects */}
-            <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-800 via-gray-900 to-black pointer-events-none" />
+            <div className={`absolute top-0 left-0 w-full h-full pointer-events-none bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white via-slate-100 to-slate-200 dark:from-gray-800 dark:via-gray-900 dark:to-black`} />
 
             {/* Authenticated User Header (Top Left - Profile) */}
             {user && (
@@ -725,25 +741,24 @@ const Home = () => {
                         <motion.div
                             layout
                             transition={{ type: 'spring', stiffness: 240, damping: 24 }}
-                            className={`bg-gray-800/80 backdrop-blur-md border shadow-lg cursor-pointer hover:bg-gray-800 transition-colors select-none ${shouldShowXpPanel
+                            className={`bg-white dark:bg-gray-800/80 backdrop-blur-md border shadow-lg cursor-pointer hover:bg-white dark:bg-gray-800 transition-colors select-none ${shouldShowXpPanel
                                 ? 'w-[min(22rem,calc(100vw-2rem))] rounded-[1.75rem] border-blue-400/35 px-4 py-3 shadow-[0_0_28px_rgba(59,130,246,0.22)]'
                                 : 'rounded-full border-gray-700 p-2 pr-6'
                                 }`}
                             onClick={handleProfileClick}
-                            onTouchStart={handleProfilePressStart}
-                            onTouchEnd={handleProfilePressEnd}
-                            onTouchCancel={handleProfilePressEnd}
-                            onMouseDown={handleProfilePressStart}
-                            onMouseUp={handleProfilePressEnd}
-                            onMouseLeave={handleProfilePressEnd}
+                            onPointerDown={handleProfilePressStart}
+                            onPointerUp={handleProfilePressEnd}
+                            onPointerCancel={handleProfilePressEnd}
+                            onPointerLeave={handleProfilePressEnd}
+                            onContextMenu={(event) => event.preventDefault()}
                         >
                             <div className="flex items-center gap-4">
                                 <div className="relative w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 p-[2px]">
-                                    <div className="w-full h-full rounded-full bg-gray-900 flex items-center justify-center overflow-hidden">
+                                    <div className="w-full h-full rounded-full bg-slate-50 dark:bg-gray-900 flex items-center justify-center overflow-hidden">
                                         {avatarUrl ? (
                                             <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
                                         ) : (
-                                            <User className="w-6 h-6 md:w-7 md:h-7 text-gray-400" />
+                                            <User className="w-6 h-6 md:w-7 md:h-7 text-slate-500 dark:text-gray-400" />
                                         )}
                                     </div>
                                     <motion.div
@@ -758,7 +773,7 @@ const Home = () => {
                                     )}
                                 </div>
                                 <div className="min-w-0 flex-1">
-                                    <div className="font-bold text-white text-base md:text-lg leading-none flex items-center gap-2">
+                                    <div className="font-bold text-slate-900 dark:text-white text-base md:text-lg leading-none flex items-center gap-2">
                                         <Flag code={countryCode} />
                                         <span className="truncate">{nickname}</span>
                                         {shouldSuggestNicknameSetup && (
@@ -800,7 +815,7 @@ const Home = () => {
                                             <div className="mb-2 flex items-center justify-between gap-3">
                                                 <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.22em] text-blue-200/80">
                                                     <span>XP</span>
-                                                    <span className="text-white/70 normal-case tracking-normal">
+                                                    <span className="text-slate-900 dark:text-white/70 normal-case tracking-normal">
                                                         {t('home.levelProgressLevel', 'Lv. {{level}}', { level: xpAnimation ? displayedLevel : staticLevel })}
                                                     </span>
                                                 </div>
@@ -817,7 +832,7 @@ const Home = () => {
                                                     transition={{ duration: 0.18, ease: 'easeOut' }}
                                                 />
                                             </div>
-                                            <div className="mt-2 flex items-center justify-between text-[11px] font-mono text-gray-300">
+                                            <div className="mt-2 flex items-center justify-between text-[11px] font-mono text-slate-600 dark:text-gray-300">
                                                 <span>{(xpAnimation ? displayedXpProgress : staticXpProgress).progressXp} / {(xpAnimation ? displayedXpProgress : staticXpProgress).requiredXp}</span>
                                                 <span>{xpAnimation ? displayedXp : staticXp}</span>
                                             </div>
@@ -845,7 +860,7 @@ const Home = () => {
                     <div className="absolute top-[calc(env(safe-area-inset-top)+0.5rem+var(--home-top-offset))] right-4 z-50">
                         <button
                             onClick={() => setShowAdModal(true)}
-                            className="bg-gray-800/80 backdrop-blur-md border border-gray-700 rounded-full py-2 px-3 md:px-5 flex items-center gap-2 md:gap-3 hover:bg-gray-700 transition-all shadow-lg active:scale-95"
+                            className="bg-white dark:bg-gray-800/80 backdrop-blur-md border border-gray-700 rounded-full py-2 px-3 md:px-5 flex items-center gap-2 md:gap-3 hover:bg-slate-100 dark:bg-gray-700 transition-all shadow-lg active:scale-95"
                         >
                             <div className="flex flex-col items-end leading-none">
                                 <div className="flex items-center gap-1.5">
@@ -855,7 +870,7 @@ const Home = () => {
                                     <span className="text-gray-500 text-sm font-bold">/ 5</span>
                                 </div>
                                 {displayedPencils < MAX_PENCILS && (
-                                    <div className="text-xs text-gray-400 font-mono flex items-center gap-1.5 mt-0.5">
+                                    <div className="text-xs text-slate-500 dark:text-gray-400 font-mono flex items-center gap-1.5 mt-0.5">
                                         <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
                                         <RechargeTimer remainingMs={displayedRechargeMs} />
                                     </div>
@@ -874,9 +889,9 @@ const Home = () => {
             {/* Auth Loading Overlay */}
             {authLoading && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm">
-                    <div className="flex items-center gap-3 bg-gray-900/80 border border-white/10 rounded-2xl px-5 py-4 shadow-xl">
+                    <div className="flex items-center gap-3 bg-slate-50 dark:bg-gray-900/80 border border-white/10 rounded-2xl px-5 py-4 shadow-xl">
                         <Loader2 className="w-5 h-5 text-blue-400 animate-spin" />
-                        <span className="text-sm font-bold text-gray-200">{t('common.loading')}</span>
+                        <span className="text-sm font-bold text-slate-700 dark:text-gray-200">{t('common.loading')}</span>
                     </div>
                 </div>
             )}
@@ -884,11 +899,11 @@ const Home = () => {
             {/* Modals */}
             {showNicknameModal && (
                 <div className="fixed inset-0 z-[120] bg-black/80 backdrop-blur-sm flex items-center justify-center px-4">
-                    <div className="w-full max-w-md rounded-3xl border border-blue-500/30 bg-gray-900/95 p-6 shadow-2xl">
-                        <h2 className="text-2xl font-bold text-white mb-2">
+                    <div className="w-full max-w-md rounded-3xl border border-blue-500/30 bg-slate-50 dark:bg-gray-900/95 p-6 shadow-2xl">
+                        <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
                             {t('profile.nicknameSetupTitle', '닉네임 설정')}
                         </h2>
-                        <p className="text-sm text-gray-300 mb-5">
+                        <p className="text-sm text-slate-600 dark:text-gray-300 mb-5">
                             {t('profile.nicknameSetupDesc', '게임에서 사용할 닉네임을 입력해주세요.')}
                         </p>
 
@@ -905,20 +920,20 @@ const Home = () => {
                             maxLength={20}
                             autoFocus
                             placeholder={t('profile.nicknamePlaceholder')}
-                            className="w-full rounded-xl border border-gray-700 bg-gray-800 px-4 py-3 text-white outline-none focus:border-blue-500"
+                            className="w-full rounded-xl border border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-slate-900 dark:text-white outline-none focus:border-blue-500"
                         />
 
                         <button
                             onClick={handleNicknameSubmit}
                             disabled={isSavingNickname}
-                            className="mt-4 w-full rounded-xl bg-blue-600 py-3 font-bold text-white transition-colors hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+                            className="mt-4 w-full rounded-xl bg-blue-600 py-3 font-bold text-slate-900 dark:text-white transition-colors hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
                         >
                             {isSavingNickname ? t('common.loading') : t('common.confirm')}
                         </button>
                         <button
                             onClick={() => setShowNicknameModal(false)}
                             disabled={isSavingNickname}
-                            className="mt-2 w-full rounded-xl border border-gray-600 bg-transparent py-3 font-semibold text-gray-300 transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
+                            className="mt-2 w-full rounded-xl border border-gray-600 bg-transparent py-3 font-semibold text-slate-600 dark:text-gray-300 transition-colors hover:bg-white dark:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
                         >
                             {t('common.close')}
                         </button>
@@ -928,11 +943,11 @@ const Home = () => {
 
             {activeSessionPrompt && status === 'idle' && (
                 <div className="fixed inset-0 z-[125] bg-black/75 backdrop-blur-sm flex items-center justify-center px-4">
-                    <div className="w-full max-w-md rounded-3xl border border-yellow-400/30 bg-gray-900/95 p-6 shadow-2xl">
-                        <h2 className="text-xl font-black text-white mb-2">
+                    <div className="w-full max-w-md rounded-3xl border border-yellow-400/30 bg-slate-50 dark:bg-gray-900/95 p-6 shadow-2xl">
+                        <h2 className="text-xl font-black text-slate-900 dark:text-white mb-2">
                             {t('home.resumeMatchTitle')}
                         </h2>
-                        <p className="text-sm text-gray-300 mb-5">
+                        <p className="text-sm text-slate-600 dark:text-gray-300 mb-5">
                             {t('home.resumeMatchDesc')}
                         </p>
                         <div className="grid grid-cols-2 gap-2">
@@ -942,7 +957,7 @@ const Home = () => {
                                     dismissedActiveRoomRef.current = activeSessionPrompt.roomId;
                                     setActiveSessionPrompt(null);
                                 }}
-                                className="rounded-xl border border-gray-600 bg-transparent py-3 font-semibold text-gray-300 transition-colors hover:bg-gray-800"
+                                className="rounded-xl border border-gray-600 bg-transparent py-3 font-semibold text-slate-600 dark:text-gray-300 transition-colors hover:bg-white dark:bg-gray-800"
                             >
                                 {t('home.resumeLater')}
                             </button>
@@ -987,7 +1002,7 @@ const Home = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 bg-gray-900 flex flex-col items-center pointer-events-auto"
+                        className="fixed inset-0 z-50 bg-slate-50 dark:bg-gray-900 flex flex-col items-center pointer-events-auto"
                     >
                         {status === 'timeout' ? (
                             /* Timeout Screen - same as before */
@@ -995,15 +1010,15 @@ const Home = () => {
                                 <motion.div
                                     initial={{ scale: 0.8 }}
                                     animate={{ scale: 1 }}
-                                    className="bg-gray-800 p-8 rounded-3xl border border-red-500/50 flex flex-col items-center text-center shadow-2xl min-w-[300px]"
+                                    className="bg-white dark:bg-gray-800 p-8 rounded-3xl border border-red-500/50 flex flex-col items-center text-center shadow-2xl min-w-[300px]"
                                 >
                                     <AlertTriangle className="w-16 h-16 text-red-500 mb-6" />
-                                    <h2 className="text-2xl font-bold mb-2 text-white">{t('matchmaking.timeout')}</h2>
-                                    <p className="text-gray-400 mb-8">{t('matchmaking.timeoutDesc')}</p>
+                                    <h2 className="text-2xl font-bold mb-2 text-slate-900 dark:text-white">{t('matchmaking.timeout')}</h2>
+                                    <p className="text-slate-500 dark:text-gray-400 mb-8">{t('matchmaking.timeoutDesc')}</p>
                                     <div className="flex gap-4">
                                         <button
                                             onClick={() => { playSound('click'); cancelSearch(); }}
-                                            className="px-6 py-3 rounded-xl bg-gray-700 hover:bg-gray-600 font-bold transition-colors"
+                                            className="px-6 py-3 rounded-xl bg-slate-100 dark:bg-gray-700 hover:bg-gray-600 font-bold transition-colors"
                                         >
                                             {t('common.close')}
                                         </button>
@@ -1033,10 +1048,10 @@ const Home = () => {
                                         transition={{ delay: 0.1 }}
                                         className="mt-4 flex flex-col items-center"
                                     >
-                                        <div className="flex items-center gap-3 bg-gray-900/70 border border-blue-400/30 rounded-2xl px-5 py-3 shadow-xl backdrop-blur-sm">
+                                        <div className="flex items-center gap-3 bg-slate-50 dark:bg-gray-900/70 border border-blue-400/30 rounded-2xl px-5 py-3 shadow-xl backdrop-blur-sm">
                                             <Flag code={countryCode} className="w-6 h-4" />
-                                            <span className="text-base font-bold text-white">{nickname}</span>
-                                            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-blue-500 bg-gray-800 flex items-center justify-center">
+                                            <span className="text-base font-bold text-slate-900 dark:text-white">{nickname}</span>
+                                            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-blue-500 bg-white dark:bg-gray-800 flex items-center justify-center">
                                                 {avatarUrl ? (
                                                     <img src={avatarUrl} className="w-full h-full object-cover" />
                                                 ) : (
@@ -1075,7 +1090,7 @@ const Home = () => {
                                             initial={{ scale: 0.8, opacity: 0 }}
                                             animate={{ scale: 1, opacity: 1 }}
                                             transition={{ delay: 0.2 }}
-                                            className="relative bg-gray-900/60 border border-white/10 rounded-3xl p-3 shadow-2xl backdrop-blur-sm"
+                                            className="relative bg-slate-50 dark:bg-gray-900/60 border border-white/10 rounded-3xl p-3 shadow-2xl backdrop-blur-sm"
                                         >
                                             <HexRadar
                                                 values={myRadarStats}
@@ -1105,16 +1120,16 @@ const Home = () => {
                                                 <motion.div
                                                     initial={{ scale: 0.9, opacity: 0 }}
                                                     animate={{ scale: 1, opacity: 1 }}
-                                                    className="flex items-center gap-3 bg-gray-900/70 border border-red-400/30 rounded-2xl px-5 py-3 shadow-xl backdrop-blur-sm"
+                                                    className="flex items-center gap-3 bg-slate-50 dark:bg-gray-900/70 border border-red-400/30 rounded-2xl px-5 py-3 shadow-xl backdrop-blur-sm"
                                                 >
-                                                    <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-red-500 bg-gray-800 flex items-center justify-center">
+                                                    <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-red-500 bg-white dark:bg-gray-800 flex items-center justify-center">
                                                         {matchedOpProfile.avatar_url ? (
                                                             <img src={matchedOpProfile.avatar_url} className="w-full h-full object-cover" />
                                                         ) : (
                                                             <User size={20} className="text-red-500" />
                                                         )}
                                                     </div>
-                                                    <span className="text-base font-bold text-white">{matchedOpProfile.nickname || t('game.unknownPlayer')}</span>
+                                                    <span className="text-base font-bold text-slate-900 dark:text-white">{matchedOpProfile.nickname || t('game.unknownPlayer')}</span>
                                                     <Flag code={matchedOpProfile.country} className="w-6 h-4" />
                                                 </motion.div>
                                             </>
@@ -1122,8 +1137,8 @@ const Home = () => {
                                             /* Searching - Show skeleton */
                                             <>
                                                 <div className="text-red-300/50 font-mono font-bold text-xs mb-1">&nbsp;</div>
-                                                <div className="flex items-center gap-3 bg-gray-900/70 border border-red-400/20 rounded-2xl px-5 py-3 shadow-xl backdrop-blur-sm">
-                                                    <div className="w-10 h-10 rounded-full border-2 border-red-500/40 bg-gray-800 flex items-center justify-center animate-pulse">
+                                                <div className="flex items-center gap-3 bg-slate-50 dark:bg-gray-900/70 border border-red-400/20 rounded-2xl px-5 py-3 shadow-xl backdrop-blur-sm">
+                                                    <div className="w-10 h-10 rounded-full border-2 border-red-500/40 bg-white dark:bg-gray-800 flex items-center justify-center animate-pulse">
                                                         <User size={20} className="text-red-500/40" />
                                                     </div>
                                                     <span className="text-base font-bold text-gray-500 animate-pulse">{t('matchmaking.searchingOpponent', '상대를 찾는 중...')}</span>
@@ -1137,7 +1152,7 @@ const Home = () => {
                                         {status === 'searching' && (
                                             <button
                                                 onClick={() => { playSound('click'); cancelSearch(); }}
-                                                className="px-10 py-3.5 rounded-2xl bg-gray-800/60 backdrop-blur-md border border-gray-700 font-bold text-gray-300 transition-all duration-200 hover:border-red-500/50 hover:bg-gray-800 hover:text-white hover:shadow-[0_0_15px_rgba(239,68,68,0.3)] active:scale-[0.98]"
+                                                className="px-10 py-3.5 rounded-2xl bg-white dark:bg-gray-800/60 backdrop-blur-md border border-gray-700 font-bold text-slate-600 dark:text-gray-300 transition-all duration-200 hover:border-red-500/50 hover:bg-white dark:bg-gray-800 hover:text-slate-900 dark:text-white hover:shadow-[0_0_15px_rgba(239,68,68,0.3)] active:scale-[0.98]"
                                             >
                                                 {t('common.cancel')}
                                             </button>
@@ -1163,7 +1178,7 @@ const Home = () => {
                         <h1 className="text-5xl md:text-6xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 drop-shadow-lg">
                             {t('app.title')}
                         </h1>
-                        <p className="text-gray-400 mt-2 text-sm uppercase tracking-widest">{t('app.subtitle')}</p>
+                        <p className="text-slate-500 dark:text-gray-400 mt-2 text-sm uppercase tracking-widest">{t('app.subtitle')}</p>
                     </motion.div>
 
                     {/* Game Modes */}
@@ -1174,7 +1189,7 @@ const Home = () => {
                             ref={normalModeRef}
                             onMouseEnter={() => playSound('hover')}
                             onClick={() => handleModeSelect('normal')}
-                            className={`group relative w-full p-6 bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-200 hover:border-blue-500 hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] active:scale-[0.98] active:border-blue-300 active:bg-blue-400/20 active:shadow-[0_0_28px_rgba(59,130,246,0.5)] active:brightness-125 active:saturate-150 cursor-pointer flex items-center gap-4 text-left`}
+                            className={`group relative w-full p-6 bg-white dark:bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-200 hover:border-blue-500 hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] active:scale-[0.98] active:border-blue-300 active:bg-blue-400/20 active:shadow-[0_0_28px_rgba(59,130,246,0.5)] active:brightness-125 active:saturate-150 cursor-pointer flex items-center gap-4 text-left`}
                         >
                             <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-300" />
                             <div className="p-3 rounded-full bg-blue-500/20 group-hover:bg-blue-500/30 group-active:bg-blue-500/40 transition-colors">
@@ -1191,20 +1206,23 @@ const Home = () => {
                             ref={rankModeRef}
                             onMouseEnter={() => playSound('hover')}
                             onClick={() => handleModeSelect('rank')}
-                            className={`group relative w-full p-6 bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-200 ${canPlayRank ? 'hover:border-purple-500 hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] active:scale-[0.98] active:border-purple-300 active:bg-purple-400/20 active:shadow-[0_0_28px_rgba(168,85,247,0.5)] active:brightness-125 active:saturate-150 cursor-pointer' : 'opacity-50 grayscale cursor-not-allowed'} flex items-center gap-4 text-left`}
+                            className={`group relative w-full p-6 bg-white dark:bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-200 ${canPlayRank ? 'hover:border-purple-500 hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] active:scale-[0.98] active:border-purple-300 active:bg-purple-400/20 active:shadow-[0_0_28px_rgba(168,85,247,0.5)] active:brightness-125 active:saturate-150 cursor-pointer' : 'opacity-50 grayscale cursor-not-allowed'} ${shouldHighlightRankButton ? 'rank-cta-highlight border-purple-400/80' : ''} flex items-center gap-4 text-left`}
                         >
+                            {shouldHighlightRankButton && (
+                                <div className="rank-cta-sheen absolute inset-0 z-0 pointer-events-none" />
+                            )}
                             <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-300" />
-                            <div className="p-3 rounded-full bg-purple-500/20 group-hover:bg-purple-500/30 group-active:bg-purple-500/40 transition-colors">
+                            <div className="relative z-10 p-3 rounded-full bg-purple-500/20 group-hover:bg-purple-500/30 group-active:bg-purple-500/40 transition-colors">
                                 <Trophy className="w-8 h-8 text-purple-400 group-active:text-purple-200 transition-colors" />
                             </div>
-                            <div>
+                            <div className="relative z-10">
                                 <h3 className="text-2xl font-bold group-hover:text-purple-400 group-active:text-purple-200 transition-colors">{t('menu.rank.title')}</h3>
                                 <p className="text-gray-500 text-sm mt-1">{t('menu.rank.subtitle')}</p>
                             </div>
 
                             {!user && (
                                 <div className="absolute inset-0 flex items-center justify-center bg-black/60 z-10">
-                                    <Lock className="w-8 h-8 text-white/80" />
+                                    <Lock className="w-8 h-8 text-slate-900 dark:text-white/80" />
                                 </div>
                             )}
 
@@ -1213,7 +1231,7 @@ const Home = () => {
                                 <div className="absolute top-2 right-2 z-20 flex flex-col items-end gap-0.5">
                                     <div className="flex items-center gap-1.5 bg-gradient-to-r from-orange-600/90 to-red-600/90 backdrop-blur-sm rounded-full px-2.5 py-1 shadow-lg border border-orange-400/40 animate-pulse">
                                         <Flame className="w-4 h-4 text-yellow-300" />
-                                        <span className="text-xs font-black text-white">{streakCount}</span>
+                                        <span className="text-xs font-black text-slate-900 dark:text-white">{streakCount}</span>
                                         <span className="text-[10px] text-orange-200 font-mono">{streakMinutes}:{String(streakSeconds).padStart(2, '0')}</span>
                                     </div>
                                     {nextMilestone > 0 && (
@@ -1230,7 +1248,7 @@ const Home = () => {
                             ref={practiceModeRef}
                             onMouseEnter={() => playSound('hover')}
                             onClick={() => { playSound('click'); navigate('/practice'); }}
-                            className={`group relative w-full p-6 bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-200 hover:border-green-500 hover:shadow-[0_0_20px_rgba(34,197,94,0.5)] active:scale-[0.98] active:border-green-300 active:bg-green-400/20 active:shadow-[0_0_28px_rgba(34,197,94,0.5)] active:brightness-125 active:saturate-150 cursor-pointer flex items-center gap-4 text-left`}
+                            className={`group relative w-full p-6 bg-white dark:bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-200 hover:border-green-500 hover:shadow-[0_0_20px_rgba(34,197,94,0.5)] active:scale-[0.98] active:border-green-300 active:bg-green-400/20 active:shadow-[0_0_28px_rgba(34,197,94,0.5)] active:brightness-125 active:saturate-150 cursor-pointer flex items-center gap-4 text-left`}
                         >
                             <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-transparent opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-300" />
                             <div className="p-3 rounded-full bg-green-500/20 group-hover:bg-green-500/30 group-active:bg-green-500/40 transition-colors">
@@ -1249,65 +1267,65 @@ const Home = () => {
                             ref={rankingBtnRef}
                             onMouseEnter={() => playSound('hover')}
                             onClick={() => { playSound('click'); setShowLeaderboard(true); }}
-                            className="p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 active:bg-yellow-400/20 active:border-yellow-300 active:shadow-[0_0_22px_rgba(234,179,8,0.45)] active:brightness-125 active:saturate-150 active:scale-[0.98] transition-all duration-150 flex items-center justify-center gap-2 group cursor-pointer"
+                            className="p-4 bg-white dark:bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-slate-100 dark:bg-gray-700 active:bg-yellow-400/20 active:border-yellow-300 active:shadow-[0_0_22px_rgba(234,179,8,0.45)] active:brightness-125 active:saturate-150 active:scale-[0.98] transition-all duration-150 flex items-center justify-center gap-2 group cursor-pointer"
                         >
                             <Trophy className="w-5 h-5 text-yellow-500 group-hover:text-yellow-400 group-active:text-yellow-300 transition-colors" />
-                            <span className="text-gray-300 group-hover:text-white group-active:text-yellow-100 transition-colors">{t('leaderboard.button', 'Ranking')}</span>
+                            <span className="text-slate-600 dark:text-gray-300 group-hover:text-slate-900 dark:text-white group-active:text-yellow-100 transition-colors">{t('leaderboard.button', 'Ranking')}</span>
                         </button>
                         <button
                             ref={shopBtnRef}
                             onMouseEnter={() => playSound('hover')}
                             onClick={() => { playSound('click'); navigate('/shop'); }}
-                            className="p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 active:bg-cyan-400/20 active:border-cyan-300 active:shadow-[0_0_22px_rgba(34,211,238,0.45)] active:brightness-125 active:saturate-150 active:scale-[0.98] transition-all duration-150 flex items-center justify-center gap-2 group cursor-pointer"
+                            className="p-4 bg-white dark:bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-slate-100 dark:bg-gray-700 active:bg-cyan-400/20 active:border-cyan-300 active:shadow-[0_0_22px_rgba(34,211,238,0.45)] active:brightness-125 active:saturate-150 active:scale-[0.98] transition-all duration-150 flex items-center justify-center gap-2 group cursor-pointer"
                         >
-                            <ShoppingBag className="w-5 h-5 text-cyan-400 group-hover:text-white group-active:text-cyan-200 transition-colors" />
-                            <span className="text-gray-300 group-hover:text-white group-active:text-cyan-100 transition-colors">{t('menu.shop', 'Shop')}</span>
+                            <ShoppingBag className="w-5 h-5 text-cyan-400 group-hover:text-slate-900 dark:text-white group-active:text-cyan-200 transition-colors" />
+                            <span className="text-slate-600 dark:text-gray-300 group-hover:text-slate-900 dark:text-white group-active:text-cyan-100 transition-colors">{t('menu.shop', 'Shop')}</span>
                         </button>
                         <button
                             ref={settingsBtnRef}
                             onMouseEnter={() => playSound('hover')}
                             onClick={() => { playSound('click'); navigate('/settings'); }}
-                            className="p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 active:bg-slate-300/20 active:border-slate-200 active:shadow-[0_0_22px_rgba(148,163,184,0.35)] active:brightness-125 active:scale-[0.98] transition-all duration-150 flex items-center justify-center gap-2 group cursor-pointer"
+                            className="p-4 bg-white dark:bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-slate-100 dark:bg-gray-700 active:bg-slate-300/20 active:border-slate-200 active:shadow-[0_0_22px_rgba(148,163,184,0.35)] active:brightness-125 active:scale-[0.98] transition-all duration-150 flex items-center justify-center gap-2 group cursor-pointer"
                         >
-                            <Settings className="w-5 h-5 text-gray-400 group-hover:text-white group-active:text-slate-200 transition-colors" />
-                            <span className="text-gray-300 group-hover:text-white group-active:text-slate-100 transition-colors">{t('menu.settings')}</span>
+                            <Settings className="w-5 h-5 text-slate-500 dark:text-gray-400 group-hover:text-slate-900 dark:text-white group-active:text-slate-200 transition-colors" />
+                            <span className="text-slate-600 dark:text-gray-300 group-hover:text-slate-900 dark:text-white group-active:text-slate-100 transition-colors">{t('menu.settings')}</span>
                         </button>
                         {user ? (
                             <button
                                 ref={loginProfileBtnRef}
                                 onMouseEnter={() => playSound('hover')}
                                 onClick={() => { playSound('click'); navigate('/profile'); }}
-                                className="p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 active:bg-blue-400/20 active:border-blue-300 active:shadow-[0_0_22px_rgba(59,130,246,0.45)] active:brightness-125 active:saturate-150 active:scale-[0.98] transition-all duration-150 flex items-center justify-center gap-2 group cursor-pointer"
+                                className="p-4 bg-white dark:bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-slate-100 dark:bg-gray-700 active:bg-blue-400/20 active:border-blue-300 active:shadow-[0_0_22px_rgba(59,130,246,0.45)] active:brightness-125 active:saturate-150 active:scale-[0.98] transition-all duration-150 flex items-center justify-center gap-2 group cursor-pointer"
                             >
                                 <span className="relative">
-                                    <User className="w-5 h-5 text-blue-400 group-hover:text-white group-active:text-blue-200 transition-colors" />
+                                    <User className="w-5 h-5 text-blue-400 group-hover:text-slate-900 dark:text-white group-active:text-blue-200 transition-colors" />
                                     {hasSocialNotifications && (
                                         <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-gray-900" aria-hidden="true"></span>
                                     )}
                                 </span>
-                                <span className="text-blue-300 group-hover:text-white group-active:text-blue-100 transition-colors">{t('menu.profile')}</span>
+                                <span className="text-blue-300 group-hover:text-slate-900 dark:text-white group-active:text-blue-100 transition-colors">{t('menu.profile')}</span>
                             </button>
                         ) : (
                             <button
                                 ref={loginProfileBtnRef}
                                 onMouseEnter={() => playSound('hover')}
                                 onClick={() => { playSound('click'); navigate('/login'); }}
-                                className="p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 active:bg-slate-300/20 active:border-slate-200 active:shadow-[0_0_22px_rgba(148,163,184,0.35)] active:brightness-125 active:scale-[0.98] transition-all duration-150 flex items-center justify-center gap-2 group cursor-pointer"
+                                className="p-4 bg-white dark:bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-slate-100 dark:bg-gray-700 active:bg-slate-300/20 active:border-slate-200 active:shadow-[0_0_22px_rgba(148,163,184,0.35)] active:brightness-125 active:scale-[0.98] transition-all duration-150 flex items-center justify-center gap-2 group cursor-pointer"
                             >
-                                <User className="w-5 h-5 text-gray-400 group-hover:text-white group-active:text-slate-200 transition-colors" />
-                                <span className="text-gray-300 group-hover:text-white group-active:text-slate-100 transition-colors">{t('menu.login')}</span>
+                                <User className="w-5 h-5 text-slate-500 dark:text-gray-400 group-hover:text-slate-900 dark:text-white group-active:text-slate-200 transition-colors" />
+                                <span className="text-slate-600 dark:text-gray-300 group-hover:text-slate-900 dark:text-white group-active:text-slate-100 transition-colors">{t('menu.login')}</span>
                             </button>
                         )}
                     </motion.div>
                 </motion.div>
             </div>
 
-            <div className="fixed md:hidden bottom-0 inset-x-0 z-20 border-t border-white/10 bg-gray-900/90 backdrop-blur-xl px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-2">
+            <div className="fixed md:hidden bottom-0 inset-x-0 z-20 border-t border-white/10 bg-slate-50 dark:bg-gray-900/90 backdrop-blur-xl px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-2">
                 <div className="mx-auto grid w-full max-w-md grid-cols-4 gap-2">
                     <button
                         ref={mobileRankingBtnRef}
                         onClick={() => { playSound('click'); setShowLeaderboard(true); }}
-                        className="group rounded-xl bg-gray-800/70 py-2.5 flex flex-col items-center justify-center gap-1.5 text-gray-200 hover:bg-gray-700 active:bg-yellow-400/20 active:border active:border-yellow-300 active:shadow-[0_0_18px_rgba(234,179,8,0.45)] active:brightness-125 active:saturate-150 active:scale-[0.98] transition-all duration-150"
+                        className="group rounded-xl bg-white dark:bg-gray-800/70 py-2.5 flex flex-col items-center justify-center gap-1.5 text-slate-700 dark:text-gray-200 hover:bg-slate-100 dark:bg-gray-700 active:bg-yellow-400/20 active:border active:border-yellow-300 active:shadow-[0_0_18px_rgba(234,179,8,0.45)] active:brightness-125 active:saturate-150 active:scale-[0.98] transition-all duration-150"
                     >
                         <Trophy className="w-5 h-5 text-yellow-400 group-active:text-yellow-300 transition-colors" />
                         <span className="text-[11px] font-semibold leading-none group-active:text-yellow-100 transition-colors">{t('leaderboard.button', 'Ranking')}</span>
@@ -1315,7 +1333,7 @@ const Home = () => {
                     <button
                         ref={mobileShopBtnRef}
                         onClick={() => { playSound('click'); navigate('/shop'); }}
-                        className="group rounded-xl bg-gray-800/70 py-2.5 flex flex-col items-center justify-center gap-1.5 text-gray-200 hover:bg-gray-700 active:bg-cyan-400/20 active:border active:border-cyan-300 active:shadow-[0_0_18px_rgba(34,211,238,0.45)] active:brightness-125 active:saturate-150 active:scale-[0.98] transition-all duration-150"
+                        className="group rounded-xl bg-white dark:bg-gray-800/70 py-2.5 flex flex-col items-center justify-center gap-1.5 text-slate-700 dark:text-gray-200 hover:bg-slate-100 dark:bg-gray-700 active:bg-cyan-400/20 active:border active:border-cyan-300 active:shadow-[0_0_18px_rgba(34,211,238,0.45)] active:brightness-125 active:saturate-150 active:scale-[0.98] transition-all duration-150"
                     >
                         <ShoppingBag className="w-5 h-5 text-cyan-400 group-active:text-cyan-200 transition-colors" />
                         <span className="text-[11px] font-semibold leading-none group-active:text-cyan-100 transition-colors">{t('menu.shop', 'Shop')}</span>
@@ -1323,15 +1341,15 @@ const Home = () => {
                     <button
                         ref={mobileSettingsBtnRef}
                         onClick={() => { playSound('click'); navigate('/settings'); }}
-                        className="group rounded-xl bg-gray-800/70 py-2.5 flex flex-col items-center justify-center gap-1.5 text-gray-200 hover:bg-gray-700 active:bg-slate-300/20 active:border active:border-slate-200 active:shadow-[0_0_18px_rgba(148,163,184,0.35)] active:brightness-125 active:scale-[0.98] transition-all duration-150"
+                        className="group rounded-xl bg-white dark:bg-gray-800/70 py-2.5 flex flex-col items-center justify-center gap-1.5 text-slate-700 dark:text-gray-200 hover:bg-slate-100 dark:bg-gray-700 active:bg-slate-300/20 active:border active:border-slate-200 active:shadow-[0_0_18px_rgba(148,163,184,0.35)] active:brightness-125 active:scale-[0.98] transition-all duration-150"
                     >
-                        <Settings className="w-5 h-5 text-gray-300 group-active:text-slate-200 transition-colors" />
+                        <Settings className="w-5 h-5 text-slate-600 dark:text-gray-300 group-active:text-slate-200 transition-colors" />
                         <span className="text-[11px] font-semibold leading-none group-active:text-slate-100 transition-colors">{t('menu.settings')}</span>
                     </button>
                     <button
                         ref={mobileLoginProfileBtnRef}
                         onClick={() => { playSound('click'); navigate(user ? '/profile' : '/login'); }}
-                        className={`group relative rounded-xl bg-gray-800/70 py-2.5 flex flex-col items-center justify-center gap-1.5 text-gray-200 hover:bg-gray-700 active:brightness-125 active:scale-[0.98] transition-all duration-150 ${user
+                        className={`group relative rounded-xl bg-white dark:bg-gray-800/70 py-2.5 flex flex-col items-center justify-center gap-1.5 text-slate-700 dark:text-gray-200 hover:bg-slate-100 dark:bg-gray-700 active:brightness-125 active:scale-[0.98] transition-all duration-150 ${user
                             ? 'active:bg-blue-400/20 active:border active:border-blue-300 active:shadow-[0_0_18px_rgba(59,130,246,0.45)] active:saturate-150'
                             : 'active:bg-slate-300/20 active:border active:border-slate-200 active:shadow-[0_0_18px_rgba(148,163,184,0.35)]'
                             }`}

@@ -44,6 +44,7 @@ import { useAuth } from '../contexts/AuthContext';
 import ReportReasonModal from '../components/ui/ReportReasonModal';
 import { resolveRoundWinner } from '../effects/roundWinner';
 import { getLevelFromXp, getXpSnapshotStorageKey } from '../utils/levelUtils';
+// useTheme removed — Game board uses Tailwind dark: variants directly
 
 const IS_DEV = import.meta.env.DEV;
 const BOT_EMOJI_POOL = ['🙂', '😭', '😂', '☹️', '❤️', '💔', '👍', '👎'];
@@ -1176,18 +1177,18 @@ const Game: React.FC = () => {
                 : 'text-[clamp(72px,20vw,220px)]';
 
     return (
-        <div className="relative w-full h-[100dvh] bg-gray-900 text-white overflow-hidden flex flex-col font-sans select-none pt-[env(safe-area-inset-top)]">
+        <div className={`relative w-full h-[100dvh] overflow-hidden flex flex-col font-sans select-none pt-[env(safe-area-inset-top)] bg-slate-50 dark:bg-gray-900 text-slate-900 dark:text-white`}>
 
             {isUrgentRound && <div className="round-urgent-frame z-[70]" aria-hidden="true" />}
 
             {/* Top Info Bar (Timer & Scores) */}
             {!showFinalResult && (
-                <header className="h-24 w-full bg-gray-800/80 backdrop-blur-md flex items-center justify-between px-4 shadow-lg z-50 relative">
+                <header className="h-24 w-full bg-white dark:bg-gray-800/80 backdrop-blur-md flex items-center justify-between px-4 shadow-lg z-50 relative">
 
                     {/* Score Progress Bar - Hide in Practice */}
                     {gameState.mode !== 'practice' && (
                         <div className="absolute bottom-0 left-0 w-full px-0">
-                            <div className="w-full h-1.5 bg-gray-900/50 overflow-hidden backdrop-blur-sm">
+                            <div className="w-full h-1.5 bg-slate-50 dark:bg-gray-900/50 overflow-hidden backdrop-blur-sm">
                                 <ScoreProgressBar myScore={displayMyScore} opScore={displayOpScore} />
                             </div>
                         </div>
@@ -1199,12 +1200,12 @@ const Game: React.FC = () => {
                             {myProfile?.avatar_url ? (
                                 <img src={myProfile.avatar_url} className="w-11 h-11 rounded-full border-2 border-blue-500 object-cover" />
                             ) : (
-                                <div className="w-11 h-11 rounded-full border-2 border-blue-500 flex items-center justify-center bg-gray-800 text-blue-500">
+                                <div className="w-11 h-11 rounded-full border-2 border-blue-500 flex items-center justify-center bg-white dark:bg-gray-800 text-blue-500">
                                     <User size={20} />
                                 </div>
                             )}
                             {isConnectionUnstable && (
-                                <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-yellow-300 border-t-transparent animate-spin bg-gray-900/80" />
+                                <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-yellow-300 border-t-transparent animate-spin bg-slate-50 dark:bg-gray-900/80" />
                             )}
                         </div>
                         <div className="min-w-0">
@@ -1220,7 +1221,7 @@ const Game: React.FC = () => {
                     <div className="flex flex-col items-center flex-shrink-0 px-2 pt-2">
                         {gameState.mode !== 'practice' && (
                             <div className="flex flex-col items-center mb-0.5">
-                                <div className="text-xs font-bold text-blue-300 tracking-wider uppercase whitespace-nowrap">
+                                <div className="text-xs font-bold text-blue-500 dark:text-blue-300 tracking-wider uppercase whitespace-nowrap">
                                     {t('game.table.round')} {gameState.currentRound}/{gameState.totalRounds}
                                 </div>
                             </div>
@@ -1231,7 +1232,7 @@ const Game: React.FC = () => {
                         >
                             {Math.floor(gameState.remainingTime)}
                         </div>
-                        <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{t('game.timeLeft')}</div>
+                        <div className="text-[10px] text-slate-500 dark:text-gray-400 font-bold uppercase tracking-wider">{t('game.timeLeft')}</div>
                     </div>
 
                     {/* Opponent Profile - Hide in Solo Practice */}
@@ -1249,12 +1250,12 @@ const Game: React.FC = () => {
                                     {opponentProfile?.avatar_url ? (
                                         <img src={opponentProfile.avatar_url} className={`w-11 h-11 rounded-full border-2 object-cover ${!isOpponentOnline ? 'border-gray-500 grayscale opacity-50' : 'border-red-500'}`} />
                                     ) : (
-                                        <div className={`w-11 h-11 rounded-full border-2 flex items-center justify-center bg-gray-800 ${!isOpponentOnline ? 'border-gray-500 text-gray-500' : 'border-red-500 text-red-500'}`}>
+                                        <div className={`w-11 h-11 rounded-full border-2 flex items-center justify-center bg-white dark:bg-gray-800 ${!isOpponentOnline ? 'border-gray-500 text-gray-500' : 'border-red-500 text-red-500'}`}>
                                             <User size={20} />
                                         </div>
                                     )}
                                     {!isOpponentOnline && gameState.status !== 'finished' && (
-                                        <div className="absolute -bottom-2 -right-2 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded animate-pulse border border-red-400 whitespace-nowrap z-50">
+                                        <div className="absolute -bottom-2 -right-2 bg-red-600 text-slate-900 dark:text-white text-[10px] font-bold px-1.5 py-0.5 rounded animate-pulse border border-red-400 whitespace-nowrap z-50">
                                             {t('game.disconnected')}
                                         </div>
                                     )}
@@ -1271,8 +1272,8 @@ const Game: React.FC = () => {
             )}
 
             {isConnectionUnstable && (
-                <div className="absolute top-24 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 bg-yellow-500/20 border border-yellow-400/40 text-yellow-100 text-xs font-bold px-3 py-1.5 rounded-full backdrop-blur-md">
-                    <span className="w-3 h-3 rounded-full border-2 border-yellow-200 border-t-transparent animate-spin" />
+                <div className="absolute top-24 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 bg-yellow-100 dark:bg-yellow-500/20 border border-yellow-400/40 text-yellow-800 dark:text-yellow-100 text-xs font-bold px-3 py-1.5 rounded-full backdrop-blur-md shadow-md dark:shadow-none">
+                    <span className="w-3 h-3 rounded-full border-2 border-yellow-500 dark:border-yellow-200 border-t-transparent animate-spin" />
                     <span>{connectionLabel}</span>
                 </div>
             )}
@@ -1285,7 +1286,7 @@ const Game: React.FC = () => {
                         <motion.div
                             initial={{ scale: 0.8, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
-                            className="text-4xl sm:text-5xl font-black text-white/80 uppercase tracking-widest font-mono"
+                            className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white/80 uppercase tracking-widest font-mono"
                         >
                             {t('game.roundFinished')}
                         </motion.div>
@@ -1294,7 +1295,7 @@ const Game: React.FC = () => {
             )}
 
             {/* Main Game Area */}
-            <main className="flex-1 relative flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-black">
+            <main className="flex-1 relative flex items-center justify-center bg-gradient-to-br from-slate-100 via-slate-200 to-slate-300 dark:from-gray-900 dark:via-gray-800 dark:to-black">
                 {/* Background Scoreboard (play tension UI) */}
                 {(isPlaying || showRoundFinished) && (
                     <div className="absolute inset-0 pointer-events-none z-0 select-none overflow-hidden">
@@ -1302,24 +1303,24 @@ const Game: React.FC = () => {
                         <div className="absolute inset-0 pointer-events-none flex opacity-20">
                             {/* Blue Side (My Score) */}
                             <div
-                                className={`relative h-full overflow-hidden transition-all duration-500 ease-out ${isMyBackdropScoreFlashing ? 'bg-blue-400/55' : 'bg-blue-500/30'}`}
+                                className={`relative h-full overflow-hidden transition-[width,background-color] duration-300 ease-out ${isMyBackdropScoreFlashing ? 'bg-blue-400/42' : 'bg-blue-500/22'}`}
                                 style={{
                                     width: `${displayMyScore === 0 && displayOpScore === 0 ? 50 : (displayMyScore / (displayMyScore + displayOpScore)) * 100}%`
                                 }}
                             >
                                 <div
-                                    className={`absolute inset-y-0 right-0 w-32 bg-[radial-gradient(circle_at_center,rgba(191,219,254,0.7)_0%,rgba(96,165,250,0.32)_45%,rgba(59,130,246,0)_78%)] blur-2xl transition-all duration-500 ${isMyBackdropScoreFlashing ? 'opacity-100 scale-125' : 'opacity-0 scale-90'}`}
+                                    className={`absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-blue-200/35 to-transparent transition-opacity duration-200 ${isMyBackdropScoreFlashing ? 'opacity-100' : 'opacity-0'}`}
                                 />
                             </div>
                             {/* Red Side (Op Score) */}
                             <div
-                                className={`relative h-full overflow-hidden transition-all duration-500 ease-out ${isOpBackdropScoreFlashing ? 'bg-red-400/55' : 'bg-red-500/30'}`}
+                                className={`relative h-full overflow-hidden transition-[width,background-color] duration-300 ease-out ${isOpBackdropScoreFlashing ? 'bg-red-400/42' : 'bg-red-500/22'}`}
                                 style={{
                                     width: `${displayMyScore === 0 && displayOpScore === 0 ? 50 : (displayOpScore / (displayMyScore + displayOpScore)) * 100}%`
                                 }}
                             >
                                 <div
-                                    className={`absolute inset-y-0 left-0 w-32 bg-[radial-gradient(circle_at_center,rgba(254,202,202,0.7)_0%,rgba(248,113,113,0.32)_45%,rgba(239,68,68,0)_78%)] blur-2xl transition-all duration-500 ${isOpBackdropScoreFlashing ? 'opacity-100 scale-125' : 'opacity-0 scale-90'}`}
+                                    className={`absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-red-200/35 to-transparent transition-opacity duration-200 ${isOpBackdropScoreFlashing ? 'opacity-100' : 'opacity-0'}`}
                                 />
                             </div>
                         </div>
@@ -1329,7 +1330,7 @@ const Game: React.FC = () => {
                                 className={`w-[42%] font-black font-mono tabular-nums tracking-tight leading-none transition-all duration-300 ${backdropScoreSizeClass}
                                     ${displayMyScore >= displayOpScore ? 'text-blue-400' : 'text-blue-400'}
                                     ${showRoundFinished ? 'opacity-90' : 'opacity-10'}
-                                    ${isMyBackdropScoreFlashing ? 'scale-[1.06] brightness-125 drop-shadow-[0_0_26px_rgba(96,165,250,0.9)]' : ''}`}
+                                    ${isMyBackdropScoreFlashing ? 'scale-[1.03] opacity-20' : ''}`}
                             >
                                 <AnimatedScore value={displayMyScore} duration={360} useGrouping={false} />
                             </div>
@@ -1337,7 +1338,7 @@ const Game: React.FC = () => {
                                 className={`w-[42%] font-black font-mono tabular-nums tracking-tight leading-none text-right transition-all duration-300 ${backdropScoreSizeClass}
                                     ${displayOpScore > displayMyScore ? 'text-red-400' : 'text-red-400'}
                                     ${showRoundFinished ? 'opacity-90' : 'opacity-10'}
-                                    ${isOpBackdropScoreFlashing ? 'scale-[1.06] brightness-125 drop-shadow-[0_0_26px_rgba(248,113,113,0.9)]' : ''}`}
+                                    ${isOpBackdropScoreFlashing ? 'scale-[1.03] opacity-20' : ''}`}
                             >
                                 <AnimatedScore value={displayOpScore} duration={360} useGrouping={false} />
                             </div>
@@ -1385,14 +1386,14 @@ const Game: React.FC = () => {
                 {isWaiting && !skipWaiting && (
                     <div className="absolute inset-0 flex flex-col items-center pb-44">
                         {/* Background gradients */}
-                        <div className="absolute inset-0 bg-gradient-to-b from-blue-900/30 via-transparent to-red-900/30 pointer-events-none" />
+                        <div className="absolute inset-0 bg-gradient-to-b from-blue-500/10 via-transparent to-red-500/10 dark:from-blue-900/30 dark:via-transparent dark:to-red-900/30 pointer-events-none" />
 
                         {/* My Profile - Top */}
                         <div className="mt-4 flex flex-col items-center">
-                            <div className="flex items-center gap-3 bg-gray-900/70 border border-blue-400/30 rounded-2xl px-5 py-3 shadow-xl backdrop-blur-sm">
+                            <div className="flex items-center gap-3 bg-slate-50 dark:bg-gray-900/70 border border-blue-400/30 rounded-2xl px-5 py-3 shadow-xl backdrop-blur-sm">
                                 <Flag code={myProfile?.country} className="w-6 h-4" />
-                                <span className="text-base font-bold text-white">{myProfile?.nickname || t('game.unknownPlayer')}</span>
-                                <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-blue-500 bg-gray-800 flex items-center justify-center">
+                                <span className="text-base font-bold text-slate-900 dark:text-white">{myProfile?.nickname || t('game.unknownPlayer')}</span>
+                                <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-blue-500 bg-white dark:bg-gray-800 flex items-center justify-center">
                                     {myProfile?.avatar_url ? (
                                         <img src={myProfile.avatar_url} className="w-full h-full object-cover" />
                                     ) : (
@@ -1405,7 +1406,7 @@ const Game: React.FC = () => {
 
                         {/* Hex Radar - Center with Labels */}
                         <div className="flex-1 flex items-center justify-center">
-                            <div className="relative bg-gray-900/60 border border-white/10 rounded-3xl p-3 shadow-2xl backdrop-blur-sm">
+                            <div className="relative bg-slate-50 dark:bg-gray-900/60 border border-white/10 rounded-3xl p-3 shadow-2xl backdrop-blur-sm">
                                 <HexRadar
                                     values={myRadarStats}
                                     compareValues={opRadarStats}
@@ -1423,17 +1424,17 @@ const Game: React.FC = () => {
                             <div className="text-red-300 font-mono font-bold text-xs mb-1">
                                 {opponentProfile?.mmr ? `${opponentProfile.mmr.toLocaleString()} MMR` : t('game.opponentWaiting')}
                             </div>
-                            <div className="flex items-center gap-3 bg-gray-900/70 border border-red-400/30 rounded-2xl px-5 py-3 shadow-xl backdrop-blur-sm">
-                                <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-red-500 bg-gray-800 flex items-center justify-center">
+                            <div className="flex items-center gap-3 bg-slate-50 dark:bg-gray-900/70 border border-red-400/30 rounded-2xl px-5 py-3 shadow-xl backdrop-blur-sm">
+                                <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-red-500 bg-white dark:bg-gray-800 flex items-center justify-center">
                                     {opponentProfile?.avatar_url ? (
                                         <img src={opponentProfile.avatar_url} className="w-full h-full object-cover" />
                                     ) : (
-                                        <div className="w-full h-full flex items-center justify-center bg-gray-800 text-red-500">
+                                        <div className="w-full h-full flex items-center justify-center bg-white dark:bg-gray-800 text-red-500">
                                             <User size={20} />
                                         </div>
                                     )}
                                 </div>
-                                <span className="text-base font-bold text-white">{opponentProfile?.nickname || t('game.opponentWaiting')}</span>
+                                <span className="text-base font-bold text-slate-900 dark:text-white">{opponentProfile?.nickname || t('game.opponentWaiting')}</span>
                                 <Flag code={opponentProfile?.country} className="w-6 h-4" />
                             </div>
                         </div>
@@ -1450,7 +1451,7 @@ const Game: React.FC = () => {
                     >
                         {/* WARM UP OVERLAY */}
                         {showWarmupOverlay && (
-                            <div className="absolute inset-0 bg-black/90 z-50 flex flex-col items-center justify-center p-8 text-center backdrop-blur-sm">
+                            <div className="absolute inset-0 bg-white/95 dark:bg-black/90 z-50 flex flex-col items-center justify-center p-8 text-center backdrop-blur-sm">
                                 {IS_DEV && isBotId(opponentId) && botRoundDebugPreview && (
                                     <div className="absolute top-4 left-1/2 -translate-x-1/2 w-[min(92vw,28rem)] rounded-2xl border border-amber-400/30 bg-black/55 px-4 py-3 text-xs font-mono text-amber-100 shadow-lg backdrop-blur-sm">
                                         <div className="mb-1 text-[10px] font-black uppercase tracking-[0.24em] text-amber-300/80">
@@ -1483,8 +1484,8 @@ const Game: React.FC = () => {
                                     className="flex flex-col items-center"
                                 >
                                     {/* Previous round result removed */}
-                                    <h2 className="w-full max-w-[94vw] font-black text-yellow-400 mb-6 drop-shadow-lg flex flex-col items-center">
-                                        <span className="text-3xl text-white mb-2">{t('game.table.round')} {gameState.currentRound}</span>
+                                    <h2 className="w-full max-w-[94vw] font-black text-amber-500 dark:text-yellow-400 mb-6 drop-shadow-lg flex flex-col items-center">
+                                        <span className="text-3xl text-slate-900 dark:text-white mb-2">{t('game.table.round')} {gameState.currentRound}</span>
                                         <span className="block w-full text-center whitespace-nowrap text-[clamp(1.4rem,8vw,3.75rem)] leading-none px-3">
                                             {gameState.gameType === 'RPS' && t('rps.title')}
                                             {gameState.gameType === 'NUMBER' && t('number.title')}
@@ -1518,7 +1519,7 @@ const Game: React.FC = () => {
                                             {gameState.gameType === 'MAKE_ZERO' && t('zero.title', '0을 만들어라')}
                                         </span>
                                     </h2>
-                                    <p className="text-2xl text-white mb-12 font-bold max-w-2xl">
+                                    <p className="text-2xl text-slate-700 dark:text-white/80 mb-12 font-bold max-w-2xl">
                                         {gameState.gameType === 'RPS' && t('rps.instruction')}
                                         {gameState.gameType === 'NUMBER' && t('number.instruction')}
                                         {gameState.gameType === 'NUMBER_DESC' && t('number.instructionDesc')}
@@ -1673,26 +1674,26 @@ const Game: React.FC = () => {
 
                 {/* Result Overlay */}
                 {showFinalResult && (
-                    <div className="absolute inset-0 bg-black/80 backdrop-blur-md z-50 overflow-y-auto">
+                    <div className="absolute inset-0 bg-white/90 dark:bg-black/80 backdrop-blur-md z-50 overflow-y-auto">
                         <div className="min-h-full flex flex-col items-center justify-center p-4">
                             <motion.div
                                 initial={{ scale: 0.9, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
-                                className={`relative p-8 rounded-3xl border-4 shadow-2xl text-center max-w-2xl w-full overflow-hidden ${
-                                    isMatchWin
+                                className={`relative p-8 rounded-3xl border-4 shadow-2xl text-center max-w-2xl w-full overflow-hidden ${gameState.mode === 'practice'
+                                    ? 'bg-white dark:bg-[radial-gradient(circle_at_top,_rgba(148,163,184,0.18),_transparent_42%),linear-gradient(180deg,_rgba(31,41,55,0.94),_rgba(15,23,42,0.96))] border-green-300 dark:border-white/10'
+                                    : isMatchWin
                                         ? 'bg-[radial-gradient(circle_at_top,_rgba(96,165,250,0.32),_transparent_42%),linear-gradient(180deg,_rgba(30,58,138,0.92),_rgba(15,23,42,0.96))] border-blue-300/25'
                                         : isMatchLoss
                                             ? 'bg-[radial-gradient(circle_at_top,_rgba(248,113,113,0.28),_transparent_42%),linear-gradient(180deg,_rgba(127,29,29,0.92),_rgba(24,24,27,0.96))] border-red-300/20'
                                             : 'bg-[radial-gradient(circle_at_top,_rgba(148,163,184,0.18),_transparent_42%),linear-gradient(180deg,_rgba(31,41,55,0.94),_rgba(15,23,42,0.96))] border-white/10'
-                                }`}
+                                    }`}
                             >
-                                {/* PRACTICE MODE RESULT */}
                                 {gameState.mode === 'practice' ? (
                                     <div className="text-center">
-                                        <h2 className="text-5xl font-black mb-4 text-green-400 tracking-wider">
+                                        <h2 className="text-5xl font-black mb-4 text-green-600 dark:text-green-400 tracking-wider">
                                             {t('game.practiceComplete', '연습 완료!')}
                                         </h2>
-                                        <div className="text-2xl text-white mb-8">
+                                        <div className="text-2xl text-slate-700 dark:text-white mb-8">
                                             {/* Show Score or Time based on game type if tracked, currently just completion */}
                                             <p>{t('game.greatJob', '수고하셨습니다!')}</p>
                                         </div>
@@ -1713,13 +1714,13 @@ const Game: React.FC = () => {
                                             <div className="absolute top-4 right-4 z-20">
                                                 <button
                                                     onClick={() => setIsResultActionsOpen((prev) => !prev)}
-                                                    className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-gray-200 transition-colors"
+                                                    className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-slate-700 dark:text-gray-200 transition-colors"
                                                     title={t('common.more', '더보기')}
                                                 >
                                                     <MoreHorizontal className="w-5 h-5" />
                                                 </button>
                                                 {isResultActionsOpen && (
-                                                    <div className="absolute right-0 mt-2 w-40 bg-gray-900 border border-white/10 rounded-xl p-1.5 shadow-xl text-left">
+                                                    <div className="absolute right-0 mt-2 w-40 bg-slate-50 dark:bg-gray-900 border border-white/10 rounded-xl p-1.5 shadow-xl text-left">
                                                         {canAddFriendOpponent && (
                                                             <button
                                                                 onClick={handleAddFriend}
@@ -1755,23 +1756,22 @@ const Game: React.FC = () => {
                                             }}
                                             className="mb-8 flex flex-col items-center"
                                         >
-                                            <h3 className={`text-4xl md:text-6xl font-black tracking-[0.08em] drop-shadow-2xl ${
-                                                isMatchWin
-                                                    ? 'text-blue-300'
-                                                    : isMatchLoss
-                                                        ? 'text-red-300'
-                                                        : 'text-slate-200'
-                                            }`}>
+                                            <h3 className={`text-4xl md:text-6xl font-black tracking-[0.08em] drop-shadow-2xl ${isMatchWin
+                                                ? 'text-blue-300'
+                                                : isMatchLoss
+                                                    ? 'text-red-300'
+                                                    : 'text-slate-200'
+                                                }`}>
                                                 {myWinsForLives} : {opWinsForLives}
                                             </h3>
-                                            <p className="mt-2 text-xs md:text-sm font-semibold tracking-[0.2em] text-white/60">
+                                            <p className="mt-2 text-xs md:text-sm font-semibold tracking-[0.2em] text-slate-900 dark:text-white/60">
                                                 {t('game.setScore', '세트 스코어')}
                                             </p>
                                         </motion.div>
 
                                         {/* Scoreboard Table */}
-                                        <div className="w-full bg-gray-900/50 rounded-xl overflow-hidden mb-4 md:mb-8 border border-white/5">
-                                            <div className="grid grid-cols-3 bg-gray-800 p-2 md:p-3 text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest">
+                                        <div className="w-full bg-slate-50 dark:bg-gray-900/50 rounded-xl overflow-hidden mb-4 md:mb-8 border border-white/5">
+                                            <div className="grid grid-cols-3 bg-white dark:bg-gray-800 p-2 md:p-3 text-[10px] md:text-xs font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest">
                                                 <div className="text-left pl-4">{t('game.table.round')}</div>
                                                 <div>{t('game.table.myScore')}</div>
                                                 <div>{t('game.table.opScore')}</div>
@@ -1808,7 +1808,7 @@ const Game: React.FC = () => {
                                                             />
                                                         </div>
 
-                                                        <div className="text-left pl-2 md:pl-4 text-white font-bold relative z-10 text-xs md:text-sm truncate pr-2">{getRoundGameTitle(round?.game_type)}</div>
+                                                        <div className="text-left pl-2 md:pl-4 text-slate-900 dark:text-white font-bold relative z-10 text-xs md:text-sm truncate pr-2">{getRoundGameTitle(round?.game_type)}</div>
                                                         <div className="text-blue-400 font-bold text-base md:text-lg relative z-10">{myS}</div>
                                                         <div className="text-red-400 font-bold text-base md:text-lg relative z-10">{opS}</div>
                                                     </motion.div>
@@ -1836,7 +1836,7 @@ const Game: React.FC = () => {
                                                 className="mb-8 p-4 bg-white/10 rounded-xl border border-white/20 overflow-hidden"
                                             >
                                                 <div className="flex items-center justify-center gap-4 text-3xl font-black">
-                                                    <div className="text-white">{displayMMR}</div>
+                                                    <div className="text-slate-900 dark:text-white">{displayMMR}</div>
                                                     {mmrDelta !== null && mmrDelta !== 0 && (
                                                         <div className="flex flex-col items-start">
                                                             <motion.div
@@ -1863,13 +1863,13 @@ const Game: React.FC = () => {
                                             </motion.div>
                                         )}
 
-                                        <div className="w-full bg-black/20 rounded-xl p-4 mb-6 border border-white/5">
+                                        <div className="w-full bg-slate-100 dark:bg-black/20 rounded-xl p-4 mb-6 border border-slate-200 dark:border-white/5">
                                             <div className="grid grid-cols-4 gap-3">
                                                 {[...emojiRowTop, ...emojiRowBottom].map((emoji) => (
                                                     <button
                                                         key={emoji}
                                                         onClick={() => handleEmojiSend(emoji)}
-                                                        className="aspect-square rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition active:scale-95 border border-white/5"
+                                                        className="aspect-square rounded-xl bg-white dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 flex items-center justify-center transition active:scale-95 border border-slate-200 dark:border-white/5 shadow-sm dark:shadow-none"
                                                     >
                                                         {renderEmojiButton(emoji, 'text-[2.35rem]')}
                                                     </button>
@@ -1885,7 +1885,7 @@ const Game: React.FC = () => {
                                                     transition={{ delay: 1.5 + (gameState.roundScores.length + 1) * 0.4 }}
                                                     onClick={handleRequestRematch}
                                                     disabled={!isButtonEnabled || isSubmittingRematch || isReturningToMenu || !!pendingRematchInviteId || isRematchClosed || !hasRematchPencils}
-                                                    className={`w-full rounded-xl px-4 py-3 text-white transition-all ${!isButtonEnabled || isSubmittingRematch || isReturningToMenu || !!pendingRematchInviteId || isRematchClosed
+                                                    className={`w-full rounded-xl px-4 py-3 text-slate-900 dark:text-white transition-all ${!isButtonEnabled || isSubmittingRematch || isReturningToMenu || !!pendingRematchInviteId || isRematchClosed
                                                         ? 'bg-gray-700 text-gray-400 cursor-not-allowed opacity-60'
                                                         : !hasRematchPencils
                                                             ? 'bg-red-500 hover:bg-red-600'
@@ -1901,11 +1901,11 @@ const Game: React.FC = () => {
                                                                         ? t('game.rematchPending', '응답 대기중')
                                                                         : isRematchClosed
                                                                             ? t('game.rematchClosed', '재대결 종료')
-                                                                        : isSubmittingRematch
-                                                                            ? t('common.loading')
-                                                                            : t('game.rematchRequest', '재대결 신청')}
+                                                                            : isSubmittingRematch
+                                                                                ? t('common.loading')
+                                                                                : t('game.rematchRequest', '재대결 신청')}
                                                             </div>
-                                                            <div className="mt-1 flex items-center gap-2 text-xs text-white/85">
+                                                            <div className="mt-1 flex items-center gap-2 text-xs text-slate-900 dark:text-white/85">
                                                                 <img
                                                                     src="/images/icon/icon_pen.png"
                                                                     alt={t('ad.pencils', '연필')}
@@ -1915,8 +1915,8 @@ const Game: React.FC = () => {
                                                                     {isRematchClosed
                                                                         ? t('game.rematchExpiredShort', '종료')
                                                                         : myPencils !== null && myPencils < 1
-                                                                        ? t('game.rematchNoPencilsShort', '부족')
-                                                                        : t('game.rematchCostCountdownShort', '신청 1개 · {{seconds}}초', { seconds: rematchSecondsLeft })}
+                                                                            ? t('game.rematchNoPencilsShort', '부족')
+                                                                            : t('game.rematchCostCountdownShort', '신청 1개 · {{seconds}}초', { seconds: rematchSecondsLeft })}
                                                                 </span>
                                                             </div>
                                                         </div>
@@ -1977,10 +1977,10 @@ const Game: React.FC = () => {
                                         className="w-16 h-16 object-contain"
                                     />
                                 </div>
-                                <h3 className="text-xl font-black text-white mb-3">
+                                <h3 className="text-xl font-black text-slate-900 dark:text-white mb-3">
                                     {t('streak.loseBonusTitle', '3연패를 하셨네요...')}
                                 </h3>
-                                <p className="text-gray-300 text-sm leading-relaxed mb-2">
+                                <p className="text-slate-600 dark:text-gray-300 text-sm leading-relaxed mb-2">
                                     {t('streak.loseBonusMessage', '위로의 마음을 담아 연필을 하나 드립니다.')}
                                 </p>
                                 <p className="text-gray-500 text-xs mb-6">
@@ -2029,13 +2029,13 @@ const Game: React.FC = () => {
                         </AnimatePresence>
                         {showEmojiBar && (
                             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 pointer-events-auto">
-                                <div className="bg-black/50 border border-white/10 rounded-2xl px-4 py-4 backdrop-blur-md w-[360px] max-w-[92vw]">
+                                <div className="bg-white/80 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-2xl px-4 py-4 backdrop-blur-md w-[360px] max-w-[92vw] shadow-lg dark:shadow-none">
                                     <div className="grid grid-cols-4 gap-4 mb-4 justify-items-center">
                                         {emojiRowTop.map((emoji) => (
                                             <button
                                                 key={emoji}
                                                 onClick={() => handleEmojiSend(emoji)}
-                                                className="w-16 h-16 rounded-2xl bg-white/5 hover:bg-white/10 transition active:scale-95 flex items-center justify-center"
+                                                className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 transition active:scale-95 flex items-center justify-center"
                                             >
                                                 {renderEmojiButton(emoji, 'text-[2.35rem]')}
                                             </button>
@@ -2046,7 +2046,7 @@ const Game: React.FC = () => {
                                             <button
                                                 key={emoji}
                                                 onClick={() => handleEmojiSend(emoji)}
-                                                className="w-16 h-16 rounded-2xl bg-white/5 hover:bg-white/10 transition active:scale-95 flex items-center justify-center"
+                                                className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 transition active:scale-95 flex items-center justify-center"
                                             >
                                                 {renderEmojiButton(emoji, 'text-[2.35rem]')}
                                             </button>

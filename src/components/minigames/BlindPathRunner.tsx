@@ -335,7 +335,7 @@ const BlindPathRunner: React.FC<BlindPathRunnerProps> = ({ seed, onScore, isPlay
     return (
         <div className="w-full h-full flex flex-col items-center justify-center px-4 select-none">
             <div
-                className={`w-[92vw] max-w-[360px] rounded-2xl border border-white/10 bg-gray-800/40 p-2 shadow-2xl transition-colors ${errorFlash ? 'ring-4 ring-red-500/70' : ''}`}
+                className={`w-[92vw] max-w-[360px] rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-gray-800/40 p-2 shadow-2xl transition-colors ${errorFlash ? 'ring-4 ring-red-500/70' : ''}`}
                 style={containerStyle}
             >
                 <div className="grid w-full h-full gap-[2px]" style={boardStyle}>
@@ -346,8 +346,8 @@ const BlindPathRunner: React.FC<BlindPathRunnerProps> = ({ seed, onScore, isPlay
                             const isGoal = r === goal.r && c === goal.c;
                             const isPath = pathSet.has(key);
 
-                            let cellClass = 'bg-gray-800/80';
-                            if (showPath && isPath) cellClass = 'bg-white/90';
+                            let cellClass = 'bg-slate-200 dark:bg-gray-800/80';
+                            if (showPath && isPath) cellClass = 'bg-white dark:bg-white/90 border border-slate-300 dark:border-transparent';
                             if (isGoal) cellClass = 'bg-blue-500';
                             if (isPlayer) cellClass = 'bg-emerald-500';
 
@@ -366,7 +366,7 @@ const BlindPathRunner: React.FC<BlindPathRunnerProps> = ({ seed, onScore, isPlay
                 <div />
                 <button
                     onClick={() => applyMove('up')}
-                    className="w-14 h-14 rounded-xl bg-gray-800/70 border border-white/10 text-white flex items-center justify-center active:scale-95 transition-transform"
+                    className="w-14 h-14 rounded-xl bg-white dark:bg-gray-800/70 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white flex items-center justify-center active:scale-95 transition-transform shadow-sm"
                 >
                     {renderDirectionIcon('up')}
                 </button>
@@ -374,19 +374,19 @@ const BlindPathRunner: React.FC<BlindPathRunnerProps> = ({ seed, onScore, isPlay
 
                 <button
                     onClick={() => applyMove('left')}
-                    className="w-14 h-14 rounded-xl bg-gray-800/70 border border-white/10 text-white flex items-center justify-center active:scale-95 transition-transform"
+                    className="w-14 h-14 rounded-xl bg-white dark:bg-gray-800/70 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white flex items-center justify-center active:scale-95 transition-transform shadow-sm"
                 >
                     {renderDirectionIcon('left')}
                 </button>
                 <button
                     onClick={() => applyMove('down')}
-                    className="w-14 h-14 rounded-xl bg-gray-800/70 border border-white/10 text-white flex items-center justify-center active:scale-95 transition-transform"
+                    className="w-14 h-14 rounded-xl bg-white dark:bg-gray-800/70 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white flex items-center justify-center active:scale-95 transition-transform shadow-sm"
                 >
                     {renderDirectionIcon('down')}
                 </button>
                 <button
                     onClick={() => applyMove('right')}
-                    className="w-14 h-14 rounded-xl bg-gray-800/70 border border-white/10 text-white flex items-center justify-center active:scale-95 transition-transform"
+                    className="w-14 h-14 rounded-xl bg-white dark:bg-gray-800/70 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white flex items-center justify-center active:scale-95 transition-transform shadow-sm"
                 >
                     {renderDirectionIcon('right')}
                 </button>

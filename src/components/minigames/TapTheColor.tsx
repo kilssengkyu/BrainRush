@@ -181,7 +181,7 @@ const TapTheColor: React.FC<TapTheColorProps> = ({ seed, onScore, isPlaying }) =
                             key={`tile-${index}`}
                             animate={isShake ? { x: [-5, 5, -5, 5, 0] } : {}}
                             className={`relative w-24 h-24 rounded-xl shadow-lg transition-all active:scale-95
-                                ${!isVisible && phase === 'input' ? 'bg-gray-700 hover:bg-gray-600' : ''}
+                                ${!isVisible && phase === 'input' ? 'bg-slate-200 dark:bg-gray-700 hover:bg-slate-300 dark:hover:bg-gray-600' : ''}
                                 ${isUsed ? 'opacity-50 cursor-not-allowed ring-2 ring-white/30' : ''}
                             `}
                             style={{
@@ -203,7 +203,7 @@ const TapTheColor: React.FC<TapTheColorProps> = ({ seed, onScore, isPlaying }) =
                         >
                             {isUsed && (
                                 <div className="absolute inset-0 flex items-center justify-center">
-                                    <span className="text-white text-3xl font-bold drop-shadow-lg">✓</span>
+                                    <span className="text-slate-900 dark:text-white text-3xl font-bold drop-shadow-lg">✓</span>
                                 </div>
                             )}
                         </motion.button>
@@ -216,7 +216,7 @@ const TapTheColor: React.FC<TapTheColorProps> = ({ seed, onScore, isPlaying }) =
                 <motion.button
                     initial={{ y: 20, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
-                    className="mt-8 px-8 py-3 bg-yellow-500 rounded-full text-white font-bold text-xl shadow-lg hover:bg-yellow-400 active:scale-95"
+                    className="mt-8 px-8 py-3 bg-yellow-500 rounded-full text-slate-900 dark:text-white font-bold text-xl shadow-lg hover:bg-yellow-400 active:scale-95"
                     onPointerDown={(e) => {
                         e.preventDefault();
                         if (e.currentTarget.setPointerCapture) {

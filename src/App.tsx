@@ -20,7 +20,8 @@ const BackButtonHandler = () => {
       try {
         backButtonListener = await CapacitorApp.addListener('backButton', ({ canGoBack }) => {
           if (location.pathname === '/' || location.pathname === '/home') {
-            CapacitorApp.exitApp();
+            // Prevent accidental app termination on Home.
+            return;
           } else if (canGoBack) {
             window.history.back();
           } else {
@@ -82,6 +83,7 @@ import { SoundProvider } from './contexts/SoundContext';
 
 import { AuthProvider } from './contexts/AuthContext';
 import { UIProvider, useUI } from './contexts/UIContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { TutorialProvider } from './contexts/TutorialContext';
 // Pages
 import Login from './pages/Login';
@@ -145,36 +147,40 @@ function App() {
 
   return (
     <SoundProvider>
-      <AuthProvider>
-        <UIProvider>
-          <TutorialProvider>
-            <BrowserRouter>
-              <BackButtonHandler />
-              <ForceUpdateCheck />
-              <AuthErrorRelay />
-              <BGMManager />
-              <GameInviteListener />
-              <RematchListener />
-              <ChatNotificationListener />
-              <LocalNotificationScheduler />
-              <ForceLogoutListener />
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/game/:roomId" element={<Game />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/practice" element={<PracticeMode />} />
-                <Route path="/shop" element={<Shop />} />
-                <Route path="/privacy" element={<Privacy />} />
-                <Route path="/support" element={<Support />} />
-                <Route path="/admin" element={<Admin />} />
-                <Route path="/admin/member" element={<AdminMember />} />
-              </Routes>
-            </BrowserRouter>
-          </TutorialProvider>
-        </UIProvider>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <UIProvider>
+            <TutorialProvider>
+              <BrowserRouter>
+                <div className="app-theme-root">
+                  <BackButtonHandler />
+                  <ForceUpdateCheck />
+                  <AuthErrorRelay />
+                  <BGMManager />
+                  <GameInviteListener />
+                  <RematchListener />
+                  <ChatNotificationListener />
+                  <LocalNotificationScheduler />
+                  <ForceLogoutListener />
+                  <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/game/:roomId" element={<Game />} />
+                    <Route path="/settings" element={<Settings />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/practice" element={<PracticeMode />} />
+                    <Route path="/shop" element={<Shop />} />
+                    <Route path="/privacy" element={<Privacy />} />
+                    <Route path="/support" element={<Support />} />
+                    <Route path="/admin" element={<Admin />} />
+                    <Route path="/admin/member" element={<AdminMember />} />
+                  </Routes>
+                </div>
+              </BrowserRouter>
+            </TutorialProvider>
+          </UIProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </SoundProvider>
   );
 }

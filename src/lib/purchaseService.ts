@@ -5,6 +5,7 @@ const isIOS = Capacitor.getPlatform() === 'ios';
 
 export const PRODUCT_IDS = {
     removeAds: 'remove_ads',
+    nicknameChangeTicket: 'nickname_change_ticket',
     pencils5: 'pencils_5',
     pencils20: isIOS ? 'pencil_20' : 'pencils_20',
     pencils100: isIOS ? 'pencil_100' : 'pencils_100',

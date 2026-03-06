@@ -92,11 +92,11 @@ const ChatNotificationListener = () => {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -10, scale: 0.98 }}
                         transition={{ duration: 0.2 }}
-                        className="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl border border-blue-400/40 bg-gray-900/90 text-white shadow-xl backdrop-blur-md min-w-[280px]"
+                        className="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl border border-blue-400/40 bg-slate-50 dark:bg-gray-900/90 text-slate-900 dark:text-white shadow-xl backdrop-blur-md min-w-[280px]"
                     >
                         <MessageCircle className="w-5 h-5 text-blue-400" />
                         <span className="text-sm font-medium flex-1">{banner.text}</span>
-                        <button onClick={() => setBanner(null)} className="text-gray-400 hover:text-white transition-colors">
+                        <button onClick={() => setBanner(null)} className="text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:text-white transition-colors">
                             <X className="w-4 h-4" />
                         </button>
                     </motion.div>

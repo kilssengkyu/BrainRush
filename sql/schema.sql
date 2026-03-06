@@ -2013,6 +2013,36 @@ $$;
 
 
 --
+-- Name: grant_nickname_change_tickets(uuid, integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.grant_nickname_change_tickets(user_id uuid, amount integer) RETURNS boolean
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  IF user_id != auth.uid() THEN
+    RAISE EXCEPTION 'Cannot grant nickname change tickets for another user';
+  END IF;
+
+  IF amount IS NULL OR amount <= 0 OR amount > 1000 THEN
+    RAISE EXCEPTION 'Invalid nickname change ticket amount';
+  END IF;
+
+  UPDATE public.profiles
+  SET nickname_change_tickets = COALESCE(nickname_change_tickets, 0) + amount
+  WHERE id = user_id;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Profile not found';
+  END IF;
+
+  RETURN TRUE;
+END;
+$$;
+
+
+--
 -- Name: grant_practice_notes(uuid, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -2126,10 +2156,9 @@ CREATE FUNCTION public.handle_new_user() RETURNS trigger
     SET search_path TO 'public'
     AS $$
 begin
-  insert into public.profiles (id, email, full_name, avatar_url, nickname, needs_nickname_setup)
+  insert into public.profiles (id, full_name, avatar_url, nickname, needs_nickname_setup)
   values (
     new.id, 
-    new.email, 
     new.raw_user_meta_data->>'full_name', 
     new.raw_user_meta_data->>'avatar_url',
     'Player_' || floor(random() * 9000 + 1000)::text,
@@ -2415,6 +2444,10 @@ CREATE FUNCTION public.update_my_profile(p_nickname text, p_country text DEFAULT
 DECLARE
   v_user_id uuid := auth.uid();
   v_nickname text;
+  v_current_nickname text;
+  v_last_nickname_set_at timestamptz;
+  v_needs_nickname_setup boolean;
+  v_nickname_change_tickets integer;
 BEGIN
   IF v_user_id IS NULL THEN
     RAISE EXCEPTION 'Not authenticated';
@@ -2436,16 +2469,55 @@ BEGIN
     RAISE EXCEPTION 'Nickname already in use';
   END IF;
 
-  UPDATE public.profiles
-  SET nickname = v_nickname,
-      country = p_country,
-      needs_nickname_setup = false,
-      nickname_set_at = CASE WHEN needs_nickname_setup THEN now() ELSE nickname_set_at END
-  WHERE id = v_user_id;
+  SELECT
+    p.nickname,
+    p.nickname_set_at,
+    p.needs_nickname_setup,
+    COALESCE(p.nickname_change_tickets, 0)
+  INTO
+    v_current_nickname,
+    v_last_nickname_set_at,
+    v_needs_nickname_setup,
+    v_nickname_change_tickets
+  FROM public.profiles p
+  WHERE p.id = v_user_id
+  FOR UPDATE;
 
   IF NOT FOUND THEN
     RAISE EXCEPTION 'Profile not found';
   END IF;
+
+  IF lower(COALESCE(v_current_nickname, '')) <> lower(v_nickname) THEN
+    IF NOT v_needs_nickname_setup
+      AND v_last_nickname_set_at IS NOT NULL
+      AND v_last_nickname_set_at > (now() - interval '30 days')
+    THEN
+      IF v_nickname_change_tickets <= 0 THEN
+        RAISE EXCEPTION 'Nickname can be changed once every 30 days or with a ticket';
+      END IF;
+
+      UPDATE public.profiles
+      SET nickname = v_nickname,
+          country = p_country,
+          needs_nickname_setup = false,
+          nickname_set_at = now(),
+          nickname_change_tickets = GREATEST(COALESCE(nickname_change_tickets, 0) - 1, 0)
+      WHERE id = v_user_id;
+      RETURN;
+    END IF;
+
+    UPDATE public.profiles
+    SET nickname = v_nickname,
+        country = p_country,
+        needs_nickname_setup = false,
+        nickname_set_at = now()
+    WHERE id = v_user_id;
+    RETURN;
+  END IF;
+
+  UPDATE public.profiles
+  SET country = p_country
+  WHERE id = v_user_id;
 END;
 $$;
 
@@ -5771,6 +5843,7 @@ CREATE TABLE public.profiles (
     practice_ad_reward_day date DEFAULT CURRENT_DATE,
     needs_nickname_setup boolean DEFAULT false NOT NULL,
     nickname_set_at timestamp with time zone,
+    nickname_change_tickets integer DEFAULT 0 NOT NULL,
     rank_win_streak integer DEFAULT 0,
     rank_streak_updated_at timestamp with time zone,
     rank_lose_streak integer DEFAULT 0,
@@ -8177,7 +8250,6 @@ BEGIN
     SELECT
       p.id,
       p.nickname,
-      p.email,
       p.country,
       p.mmr,
       p.level,
@@ -8194,14 +8266,13 @@ BEGIN
     WHERE (
       v_search IS NULL
       OR lower(COALESCE(p.nickname, '')) LIKE '%' || lower(v_search) || '%'
-      OR lower(COALESCE(p.email, '')) LIKE '%' || lower(v_search) || '%'
       OR p.id::text LIKE '%' || v_search || '%'
     )
   )
   SELECT
     b.id,
     b.nickname,
-    b.email,
+    NULL::text AS email,
     b.country,
     b.mmr,
     b.level,
@@ -8366,7 +8437,7 @@ BEGIN
     pr.created_at,
     pr.reporter_id,
     rp.nickname AS reporter_nickname,
-    rp.email AS reporter_email
+    NULL::text AS reporter_email
   FROM public.player_reports pr
   LEFT JOIN public.profiles rp ON rp.id = pr.reporter_id
   WHERE pr.reported_user_id = p_reported_user_id

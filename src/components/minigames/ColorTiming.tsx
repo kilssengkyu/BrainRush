@@ -371,7 +371,7 @@ const ColorTiming: React.FC<ColorTimingProps> = ({ onScore, isPlaying }) => {
                 </div>
             )}
 
-            <div className="absolute bottom-3 inset-x-0 text-center text-white/70 text-xs font-semibold">
+            <div className="absolute bottom-3 inset-x-0 text-center text-slate-900 dark:text-white/70 text-xs font-semibold">
                 LEFT / RIGHT TAP
             </div>
         </div>

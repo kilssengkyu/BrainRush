@@ -150,10 +150,10 @@ const NumberUpDown: React.FC<NumberUpDownProps> = ({ seed, onScore, isPlaying })
             {isGameStarted && (
                 <>
                     <div className="absolute inset-x-0 top-1/4 flex justify-center opacity-5 pointer-events-none">
-                        <ChevronUp size={64} className="text-white" />
+                        <ChevronUp size={64} className="text-slate-900 dark:text-white" />
                     </div>
                     <div className="absolute inset-x-0 bottom-1/4 flex justify-center opacity-5 pointer-events-none">
-                        <ChevronDown size={64} className="text-white" />
+                        <ChevronDown size={64} className="text-slate-900 dark:text-white" />
                     </div>
                 </>
             )}

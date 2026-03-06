@@ -438,7 +438,7 @@ const TimingBar: React.FC<TimingBarProps> = ({ onScore, isPlaying, remainingTime
                             />
                         )}
                         {note.type === 'hold' && !note.isBeingHeld && (
-                            <span className="absolute inset-0 flex items-center justify-center text-white text-xs font-bold drop-shadow">
+                            <span className="absolute inset-0 flex items-center justify-center text-slate-900 dark:text-white text-xs font-bold drop-shadow">
                                 HOLD
                             </span>
                         )}

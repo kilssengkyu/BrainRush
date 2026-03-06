@@ -195,7 +195,7 @@ const FindLargest: React.FC<FindLargestProps> = ({ seed, onScore, isPlaying }) =
         }
     };
 
-    if (!currentProblem) return <div className="text-white">{t('common.loading')}</div>;
+    if (!currentProblem) return <div className="text-slate-900 dark:text-white">{t('common.loading')}</div>;
 
     const optionCount = currentProblem.options.length;
     const gridClass = optionCount === 2
@@ -235,7 +235,7 @@ const FindLargest: React.FC<FindLargestProps> = ({ seed, onScore, isPlaying }) =
                             }}
                             animate={shakeId === option.id ? { x: [-6, 6, -6, 6, 0], backgroundColor: '#ef4444' } : {}}
                             whileTap={{ scale: 0.95 }}
-                            className={`h-24 rounded-2xl flex items-center justify-center ${textClass} font-bold text-white bg-gray-800 border-b-4 border-gray-950 hover:bg-gray-700 active:border-b-0 active:translate-y-1 transition-all`}
+                            className={`h-24 rounded-2xl flex items-center justify-center ${textClass} font-bold text-slate-900 dark:text-white bg-white dark:bg-gray-800 border-b-4 border-slate-300 dark:border-gray-950 hover:bg-slate-100 dark:hover:bg-gray-700 active:border-b-0 active:translate-y-1 transition-all`}
                         >
                             {formatExpression(option.expression)}
                         </motion.button>

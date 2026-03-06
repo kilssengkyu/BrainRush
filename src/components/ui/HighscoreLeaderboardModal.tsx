@@ -43,19 +43,19 @@ const HighscoreLeaderboardModal = ({ isOpen, onClose, gameType, title }: Highsco
     if (!isOpen || !gameType) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-            <div className="w-full max-w-md bg-gray-900 border border-white/10 rounded-3xl shadow-2xl overflow-hidden">
-                <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
-                    <div className="flex items-center gap-2 text-white font-bold">
-                        <Trophy className="w-5 h-5 text-yellow-400" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 dark:bg-black/70 backdrop-blur-sm p-4">
+            <div className="w-full max-w-md bg-slate-50 dark:bg-gray-900 border border-slate-200 dark:border-white/10 rounded-3xl shadow-2xl overflow-hidden">
+                <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-white/10">
+                    <div className="flex items-center gap-2 text-slate-900 dark:text-white font-bold">
+                        <Trophy className="w-5 h-5 text-yellow-500 dark:text-yellow-400" />
                         <span>{t('profile.highscoreLeaderboardTitle', 'Top 10')} - {title}</span>
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2 rounded-full hover:bg-white/10 transition"
+                        className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-white/10 transition"
                         aria-label={t('common.close')}
                     >
-                        <X className="w-5 h-5 text-gray-300" />
+                        <X className="w-5 h-5 text-slate-500 dark:text-gray-400" />
                     </button>
                 </div>
 
@@ -75,26 +75,26 @@ const HighscoreLeaderboardModal = ({ isOpen, onClose, gameType, title }: Highsco
                             {rows.map((row) => (
                                 <div
                                     key={`${row.user_id}-${row.rank}`}
-                                    className="grid grid-cols-[0.5fr_1.4fr_0.8fr] items-center bg-gray-800/60 rounded-lg px-3 py-2"
+                                    className="grid grid-cols-[0.5fr_1.4fr_0.8fr] items-center bg-white dark:bg-gray-800/60 rounded-lg px-3 py-2 border border-slate-200 dark:border-transparent shadow-sm dark:shadow-none"
                                 >
-                                    <span className="text-yellow-300 font-bold tabular-nums">{row.rank}</span>
+                                    <span className="text-yellow-600 dark:text-yellow-400 font-bold tabular-nums text-lg">{row.rank}</span>
                                     <div className="flex items-center gap-2 min-w-0">
-                                        <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-700 border border-white/10 flex items-center justify-center">
+                                        <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-100 dark:bg-gray-700 border border-slate-300 dark:border-white/10 flex items-center justify-center">
                                             {row.avatar_url ? (
                                                 <img src={row.avatar_url} alt={row.nickname} className="w-full h-full object-cover" />
                                             ) : (
-                                                <UserIcon className="w-4 h-4 text-gray-400" />
+                                                <UserIcon className="w-4 h-4 text-slate-500 dark:text-gray-400" />
                                             )}
                                         </div>
                                         <div className="min-w-0">
-                                            <div className="text-sm text-white font-semibold truncate">{row.nickname || t('game.unknownPlayer')}</div>
-                                            <div className="text-[10px] text-gray-400 flex items-center gap-1">
+                                            <div className="text-sm text-slate-800 dark:text-white font-semibold truncate">{row.nickname || t('game.unknownPlayer')}</div>
+                                            <div className="text-[10px] text-slate-500 dark:text-gray-400 flex items-center gap-1">
                                                 <Flag code={row.country} size="xs" />
                                                 <span className="truncate">{row.country || ''}</span>
                                             </div>
                                         </div>
                                     </div>
-                                    <span className="text-right text-blue-300 font-bold tabular-nums">{row.best_score ?? 0}</span>
+                                    <span className="text-right text-blue-600 dark:text-blue-400 font-bold tabular-nums">{row.best_score ?? 0}</span>
                                 </div>
                             ))}
                         </div>

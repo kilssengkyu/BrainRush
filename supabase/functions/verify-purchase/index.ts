@@ -177,6 +177,11 @@ const grantEntitlement = async (
   } else if (productId === 'practice_notes_100' || productId === 'practice_note_100') {
     const { error } = await supabase.rpc('grant_practice_notes', { user_id: userId, amount: 100 });
     if (error) throw error;
+  } else if (productId === 'nickname_change_ticket' || productId === 'nickname_ticket') {
+    const { error } = await supabase.rpc('grant_nickname_change_tickets', { user_id: userId, amount: 1 });
+    if (error) throw error;
+  } else {
+    throw new Error(`Unsupported productId: ${productId}`);
   }
 };
 

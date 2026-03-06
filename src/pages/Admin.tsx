@@ -27,14 +27,14 @@ const Admin = () => {
   if (loading || !user || !isAdmin) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-950 to-black text-white p-6">
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-950 to-black text-slate-900 dark:text-white p-6">
       <div className="max-w-4xl mx-auto">
         <button
           onClick={() => {
             playSound('click');
             navigate('/');
           }}
-          className="mb-4 rounded-lg border border-white/20 px-4 py-2 text-sm text-white/80 hover:text-white hover:border-white/40"
+          className="mb-4 rounded-lg border border-white/20 px-4 py-2 text-sm text-slate-900 dark:text-white/80 hover:text-slate-900 dark:text-white hover:border-white/40"
         >
           Back
         </button>
@@ -44,7 +44,7 @@ const Admin = () => {
             <Shield className="h-5 w-5" />
             <h1 className="text-xl font-bold">Admin</h1>
           </div>
-          <p className="text-sm text-white/80">관리 기능 메뉴</p>
+          <p className="text-sm text-slate-900 dark:text-white/80">관리 기능 메뉴</p>
         </div>
 
         <div className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -59,7 +59,7 @@ const Admin = () => {
               <Users className="h-5 w-5" />
             </div>
             <div className="text-lg font-semibold">회원관리</div>
-            <div className="mt-1 text-sm text-white/70">회원 목록, 검색, 프로필 사진 확인</div>
+            <div className="mt-1 text-sm text-slate-900 dark:text-white/70">회원 목록, 검색, 프로필 사진 확인</div>
           </button>
         </div>
       </div>

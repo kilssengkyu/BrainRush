@@ -10,6 +10,7 @@ import { consumePurchaseToken, getPurchaseToken, getTransactionId, loadProducts,
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { Capacitor } from '@capacitor/core';
+import { useTheme } from '../contexts/ThemeContext';
 
 type ShopItem = {
     id: string;
@@ -26,6 +27,7 @@ type ShopItem = {
 const Shop = () => {
     const navigate = useNavigate();
     const { t } = useTranslation();
+    const { themeMode } = useTheme();
     const { playSound } = useSound();
     const { showToast } = useUI();
     const { user, profile, refreshProfile } = useAuth();
@@ -36,7 +38,8 @@ const Shop = () => {
         amount: number | null;
         unitLabel: string;
         description: string;
-        iconSrc: string;
+        iconSrc?: string;
+        iconEmoji?: string;
         iconAlt: string;
     } | null>(null);
     const edgeSwipeStartRef = useRef<{ x: number; y: number } | null>(null);
@@ -52,6 +55,17 @@ const Shop = () => {
             tagKey: 'shop.premium',
             accent: 'from-rose-500/20 to-transparent',
             icon: <Ban className="w-8 h-8 text-rose-300" />
+        },
+        {
+            id: 'nickname_change_ticket',
+            productId: PRODUCT_IDS.nicknameChangeTicket,
+            titleKey: 'shop.nicknameChangeTicket.title',
+            descKey: 'shop.nicknameChangeTicket.desc',
+            priceLabel: priceMap[PRODUCT_IDS.nicknameChangeTicket] || '₩5,500',
+            tagKey: 'shop.premium',
+            accent: 'from-indigo-500/20 to-transparent',
+            icon: <span className="w-8 h-8 flex items-center justify-center text-3xl leading-none select-none" role="img" aria-label="ticket">🎫</span>,
+            isConsumable: true,
         },
         {
             id: 'pencils_5',
@@ -126,6 +140,7 @@ const Shop = () => {
             try {
                 const products = await loadProducts([
                     PRODUCT_IDS.removeAds,
+                    PRODUCT_IDS.nicknameChangeTicket,
                     PRODUCT_IDS.pencils5,
                     PRODUCT_IDS.pencils20,
                     PRODUCT_IDS.pencils100,
@@ -283,6 +298,7 @@ const Shop = () => {
             }
             await refreshProfile();
             const rewardMap: Partial<Record<ShopProductId, { amount: number; unitLabel: string }>> = {
+                [PRODUCT_IDS.nicknameChangeTicket]: { amount: 1, unitLabel: t('shop.nicknameChangeTicket.unit', '닉네임 변경권') },
                 [PRODUCT_IDS.pencils5]: { amount: 5, unitLabel: t('ad.pencils', '연필') },
                 [PRODUCT_IDS.pencils20]: { amount: 20, unitLabel: t('ad.pencils', '연필') },
                 [PRODUCT_IDS.pencils100]: { amount: 100, unitLabel: t('ad.pencils', '연필') },
@@ -294,13 +310,17 @@ const Shop = () => {
             const isPracticeNoteReward = item.productId === PRODUCT_IDS.practiceNotes10
                 || item.productId === PRODUCT_IDS.practiceNotes20
                 || item.productId === PRODUCT_IDS.practiceNotes100;
+            const isNicknameTicketReward = item.productId === PRODUCT_IDS.nicknameChangeTicket;
             if (reward) {
                 setPurchaseReward({
                     amount: reward.amount,
                     unitLabel: reward.unitLabel,
                     description: t('shop.purchaseRewardDesc', '구매하신 아이템이 지급되었습니다.'),
-                    iconSrc: isPracticeNoteReward ? '/images/icon/icon_note.png' : '/images/icon/icon_pen.png',
-                    iconAlt: isPracticeNoteReward ? t('ad.practiceNotes') : t('ad.pencils')
+                    iconSrc: isNicknameTicketReward ? undefined : (isPracticeNoteReward ? '/images/icon/icon_note.png' : '/images/icon/icon_pen.png'),
+                    iconEmoji: isNicknameTicketReward ? '🎫' : undefined,
+                    iconAlt: isPracticeNoteReward
+                        ? t('ad.practiceNotes')
+                        : (isNicknameTicketReward ? t('shop.nicknameChangeTicket.unit', '닉네임 변경권') : t('ad.pencils'))
                 });
             } else {
                 setPurchaseReward({
@@ -340,16 +360,16 @@ const Shop = () => {
 
     return (
         <div
-            className="h-[100dvh] bg-gray-900 text-white flex flex-col relative overflow-hidden"
+            className={`h-[100dvh] flex flex-col relative overflow-hidden bg-slate-50 dark:bg-gray-900 text-slate-900 dark:text-white`}
             onTouchStart={handleEdgeSwipeStart}
             onTouchMove={handleEdgeSwipeMove}
             onTouchEnd={handleEdgeSwipeEnd}
             onTouchCancel={handleEdgeSwipeEnd}
         >
-            <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-800 via-gray-900 to-black pointer-events-none" />
+            <div className={`absolute top-0 left-0 w-full h-full pointer-events-none bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white via-slate-100 to-slate-200 dark:from-gray-800 dark:via-gray-900 dark:to-black`} />
 
             {/* Header - Fixed to top */}
-            <div className="flex-none w-full max-w-5xl mx-auto flex items-center justify-between z-20 px-4 pt-[calc(env(safe-area-inset-top)+1.5rem)] pb-4 bg-gray-900/50 backdrop-blur-sm sticky top-0">
+            <div className={`flex-none w-full max-w-5xl mx-auto flex items-center justify-between z-20 px-4 pt-[calc(env(safe-area-inset-top)+1.5rem)] pb-4 backdrop-blur-sm sticky top-0 ${themeMode === 'light' ? 'bg-slate-100/75' : 'bg-gray-900/50'}`}>
                 <button onClick={handleBack} disabled={purchasing} className={`p-2 rounded-full transition-colors ${purchasing ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white/10'}`}>
                     <ArrowLeft className="w-8 h-8" />
                 </button>
@@ -361,7 +381,7 @@ const Shop = () => {
                         <h1 className="text-2xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400 drop-shadow-lg">
                             {t('shop.title', 'Shop')}
                         </h1>
-                        <p className="text-xs text-gray-400 uppercase tracking-widest">
+                        <p className="text-xs text-slate-500 dark:text-gray-400 uppercase tracking-widest">
                             {t('shop.subtitle', 'Boost your play')}
                         </p>
                     </div>
@@ -381,40 +401,40 @@ const Shop = () => {
                         <motion.div
                             key={item.id}
                             variants={itemVariants}
-                            className="relative bg-gray-800/60 border border-gray-700 rounded-2xl p-6 overflow-hidden shadow-xl"
+                            className="relative bg-white dark:bg-gray-800/60 border border-slate-200 dark:border-gray-700 rounded-2xl p-6 overflow-hidden shadow-xl"
                         >
                             <div className={`absolute inset-0 bg-gradient-to-br ${item.accent} opacity-70`} />
 
                             <div className="relative z-10 flex items-center justify-between mb-6">
-                                <div className="p-3 rounded-full bg-gray-900/60 border border-white/10">
+                                <div className="p-3 rounded-full bg-slate-50 dark:bg-gray-900/60 border border-slate-200 dark:border-white/10 shadow-sm dark:shadow-none">
                                     {item.icon}
                                 </div>
                                 {item.tagKey && (
-                                    <span className="px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full bg-white/10 border border-white/20 text-white">
+                                    <span className="px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full bg-white/50 dark:bg-white/10 border border-slate-200 dark:border-white/20 text-slate-800 dark:text-white shadow-sm dark:shadow-none">
                                         {t(item.tagKey, 'Popular')}
                                     </span>
                                 )}
                             </div>
 
                             <div className="relative z-10">
-                                <h3 className="text-xl font-bold text-white mb-2">
+                                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
                                     {t(item.titleKey)}
                                 </h3>
-                                <p className="text-sm text-gray-400 mb-6">
+                                <p className="text-sm text-slate-500 dark:text-gray-400 mb-6">
                                     {t(item.descKey)}
                                 </p>
                                 <div className="flex items-center justify-between">
                                     {loadingPrices ? (
-                                        <div className="h-8 w-24 bg-gray-700 rounded animate-pulse" />
+                                        <div className="h-8 w-24 bg-slate-100 dark:bg-gray-700 rounded animate-pulse" />
                                     ) : (
-                                        <div className="text-2xl font-black text-white">
+                                        <div className="text-2xl font-black text-slate-900 dark:text-white">
                                             {item.priceLabel}
                                         </div>
                                     )}
                                     {item.productId === PRODUCT_IDS.removeAds && profile?.ads_removed ? (
                                         <button
                                             disabled
-                                            className="px-4 py-2 rounded-xl bg-gray-600 text-gray-300 font-bold text-sm cursor-not-allowed"
+                                            className="px-4 py-2 rounded-xl bg-slate-200 dark:bg-gray-600 text-slate-500 dark:text-gray-300 font-bold text-sm cursor-not-allowed"
                                         >
                                             {t('shop.purchased', 'Purchased')}
                                         </button>
@@ -422,7 +442,7 @@ const Shop = () => {
                                         <button
                                             onClick={() => handlePurchase(item)}
                                             disabled={loadingPrices || purchasing}
-                                            className="px-4 py-2 rounded-xl bg-white text-black font-bold text-sm hover:bg-gray-200 transition-colors active:scale-95"
+                                            className="px-4 py-2 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-black font-bold text-sm hover:bg-slate-800 dark:hover:bg-gray-200 transition-colors active:scale-95 shadow-md dark:shadow-none"
                                         >
                                             {loadingPrices ? t('shop.loading', 'Loading...') : t('shop.buy', 'Buy')}
                                         </button>
@@ -438,9 +458,9 @@ const Shop = () => {
             {/* 구매 처리 중 오버레이 */}
             {purchasing && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm">
-                    <div className="flex items-center gap-3 bg-gray-900/80 border border-white/10 rounded-2xl px-5 py-4 shadow-xl">
+                    <div className="flex items-center gap-3 bg-slate-50 dark:bg-gray-900/80 border border-white/10 rounded-2xl px-5 py-4 shadow-xl">
                         <Loader2 className="w-5 h-5 text-blue-400 animate-spin" />
-                        <span className="text-sm font-bold text-gray-200">
+                        <span className="text-sm font-bold text-slate-700 dark:text-gray-200">
                             {t('shop.processing', '처리 중...')}
                         </span>
                     </div>
@@ -465,25 +485,37 @@ const Shop = () => {
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="mb-4 flex justify-center">
-                                <img
-                                    src={purchaseReward.iconSrc}
-                                    alt={purchaseReward.iconAlt}
-                                    className="w-16 h-16 object-contain"
-                                />
+                                {purchaseReward.iconEmoji ? (
+                                    <span className="text-6xl select-none" role="img" aria-label={purchaseReward.iconAlt}>
+                                        {purchaseReward.iconEmoji}
+                                    </span>
+                                ) : (
+                                    <img
+                                        src={purchaseReward.iconSrc}
+                                        alt={purchaseReward.iconAlt}
+                                        className="w-16 h-16 object-contain"
+                                    />
+                                )}
                             </div>
-                            <h3 className="text-xl font-black text-white mb-3">
+                            <h3 className="text-xl font-black text-slate-900 dark:text-white mb-3">
                                 {t('shop.purchaseSuccess', 'Purchase completed.')}
                             </h3>
-                            <p className="text-gray-300 text-sm leading-relaxed mb-6">
+                            <p className="text-slate-600 dark:text-gray-300 text-sm leading-relaxed mb-6">
                                 {purchaseReward.description}
                             </p>
                             {purchaseReward.amount !== null && (
                                 <div className="flex items-center justify-center gap-2 mb-6 py-3 px-4 bg-yellow-500/10 rounded-xl border border-yellow-500/20">
-                                    <img
-                                        src={purchaseReward.iconSrc}
-                                        alt={purchaseReward.iconAlt}
-                                        className="w-7 h-7 object-contain"
-                                    />
+                                    {purchaseReward.iconEmoji ? (
+                                        <span className="text-2xl select-none" role="img" aria-label={purchaseReward.iconAlt}>
+                                            {purchaseReward.iconEmoji}
+                                        </span>
+                                    ) : (
+                                        <img
+                                            src={purchaseReward.iconSrc}
+                                            alt={purchaseReward.iconAlt}
+                                            className="w-7 h-7 object-contain"
+                                        />
+                                    )}
                                     <span className="text-yellow-400 font-bold text-lg">
                                         +{purchaseReward.amount} {purchaseReward.unitLabel}
                                     </span>

@@ -88,6 +88,11 @@
       "title": "练习笔记 x100",
       "desc": "适合长时间练习的超值包。"
     },
+    "nicknameChangeTicket": {
+      "title": "昵称更改券",
+      "desc": "无需等待30天，立即更改昵称。",
+      "unit": "昵称更改券"
+    },
     "buy": "购买",
     "premium": "高级",
     "popular": "热门",
@@ -219,6 +224,9 @@
     "notificationDeniedIos": "Please allow notifications in iPhone Settings > Notifications.",
     "notificationDeniedAndroid": "Please allow notifications in Android Settings > Notifications.",
     "notificationOn": "Notifications turned on.",
+    "support": "联系我们",
+    "supportDesc": "查看问题反馈、错误报告和其他咨询。",
+    "goToSupport": "打开支持页面",
     "notifications": "Notifications",
     "pushNotifications": "Push/Local Notifications",
     "notificationNativeHint": "Notification toggle is disabled on the web."
@@ -308,6 +316,11 @@
     "nicknameSetupTitle": "设置昵称",
     "nicknameSetupDesc": "请输入你在游戏中要使用的昵称。",
     "nicknamePlaceholder": "输入昵称",
+    "nicknameTicketsLabel": "昵称更改券",
+    "nicknameChangeAvailableNow": "现在可更改昵称",
+    "nicknameChangeUnavailableNow": "现在不可更改昵称",
+    "nicknameFreeChangeNow": "免费更改可用：现在",
+    "nicknameFreeChangeAt": "免费更改可用：{{date}}",
     "edit": "编辑",
     "highscoresTitle": "最高分",
     "highscoresColumns": {
@@ -335,14 +348,19 @@
       "observation": "观察力"
     },
     "changeAvatar": "更换头像",
+    "removeAvatar": "删除头像",
+    "removeAvatarConfirm": "要删除当前头像吗？",
     "avatarUploading": "上传中...",
     "avatarInvalidType": "不支持的图片格式。",
     "avatarTooLarge": "文件太大。",
     "avatarUploadSuccess": "头像已更新。",
     "avatarUploadFail": "头像上传失败",
+    "avatarRemoveSuccess": "头像已删除。",
+    "avatarRemoveFail": "头像删除失败",
     "record": "战绩",
     "disconnects": "掉线",
     "updateSuccess": "更新成功",
+    "nicknameCooldownOrTicket": "昵称每30天可免费更改一次。若要立即更改，需要更改券。",
     "updateFail": "更新失败",
     "deleteSuccess": "账户已删除",
     "deleteFail": "删除失败",

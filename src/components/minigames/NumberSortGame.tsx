@@ -107,10 +107,10 @@ const NumberSortGame: React.FC<NumberSortGameProps> = ({ seed, onScore, mode, is
         }
     };
 
-    if (!seed) return <div className="text-white">{t('common.loading')}</div>;
+    if (!seed) return <div className="text-slate-900 dark:text-white">{t('common.loading')}</div>;
 
     // Theme Colors
-    const cellDefaultColor = 'bg-gray-800';
+    const cellDefaultColor = 'bg-white dark:bg-gray-800';
     const cellErrorColor = '#ef4444'; // Red
     const cellSuccessColor = mode === 'asc' ? '#22c55e' : '#f59e0b'; // Green vs Amber for success? Or just Green/Red separation? 
     // Let's use Green for Asc success, and maybe Amber/Orange for Desc success to differentiate visuals? 
@@ -161,8 +161,8 @@ const NumberSortGame: React.FC<NumberSortGameProps> = ({ seed, onScore, mode, is
                                         pointerEvents: clearedNumbers.includes(num) ? 'none' : 'auto'
                                     }}
                                     className={`
-                                        w-full h-full rounded-2xl flex items-center justify-center text-4xl font-bold text-white border-2 
-                                        ${mode === 'asc' ? 'border-blue-900/50 hover:border-blue-400' : 'border-red-900/50 hover:border-red-400'} 
+                                        w-full h-full rounded-2xl flex items-center justify-center text-4xl font-bold text-slate-900 dark:text-white border-2 
+                                        ${mode === 'asc' ? 'border-blue-300 dark:border-blue-900/50 hover:border-blue-400' : 'border-red-300 dark:border-red-900/50 hover:border-red-400'} 
                                         ${cellDefaultColor} shadow-lg active:scale-95 transition-colors
                                     `}
                                 >

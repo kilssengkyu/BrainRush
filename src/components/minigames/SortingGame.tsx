@@ -187,10 +187,10 @@ const SortingGame: React.FC<SortingGameProps> = ({ seed, onScore, isPlaying }) =
                 {nextSymbol && NextIcon && (
                     <motion.div
                         animate={previewControls}
-                        className="absolute bottom-[95%] left-1/2 -translate-x-1/2 w-40 h-52 bg-gray-800 rounded-2xl border-4 border-white/20 shadow-xl flex flex-col items-center justify-center z-0 pointer-events-none"
+                        className="absolute bottom-[95%] left-1/2 -translate-x-1/2 w-40 h-52 bg-white dark:bg-gray-800 rounded-2xl border-4 border-white/20 shadow-xl flex flex-col items-center justify-center z-0 pointer-events-none"
                     >
                         <NextIcon size={58} className={`${nextSymbol.color} drop-shadow-lg mb-3`} />
-                        <div className="text-white/50 font-mono text-[10px] uppercase tracking-widest">{nextSymbol.id}</div>
+                        <div className="text-slate-900 dark:text-white/50 font-mono text-[10px] uppercase tracking-widest">{nextSymbol.id}</div>
                     </motion.div>
                 )}
 
@@ -198,7 +198,7 @@ const SortingGame: React.FC<SortingGameProps> = ({ seed, onScore, isPlaying }) =
                 {/* Current Card (Draggable) */}
                 {!isPromotingNextCard && (
                     <motion.div
-                        className="absolute w-full h-full bg-gray-800 rounded-3xl border-4 border-white/20 shadow-2xl flex flex-col items-center justify-center z-10 cursor-grab active:cursor-grabbing"
+                        className="absolute w-full h-full bg-white dark:bg-gray-800 rounded-3xl border-4 border-white/20 shadow-2xl flex flex-col items-center justify-center z-10 cursor-grab active:cursor-grabbing"
                         drag="x"
                         dragConstraints={{ left: 0, right: 0 }}
                         dragElastic={0.7} // Springy feeling
@@ -207,7 +207,7 @@ const SortingGame: React.FC<SortingGameProps> = ({ seed, onScore, isPlaying }) =
                         whileTap={{ scale: 1.05 }}
                     >
                         <CurrentIcon size={100} className={`${currentSymbol.color} drop-shadow-lg mb-8`} />
-                        <div className="text-white/50 font-mono text-sm uppercase tracking-widest">{currentSymbol.id}</div>
+                        <div className="text-slate-900 dark:text-white/50 font-mono text-sm uppercase tracking-widest">{currentSymbol.id}</div>
                     </motion.div>
                 )}
             </div>

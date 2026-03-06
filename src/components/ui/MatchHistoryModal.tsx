@@ -184,14 +184,14 @@ const MatchHistoryModal = ({ isOpen, onClose, userId, initialMode = 'all' }: Mat
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-            <div className="w-full max-w-md bg-gray-900 border border-white/10 rounded-3xl shadow-2xl flex flex-col max-h-[80vh]">
+            <div className="w-full max-w-md bg-slate-50 dark:bg-gray-900 border border-white/10 rounded-3xl shadow-2xl flex flex-col max-h-[80vh]">
                 {/* Header */}
                 <div className="p-6 border-b border-white/10 flex justify-between items-center flex-shrink-0">
-                    <h2 className="text-xl font-bold text-white flex gap-2 items-center">
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-white flex gap-2 items-center">
                         {t('profile.record')}
                     </h2>
                     <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
-                        <X className="w-6 h-6 text-gray-400" />
+                        <X className="w-6 h-6 text-slate-500 dark:text-gray-400" />
                     </button>
                 </div>
 
@@ -227,7 +227,7 @@ const MatchHistoryModal = ({ isOpen, onClose, userId, initialMode = 'all' }: Mat
                         history.map((match) => (
                             <div
                                 key={match.session_id}
-                                className="bg-gray-800/50 p-3 rounded-xl flex items-center justify-between border border-white/5 hover:border-white/10 transition cursor-pointer"
+                                className="bg-white dark:bg-gray-800/50 p-3 rounded-xl flex items-center justify-between border border-white/5 hover:border-white/10 transition cursor-pointer"
                                 onClick={() => {
                                     if (!match.opponent_id || match.opponent_id.startsWith('guest_') || match.opponent_id.startsWith('bot_')) return;
                                     setViewProfileId(match.opponent_id);
@@ -242,7 +242,7 @@ const MatchHistoryModal = ({ isOpen, onClose, userId, initialMode = 'all' }: Mat
                                         <span>{match.result}</span>
                                     </div>
                                     <div className="flex flex-col">
-                                        <div className="text-xs text-gray-400 uppercase tracking-wider mb-0.5 flex items-center gap-1">
+                                        <div className="text-xs text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-0.5 flex items-center gap-1">
                                             {match.game_mode === 'rank' && <Trophy size={10} className="text-purple-400" />}
                                             {match.game_mode === 'normal' && <Zap size={10} className="text-blue-400" />}
                                             {match.game_mode}
@@ -259,11 +259,11 @@ const MatchHistoryModal = ({ isOpen, onClose, userId, initialMode = 'all' }: Mat
                                             <Flag code={match.opponent_country} size="xs" />
                                         </div>
                                     </div>
-                                    <div className="w-8 h-8 rounded-full bg-gray-600 overflow-hidden relative border border-gray-500">
+                                    <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-gray-600 overflow-hidden relative border border-gray-500">
                                         {match.opponent_avatar_url ? (
                                             <img src={match.opponent_avatar_url} className="w-full h-full object-cover" />
                                         ) : (
-                                            <UserIcon className="w-full h-full p-1.5 text-gray-400" />
+                                            <UserIcon className="w-full h-full p-1.5 text-slate-500 dark:text-gray-400" />
                                         )}
                                     </div>
                                     <button
@@ -282,7 +282,7 @@ const MatchHistoryModal = ({ isOpen, onClose, userId, initialMode = 'all' }: Mat
                                                 canReport: Boolean(canAct)
                                             });
                                         }}
-                                        className="p-1.5 bg-white/5 text-gray-300 rounded-lg hover:bg-white/10 transition ml-1"
+                                        className="p-1.5 bg-white/5 text-slate-600 dark:text-gray-300 rounded-lg hover:bg-white/10 transition ml-1"
                                         title={t('common.more', '더보기')}
                                     >
                                         <MoreHorizontal className="w-4 h-4" />
@@ -317,7 +317,7 @@ const MatchHistoryModal = ({ isOpen, onClose, userId, initialMode = 'all' }: Mat
                     onClick={() => setActionTarget(null)}
                 >
                     <div
-                        className="w-full sm:w-[320px] bg-gray-900 border border-white/10 rounded-t-2xl sm:rounded-2xl p-4 space-y-2"
+                        className="w-full sm:w-[320px] bg-slate-50 dark:bg-gray-900 border border-white/10 rounded-t-2xl sm:rounded-2xl p-4 space-y-2"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <button
@@ -325,7 +325,7 @@ const MatchHistoryModal = ({ isOpen, onClose, userId, initialMode = 'all' }: Mat
                                 setViewProfileId(actionTarget.opponentId);
                                 setActionTarget(null);
                             }}
-                            className="w-full px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-left font-semibold text-white transition-colors"
+                            className="w-full px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-left font-semibold text-slate-900 dark:text-white transition-colors"
                         >
                             {t('profile.title', '프로필 보기')}
                         </button>
@@ -335,7 +335,7 @@ const MatchHistoryModal = ({ isOpen, onClose, userId, initialMode = 'all' }: Mat
                                     handleAddFriend(actionTarget.opponentId);
                                     setActionTarget(null);
                                 }}
-                                className="w-full px-4 py-3 rounded-xl bg-green-600/20 hover:bg-green-600 text-left font-semibold text-green-300 hover:text-white transition-colors"
+                                className="w-full px-4 py-3 rounded-xl bg-green-600/20 hover:bg-green-600 text-left font-semibold text-green-300 hover:text-slate-900 dark:text-white transition-colors"
                             >
                                 {t('social.addFriend')}
                             </button>
@@ -350,14 +350,14 @@ const MatchHistoryModal = ({ isOpen, onClose, userId, initialMode = 'all' }: Mat
                                     });
                                     setActionTarget(null);
                                 }}
-                                className="w-full px-4 py-3 rounded-xl bg-red-600/20 hover:bg-red-600 text-left font-semibold text-red-300 hover:text-white transition-colors"
+                                className="w-full px-4 py-3 rounded-xl bg-red-600/20 hover:bg-red-600 text-left font-semibold text-red-300 hover:text-slate-900 dark:text-white transition-colors"
                             >
                                 {t('report.button', '신고')}
                             </button>
                         )}
                         <button
                             onClick={() => setActionTarget(null)}
-                            className="w-full px-4 py-3 rounded-xl bg-gray-800 hover:bg-gray-700 text-center font-semibold text-gray-200 transition-colors"
+                            className="w-full px-4 py-3 rounded-xl bg-white dark:bg-gray-800 hover:bg-slate-100 dark:bg-gray-700 text-center font-semibold text-slate-700 dark:text-gray-200 transition-colors"
                         >
                             {t('common.close')}
                         </button>

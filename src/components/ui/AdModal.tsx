@@ -208,11 +208,11 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
                         initial={{ scale: 0.9, y: 20 }}
                         animate={{ scale: 1, y: 0 }}
                         exit={{ scale: 0.9, y: 20 }}
-                        className="bg-gray-800 w-full max-w-sm rounded-3xl border border-gray-700 shadow-2xl overflow-hidden"
+                        className="bg-white dark:bg-gray-800 w-full max-w-sm rounded-3xl border border-gray-700 shadow-2xl overflow-hidden"
                     >
                         {/* Header */}
                         <div className="flex justify-between items-center p-4 border-b border-gray-700">
-                            <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                            <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                                 <Gift className="text-yellow-400" />
                                 {t(copy.titleKey, copy.titleFallback)}
                             </h3>
@@ -224,7 +224,7 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
                                     : 'hover:bg-gray-700'
                                     }`}
                             >
-                                <X className="w-5 h-5 text-gray-400" />
+                                <X className="w-5 h-5 text-slate-500 dark:text-gray-400" />
                             </button>
                         </div>
 
@@ -243,7 +243,7 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
                                             />
                                         )}
                                     </div>
-                                    <p className="text-gray-300 mb-6">
+                                    <p className="text-slate-600 dark:text-gray-300 mb-6">
                                         {adState === 'loading'
                                             ? adsRemoved
                                                 ? t('ad.granting', 'Granting reward...')
@@ -283,15 +283,15 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
                                     <div className="w-full h-40 bg-black rounded-xl mb-4 flex flex-col items-center justify-center border border-gray-700 relative overflow-hidden">
                                         {/* Fake Ad Content (Web Only) */}
                                         <div className="absolute inset-0 bg-gradient-to-br from-purple-900 to-blue-900 opacity-50" />
-                                        <Loader2 className="w-12 h-12 text-white animate-spin relative z-10" />
-                                        <p className="text-white font-bold mt-4 relative z-10">
+                                        <Loader2 className="w-12 h-12 text-slate-900 dark:text-white animate-spin relative z-10" />
+                                        <p className="text-slate-900 dark:text-white font-bold mt-4 relative z-10">
                                             DEMO ADVERTISEMENT
                                         </p>
-                                        <div className="absolute top-2 right-3 text-xs bg-black/50 px-2 py-1 rounded text-white font-mono">
+                                        <div className="absolute top-2 right-3 text-xs bg-black/50 px-2 py-1 rounded text-slate-900 dark:text-white font-mono">
                                             {timeLeft}s
                                         </div>
                                     </div>
-                                    <p className="text-gray-400 text-sm animate-pulse">
+                                    <p className="text-slate-500 dark:text-gray-400 text-sm animate-pulse">
                                         {t('ad.watching', 'Watching ad...')}
                                     </p>
                                 </>
@@ -303,7 +303,7 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
                                     <div className="w-20 h-20 bg-blue-500/20 rounded-full flex items-center justify-center mb-4">
                                         <Loader2 className="w-10 h-10 text-blue-400 animate-spin" />
                                     </div>
-                                    <p className="text-gray-300 mb-6">
+                                    <p className="text-slate-600 dark:text-gray-300 mb-6">
                                         {t('ad.playing', 'Ad is playing...')}
                                     </p>
                                 </>
@@ -314,15 +314,15 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
                                     <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mb-4 animate-bounce">
                                         {copy.rewardIcon}
                                     </div>
-                                    <h4 className="text-2xl font-bold text-white mb-2">
+                                    <h4 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
                                         +{rewardAmount} {t(copy.rewardLabelKey, copy.rewardLabelFallback)}!
                                     </h4>
-                                    <p className="text-gray-400 mb-6">
+                                    <p className="text-slate-500 dark:text-gray-400 mb-6">
                                         {t('ad.success', 'Reward earned successfully.')}
                                     </p>
                                     <button
                                         onClick={() => { playSound('click'); onClose(); }}
-                                        className="w-full py-3 bg-gray-700 hover:bg-gray-600 text-white font-bold rounded-xl transition-all active:scale-95"
+                                        className="w-full py-3 bg-slate-100 dark:bg-gray-700 hover:bg-slate-200 dark:bg-gray-600 text-slate-900 dark:text-white font-bold rounded-xl transition-all active:scale-95"
                                     >
                                         {t('common.close', 'Close')}
                                     </button>
@@ -334,15 +334,15 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
                                     <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mb-4">
                                         <div className="text-3xl">⛔</div>
                                     </div>
-                                    <h4 className="text-2xl font-bold text-white mb-2">
+                                    <h4 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
                                         {t('ad.limitReached', 'Daily ad limit reached.')}
                                     </h4>
-                                    <p className="text-gray-400 mb-6">
+                                    <p className="text-slate-500 dark:text-gray-400 mb-6">
                                         {t('ad.limitReachedDesc', 'Come back tomorrow to watch more ads.')}
                                     </p>
                                     <button
                                         onClick={() => { playSound('click'); onClose(); }}
-                                        className="w-full py-3 bg-gray-700 hover:bg-gray-600 text-white font-bold rounded-xl transition-all active:scale-95"
+                                        className="w-full py-3 bg-slate-100 dark:bg-gray-700 hover:bg-slate-200 dark:bg-gray-600 text-slate-900 dark:text-white font-bold rounded-xl transition-all active:scale-95"
                                     >
                                         {t('common.close', 'Close')}
                                     </button>
@@ -354,15 +354,15 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
                                     <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mb-4">
                                         <div className="text-3xl">⚠️</div>
                                     </div>
-                                    <h4 className="text-2xl font-bold text-white mb-2">
+                                    <h4 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
                                         {t('ad.rewardFailed', 'Reward failed.')}
                                     </h4>
-                                    <p className="text-gray-400 mb-6">
+                                    <p className="text-slate-500 dark:text-gray-400 mb-6">
                                         {t('ad.rewardFailedDesc', 'Please try again later.')}
                                     </p>
                                     <button
                                         onClick={() => { playSound('click'); onClose(); }}
-                                        className="w-full py-3 bg-gray-700 hover:bg-gray-600 text-white font-bold rounded-xl transition-all active:scale-95"
+                                        className="w-full py-3 bg-slate-100 dark:bg-gray-700 hover:bg-slate-200 dark:bg-gray-600 text-slate-900 dark:text-white font-bold rounded-xl transition-all active:scale-95"
                                     >
                                         {t('common.close', 'Close')}
                                     </button>

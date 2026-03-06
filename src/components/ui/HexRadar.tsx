@@ -85,7 +85,7 @@ const HexRadar: React.FC<HexRadarProps> = ({
                         key={`grid-${idx}`}
                         points={makePolygon(level)}
                         fill="none"
-                        stroke="rgba(255,255,255,0.08)"
+                        className="stroke-slate-300 dark:stroke-white/10"
                         strokeWidth="1"
                     />
                 ))}
@@ -100,7 +100,7 @@ const HexRadar: React.FC<HexRadarProps> = ({
                             y1={center}
                             x2={pt.x}
                             y2={pt.y}
-                            stroke="rgba(255,255,255,0.12)"
+                            className="stroke-slate-300 dark:stroke-white/10"
                             strokeWidth="1"
                         />
                     );
@@ -134,7 +134,7 @@ const HexRadar: React.FC<HexRadarProps> = ({
                             y={labelPt.y}
                             textAnchor={anchor}
                             alignmentBaseline="middle"
-                            className="fill-slate-200 text-[11px] font-medium tracking-[0.02em]"
+                            className="fill-slate-600 dark:fill-slate-200 text-[11px] font-medium tracking-[0.02em]"
                         >
                             {labels[key]}
                         </text>

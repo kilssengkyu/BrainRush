@@ -76,7 +76,7 @@ export const UIProvider = ({ children }: { children: ReactNode }) => {
 
             {/* Toast Container */}
             <div
-                className="fixed z-[200] flex flex-col gap-2 pointer-events-none px-3 w-full max-w-xl left-1/2 -translate-x-1/2 top-[max(12px,env(safe-area-inset-top))] md:top-auto md:bottom-4"
+                className="fixed z-[200] flex flex-col gap-2 pointer-events-none px-3 w-full max-w-xl left-1/2 -translate-x-1/2 top-[max(12px,env(safe-area-inset-top))]"
                 aria-live="polite"
                 aria-atomic="true"
             >

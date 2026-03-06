@@ -125,22 +125,27 @@ const StairwayGame: React.FC<StairwayGameProps> = ({ seed, onScore, isPlaying })
         }
     }, [isPlaying, falling, playerStepIndex, steps, playSound, onScore]);
 
-    const lastTouchRef = useRef(0);
+    const lastPointerRef = useRef<{ time: number; x: number; type: string | null }>({
+        time: 0,
+        x: 0,
+        type: null
+    });
 
-    // Touch handler (mobile)
-    const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    const handlePointerDown = useCallback((e: React.PointerEvent) => {
         if (!containerRef.current) return;
-        lastTouchRef.current = Date.now();
-        const rect = containerRef.current.getBoundingClientRect();
-        const clientX = e.touches[0].clientX;
-        const midX = rect.left + rect.width / 2;
-        handleInput(clientX < midX ? 'left' : 'right');
-    }, [handleInput]);
+        const now = Date.now();
+        const lastPointer = lastPointerRef.current;
+        const isDuplicatePointer = now - lastPointer.time < 350
+            && Math.abs(lastPointer.x - e.clientX) < 8
+            && lastPointer.type !== null
+            && lastPointer.type !== e.pointerType;
+        if (isDuplicatePointer) return;
 
-    // Mouse handler (desktop only - skip if recent touch)
-    const handleMouseDown = useCallback((e: React.MouseEvent) => {
-        if (Date.now() - lastTouchRef.current < 300) return; // ignore mouse after touch
-        if (!containerRef.current) return;
+        lastPointerRef.current = {
+            time: now,
+            x: e.clientX,
+            type: e.pointerType
+        };
         const rect = containerRef.current.getBoundingClientRect();
         const midX = rect.left + rect.width / 2;
         handleInput(e.clientX < midX ? 'left' : 'right');
@@ -194,16 +199,15 @@ const StairwayGame: React.FC<StairwayGameProps> = ({ seed, onScore, isPlaying })
         <div
             ref={containerRef}
             className="w-full h-full flex flex-col items-center justify-center relative touch-none select-none overflow-hidden"
-            onMouseDown={handleMouseDown}
-            onTouchStart={handleTouchStart}
+            onPointerDown={handlePointerDown}
         >
             {/* Left/Right touch indicators - large and semi-transparent */}
             <div className="absolute inset-0 flex pointer-events-none z-10">
                 <div className="flex-1 flex items-center justify-center">
-                    <span className="text-[120px] font-black text-white/[0.06] select-none leading-none">&lt;</span>
+                    <span className="text-[120px] font-black text-slate-900 dark:text-white/[0.06] select-none leading-none">&lt;</span>
                 </div>
                 <div className="flex-1 flex items-center justify-center">
-                    <span className="text-[120px] font-black text-white/[0.06] select-none leading-none">&gt;</span>
+                    <span className="text-[120px] font-black text-slate-900 dark:text-white/[0.06] select-none leading-none">&gt;</span>
                 </div>
             </div>
 
@@ -291,7 +295,7 @@ const StairwayGame: React.FC<StairwayGameProps> = ({ seed, onScore, isPlaying })
                             >
                                 {/* Direction hint - Phase 1 only */}
                                 {isNextStep && showHint && (
-                                    <div className="absolute inset-0 flex items-center justify-center text-white/60 text-xs font-black">
+                                    <div className="absolute inset-0 flex items-center justify-center text-slate-900 dark:text-white/60 text-xs font-black">
                                         {step.direction === 'left' ? '←' : '→'}
                                     </div>
                                 )}

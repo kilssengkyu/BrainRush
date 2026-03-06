@@ -59,7 +59,7 @@ const Profile = () => {
     const { playSound } = useSound();
     const { showToast, confirm } = useUI();
     const navigate = useNavigate();
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const isIOS = Capacitor.getPlatform() === 'ios';
 
     const [activeTab, setActiveTab] = useState<'profile' | 'friends'>('profile');
@@ -90,7 +90,9 @@ const Profile = () => {
     const [pendingInvite, setPendingInvite] = useState<{ inviteId: string; friendId: string; expiresAt: number } | null>(null);
     const [inviteTimeLeft, setInviteTimeLeft] = useState(0);
     const [selectedHighscoreType, setSelectedHighscoreType] = useState<{ type: string; labelKey: string } | null>(null);
+    const [nowMs, setNowMs] = useState(() => Date.now());
     const INVITE_TIMEOUT_MS = 60000;
+    const NICKNAME_COOLDOWN_MS = 30 * 24 * 60 * 60 * 1000;
     const edgeSwipeStartRef = useRef<{ x: number; y: number } | null>(null);
     const edgeSwipeTriggeredRef = useRef(false);
 
@@ -204,6 +206,11 @@ const Profile = () => {
             supabase.removeChannel(unreadChatChannel);
         };
     }, [user]);
+
+    useEffect(() => {
+        const timer = window.setInterval(() => setNowMs(Date.now()), 1000);
+        return () => window.clearInterval(timer);
+    }, []);
 
     useEffect(() => {
         if (activeTab !== 'profile') return;
@@ -480,6 +487,8 @@ const Profile = () => {
                 showToast(t('profile.nicknameTaken', '이미 사용 중인 닉네임입니다.'), 'error');
             } else if (message.includes('between 2 and 20')) {
                 showToast(t('profile.nicknameInvalid', '닉네임은 2~20자로 입력해 주세요.'), 'error');
+            } else if (message.includes('once every 30 days') || message.includes('with a ticket')) {
+                showToast(t('profile.nicknameCooldownOrTicket', '닉네임은 30일마다 무료 변경 가능하며, 즉시 변경하려면 변경권이 필요합니다.'), 'error');
             } else {
                 showToast(`${t('profile.updateFail')}: ${error.message || error}`, 'error');
             }
@@ -547,6 +556,33 @@ const Profile = () => {
             if (avatarInputRef.current) {
                 avatarInputRef.current.value = '';
             }
+        }
+    };
+
+    const handleAvatarRemove = async () => {
+        if (!user || !profile?.avatar_url) return;
+
+        const confirmed = await confirm(
+            t('profile.removeAvatar', '사진 삭제'),
+            t('profile.removeAvatarConfirm', '현재 프로필 사진을 삭제하시겠습니까?')
+        );
+        if (!confirmed) return;
+
+        setIsUploadingAvatar(true);
+        try {
+            const { error } = await supabase
+                .from('profiles')
+                .update({ avatar_url: null })
+                .eq('id', user.id);
+
+            if (error) throw error;
+            await refreshProfile();
+            showToast(t('profile.avatarRemoveSuccess', '프로필 사진이 삭제되었습니다.'), 'success');
+        } catch (error: any) {
+            console.error('Avatar remove error:', error);
+            showToast(`${t('profile.avatarRemoveFail', '프로필 사진 삭제 실패')}: ${error.message || error}`, 'error');
+        } finally {
+            setIsUploadingAvatar(false);
         }
     };
 
@@ -649,42 +685,56 @@ const Profile = () => {
     const hasSocialNotifications = pendingRequestsCount > 0 || unreadChatCount > 0;
     const needsNicknameSetup = Boolean(profile?.needs_nickname_setup);
     const isGuest = Boolean(user?.is_anonymous || user?.app_metadata?.provider === 'anonymous');
+    const nicknameChangeTickets = Math.max(0, Number(profile?.nickname_change_tickets ?? 0));
+    const nicknameSetAtMs = profile?.nickname_set_at ? Date.parse(profile.nickname_set_at) : NaN;
+    const nextFreeNicknameChangeMs = Number.isFinite(nicknameSetAtMs) ? nicknameSetAtMs + NICKNAME_COOLDOWN_MS : null;
+    const isNicknameFreeChangeAvailable = needsNicknameSetup || !nextFreeNicknameChangeMs || nowMs >= nextFreeNicknameChangeMs;
+    const canChangeNicknameNow = isNicknameFreeChangeAvailable || nicknameChangeTickets > 0;
+    const nextFreeNicknameChangeText = nextFreeNicknameChangeMs
+        ? new Date(nextFreeNicknameChangeMs).toLocaleString(i18n.language || undefined, {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        })
+        : null;
 
     return (
         <div
-            className="h-[100dvh] bg-gray-900 text-white flex flex-col items-center p-4 pt-[calc(env(safe-area-inset-top)+1rem)] relative overflow-hidden"
+            className={`h-[100dvh] flex flex-col items-center p-4 pt-[calc(env(safe-area-inset-top)+1rem)] relative overflow-hidden bg-slate-50 dark:bg-gray-900 text-slate-900 dark:text-white`}
             onTouchStart={handleEdgeSwipeStart}
             onTouchMove={handleEdgeSwipeMove}
             onTouchEnd={handleEdgeSwipeEnd}
             onTouchCancel={handleEdgeSwipeEnd}
         >
             {/* Background Effects */}
-            <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-800 via-gray-900 to-black pointer-events-none" />
+            <div className={`absolute top-0 left-0 w-full h-full pointer-events-none bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white via-slate-100 to-slate-200 dark:from-gray-800 dark:via-gray-900 dark:to-black`} />
 
             {/* Header */}
             <div className="w-full max-w-md flex justify-between items-center z-10 mb-8 pt-4">
-                <button onClick={handleBack} className="p-2 rounded-full hover:bg-white/10 transition-colors">
-                    <ArrowLeft className="w-6 h-6" />
+                <button onClick={handleBack} className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-white/10 transition-colors">
+                    <ArrowLeft className="w-6 h-6 text-slate-800 dark:text-gray-200" />
                 </button>
-                <div className="flex bg-slate-800 rounded-full p-1 border border-slate-700">
+                <div className="flex bg-white dark:bg-slate-800 rounded-full p-1 border border-slate-200 dark:border-slate-700 shadow-sm dark:shadow-none">
                     <button
                         onClick={() => setActiveTab('profile')}
-                        className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all ${activeTab === 'profile' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+                        className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all ${activeTab === 'profile' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-800 dark:text-gray-400 dark:hover:text-white'}`}
                     >
                         {t('menu.profile')}
                     </button>
                     <button
                         onClick={() => setActiveTab('friends')}
-                        className={`relative px-4 py-1.5 rounded-full text-sm font-bold transition-all flex items-center gap-1 ${activeTab === 'friends' ? 'bg-green-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+                        className={`relative px-4 py-1.5 rounded-full text-sm font-bold transition-all flex items-center gap-1 ${activeTab === 'friends' ? 'bg-green-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-800 dark:text-gray-400 dark:hover:text-white'}`}
                     >
                         {t('social.friends')}
                         {hasSocialNotifications && (
-                            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-slate-800" aria-hidden="true"></span>
+                            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-white dark:ring-slate-800" aria-hidden="true"></span>
                         )}
                     </button>
                 </div>
                 <div className="flex gap-2">
-                    <button onClick={handleLogout} className="p-2 rounded-full hover:bg-red-500/20 text-red-400 transition-colors">
+                    <button onClick={handleLogout} className="p-2 rounded-full hover:bg-red-50 dark:hover:bg-red-500/20 text-red-500 dark:text-red-400 transition-colors">
                         <LogOut className="w-6 h-6" />
                     </button>
                 </div>
@@ -699,7 +749,7 @@ const Profile = () => {
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: 20 }}
-                            className="w-full max-w-md bg-gray-800/50 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl relative z-10"
+                            className="w-full max-w-md bg-white dark:bg-gray-800/50 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl relative z-10"
                         >
                             {isGuest && (
                                 <div className="mb-6 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-center">
@@ -747,7 +797,7 @@ const Profile = () => {
                                 <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 p-[3px] mb-4">
                                     <button
                                         type="button"
-                                        className="w-full h-full rounded-full bg-gray-900 flex items-center justify-center overflow-hidden cursor-zoom-in"
+                                        className="w-full h-full rounded-full bg-slate-50 dark:bg-gray-900 flex items-center justify-center overflow-hidden cursor-zoom-in"
                                         onClick={() => {
                                             if (profile?.avatar_url) {
                                                 setAvatarPreview({
@@ -761,9 +811,20 @@ const Profile = () => {
                                         {profile?.avatar_url ? (
                                             <img src={profile.avatar_url} alt={t('profile.avatarAlt')} className="w-full h-full object-cover" />
                                         ) : (
-                                            <UserIcon className="w-12 h-12 text-gray-400" />
+                                            <UserIcon className="w-12 h-12 text-slate-500 dark:text-gray-400" />
                                         )}
                                     </button>
+                                    {isEditing && profile?.avatar_url && (
+                                        <button
+                                            type="button"
+                                            onClick={handleAvatarRemove}
+                                            disabled={isUploadingAvatar || isLoading}
+                                            aria-label={t('profile.removeAvatar', '사진 삭제')}
+                                            className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-red-600/90 hover:bg-red-500 text-slate-900 dark:text-white border border-white/20 flex items-center justify-center transition-colors disabled:opacity-50"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    )}
                                     <LevelBadge level={level} size="md" className="absolute -bottom-1 -right-1 ring-2 ring-gray-900" />
                                 </div>
                                 <input
@@ -792,7 +853,7 @@ const Profile = () => {
                                                 type="text"
                                                 value={nickname}
                                                 onChange={(e) => setNickname(e.target.value)}
-                                                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-center text-white focus:outline-none focus:border-blue-500"
+                                                className="w-full bg-white dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-lg px-3 py-2 text-center text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 shadow-sm"
                                                 placeholder={t('profile.nicknamePlaceholder')}
                                                 maxLength={12}
                                             />
@@ -804,7 +865,7 @@ const Profile = () => {
                                                     setCountrySearch('');
                                                     setIsCountryModalOpen(true);
                                                 }}
-                                                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500 flex items-center justify-between"
+                                                className="w-full bg-white dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-lg px-3 py-2 text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 flex items-center justify-between shadow-sm"
                                             >
                                                 <div className="flex items-center gap-2 min-w-0">
                                                     <Flag code={country} size="sm" />
@@ -812,16 +873,50 @@ const Profile = () => {
                                                         {country ? COUNTRIES.find((c) => c.code === country)?.name : t('profile.selectCountry')}
                                                     </span>
                                                 </div>
-                                                <ChevronRight className="w-4 h-4 text-gray-300" />
+                                                <ChevronRight className="w-4 h-4 text-slate-400 dark:text-gray-300" />
                                             </button>
 
-                                            <button
-                                                onClick={handleSave}
-                                                disabled={isLoading}
-                                                className="p-2 bg-blue-600 rounded-lg hover:bg-blue-500 disabled:opacity-50 w-full flex justify-center mt-2"
-                                            >
-                                                <Save className="w-5 h-5" />
-                                            </button>
+                                            <div className="mt-2 grid grid-cols-2 gap-2">
+                                                <button
+                                                    onClick={() => {
+                                                        playSound('click');
+                                                        setNickname(profile?.nickname || '');
+                                                        setCountry(profile?.country || null);
+                                                        setIsEditing(false);
+                                                    }}
+                                                    disabled={isLoading}
+                                                    className="p-2 bg-slate-200 dark:bg-gray-600 text-slate-700 dark:text-white rounded-lg hover:bg-slate-300 dark:hover:bg-gray-500 disabled:opacity-50 w-full flex justify-center items-center text-sm font-bold shadow-sm"
+                                                >
+                                                    {t('common.cancel', '취소')}
+                                                </button>
+                                                <button
+                                                    onClick={handleSave}
+                                                    disabled={isLoading}
+                                                    className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 disabled:opacity-50 w-full flex justify-center shadow-sm"
+                                                >
+                                                    <Save className="w-5 h-5" />
+                                                </button>
+                                            </div>
+
+                                            <div className={`mt-2 rounded-lg border px-3 py-2 text-left ${canChangeNicknameNow ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-red-500/10 border-red-500/30'}`}>
+                                                <div className="flex items-center justify-between gap-2 text-xs">
+                                                    <span className="text-slate-600 dark:text-gray-300">{t('profile.nicknameTicketsLabel', '닉네임 변경권')}</span>
+                                                    <span className="font-bold text-slate-900 dark:text-white">{nicknameChangeTickets}</span>
+                                                </div>
+                                                <div className={`mt-1 text-xs font-semibold ${canChangeNicknameNow ? 'text-emerald-300' : 'text-red-300'}`}>
+                                                    {canChangeNicknameNow
+                                                        ? t('profile.nicknameChangeAvailableNow', '지금 닉네임 변경 가능')
+                                                        : t('profile.nicknameChangeUnavailableNow', '지금 닉네임 변경 불가')}
+                                                </div>
+                                                <div className="mt-1 text-[11px] text-slate-500 dark:text-gray-400 leading-tight">
+                                                    {isNicknameFreeChangeAvailable
+                                                        ? t('profile.nicknameFreeChangeNow', '무료 변경 가능: 지금')
+                                                        : t('profile.nicknameFreeChangeAt', {
+                                                            date: nextFreeNicknameChangeText || '-',
+                                                            defaultValue: '무료 변경 가능: {{date}}'
+                                                        })}
+                                                </div>
+                                            </div>
                                         </div>
                                     ) : (
                                         <div className="flex flex-col items-center gap-1">
@@ -830,11 +925,11 @@ const Profile = () => {
                                                 <h2 className="text-2xl font-bold">{nickname}</h2>
                                                 <button
                                                     onClick={() => { playSound('click'); setIsEditing(true); }}
-                                                    className="relative text-gray-500 hover:text-white text-xs bg-gray-800 px-2 py-1 rounded border border-gray-700 ml-2"
+                                                    className="relative text-slate-500 hover:text-slate-800 dark:text-gray-400 dark:hover:text-white text-xs bg-white dark:bg-gray-800 px-2 py-1 rounded border border-slate-300 dark:border-gray-700 ml-2 shadow-sm"
                                                 >
                                                     {t('profile.edit')}
                                                     {needsNicknameSetup && (
-                                                        <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-slate-800" aria-hidden="true"></span>
+                                                        <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-white dark:ring-slate-800" aria-hidden="true"></span>
                                                     )}
                                                 </button>
                                             </div>
@@ -856,13 +951,13 @@ const Profile = () => {
                             {/* Stats Grid */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div className={`col-span-2 bg-gradient-to-br ${tierColor} p-[2px] rounded-2xl shadow-lg transform hover:scale-[1.01] transition-transform`}>
-                                    <div className="bg-gray-800 w-full h-full rounded-2xl p-4 flex flex-col items-center justify-center gap-3">
-                                        <div className="w-16 h-16 rounded-xl bg-black/20 border border-white/10 flex items-center justify-center">
-                                            <TierIcon className="w-12 h-12 object-contain drop-shadow-md" />
+                                    <div className="bg-white dark:bg-gray-800 w-full h-full rounded-2xl p-4 flex flex-col items-center justify-center gap-3">
+                                        <div className="w-16 h-16 rounded-xl bg-black/5 dark:bg-black/20 border border-black/5 dark:border-white/10 flex items-center justify-center">
+                                            <TierIcon className="w-12 h-12 object-contain drop-shadow-sm dark:drop-shadow-md" />
                                         </div>
                                         <div className="min-w-0 flex flex-col justify-center items-center text-center leading-tight">
-                                            <div className="text-2xl font-black text-white truncate">{tier}</div>
-                                            <div className="text-xl font-black text-white/90 font-mono mt-1">{rank}</div>
+                                            <div className="text-2xl font-black text-slate-900 dark:text-white truncate">{tier}</div>
+                                            <div className="text-xl font-black text-slate-800 dark:text-white/90 font-mono mt-1">{rank}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -870,31 +965,31 @@ const Profile = () => {
                                 {/* Rank Record */}
                                 <button
                                     onClick={() => handleOpenHistory('rank')}
-                                    className="bg-gray-700/30 p-4 rounded-2xl flex flex-col items-center col-span-2 hover:bg-gray-700/50 transition-colors cursor-pointer"
+                                    className="bg-white dark:bg-gray-700/30 p-4 rounded-2xl flex flex-col items-center col-span-2 shadow-sm border border-slate-200 dark:border-transparent hover:bg-slate-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer"
                                 >
-                                    <span className="text-xs text-blue-300 mb-1 font-bold uppercase tracking-wider">{t('game.rank')} {t('profile.record')}</span>
+                                    <span className="text-xs text-blue-600 dark:text-blue-300 mb-1 font-bold uppercase tracking-wider">{t('game.rank')} {t('profile.record')}</span>
                                     <div className="flex gap-4 items-end">
-                                        <span className="text-lg font-bold text-blue-400">{wins}W</span>
-                                        <span className="text-lg font-bold text-red-400">{losses}L</span>
+                                        <span className="text-lg font-bold text-blue-500 dark:text-blue-400">{wins}W</span>
+                                        <span className="text-lg font-bold text-red-500 dark:text-red-400">{losses}L</span>
                                     </div>
                                 </button>
 
                                 {/* Casual Record */}
                                 <button
                                     onClick={() => handleOpenHistory('normal')}
-                                    className="bg-gray-700/30 p-4 rounded-2xl flex flex-col items-center col-span-2 border border-white/5 hover:bg-gray-700/50 transition-colors cursor-pointer"
+                                    className="bg-white dark:bg-gray-700/30 p-4 rounded-2xl flex flex-col items-center col-span-2 shadow-sm border border-slate-200 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer"
                                 >
-                                    <span className="text-xs text-green-300 mb-1 font-bold uppercase tracking-wider">{t('game.normal')} {t('profile.record')}</span>
+                                    <span className="text-xs text-emerald-600 dark:text-green-300 mb-1 font-bold uppercase tracking-wider">{t('game.normal')} {t('profile.record')}</span>
                                     <div className="flex gap-4 items-end">
-                                        <span className="text-lg font-bold text-blue-300">{casualWins}W</span>
-                                        <span className="text-lg font-bold text-red-300">{casualLosses}L</span>
+                                        <span className="text-lg font-bold text-emerald-500 dark:text-blue-300">{casualWins}W</span>
+                                        <span className="text-lg font-bold text-red-500 dark:text-red-300">{casualLosses}L</span>
                                     </div>
                                 </button>
                             </div>
 
                             {/* Skill Radar */}
-                            <div className="mt-8 pt-6 border-t border-white/10">
-                                <h3 className="text-sm font-bold uppercase tracking-widest text-gray-400 mb-4 text-center">
+                            <div className="mt-8 pt-6 border-t border-slate-200 dark:border-white/10">
+                                <h3 className="text-sm font-bold uppercase tracking-widest text-slate-500 dark:text-gray-400 mb-4 text-center">
                                     {t('profile.statsTitle')}
                                 </h3>
                                 <HexRadar
@@ -908,37 +1003,37 @@ const Profile = () => {
                                         observation: t('profile.stats.observation')
                                     }}
                                 />
-                                <div className="grid grid-cols-3 gap-2 mt-4 text-xs text-gray-400">
-                                    <div className="flex items-center justify-between bg-gray-800/50 rounded-lg px-2 py-1">
+                                <div className="grid grid-cols-3 gap-2 mt-4 text-xs text-slate-600 dark:text-gray-400">
+                                    <div className="flex items-center justify-between bg-slate-50 dark:bg-gray-800/50 rounded-lg px-2 py-1 shadow-sm dark:shadow-none border border-slate-200 dark:border-transparent">
                                         <span>{t('profile.stats.speed')}</span>
-                                        <span className="text-blue-300 font-bold">{statValues.speed}</span>
+                                        <span className="text-blue-600 dark:text-blue-300 font-bold">{statValues.speed}</span>
                                     </div>
-                                    <div className="flex items-center justify-between bg-gray-800/50 rounded-lg px-2 py-1">
+                                    <div className="flex items-center justify-between bg-slate-50 dark:bg-gray-800/50 rounded-lg px-2 py-1 shadow-sm dark:shadow-none border border-slate-200 dark:border-transparent">
                                         <span>{t('profile.stats.memory')}</span>
-                                        <span className="text-blue-300 font-bold">{statValues.memory}</span>
+                                        <span className="text-blue-600 dark:text-blue-300 font-bold">{statValues.memory}</span>
                                     </div>
-                                    <div className="flex items-center justify-between bg-gray-800/50 rounded-lg px-2 py-1">
+                                    <div className="flex items-center justify-between bg-slate-50 dark:bg-gray-800/50 rounded-lg px-2 py-1 shadow-sm dark:shadow-none border border-slate-200 dark:border-transparent">
                                         <span>{t('profile.stats.judgment')}</span>
-                                        <span className="text-blue-300 font-bold">{statValues.judgment}</span>
+                                        <span className="text-blue-600 dark:text-blue-300 font-bold">{statValues.judgment}</span>
                                     </div>
-                                    <div className="flex items-center justify-between bg-gray-800/50 rounded-lg px-2 py-1">
+                                    <div className="flex items-center justify-between bg-slate-50 dark:bg-gray-800/50 rounded-lg px-2 py-1 shadow-sm dark:shadow-none border border-slate-200 dark:border-transparent">
                                         <span>{t('profile.stats.calculation')}</span>
-                                        <span className="text-blue-300 font-bold">{statValues.calculation}</span>
+                                        <span className="text-blue-600 dark:text-blue-300 font-bold">{statValues.calculation}</span>
                                     </div>
-                                    <div className="flex items-center justify-between bg-gray-800/50 rounded-lg px-2 py-1">
+                                    <div className="flex items-center justify-between bg-slate-50 dark:bg-gray-800/50 rounded-lg px-2 py-1 shadow-sm dark:shadow-none border border-slate-200 dark:border-transparent">
                                         <span>{t('profile.stats.accuracy')}</span>
-                                        <span className="text-blue-300 font-bold">{statValues.accuracy}</span>
+                                        <span className="text-blue-600 dark:text-blue-300 font-bold">{statValues.accuracy}</span>
                                     </div>
-                                    <div className="flex items-center justify-between bg-gray-800/50 rounded-lg px-2 py-1">
+                                    <div className="flex items-center justify-between bg-slate-50 dark:bg-gray-800/50 rounded-lg px-2 py-1 shadow-sm dark:shadow-none border border-slate-200 dark:border-transparent">
                                         <span>{t('profile.stats.observation')}</span>
-                                        <span className="text-blue-300 font-bold">{statValues.observation}</span>
+                                        <span className="text-blue-600 dark:text-blue-300 font-bold">{statValues.observation}</span>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Highscores */}
                             <div className="mt-8 pt-6 border-t border-white/10">
-                                <h3 className="text-sm font-bold uppercase tracking-widest text-gray-400 mb-4 text-center">
+                                <h3 className="text-sm font-bold uppercase tracking-widest text-slate-500 dark:text-gray-400 mb-4 text-center">
                                     {t('profile.highscoresTitle')}
                                 </h3>
                                 {isHighscoresLoading ? (
@@ -960,11 +1055,11 @@ const Profile = () => {
                                                 <div
                                                     key={type}
                                                     onClick={() => setSelectedHighscoreType({ type, labelKey })}
-                                                    className="grid grid-cols-[1.4fr_0.8fr_0.6fr] gap-2 bg-gray-800/50 rounded-lg px-2 py-1 hover:bg-gray-700/60 active:scale-[0.99] transition-all cursor-pointer group"
+                                                    className="grid grid-cols-[1.4fr_0.8fr_0.6fr] gap-2 bg-white dark:bg-gray-800/50 rounded-lg px-2 py-1 hover:bg-slate-100 dark:bg-gray-700/60 active:scale-[0.99] transition-all cursor-pointer group"
                                                 >
-                                                    <span className="text-gray-300 flex items-center gap-1">
+                                                    <span className="text-slate-600 dark:text-gray-300 flex items-center gap-1">
                                                         {t(labelKey)}
-                                                        <span className="text-gray-500 group-hover:text-gray-300 transition-colors">›</span>
+                                                        <span className="text-gray-500 group-hover:text-slate-600 dark:text-gray-300 transition-colors">›</span>
                                                     </span>
                                                     <span className="text-right text-yellow-300 font-bold tabular-nums">
                                                         {highscores[type] ?? 0}
@@ -1000,31 +1095,31 @@ const Profile = () => {
             </div>
 
             {isCountryModalOpen && (
-                <div className="fixed inset-0 z-[130] bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
+                <div className="fixed inset-0 z-[130] bg-black/50 dark:bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
                     <motion.div
                         initial={{ opacity: 0, y: 24 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="w-full max-w-md max-h-[75vh] bg-gray-900 border border-white/10 rounded-2xl overflow-hidden shadow-2xl"
+                        className="w-full max-w-md max-h-[75vh] bg-slate-50 dark:bg-gray-900 border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden shadow-2xl"
                     >
-                        <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
-                            <h3 className="text-lg font-bold">{t('profile.selectCountry')}</h3>
+                        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-white/10">
+                            <h3 className="text-lg font-bold text-slate-900 dark:text-white">{t('profile.selectCountry')}</h3>
                             <button
                                 onClick={() => {
                                     playSound('click');
                                     setCountrySearch('');
                                     setIsCountryModalOpen(false);
                                 }}
-                                className="p-2 rounded-full hover:bg-white/10 transition-colors"
+                                className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-white transition-colors"
                             >
                                 <X size={18} />
                             </button>
                         </div>
-                        <div className="p-3 border-b border-white/10">
+                        <div className="p-3 border-b border-slate-200 dark:border-white/10">
                             <input
                                 value={countrySearch}
                                 onChange={(e) => setCountrySearch(e.target.value)}
                                 placeholder={`${t('profile.selectCountry')}...`}
-                                className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm outline-none focus:border-blue-400/70"
+                                className="w-full rounded-lg bg-white dark:bg-white/5 border border-slate-300 dark:border-white/10 px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-blue-400/70 shadow-sm"
                             />
                         </div>
                         <div className="max-h-[52vh] overflow-y-auto p-3 space-y-2">
@@ -1036,12 +1131,12 @@ const Profile = () => {
                                     setIsCountryModalOpen(false);
                                 }}
                                 className={`w-full p-4 rounded-xl flex items-center justify-between border transition-all duration-200 ${!country
-                                    ? 'bg-blue-600/30 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.35)]'
-                                    : 'bg-white/5 border-white/10 hover:bg-white/10'
+                                    ? 'bg-blue-50 dark:bg-blue-600/30 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.35)]'
+                                    : 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10'
                                     }`}
                             >
-                                <span className="text-base font-medium truncate">{t('profile.selectCountry')}</span>
-                                {!country && <div className="w-3 h-3 bg-blue-400 rounded-full shadow-[0_0_8px_#60a5fa]" />}
+                                <span className={`text-base font-medium truncate ${!country ? 'text-blue-600 dark:text-white' : 'text-slate-700 dark:text-white'}`}>{t('profile.selectCountry')}</span>
+                                {!country && <div className="w-3 h-3 bg-blue-500 dark:bg-blue-400 rounded-full shadow-[0_0_8px_#60a5fa]" />}
                             </button>
                             {filteredCountries.map((c) => (
                                 <button
@@ -1053,19 +1148,21 @@ const Profile = () => {
                                         setIsCountryModalOpen(false);
                                     }}
                                     className={`w-full p-4 rounded-xl flex items-center justify-between border transition-all duration-200 ${country === c.code
-                                        ? 'bg-blue-600/30 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.35)]'
-                                        : 'bg-white/5 border-white/10 hover:bg-white/10'
+                                        ? 'bg-blue-50 dark:bg-blue-600/30 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.35)]'
+                                        : 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10'
                                         }`}
                                 >
-                                    <div className="flex items-center gap-3 min-w-0">
-                                        <Flag code={c.code} size="sm" />
-                                        <span className="text-base font-medium truncate">{c.name}</span>
+                                    <div className="flex items-center gap-3 min-w-0 pr-4">
+                                        <Flag code={c.code} size="md" className="flex-shrink-0" />
+                                        <span className={`text-base font-medium truncate ${country === c.code ? 'text-blue-600 dark:text-white' : 'text-slate-700 dark:text-white'}`}>
+                                            {c.name}
+                                        </span>
                                     </div>
-                                    {country === c.code && <div className="w-3 h-3 bg-blue-400 rounded-full shadow-[0_0_8px_#60a5fa]" />}
+                                    {country === c.code && <div className="w-3 h-3 bg-blue-500 dark:bg-blue-400 rounded-full flex-shrink-0 shadow-[0_0_8px_#60a5fa]" />}
                                 </button>
                             ))}
                             {filteredCountries.length === 0 && (
-                                <div className="text-center text-sm text-gray-400 py-6">
+                                <div className="text-center text-sm text-slate-500 dark:text-gray-400 py-6">
                                     {t('common.noResults')}
                                 </div>
                             )}
@@ -1109,14 +1206,14 @@ const Profile = () => {
                             initial={{ scale: 0.95, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.95, opacity: 0 }}
-                            className="bg-gray-800 border border-white/10 rounded-2xl p-6 w-full max-w-sm text-center shadow-2xl"
+                            className="bg-white dark:bg-gray-800 border border-white/10 rounded-2xl p-6 w-full max-w-sm text-center shadow-2xl"
                         >
-                            <h3 className="text-xl font-bold text-white mb-2">{t('social.challengeWaitingTitle')}</h3>
-                            <p className="text-gray-300 mb-4">{t('social.challengeWaitingDesc')}</p>
-                            <p className="text-sm text-gray-400 mb-6">{t('social.challengeWaitingTime', { seconds: inviteTimeLeft })}</p>
+                            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{t('social.challengeWaitingTitle')}</h3>
+                            <p className="text-slate-600 dark:text-gray-300 mb-4">{t('social.challengeWaitingDesc')}</p>
+                            <p className="text-sm text-slate-500 dark:text-gray-400 mb-6">{t('social.challengeWaitingTime', { seconds: inviteTimeLeft })}</p>
                             <button
                                 onClick={() => cancelPendingInvite('cancel')}
-                                className="px-5 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-white font-semibold transition-colors"
+                                className="px-5 py-2 rounded-lg bg-slate-100 dark:bg-gray-700 hover:bg-gray-600 text-slate-900 dark:text-white font-semibold transition-colors"
                             >
                                 {t('common.cancel')}
                             </button>

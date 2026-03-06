@@ -210,7 +210,7 @@ const FindMostColor: React.FC<FindMostColorProps> = ({ seed, onScore, isPlaying 
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                className={`grid gap-2 p-4 bg-gray-800/50 rounded-2xl backdrop-blur-sm shadow-xl aspect-square w-full max-w-md
+                className={`grid gap-2 p-4 bg-white dark:bg-gray-800/50 rounded-2xl backdrop-blur-sm shadow-xl aspect-square w-full max-w-md
                     ${cols === 3 ? 'grid-cols-3' : cols === 4 ? 'grid-cols-4' : 'grid-cols-5'}`}
             >
                 {grid.map((color, idx) => (
@@ -235,7 +235,7 @@ const FindMostColor: React.FC<FindMostColorProps> = ({ seed, onScore, isPlaying 
                 ))}
             </motion.div>
 
-            <div className="mt-8 text-white/50 font-mono text-sm">
+            <div className="mt-8 text-slate-900 dark:text-white/50 font-mono text-sm">
                 Streak: {successCount}
             </div>
         </div>

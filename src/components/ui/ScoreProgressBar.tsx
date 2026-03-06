@@ -12,7 +12,7 @@ const ScoreProgressBar: React.FC<ScoreProgressBarProps> = ({ myScore, opScore })
     const myPercentage = total === 0 ? 50 : Math.min(100, Math.max(0, (myScore / total) * 100));
 
     return (
-        <div className="w-full h-full bg-gray-700/50 overflow-hidden flex relative backdrop-blur-sm">
+        <div className="w-full h-full bg-slate-100 dark:bg-gray-700/50 overflow-hidden flex relative backdrop-blur-sm">
             {/* Blue Bar (Me) */}
             <motion.div
                 className="h-full bg-gradient-to-r from-blue-600 to-blue-400 relative"

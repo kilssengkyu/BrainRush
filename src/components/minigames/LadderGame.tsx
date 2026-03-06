@@ -4,6 +4,7 @@ import { usePanelProgress } from '../../hooks/usePanelProgress';
 import { motion } from 'framer-motion';
 import { SeededRandom } from '../../utils/seededRandom';
 import { useSound } from '../../contexts/SoundContext';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface LadderGameProps {
     seed: string | null;
@@ -18,6 +19,9 @@ type Bridge = [number, number];
 const LadderGame: React.FC<LadderGameProps> = ({ seed, onScore, isPlaying }) => {
     const { t } = useTranslation();
     const { playSound } = useSound();
+    const { themeMode } = useTheme();
+    const isDark = themeMode === 'dark';
+    const ladderStroke = isDark ? 'rgba(255, 255, 255, 0.3)' : 'rgba(100, 116, 139, 0.5)';
     const [panelIndex, setPanelIndex] = usePanelProgress(seed);
     const [selectedEnd, setSelectedEnd] = useState<number | null>(null);
     const [isAnimating, setIsAnimating] = useState(false);
@@ -161,7 +165,7 @@ const LadderGame: React.FC<LadderGameProps> = ({ seed, onScore, isPlaying }) => 
         setTracePath(points);
     };
 
-    if (!gameState) return <div className="text-white">{t('common.loading')}</div>;
+    if (!gameState) return <div className="text-slate-900 dark:text-white">{t('common.loading')}</div>;
 
     // Rendering Constants
     const LINE_GAP = CONTAINER_WIDTH / (gameState.lines - 1);
@@ -180,7 +184,7 @@ const LadderGame: React.FC<LadderGameProps> = ({ seed, onScore, isPlaying }) => 
                             key={`line-${i}`}
                             x1={i * LINE_GAP} y1={0}
                             x2={i * LINE_GAP} y2={CONTAINER_HEIGHT}
-                            stroke="rgba(255, 255, 255, 0.3)"
+                            stroke={ladderStroke}
                             strokeWidth="4"
                             strokeLinecap="round"
                         />
@@ -196,7 +200,7 @@ const LadderGame: React.FC<LadderGameProps> = ({ seed, onScore, isPlaying }) => 
                                 key={`bridge-${i}`}
                                 x1={x1} y1={y}
                                 x2={x2} y2={y}
-                                stroke="rgba(255, 255, 255, 0.3)"
+                                stroke={ladderStroke}
                                 strokeWidth="4"
                                 strokeLinecap="round"
                             />
@@ -236,7 +240,7 @@ const LadderGame: React.FC<LadderGameProps> = ({ seed, onScore, isPlaying }) => 
                             className={`absolute w-12 h-12 rounded-full border-4 font-bold text-xl transition-all shadow-lg
                                 ${selectedEnd === i
                                     ? 'bg-green-500 border-green-300'
-                                    : 'bg-gray-800 border-gray-600 hover:border-white hover:scale-110 active:scale-95'
+                                    : 'bg-white dark:bg-gray-800 border-slate-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-white hover:scale-110 active:scale-95'
                                 }
                             `}
                             style={{ left: i * LINE_GAP - 24 }} // Center 48px button
