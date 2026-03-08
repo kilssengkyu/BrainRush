@@ -1050,6 +1050,20 @@ const Game: React.FC = () => {
     const [showLosePencilModal, setShowLosePencilModal] = useState(false);
 
     useEffect(() => {
+        const handleModalCloseRequest = (event: Event) => {
+            const customEvent = event as CustomEvent<{ handled?: boolean }>;
+            if (customEvent.detail?.handled) return;
+            if (!showLosePencilModal) return;
+            setShowLosePencilModal(false);
+            if (customEvent.detail) customEvent.detail.handled = true;
+        };
+        window.addEventListener('brainrush:request-modal-close', handleModalCloseRequest as EventListener);
+        return () => {
+            window.removeEventListener('brainrush:request-modal-close', handleModalCloseRequest as EventListener);
+        };
+    }, [showLosePencilModal]);
+
+    useEffect(() => {
         if (showFinalResult && gameState.mode === 'rank' && myProfile?.id) {
             // Delay start to sync with "Total Score" appearance
             const startDelay = setTimeout(() => {

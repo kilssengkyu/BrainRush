@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 interface ConfirmDialogProps {
@@ -22,6 +23,19 @@ const modalVariants = {
 
 export const ConfirmDialog = ({ title, message, onConfirm, onCancel }: ConfirmDialogProps) => {
     const { t } = useTranslation();
+
+    useEffect(() => {
+        const handleModalCloseRequest = (event: Event) => {
+            const customEvent = event as CustomEvent<{ handled?: boolean }>;
+            if (customEvent.detail?.handled) return;
+            if (customEvent.detail) customEvent.detail.handled = true;
+            onCancel();
+        };
+        window.addEventListener('brainrush:request-modal-close', handleModalCloseRequest as EventListener);
+        return () => {
+            window.removeEventListener('brainrush:request-modal-close', handleModalCloseRequest as EventListener);
+        };
+    }, [onCancel]);
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -60,5 +74,4 @@ export const ConfirmDialog = ({ title, message, onConfirm, onCancel }: ConfirmDi
         </div>
     );
 };
-
 

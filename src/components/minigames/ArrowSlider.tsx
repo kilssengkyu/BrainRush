@@ -106,7 +106,7 @@ const ArrowSlider: React.FC<ArrowSliderProps> = ({ seed, onScore, isPlaying }) =
         if (swipeDir === correctDir) {
             // Correct
             setFeedback('correct');
-            onScore(25);
+            onScore(70);
             setScoreCount(prev => prev + 1);
             playSound('correct');
 
@@ -118,7 +118,7 @@ const ArrowSlider: React.FC<ArrowSliderProps> = ({ seed, onScore, isPlaying }) =
                 x: xMove,
                 y: yMove,
                 opacity: 0,
-                transition: { duration: 0.15 }
+                transition: { duration: 0.1 }
             });
 
             setFeedback(null);
@@ -127,7 +127,7 @@ const ArrowSlider: React.FC<ArrowSliderProps> = ({ seed, onScore, isPlaying }) =
         } else {
             // Wrong
             setFeedback('wrong');
-            onScore(-30);
+            onScore(-60);
             playSound('error');
 
             // Shake animation

@@ -18,6 +18,7 @@ interface Ball {
 
 const HIT_LINE = 78;
 const HIT_WINDOW = 6;
+const PERFECT_WINDOW = 2;
 const MISS_LINE = 95;
 const BASE_SPAWN_MIN_MS = 420;
 const BASE_SPAWN_MAX_MS = 760;
@@ -32,7 +33,7 @@ const ColorTiming: React.FC<ColorTimingProps> = ({ onScore, isPlaying }) => {
     const { playSound } = useSound();
     const [balls, setBalls] = useState<Ball[]>([]);
     const [pressedLanes, setPressedLanes] = useState<{ left: boolean; right: boolean }>({ left: false, right: false });
-    const [feedback, setFeedback] = useState<{ lane: Lane; text: string; good: boolean } | null>(null);
+    const [feedback, setFeedback] = useState<{ lane: Lane; text: string; tone: 'good' | 'perfect' | 'bad' } | null>(null);
     const [laneFlash, setLaneFlash] = useState<{ left: 'good' | 'bad' | null; right: 'good' | 'bad' | null }>({
         left: null,
         right: null
@@ -97,8 +98,8 @@ const ColorTiming: React.FC<ColorTimingProps> = ({ onScore, isPlaying }) => {
         return true;
     }, [canSpawnInLane]);
 
-    const showFeedback = useCallback((lane: Lane, text: string, good: boolean) => {
-        setFeedback({ lane, text, good });
+    const showFeedback = useCallback((lane: Lane, text: string, tone: 'good' | 'perfect' | 'bad') => {
+        setFeedback({ lane, text, tone });
         window.setTimeout(() => {
             setFeedback((prev) => (prev?.lane === lane ? null : prev));
         }, 320);
@@ -118,10 +119,11 @@ const ColorTiming: React.FC<ColorTimingProps> = ({ onScore, isPlaying }) => {
             .sort((a, b) => Math.abs(a.y - HIT_LINE) - Math.abs(b.y - HIT_LINE));
 
         const nearest = laneBalls[0];
-        if (!nearest || Math.abs(nearest.y - HIT_LINE) > HIT_WINDOW) {
+        const distance = nearest ? Math.abs(nearest.y - HIT_LINE) : Infinity;
+        if (!nearest || distance > HIT_WINDOW) {
             onScoreRef.current(-20);
             if (playAudio) playSound('error');
-            showFeedback(lane, 'MISS', false);
+            showFeedback(lane, 'MISS', 'bad');
             flashLane(lane, 'bad');
             return 'miss';
         }
@@ -134,16 +136,22 @@ const ColorTiming: React.FC<ColorTimingProps> = ({ onScore, isPlaying }) => {
         setBalls([...ballsRef.current]);
 
         if (isCorrect) {
-            onScoreRef.current(30);
+            const isPerfect = distance <= PERFECT_WINDOW;
+            if (isPerfect) {
+                onScoreRef.current(60);
+                showFeedback(lane, 'PERFECT +60', 'perfect');
+            } else {
+                onScoreRef.current(30);
+                showFeedback(lane, '+30', 'good');
+            }
             if (playAudio) playSound('correct');
-            showFeedback(lane, '+30', true);
             flashLane(lane, 'good');
             return 'good';
         }
 
         onScoreRef.current(-40);
         if (playAudio) playSound('error');
-        showFeedback(lane, '-40', false);
+        showFeedback(lane, '-40', 'bad');
         flashLane(lane, 'bad');
         return 'bad';
     }, [flashLane, playSound, showFeedback]);
@@ -365,7 +373,9 @@ const ColorTiming: React.FC<ColorTimingProps> = ({ onScore, isPlaying }) => {
 
             {feedback && (
                 <div
-                    className={`absolute top-[18%] ${feedback.lane === 'left' ? 'left-1/4 -translate-x-1/2' : 'left-3/4 -translate-x-1/2'} text-xl font-black ${feedback.good ? 'text-green-300' : 'text-red-300'} drop-shadow-lg`}
+                    className={`absolute top-[18%] ${feedback.lane === 'left' ? 'left-1/4 -translate-x-1/2' : 'left-3/4 -translate-x-1/2'} text-xl font-black ${
+                        feedback.tone === 'perfect' ? 'text-yellow-300' : feedback.tone === 'good' ? 'text-green-300' : 'text-red-300'
+                    } drop-shadow-lg`}
                 >
                     {feedback.text}
                 </div>

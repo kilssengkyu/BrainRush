@@ -60,6 +60,20 @@ const MatchHistoryModal = ({ isOpen, onClose, userId, initialMode = 'all' }: Mat
         }
     }, [isOpen]);
 
+    useEffect(() => {
+        if (!isOpen) return;
+        const handleModalCloseRequest = (event: Event) => {
+            const customEvent = event as CustomEvent<{ handled?: boolean }>;
+            if (customEvent.detail?.handled) return;
+            if (customEvent.detail) customEvent.detail.handled = true;
+            onClose();
+        };
+        window.addEventListener('brainrush:request-modal-close', handleModalCloseRequest as EventListener);
+        return () => {
+            window.removeEventListener('brainrush:request-modal-close', handleModalCloseRequest as EventListener);
+        };
+    }, [isOpen, onClose]);
+
     // Infinite scroll observer
     useEffect(() => {
         const observer = new IntersectionObserver(

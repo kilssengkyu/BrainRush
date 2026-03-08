@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Globe, Volume2, VolumeX, RefreshCcw, BookOpen, Shield, X, Bell, MessageCircleQuestion, Moon, Sun, MonitorSmartphone } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Globe, Volume2, VolumeX, RefreshCcw, BookOpen, Shield, X, Bell, MessageCircleQuestion, Moon, Sun, MonitorSmartphone, Sparkles } from 'lucide-react';
 import { useSound } from '../contexts/SoundContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useUI } from '../contexts/UIContext';
@@ -187,6 +187,21 @@ const Settings = () => {
         edgeSwipeTriggeredRef.current = false;
     };
 
+    useEffect(() => {
+        const handleModalCloseRequest = (event: Event) => {
+            const customEvent = event as CustomEvent<{ handled?: boolean }>;
+            if (customEvent.detail?.handled) return;
+            if (!isLanguageModalOpen) return;
+            setIsLanguageModalOpen(false);
+            setLanguageSearch('');
+            if (customEvent.detail) customEvent.detail.handled = true;
+        };
+        window.addEventListener('brainrush:request-modal-close', handleModalCloseRequest as EventListener);
+        return () => {
+            window.removeEventListener('brainrush:request-modal-close', handleModalCloseRequest as EventListener);
+        };
+    }, [isLanguageModalOpen]);
+
     return (
         <div
             className={`h-[100dvh] relative overflow-hidden flex flex-col items-center bg-slate-50 dark:bg-gray-900 text-slate-900 dark:text-white`}
@@ -276,10 +291,14 @@ const Settings = () => {
                                     </button>
                                     <button
                                         onClick={() => { setThemePreference('dark'); playSound('click'); }}
-                                        className={`px-3 py-2 rounded-lg border text-sm font-semibold transition-colors ${themePreference === 'dark' ? 'bg-amber-100 dark:bg-amber-500 text-amber-700 dark:text-black border-amber-300 dark:border-amber-400' : 'bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/15 text-slate-600 dark:text-gray-200 hover:bg-slate-100 dark:hover:bg-white/10'}`}
+                                        className={`relative px-3 py-2 rounded-lg border text-sm font-semibold transition-colors ${themePreference === 'dark' ? 'bg-amber-100 dark:bg-amber-500 text-amber-700 dark:text-black border-amber-300 dark:border-amber-400' : 'bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/15 text-slate-600 dark:text-gray-200 hover:bg-slate-100 dark:hover:bg-white/10'}`}
                                         aria-label={t('settings.darkMode', 'Dark mode')}
                                     >
-                                        {t('settings.dark', 'Dark')}
+                                        <span>{t('settings.dark', 'Dark')}</span>
+                                        <span className="pointer-events-none absolute -top-2 -right-2 inline-flex items-center gap-1 rounded-full border border-emerald-300/60 bg-emerald-400/20 px-1.5 py-0.5 text-[10px] font-bold leading-none text-emerald-700 dark:text-emerald-200">
+                                            <Sparkles size={10} />
+                                            {t('settings.recommended', '추천')}
+                                        </span>
                                     </button>
                                     <button
                                         onClick={() => { setThemePreference('system'); playSound('click'); }}

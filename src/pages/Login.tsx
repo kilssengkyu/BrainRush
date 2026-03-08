@@ -56,6 +56,20 @@ const Login = () => {
         }
     }, [t]);
 
+    useEffect(() => {
+        const handleModalCloseRequest = (event: Event) => {
+            const customEvent = event as CustomEvent<{ handled?: boolean }>;
+            if (customEvent.detail?.handled) return;
+            if (!banModal) return;
+            setBanModal(null);
+            if (customEvent.detail) customEvent.detail.handled = true;
+        };
+        window.addEventListener('brainrush:request-modal-close', handleModalCloseRequest as EventListener);
+        return () => {
+            window.removeEventListener('brainrush:request-modal-close', handleModalCloseRequest as EventListener);
+        };
+    }, [banModal]);
+
     const handleGoogleLogin = async () => {
         playSound('click');
         setIsLoggingIn(true);
@@ -166,7 +180,7 @@ const Login = () => {
                         <button
                             onClick={handleAppleLogin}
                             disabled={isLoggingIn}
-                            className="w-full p-4 bg-black text-slate-900 dark:text-white rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-slate-50 dark:bg-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-white/20"
+                            className="w-full p-4 rounded-xl font-bold flex items-center justify-center gap-3 transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-white text-black border border-black/15 hover:bg-gray-100 dark:bg-black dark:text-white dark:border-white/20 dark:hover:bg-gray-900"
                         >
                             {isLoggingIn ? (
                                 <Loader2 className="animate-spin" />

@@ -412,6 +412,35 @@ const Profile = () => {
         !!chatFriend ||
         !!pendingInvite;
 
+    useEffect(() => {
+        const handleModalCloseRequest = (event: Event) => {
+            const customEvent = event as CustomEvent<{ handled?: boolean }>;
+            if (customEvent.detail?.handled) return;
+
+            if (isCountryModalOpen) {
+                setCountrySearch('');
+                setIsCountryModalOpen(false);
+                if (customEvent.detail) customEvent.detail.handled = true;
+                return;
+            }
+
+            if (pendingInvite) {
+                void cancelPendingInvite('cancel');
+                if (customEvent.detail) customEvent.detail.handled = true;
+                return;
+            }
+
+            if (chatFriend) {
+                setChatFriend(null);
+                if (customEvent.detail) customEvent.detail.handled = true;
+            }
+        };
+        window.addEventListener('brainrush:request-modal-close', handleModalCloseRequest as EventListener);
+        return () => {
+            window.removeEventListener('brainrush:request-modal-close', handleModalCloseRequest as EventListener);
+        };
+    }, [isCountryModalOpen, pendingInvite, chatFriend, cancelPendingInvite]);
+
     const handleEdgeSwipeStart = (event: React.TouchEvent<HTMLDivElement>) => {
         if (isEdgeSwipeBlocked || event.touches.length !== 1) {
             edgeSwipeStartRef.current = null;
@@ -662,6 +691,10 @@ const Profile = () => {
 
     // Calculate stats
     const rank = profile?.mmr || 1000;
+    const placementRequiredGames = 5;
+    const rankGamesPlayed = Math.max(0, Number((profile as any)?.rank_games_played ?? 0));
+    const isPlacement = rankGamesPlayed < placementRequiredGames;
+    const rankGamesRemaining = Math.max(0, placementRequiredGames - rankGamesPlayed);
     const tier = getTierFromMMR(rank);
     const tierColor = getTierColor(tier);
     const TierIcon = getTierIcon(tier);
@@ -752,11 +785,11 @@ const Profile = () => {
                             className="w-full max-w-md bg-white dark:bg-gray-800/50 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl relative z-10"
                         >
                             {isGuest && (
-                                <div className="mb-6 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-center">
-                                    <div className="text-sm font-bold text-amber-200">
+                                <div className="mb-6 rounded-2xl border border-amber-300 bg-amber-50 p-4 text-center dark:border-amber-500/40 dark:bg-amber-500/10">
+                                    <div className="text-sm font-bold text-amber-800 dark:text-amber-200">
                                         {t('profile.guestTitle')}
                                     </div>
-                                    <div className="mt-1 text-xs text-amber-100/80">
+                                    <div className="mt-1 text-xs text-amber-700 dark:text-amber-100/80">
                                         {t(isIOS ? 'profile.guestDescIOS' : 'profile.guestDesc')}
                                     </div>
                                     <div className="mt-3 flex items-center justify-center gap-2">
@@ -770,7 +803,7 @@ const Profile = () => {
                                                         showToast((err as any)?.message || t('common.error'), 'error');
                                                     }
                                                 }}
-                                                className="inline-flex items-center justify-center rounded-full bg-white/10 px-4 py-2 text-xs font-bold text-amber-100 hover:bg-white/20 transition-colors"
+                                                className="inline-flex items-center justify-center rounded-full border border-amber-300 bg-amber-100 px-4 py-2 text-xs font-bold text-amber-900 hover:bg-amber-200 transition-colors dark:border-white/10 dark:bg-white/10 dark:text-amber-100 dark:hover:bg-white/20"
                                             >
                                                 {t('profile.linkApple', 'Apple 계정 연동')}
                                             </button>
@@ -784,7 +817,7 @@ const Profile = () => {
                                                     showToast((err as any)?.message || t('common.error'), 'error');
                                                 }
                                             }}
-                                            className="inline-flex items-center justify-center rounded-full bg-white/10 px-4 py-2 text-xs font-bold text-amber-100 hover:bg-white/20 transition-colors"
+                                            className="inline-flex items-center justify-center rounded-full border border-amber-300 bg-amber-100 px-4 py-2 text-xs font-bold text-amber-900 hover:bg-amber-200 transition-colors dark:border-white/10 dark:bg-white/10 dark:text-amber-100 dark:hover:bg-white/20"
                                         >
                                             {t('profile.linkGoogle')}
                                         </button>
@@ -950,14 +983,27 @@ const Profile = () => {
 
                             {/* Stats Grid */}
                             <div className="grid grid-cols-2 gap-4">
-                                <div className={`col-span-2 bg-gradient-to-br ${tierColor} p-[2px] rounded-2xl shadow-lg transform hover:scale-[1.01] transition-transform`}>
+                                <div className={`col-span-2 bg-gradient-to-br ${isPlacement ? 'from-slate-300 to-slate-200 dark:from-slate-700 dark:to-slate-600' : tierColor} p-[2px] rounded-2xl shadow-lg transform hover:scale-[1.01] transition-transform`}>
                                     <div className="bg-white dark:bg-gray-800 w-full h-full rounded-2xl p-4 flex flex-col items-center justify-center gap-3">
-                                        <div className="w-16 h-16 rounded-xl bg-black/5 dark:bg-black/20 border border-black/5 dark:border-white/10 flex items-center justify-center">
-                                            <TierIcon className="w-12 h-12 object-contain drop-shadow-sm dark:drop-shadow-md" />
-                                        </div>
                                         <div className="min-w-0 flex flex-col justify-center items-center text-center leading-tight">
-                                            <div className="text-2xl font-black text-slate-900 dark:text-white truncate">{tier}</div>
-                                            <div className="text-xl font-black text-slate-800 dark:text-white/90 font-mono mt-1">{rank}</div>
+                                            {isPlacement ? (
+                                                <>
+                                                    <div className="text-2xl font-black text-slate-900 dark:text-white truncate">
+                                                        {t('profile.rankPlacement', '배치 중')}
+                                                    </div>
+                                                    <div className="text-xs font-semibold text-amber-600 dark:text-amber-300 mt-2">
+                                                        {t('profile.rankPlacementRemaining', '{{count}}판 후 랭크 반영', { count: rankGamesRemaining })}
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <div className="w-16 h-16 rounded-xl bg-black/5 dark:bg-black/20 border border-black/5 dark:border-white/10 flex items-center justify-center mb-1">
+                                                        <TierIcon className="w-12 h-12 object-contain drop-shadow-sm dark:drop-shadow-md" />
+                                                    </div>
+                                                    <div className="text-2xl font-black text-slate-900 dark:text-white truncate">{tier}</div>
+                                                    <div className="text-xl font-black text-slate-800 dark:text-white/90 font-mono mt-1">{rank}</div>
+                                                </>
+                                            )}
                                         </div>
                                     </div>
                                 </div>

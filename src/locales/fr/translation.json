@@ -20,7 +20,9 @@
       "hour": "il y a {{count}} h",
       "day": "il y a {{count}} j",
       "longAgo": "Il y a longtemps"
-    }
+    },
+    "exitAppTitle": "Quitter l'application",
+    "exitAppConfirm": "Voulez-vous quitter l'application ?"
   },
   "auth": {
     "loginRequired": "Connexion requise.",
@@ -89,11 +91,13 @@
   "menu": {
     "normal": {
       "title": "Mode normal",
-      "subtitle": "Entraînement cérébral de base"
+      "subtitle": "Entraînement cérébral de base",
+      "matchRule": "BO3 (2 manches gagnantes)"
     },
     "rank": {
       "title": "Mode classé",
-      "subtitle": "Compétition mondiale"
+      "subtitle": "Compétition mondiale",
+      "matchRule": "BO5 (3 manches gagnantes)"
     },
     "all": "Tous",
     "friendly": {
@@ -170,6 +174,7 @@
     "global": "Global",
     "country": "Pays",
     "myRank": "MY RANK",
+    "placementNotice": "Tu apparaîtras dans le classement après {{count}} matchs de placement.",
     "mmrLabel": "MMR",
     "avatarPreview": "{{nickname}} avatar"
   },
@@ -237,7 +242,16 @@
     "goToSupport": "Ouvrir l'assistance",
     "notifications": "Notifications",
     "pushNotifications": "Push/Local Notifications",
-    "notificationNativeHint": "Notification toggle is disabled on the web."
+    "notificationNativeHint": "Notification toggle is disabled on the web.",
+    "recommended": "Recommandé",
+    "theme": "Thème",
+    "themeMode": "Apparence",
+    "systemThemeDesc": "Suit les paramètres de l'appareil.",
+    "darkMode": "Mode sombre",
+    "lightMode": "Mode clair",
+    "light": "Clair",
+    "dark": "Sombre",
+    "system": "Système"
   },
   "report": {
     "button": "Signaler",
@@ -552,7 +566,23 @@
     "undoHint": "Touchez l'équation pour annuler"
   },
   "practice": {
-    "random": "Aléatoire"
+    "random": "Aléatoire",
+    "descriptionPending": "Description coming soon",
+    "myHighscoreLabel": "My High Score",
+    "statGainLabel": "Stat Gain",
+    "none": "None",
+    "guideTitle": "Practice Guide",
+    "guideAtAGlance": "At a glance",
+    "guideObjective": "Objective",
+    "guideHowTo": "How to play",
+    "guideTip": "Tip",
+    "autoGuide": {
+      "summary": "Practice {{title}} and learn the core rule quickly.",
+      "tip": "Read the rule once, then focus on speed and accuracy.",
+      "objectiveFallback": "Start and follow the on-screen rule."
+    },
+    "viewGrid": "Grid view",
+    "viewList": "List view"
   },
   "update": {
     "title": "Mise à jour requise",

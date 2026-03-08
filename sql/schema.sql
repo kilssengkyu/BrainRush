@@ -1743,45 +1743,69 @@ CREATE FUNCTION public.get_leaderboard(p_user_id uuid, p_country text DEFAULT NU
 DECLARE
     v_top_players JSON;
     v_user_rank JSON;
+    v_user_profile RECORD;
+    v_rank integer;
 BEGIN
-    -- Get Top 100 Players
+    -- Top 100 rows only, then calculate rank with indexed COUNT(mmr > current_mmr).
     SELECT json_agg(t) INTO v_top_players
     FROM (
-        SELECT 
-            ROW_NUMBER() OVER (ORDER BY mmr DESC) as rank,
-            id,
-            nickname,
-            avatar_url,
-            country,
-            mmr,
-            get_tier_name(mmr) as tier
-        FROM profiles
-        WHERE p_country IS NULL OR country = p_country
+        SELECT
+            (
+                SELECT COUNT(*)::int + 1
+                FROM public.profiles p2
+                WHERE (p_country IS NULL OR p2.country = p_country)
+                  AND COALESCE(p2.rank_games_played, 0) >= 5
+                  AND p2.mmr > p.mmr
+            ) AS rank,
+            p.id,
+            p.nickname,
+            p.avatar_url,
+            p.country,
+            p.mmr,
+            p.level,
+            get_tier_name(p.mmr) AS tier
+        FROM public.profiles p
+        WHERE (p_country IS NULL OR p.country = p_country)
+          AND COALESCE(p.rank_games_played, 0) >= 5
+        ORDER BY p.mmr DESC, p.id ASC
         LIMIT 100
     ) t;
 
-    -- Get Requesting User's Specific Rank (if logged in)
     IF p_user_id IS NOT NULL THEN
-        SELECT json_build_object(
-            'rank', rank,
-            'id', id,
-            'nickname', nickname,
-            'avatar_url', avatar_url,
-            'country', country,
-            'mmr', mmr,
-            'tier', get_tier_name(mmr)
-        ) INTO v_user_rank
-        FROM (
-            SELECT 
-                id, nickname, avatar_url, country, mmr,
-                RANK() OVER (ORDER BY mmr DESC) as rank
-            FROM profiles
-            WHERE p_country IS NULL OR country = p_country
-        ) sub
-        WHERE id = p_user_id;
+        SELECT
+            p.id,
+            p.nickname,
+            p.avatar_url,
+            p.country,
+            p.mmr,
+            p.level
+        INTO v_user_profile
+        FROM public.profiles p
+        WHERE p.id = p_user_id
+          AND (p_country IS NULL OR p.country = p_country)
+          AND COALESCE(p.rank_games_played, 0) >= 5;
+
+        IF FOUND THEN
+            SELECT COUNT(*)::int + 1
+            INTO v_rank
+            FROM public.profiles p2
+            WHERE (p_country IS NULL OR p2.country = p_country)
+              AND COALESCE(p2.rank_games_played, 0) >= 5
+              AND p2.mmr > v_user_profile.mmr;
+
+            v_user_rank := json_build_object(
+                'rank', v_rank,
+                'id', v_user_profile.id,
+                'nickname', v_user_profile.nickname,
+                'avatar_url', v_user_profile.avatar_url,
+                'country', v_user_profile.country,
+                'mmr', v_user_profile.mmr,
+                'level', v_user_profile.level,
+                'tier', get_tier_name(v_user_profile.mmr)
+            );
+        END IF;
     END IF;
 
-    -- Return combined result
     RETURN json_build_object(
         'top_players', COALESCE(v_top_players, '[]'::json),
         'user_rank', v_user_rank

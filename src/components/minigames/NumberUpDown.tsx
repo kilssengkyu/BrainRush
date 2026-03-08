@@ -99,7 +99,7 @@ const NumberUpDown: React.FC<NumberUpDownProps> = ({ seed, onScore, isPlaying })
         if (isUpCorrect || isDownCorrect) {
             // Correct
             setFeedback('correct');
-            onScore(100); // Score points
+            onScore(70); // Score points (rebalanced)
             playSound('correct');
 
             // Animate card flying away

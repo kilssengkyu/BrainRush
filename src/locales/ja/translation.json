@@ -16,7 +16,9 @@
       "hour": "{{count}}時間前",
       "day": "{{count}}日前",
       "longAgo": "ずっと前"
-    }
+    },
+    "exitAppTitle": "アプリ終了",
+    "exitAppConfirm": "アプリを終了しますか？"
   },
   "auth": {
     "loginRequired": "ログインが必要です。",
@@ -36,11 +38,13 @@
   "menu": {
     "normal": {
       "title": "ノーマルモード",
-      "subtitle": "基礎頭脳トレーニング"
+      "subtitle": "基礎頭脳トレーニング",
+      "matchRule": "3本勝負（2本先取）"
     },
     "rank": {
       "title": "ランク戦",
-      "subtitle": "世界中のプレイヤーと競争"
+      "subtitle": "世界中のプレイヤーと競争",
+      "matchRule": "5本勝負（3本先取）"
     },
     "friendly": {
       "title": "フレンド対戦",
@@ -166,6 +170,7 @@
     "global": "全体",
     "country": "国別",
     "myRank": "MY RANK",
+    "placementNotice": "配置戦を{{count}}試合終えるとランキングに表示されます。",
     "mmrLabel": "MMR",
     "avatarPreview": "{{nickname}} avatar"
   },
@@ -229,7 +234,16 @@
     "goToSupport": "サポートを開く",
     "notifications": "Notifications",
     "pushNotifications": "Push/Local Notifications",
-    "notificationNativeHint": "Notification toggle is disabled on the web."
+    "notificationNativeHint": "Notification toggle is disabled on the web.",
+    "recommended": "おすすめ",
+    "theme": "テーマ",
+    "themeMode": "表示モード",
+    "systemThemeDesc": "端末の設定に従います。",
+    "darkMode": "ダークモード",
+    "lightMode": "ライトモード",
+    "light": "ライト",
+    "dark": "ダーク",
+    "system": "システム"
   },
   "report": {
     "button": "通報",
@@ -548,7 +562,23 @@
     "undoHint": "数式をタッチで元に戻す"
   },
   "practice": {
-    "random": "ランダム"
+    "random": "ランダム",
+    "descriptionPending": "説明準備中",
+    "myHighscoreLabel": "マイスコア",
+    "statGainLabel": "上昇能力値",
+    "none": "なし",
+    "guideTitle": "練習ガイド",
+    "guideAtAGlance": "概要",
+    "guideObjective": "目標",
+    "guideHowTo": "遊び方",
+    "guideTip": "コツ",
+    "autoGuide": {
+      "summary": "{{title}}のコアルールを素早く身につける練習です。",
+      "tip": "まずルールを確認し、その後はスピードと正確さに集中してください。",
+      "objectiveFallback": "ゲームを開始し、画面のルールに従ってプレイしてください。"
+    },
+    "viewGrid": "グリッド表示",
+    "viewList": "リスト表示"
   },
   "update": {
     "title": "アップデートが必要です",

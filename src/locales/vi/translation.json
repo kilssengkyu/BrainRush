@@ -20,7 +20,9 @@
       "hour": "{{count}} giờ trước",
       "day": "{{count}} ngày trước",
       "longAgo": "Đã lâu"
-    }
+    },
+    "exitAppTitle": "Thoát ứng dụng",
+    "exitAppConfirm": "Bạn có muốn thoát ứng dụng không?"
   },
   "auth": {
     "loginRequired": "Yêu cầu đăng nhập.",
@@ -89,11 +91,13 @@
   "menu": {
     "normal": {
       "title": "Chế độ Thường",
-      "subtitle": "Rèn luyện não cơ bản"
+      "subtitle": "Rèn luyện não cơ bản",
+      "matchRule": "Thắng 2 trong 3 ván"
     },
     "rank": {
       "title": "Chế độ Xếp hạng",
-      "subtitle": "Thi đấu toàn cầu"
+      "subtitle": "Thi đấu toàn cầu",
+      "matchRule": "Thắng 3 trong 5 ván"
     },
     "all": "Tất cả",
     "friendly": {
@@ -170,6 +174,7 @@
     "global": "Toàn cầu",
     "country": "Quốc gia",
     "myRank": "MY RANK",
+    "placementNotice": "Bạn sẽ xuất hiện trên bảng xếp hạng sau {{count}} trận phân hạng.",
     "mmrLabel": "MMR",
     "avatarPreview": "{{nickname}} avatar"
   },
@@ -237,7 +242,16 @@
     "goToSupport": "Mở hỗ trợ",
     "notifications": "Notifications",
     "pushNotifications": "Push/Local Notifications",
-    "notificationNativeHint": "Notification toggle is disabled on the web."
+    "notificationNativeHint": "Notification toggle is disabled on the web.",
+    "recommended": "Đề xuất",
+    "theme": "Giao diện",
+    "themeMode": "Chế độ hiển thị",
+    "systemThemeDesc": "Theo cài đặt của thiết bị.",
+    "darkMode": "Chế độ tối",
+    "lightMode": "Chế độ sáng",
+    "light": "Sáng",
+    "dark": "Tối",
+    "system": "Hệ thống"
   },
   "report": {
     "button": "Báo cáo",
@@ -552,7 +566,23 @@
     "undoHint": "Chạm phương trình để hoàn tác"
   },
   "practice": {
-    "random": "Ngẫu nhiên"
+    "random": "Ngẫu nhiên",
+    "descriptionPending": "Description coming soon",
+    "myHighscoreLabel": "My High Score",
+    "statGainLabel": "Stat Gain",
+    "none": "None",
+    "guideTitle": "Practice Guide",
+    "guideAtAGlance": "At a glance",
+    "guideObjective": "Objective",
+    "guideHowTo": "How to play",
+    "guideTip": "Tip",
+    "autoGuide": {
+      "summary": "Practice {{title}} and learn the core rule quickly.",
+      "tip": "Read the rule once, then focus on speed and accuracy.",
+      "objectiveFallback": "Start and follow the on-screen rule."
+    },
+    "viewGrid": "Grid view",
+    "viewList": "List view"
   },
   "update": {
     "title": "Cần cập nhật",

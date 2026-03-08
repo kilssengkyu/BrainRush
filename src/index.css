@@ -30,6 +30,14 @@ html.dark {
     transition: background-color 180ms ease;
   }
 
+  img,
+  svg {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+
   /* Global interaction feedback (mobile-first) */
   button,
   [role="button"],

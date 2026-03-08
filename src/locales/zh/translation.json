@@ -16,7 +16,9 @@
       "hour": "{{count}}小时前",
       "day": "{{count}}天前",
       "longAgo": "很久以前"
-    }
+    },
+    "exitAppTitle": "退出应用",
+    "exitAppConfirm": "要退出应用吗？"
   },
   "auth": {
     "loginRequired": "需要登录。",
@@ -36,11 +38,13 @@
   "menu": {
     "normal": {
       "title": "普通模式",
-      "subtitle": "基础脑力训练"
+      "subtitle": "基础脑力训练",
+      "matchRule": "三局两胜"
     },
     "rank": {
       "title": "排位模式",
-      "subtitle": "全球玩家竞技"
+      "subtitle": "全球玩家竞技",
+      "matchRule": "五局三胜"
     },
     "friendly": {
       "title": "好友对战",
@@ -166,6 +170,7 @@
     "global": "全体",
     "country": "国家",
     "myRank": "MY RANK",
+    "placementNotice": "完成{{count}}场定位赛后将显示在排行榜。",
     "mmrLabel": "MMR",
     "avatarPreview": "{{nickname}} avatar"
   },
@@ -229,7 +234,16 @@
     "goToSupport": "打开支持页面",
     "notifications": "Notifications",
     "pushNotifications": "Push/Local Notifications",
-    "notificationNativeHint": "Notification toggle is disabled on the web."
+    "notificationNativeHint": "Notification toggle is disabled on the web.",
+    "recommended": "推荐",
+    "theme": "主题",
+    "themeMode": "显示模式",
+    "systemThemeDesc": "跟随设备设置。",
+    "darkMode": "深色模式",
+    "lightMode": "浅色模式",
+    "light": "浅色",
+    "dark": "深色",
+    "system": "系统"
   },
   "report": {
     "button": "举报",
@@ -548,7 +562,23 @@
     "undoHint": "点击算式可撤销"
   },
   "practice": {
-    "random": "随机"
+    "random": "随机",
+    "descriptionPending": "说明准备中",
+    "myHighscoreLabel": "我的最高分",
+    "statGainLabel": "能力值提升",
+    "none": "无",
+    "guideTitle": "练习指南",
+    "guideAtAGlance": "一览",
+    "guideObjective": "目标",
+    "guideHowTo": "玩法",
+    "guideTip": "提示",
+    "autoGuide": {
+      "summary": "这是快速掌握{{title}}核心规则的练习。",
+      "tip": "先看清规则，再专注于速度和准确度。",
+      "objectiveFallback": "开始游戏并按照屏幕规则进行。"
+    },
+    "viewGrid": "网格视图",
+    "viewList": "列表视图"
   },
   "update": {
     "title": "需要更新",

@@ -20,7 +20,9 @@
       "hour": "{{count}}h ago",
       "day": "{{count}}d ago",
       "longAgo": "Long ago"
-    }
+    },
+    "exitAppTitle": "Exit App",
+    "exitAppConfirm": "Do you want to exit the app?"
   },
   "auth": {
     "loginRequired": "Login required.",
@@ -89,11 +91,13 @@
   "menu": {
     "normal": {
       "title": "Normal Mode",
-      "subtitle": "Basic Brain Training"
+      "subtitle": "Basic Brain Training",
+      "matchRule": "Best of 3 (First to 2)"
     },
     "rank": {
       "title": "Rank Mode",
-      "subtitle": "Compete globally"
+      "subtitle": "Compete globally",
+      "matchRule": "Best of 5 (First to 3)"
     },
     "all": "All",
     "friendly": {
@@ -170,6 +174,7 @@
     "global": "Global",
     "country": "Country",
     "myRank": "MY RANK",
+    "placementNotice": "You will appear in ranking after {{count}} placement games.",
     "mmrLabel": "MMR",
     "avatarPreview": "{{nickname}} avatar"
   },
@@ -237,7 +242,16 @@
     "viewTutorial": "View Tutorial Again",
     "notifications": "Notifications",
     "pushNotifications": "Push/Local Notifications",
-    "notificationNativeHint": "Notification toggle is disabled on the web."
+    "notificationNativeHint": "Notification toggle is disabled on the web.",
+    "recommended": "Recommended",
+    "theme": "Theme",
+    "themeMode": "Appearance",
+    "systemThemeDesc": "Follows your device settings.",
+    "darkMode": "Dark mode",
+    "lightMode": "Light mode",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
   },
   "report": {
     "button": "Report",
@@ -560,7 +574,23 @@
     "undoHint": "Tap the equation to undo"
   },
   "practice": {
-    "random": "Random"
+    "random": "Random",
+    "descriptionPending": "Description coming soon",
+    "myHighscoreLabel": "My High Score",
+    "statGainLabel": "Stat Gain",
+    "none": "None",
+    "guideTitle": "Practice Guide",
+    "guideAtAGlance": "At a glance",
+    "guideObjective": "Objective",
+    "guideHowTo": "How to play",
+    "guideTip": "Tip",
+    "autoGuide": {
+      "summary": "Practice {{title}} and learn the core rule quickly.",
+      "tip": "Read the rule once, then focus on speed and accuracy.",
+      "objectiveFallback": "Start and follow the on-screen rule."
+    },
+    "viewGrid": "Grid view",
+    "viewList": "List view"
   },
   "update": {
     "title": "Update Required",

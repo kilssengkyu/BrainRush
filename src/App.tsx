@@ -1,7 +1,7 @@
 import { App as CapacitorApp } from '@capacitor/app';
 import { AdMob } from '@capacitor-community/admob';
 import { Capacitor } from '@capacitor/core';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Home from './pages/Home';
@@ -10,6 +10,9 @@ import Home from './pages/Home';
 const BackButtonHandler = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { confirm } = useUI();
+  const { t } = useTranslation();
+  const isExitConfirmOpenRef = useRef(false);
 
   useEffect(() => {
     let backButtonListener: { remove: () => void } | null = null;
@@ -18,9 +21,25 @@ const BackButtonHandler = () => {
       // But @capacitor/app supports web mostly or fails silently.
       // Actually, safely check if native? No, just add listener.
       try {
-        backButtonListener = await CapacitorApp.addListener('backButton', ({ canGoBack }) => {
+        backButtonListener = await CapacitorApp.addListener('backButton', async ({ canGoBack }) => {
+          const modalCloseRequest = { handled: false };
+          window.dispatchEvent(new CustomEvent('brainrush:request-modal-close', { detail: modalCloseRequest }));
+          if (modalCloseRequest.handled) return;
+
           if (location.pathname === '/' || location.pathname === '/home') {
-            // Prevent accidental app termination on Home.
+            if (isExitConfirmOpenRef.current) return;
+            isExitConfirmOpenRef.current = true;
+            try {
+              const shouldExit = await confirm(
+                t('common.exitAppTitle', '앱 종료'),
+                t('common.exitAppConfirm', '앱을 종료하시겠습니까?')
+              );
+              if (shouldExit) {
+                CapacitorApp.exitApp();
+              }
+            } finally {
+              isExitConfirmOpenRef.current = false;
+            }
             return;
           } else if (canGoBack) {
             window.history.back();
@@ -38,7 +57,7 @@ const BackButtonHandler = () => {
       // Avoid removing unrelated listeners (e.g., appUrlOpen for OAuth).
       if (backButtonListener) backButtonListener.remove();
     };
-  }, [navigate, location]);
+  }, [confirm, location, navigate, t]);
 
   return null;
 };
@@ -94,6 +113,8 @@ import Privacy from './pages/Privacy';
 import Support from './pages/Support';
 import Admin from './pages/Admin';
 import AdminMember from './pages/AdminMember';
+import AdminCatalogGames from './pages/AdminCatalogGames';
+import AdminCatalogShop from './pages/AdminCatalogShop';
 
 import GameInviteListener from './components/social/GameInviteListener';
 import RematchListener from './components/social/RematchListener';
@@ -174,6 +195,8 @@ function App() {
                     <Route path="/support" element={<Support />} />
                     <Route path="/admin" element={<Admin />} />
                     <Route path="/admin/member" element={<AdminMember />} />
+                    <Route path="/admin/games" element={<AdminCatalogGames />} />
+                    <Route path="/admin/shop" element={<AdminCatalogShop />} />
                   </Routes>
                 </div>
               </BrowserRouter>

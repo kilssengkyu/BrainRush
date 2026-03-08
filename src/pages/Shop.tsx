@@ -17,11 +17,33 @@ type ShopItem = {
     productId: ShopProductId;
     titleKey: string;
     descKey: string;
-    priceLabel?: string;
+    fallbackPriceLabel: string;
+    priceLabel: string;
     tagKey?: string;
     accent: string;
     icon: ReactNode;
+    runtimeIconUrl?: string;
     isConsumable?: boolean;
+};
+
+type ShopCatalogItem = Omit<ShopItem, 'priceLabel'>;
+
+const SHOP_PRODUCT_ALIAS_MAP: Record<string, ShopProductId> = {
+    remove_ads: PRODUCT_IDS.removeAds,
+    nickname_change_ticket: PRODUCT_IDS.nicknameChangeTicket,
+    nickname_ticket: PRODUCT_IDS.nicknameChangeTicket,
+    pencils_5: PRODUCT_IDS.pencils5,
+    pencil_5: PRODUCT_IDS.pencils5,
+    pencils_20: PRODUCT_IDS.pencils20,
+    pencil_20: PRODUCT_IDS.pencils20,
+    pencils_100: PRODUCT_IDS.pencils100,
+    pencil_100: PRODUCT_IDS.pencils100,
+    practice_notes_10: PRODUCT_IDS.practiceNotes10,
+    practice_note_10: PRODUCT_IDS.practiceNotes10,
+    practice_notes_20: PRODUCT_IDS.practiceNotes20,
+    practice_note_20: PRODUCT_IDS.practiceNotes20,
+    practice_notes_100: PRODUCT_IDS.practiceNotes100,
+    practice_note_100: PRODUCT_IDS.practiceNotes100,
 };
 
 const Shop = () => {
@@ -33,6 +55,8 @@ const Shop = () => {
     const { user, profile, refreshProfile } = useAuth();
     const [priceMap, setPriceMap] = useState<Record<string, string>>({});
     const [loadingPrices, setLoadingPrices] = useState(false);
+    const [enabledProductOrder, setEnabledProductOrder] = useState<ShopProductId[] | null>(null);
+    const [shopIconUrlMap, setShopIconUrlMap] = useState<Partial<Record<ShopProductId, string>>>({});
     const [purchasing, setPurchasing] = useState(false);
     const [purchaseReward, setPurchaseReward] = useState<{
         amount: number | null;
@@ -45,13 +69,27 @@ const Shop = () => {
     const edgeSwipeStartRef = useRef<{ x: number; y: number } | null>(null);
     const edgeSwipeTriggeredRef = useRef(false);
 
-    const items = useMemo<ShopItem[]>(() => ([
+    useEffect(() => {
+        const handleModalCloseRequest = (event: Event) => {
+            const customEvent = event as CustomEvent<{ handled?: boolean }>;
+            if (customEvent.detail?.handled) return;
+            if (!purchaseReward) return;
+            setPurchaseReward(null);
+            if (customEvent.detail) customEvent.detail.handled = true;
+        };
+        window.addEventListener('brainrush:request-modal-close', handleModalCloseRequest as EventListener);
+        return () => {
+            window.removeEventListener('brainrush:request-modal-close', handleModalCloseRequest as EventListener);
+        };
+    }, [purchaseReward]);
+
+    const catalogItems = useMemo<ShopCatalogItem[]>(() => ([
         {
             id: 'remove_ads',
             productId: PRODUCT_IDS.removeAds,
             titleKey: 'shop.removeAds.title',
             descKey: 'shop.removeAds.desc',
-            priceLabel: priceMap[PRODUCT_IDS.removeAds] || t('shop.priceTbd', 'TBD'),
+            fallbackPriceLabel: t('shop.priceTbd', 'TBD'),
             tagKey: 'shop.premium',
             accent: 'from-rose-500/20 to-transparent',
             icon: <Ban className="w-8 h-8 text-rose-300" />
@@ -61,7 +99,7 @@ const Shop = () => {
             productId: PRODUCT_IDS.nicknameChangeTicket,
             titleKey: 'shop.nicknameChangeTicket.title',
             descKey: 'shop.nicknameChangeTicket.desc',
-            priceLabel: priceMap[PRODUCT_IDS.nicknameChangeTicket] || '₩5,500',
+            fallbackPriceLabel: '₩5,500',
             tagKey: 'shop.premium',
             accent: 'from-indigo-500/20 to-transparent',
             icon: <span className="w-8 h-8 flex items-center justify-center text-3xl leading-none select-none" role="img" aria-label="ticket">🎫</span>,
@@ -72,7 +110,7 @@ const Shop = () => {
             productId: PRODUCT_IDS.pencils5,
             titleKey: 'shop.pencils5.title',
             descKey: 'shop.pencils5.desc',
-            priceLabel: priceMap[PRODUCT_IDS.pencils5] || '₩1,200',
+            fallbackPriceLabel: '₩1,200',
             accent: 'from-yellow-500/20 to-transparent',
             icon: <img src="/images/icon/icon_pen.png" alt="Pencil" className="w-8 h-8 object-contain" />,
             isConsumable: true,
@@ -82,7 +120,7 @@ const Shop = () => {
             productId: PRODUCT_IDS.pencils20,
             titleKey: 'shop.pencils20.title',
             descKey: 'shop.pencils20.desc',
-            priceLabel: priceMap[PRODUCT_IDS.pencils20] || '₩3,900',
+            fallbackPriceLabel: '₩3,900',
             tagKey: 'shop.popular',
             accent: 'from-emerald-500/20 to-transparent',
             icon: <img src="/images/icon/icon_pen.png" alt="Pencil" className="w-8 h-8 object-contain" />,
@@ -93,7 +131,7 @@ const Shop = () => {
             productId: PRODUCT_IDS.pencils100,
             titleKey: 'shop.pencils100.title',
             descKey: 'shop.pencils100.desc',
-            priceLabel: priceMap[PRODUCT_IDS.pencils100] || '₩19,000',
+            fallbackPriceLabel: '₩19,000',
             tagKey: 'shop.bestValue',
             accent: 'from-sky-500/20 to-transparent',
             icon: <img src="/images/icon/icon_pen.png" alt="Pencil" className="w-8 h-8 object-contain" />,
@@ -104,7 +142,7 @@ const Shop = () => {
             productId: PRODUCT_IDS.practiceNotes10,
             titleKey: 'shop.practiceNotes5.title',
             descKey: 'shop.practiceNotes5.desc',
-            priceLabel: priceMap[PRODUCT_IDS.practiceNotes10] || '₩1,200',
+            fallbackPriceLabel: '₩1,200',
             accent: 'from-green-500/20 to-transparent',
             icon: <img src="/images/icon/icon_note.png" alt="Practice Note" className="w-8 h-8 object-contain" />,
             isConsumable: true,
@@ -114,7 +152,7 @@ const Shop = () => {
             productId: PRODUCT_IDS.practiceNotes20,
             titleKey: 'shop.practiceNotes20.title',
             descKey: 'shop.practiceNotes20.desc',
-            priceLabel: priceMap[PRODUCT_IDS.practiceNotes20] || '₩2,200',
+            fallbackPriceLabel: '₩2,200',
             tagKey: 'shop.popular',
             accent: 'from-lime-500/20 to-transparent',
             icon: <img src="/images/icon/icon_note.png" alt="Practice Note" className="w-8 h-8 object-contain" />,
@@ -125,29 +163,103 @@ const Shop = () => {
             productId: PRODUCT_IDS.practiceNotes100,
             titleKey: 'shop.practiceNotes100.title',
             descKey: 'shop.practiceNotes100.desc',
-            priceLabel: priceMap[PRODUCT_IDS.practiceNotes100] || '₩9,900',
+            fallbackPriceLabel: '₩9,900',
             tagKey: 'shop.bestValue',
             accent: 'from-emerald-500/20 to-transparent',
             icon: <img src="/images/icon/icon_note.png" alt="Practice Note" className="w-8 h-8 object-contain" />,
             isConsumable: true,
         }
-    ]), [priceMap, t]);
+    ]), [t]);
+
+    useEffect(() => {
+        let active = true;
+        const fetchShopCatalog = async () => {
+            try {
+                let data: any[] | null = null;
+                let error: any = null;
+
+                const withIcon = await (supabase as any)
+                    .from('shop_catalog')
+                    .select('product_id, sort_order, icon_url')
+                    .eq('is_enabled', true)
+                    .order('sort_order', { ascending: true })
+                    .order('product_id', { ascending: true });
+
+                data = withIcon.data;
+                error = withIcon.error;
+
+                // Backward compatibility: older schema without icon_url.
+                if (error) {
+                    const withoutIcon = await (supabase as any)
+                        .from('shop_catalog')
+                        .select('product_id, sort_order')
+                        .eq('is_enabled', true)
+                        .order('sort_order', { ascending: true })
+                        .order('product_id', { ascending: true });
+                    data = withoutIcon.data;
+                    error = withoutIcon.error;
+                }
+                if (error) throw error;
+                if (!active) return;
+                const dedup = new Set<ShopProductId>();
+                const nextOrder: ShopProductId[] = [];
+                const nextIconMap: Partial<Record<ShopProductId, string>> = {};
+                for (const row of data || []) {
+                    const rawId = String(row.product_id);
+                    const mappedId = SHOP_PRODUCT_ALIAS_MAP[rawId];
+                    if (!mappedId) continue;
+                    const iconUrl = typeof row.icon_url === 'string' ? row.icon_url.trim() : '';
+                    if (iconUrl && !nextIconMap[mappedId]) nextIconMap[mappedId] = iconUrl;
+                    if (dedup.has(mappedId)) continue;
+                    dedup.add(mappedId);
+                    nextOrder.push(mappedId);
+                }
+                setEnabledProductOrder(nextOrder);
+                setShopIconUrlMap(nextIconMap);
+            } catch (err) {
+                console.error('Failed to load shop catalog:', err);
+                // null means fallback to local defaults.
+                if (active) setEnabledProductOrder(null);
+                if (active) setShopIconUrlMap({});
+            }
+        };
+
+        fetchShopCatalog();
+        return () => {
+            active = false;
+        };
+    }, []);
+
+    const enabledCatalogItems = useMemo(() => {
+        if (!enabledProductOrder) return catalogItems;
+        const byProductId = new Map(catalogItems.map((item) => [item.productId, item]));
+        const orderedItems: ShopCatalogItem[] = [];
+        for (const productId of enabledProductOrder) {
+            const item = byProductId.get(productId);
+            if (item) orderedItems.push(item);
+        }
+        return orderedItems;
+    }, [catalogItems, enabledProductOrder]);
+
+    const items = useMemo<ShopItem[]>(() => (
+        enabledCatalogItems.map((item) => ({
+            ...item,
+            priceLabel: priceMap[item.productId] || item.fallbackPriceLabel,
+            runtimeIconUrl: shopIconUrlMap[item.productId],
+        }))
+    ), [enabledCatalogItems, priceMap, shopIconUrlMap]);
 
     useEffect(() => {
         let active = true;
         const fetchPrices = async () => {
+            if (enabledCatalogItems.length < 1) {
+                setPriceMap({});
+                setLoadingPrices(false);
+                return;
+            }
             setLoadingPrices(true);
             try {
-                const products = await loadProducts([
-                    PRODUCT_IDS.removeAds,
-                    PRODUCT_IDS.nicknameChangeTicket,
-                    PRODUCT_IDS.pencils5,
-                    PRODUCT_IDS.pencils20,
-                    PRODUCT_IDS.pencils100,
-                    PRODUCT_IDS.practiceNotes10,
-                    PRODUCT_IDS.practiceNotes20,
-                    PRODUCT_IDS.practiceNotes100,
-                ]);
+                const products = await loadProducts(enabledCatalogItems.map((item) => item.productId));
                 if (!active) return;
                 const nextMap: Record<string, string> = {};
                 products.forEach((product) => {
@@ -167,7 +279,7 @@ const Shop = () => {
         return () => {
             active = false;
         };
-    }, []);
+    }, [enabledCatalogItems]);
 
     const handleBack = () => {
         playSound('click');
@@ -407,7 +519,17 @@ const Shop = () => {
 
                             <div className="relative z-10 flex items-center justify-between mb-6">
                                 <div className="p-3 rounded-full bg-slate-50 dark:bg-gray-900/60 border border-slate-200 dark:border-white/10 shadow-sm dark:shadow-none">
-                                    {item.icon}
+                                    <div className="relative w-8 h-8 flex items-center justify-center">
+                                        {item.icon}
+                                        {item.runtimeIconUrl && (
+                                            <img
+                                                src={item.runtimeIconUrl}
+                                                alt={t(item.titleKey)}
+                                                className="absolute inset-0 w-full h-full object-contain"
+                                                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                            />
+                                        )}
+                                    </div>
                                 </div>
                                 {item.tagKey && (
                                     <span className="px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full bg-white/50 dark:bg-white/10 border border-slate-200 dark:border-white/20 text-slate-800 dark:text-white shadow-sm dark:shadow-none">
@@ -452,6 +574,11 @@ const Shop = () => {
                         </motion.div>
                     ))}
                 </motion.div>
+                {items.length === 0 && (
+                    <div className="mt-6 rounded-2xl border border-amber-400/30 bg-amber-500/10 px-4 py-3 text-center text-sm text-amber-700 dark:text-amber-200">
+                        {t('shop.noEnabledItems', '현재 구매 가능한 상품이 없습니다.')}
+                    </div>
+                )}
 
 
             </div>

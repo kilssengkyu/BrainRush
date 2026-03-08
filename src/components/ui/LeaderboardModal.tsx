@@ -36,6 +36,10 @@ const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onClose }) 
     const [avatarPreview, setAvatarPreview] = useState<{ src: string; alt: string } | null>(null);
     const [scope, setScope] = useState<'global' | 'country'>('global');
     const myCountry = profile?.country ?? null;
+    const placementRequiredGames = 5;
+    const rankGamesPlayed = Math.max(0, Number((profile as any)?.rank_games_played ?? 0));
+    const placementGamesRemaining = Math.max(0, placementRequiredGames - rankGamesPlayed);
+    const isPlacementPending = Boolean(user) && rankGamesPlayed < placementRequiredGames;
 
     useEffect(() => {
         if (isOpen && scope === 'country' && !myCountry) {
@@ -46,6 +50,20 @@ const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onClose }) 
             fetchLeaderboard();
         }
     }, [isOpen, scope, myCountry, user?.id]);
+
+    useEffect(() => {
+        if (!isOpen) return;
+        const handleModalCloseRequest = (event: Event) => {
+            const customEvent = event as CustomEvent<{ handled?: boolean }>;
+            if (customEvent.detail?.handled) return;
+            if (customEvent.detail) customEvent.detail.handled = true;
+            onClose();
+        };
+        window.addEventListener('brainrush:request-modal-close', handleModalCloseRequest as EventListener);
+        return () => {
+            window.removeEventListener('brainrush:request-modal-close', handleModalCloseRequest as EventListener);
+        };
+    }, [isOpen, onClose]);
 
     const fetchLeaderboard = async () => {
         setLoading(true);
@@ -152,6 +170,15 @@ const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onClose }) 
                                         {myCountry ? `${t('leaderboard.country', 'Country')} (${myCountry})` : t('leaderboard.country', 'Country')}
                                     </button>
                                 </div>
+                                {isPlacementPending && (
+                                    <div className="mt-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-[11px] font-semibold text-amber-800 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200">
+                                        {t(
+                                            'leaderboard.placementNotice',
+                                            '배치 {{count}}판 후 랭킹에 표시됩니다.',
+                                            { count: placementGamesRemaining }
+                                        )}
+                                    </div>
+                                )}
                             </div>
 
                             {/* List */}

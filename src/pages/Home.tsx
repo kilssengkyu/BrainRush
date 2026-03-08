@@ -46,26 +46,28 @@ const getLivePencilState = (
     nowMs: number
 ) => {
     const basePencils = typeof pencils === 'number' ? pencils : 0;
+    const availablePencils = Math.min(MAX_PENCILS, Math.max(0, basePencils));
 
     if (!lastRechargeAt || basePencils >= MAX_PENCILS) {
-        return { pencils: Math.min(MAX_PENCILS, basePencils), remainingMs: 0 };
+        return { totalPencils: Math.max(0, basePencils), availablePencils, remainingMs: 0 };
     }
 
     const lastMs = new Date(lastRechargeAt).getTime();
     if (!Number.isFinite(lastMs)) {
-        return { pencils: Math.min(MAX_PENCILS, basePencils), remainingMs: 0 };
+        return { totalPencils: Math.max(0, basePencils), availablePencils, remainingMs: 0 };
     }
 
     const elapsedMs = Math.max(0, nowMs - lastMs);
     const regenerated = Math.floor(elapsedMs / PENCIL_RECHARGE_MS);
-    const livePencils = Math.min(MAX_PENCILS, basePencils + regenerated);
+    const livePencils = Math.min(MAX_PENCILS, Math.max(0, basePencils + regenerated));
 
     if (livePencils >= MAX_PENCILS) {
-        return { pencils: MAX_PENCILS, remainingMs: 0 };
+        return { totalPencils: MAX_PENCILS, availablePencils: MAX_PENCILS, remainingMs: 0 };
     }
 
     return {
-        pencils: livePencils,
+        totalPencils: livePencils,
+        availablePencils: livePencils,
         remainingMs: PENCIL_RECHARGE_MS - (elapsedMs % PENCIL_RECHARGE_MS)
     };
 };
@@ -109,6 +111,7 @@ const Home = () => {
     const xpRefreshRetryRef = useRef(0);
     const [longPressXpExpanded, setLongPressXpExpanded] = useState(false);
     const longPressTimerRef = useRef<number | null>(null);
+    const longPressCollapseTimerRef = useRef<number | null>(null);
     const longPressTouchRef = useRef(false);
     const longPressTriggeredRef = useRef(false);
     const suppressProfileClickRef = useRef(false);
@@ -122,11 +125,17 @@ const Home = () => {
     }, []);
 
     useEffect(() => {
+        const profilePencils = typeof profile?.pencils === 'number' ? profile.pencils : 0;
+        if (profilePencils >= MAX_PENCILS) {
+            setNowMs(Date.now());
+            return;
+        }
+
         const timer = window.setInterval(() => {
             setNowMs(Date.now());
         }, 1000);
         return () => window.clearInterval(timer);
-    }, []);
+    }, [profile?.pencils]);
 
     useEffect(() => {
         if (!user) {
@@ -201,6 +210,9 @@ const Home = () => {
     const tier = getTierFromMMR(rank);
     const tierColor = getTierColor(tier);
     const TierIcon = getTierIcon(tier);
+    const placementRequiredGames = 5;
+    const rankGamesPlayed = Math.max(0, Number((profile as any)?.rank_games_played ?? 0));
+    const showRankSummary = rankGamesPlayed >= placementRequiredGames;
     const level = typeof profile?.level === 'number'
         ? profile.level
         : typeof profile?.xp === 'number'
@@ -212,7 +224,8 @@ const Home = () => {
     const countryCode = profile?.country;
     const hasSocialNotifications = pendingRequestsCount > 0 || unreadChatCount > 0;
     const livePencilState = getLivePencilState(profile?.pencils, profile?.last_recharge_at, nowMs);
-    const displayedPencils = livePencilState.pencils;
+    const displayedPencils = livePencilState.totalPencils;
+    const availablePencils = livePencilState.availablePencils;
     const displayedRechargeMs = livePencilState.remainingMs;
 
     // Stable ref for refreshProfile to avoid effect dependency issues
@@ -390,8 +403,15 @@ const Home = () => {
         if (longPressTriggeredRef.current) {
             suppressProfileClickRef.current = true;
             suppressProfileClickUntilRef.current = Date.now() + 700;
+            if (longPressCollapseTimerRef.current) {
+                window.clearTimeout(longPressCollapseTimerRef.current);
+            }
+            longPressCollapseTimerRef.current = window.setTimeout(() => {
+                setLongPressXpExpanded(false);
+                longPressCollapseTimerRef.current = null;
+            }, 1500);
+            return;
         }
-        setLongPressXpExpanded(false);
     };
     const handleProfileClick = (event: React.MouseEvent | React.PointerEvent) => {
         if (
@@ -406,6 +426,17 @@ const Home = () => {
         }
         navigate('/profile');
     };
+
+    useEffect(() => {
+        return () => {
+            if (longPressTimerRef.current) {
+                window.clearTimeout(longPressTimerRef.current);
+            }
+            if (longPressCollapseTimerRef.current) {
+                window.clearTimeout(longPressCollapseTimerRef.current);
+            }
+        };
+    }, []);
     // Next milestone: 3 -> +5, 6 -> +10, 9 -> +15
     const nextMilestone = streakCount < 3 ? 3 : streakCount < 6 ? 6 : streakCount < 9 ? 9 : 0;
     const nextBonusMMR = nextMilestone === 3 ? 5 : nextMilestone === 6 ? 10 : nextMilestone === 9 ? 15 : 0;
@@ -725,6 +756,29 @@ const Home = () => {
         window.sessionStorage.setItem(shownKey, '1');
     }, [user, profile?.needs_nickname_setup]);
 
+    useEffect(() => {
+        const handleModalCloseRequest = (event: Event) => {
+            const customEvent = event as CustomEvent<{ handled?: boolean }>;
+            if (customEvent.detail?.handled) return;
+
+            if (showNicknameModal && !isSavingNickname) {
+                setShowNicknameModal(false);
+                if (customEvent.detail) customEvent.detail.handled = true;
+                return;
+            }
+
+            if (activeSessionPrompt && status === 'idle') {
+                dismissedActiveRoomRef.current = activeSessionPrompt.roomId;
+                setActiveSessionPrompt(null);
+                if (customEvent.detail) customEvent.detail.handled = true;
+            }
+        };
+        window.addEventListener('brainrush:request-modal-close', handleModalCloseRequest as EventListener);
+        return () => {
+            window.removeEventListener('brainrush:request-modal-close', handleModalCloseRequest as EventListener);
+        };
+    }, [showNicknameModal, isSavingNickname, activeSessionPrompt, status]);
+
     return (
         <div className={`min-h-[100dvh] bg-slate-50 dark:bg-gray-900 text-slate-900 dark:text-white flex flex-col items-center p-4 relative overflow-hidden`}>
             {/* Background Effects */}
@@ -741,7 +795,7 @@ const Home = () => {
                         <motion.div
                             layout
                             transition={{ type: 'spring', stiffness: 240, damping: 24 }}
-                            className={`bg-white dark:bg-gray-800/80 backdrop-blur-md border shadow-lg cursor-pointer hover:bg-white dark:bg-gray-800 transition-colors select-none ${shouldShowXpPanel
+                            className={`bg-white dark:bg-gray-800/80 backdrop-blur-md border shadow-lg cursor-pointer hover:bg-white dark:hover:bg-gray-800/80 transition-colors select-none ${shouldShowXpPanel
                                 ? 'w-[min(22rem,calc(100vw-2rem))] rounded-[1.75rem] border-blue-400/35 px-4 py-3 shadow-[0_0_28px_rgba(59,130,246,0.22)]'
                                 : 'rounded-full border-gray-700 p-2 pr-6'
                                 }`}
@@ -790,14 +844,16 @@ const Home = () => {
                                             </button>
                                         )}
                                     </div>
-                                    <div className="mt-1.5 flex gap-3 items-center">
-                                        <div className={`px-2 py-0.5 md:px-2.5 md:py-1 rounded-lg text-xs md:text-sm font-black bg-gradient-to-r ${tierColor} text-black flex items-center gap-1 shadow-md transform hover:scale-105 transition-transform`}>
-                                            <TierIcon className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                                            <span>{tier}</span>
-                                            <span className="opacity-60">|</span>
-                                            <span className="font-mono">{rank}</span>
+                                    {showRankSummary && (
+                                        <div className="mt-1.5 flex gap-3 items-center">
+                                            <div className={`px-2 py-0.5 md:px-2.5 md:py-1 rounded-lg text-xs md:text-sm font-black bg-gradient-to-r ${tierColor} text-black flex items-center gap-1 shadow-md transform hover:scale-105 transition-transform`}>
+                                                <TierIcon className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                                                <span>{tier}</span>
+                                                <span className="opacity-60">|</span>
+                                                <span className="font-mono">{rank}</span>
+                                            </div>
                                         </div>
-                                    </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -825,7 +881,7 @@ const Home = () => {
                                                     </div>
                                                 )}
                                             </div>
-                                            <div className="h-3 overflow-hidden rounded-full bg-white/10">
+                                            <div className="h-3 overflow-hidden rounded-full bg-slate-300/70 dark:bg-white/10">
                                                 <motion.div
                                                     className={`h-full rounded-full ${didLevelUpInAnimation ? 'bg-gradient-to-r from-emerald-300 via-blue-400 to-violet-400' : 'bg-gradient-to-r from-blue-400 to-cyan-300'}`}
                                                     animate={{ width: `${Math.max(6, (xpAnimation ? displayedXpProgress.ratio : staticXpProgress.ratio) * 100)}%` }}
@@ -869,7 +925,7 @@ const Home = () => {
                                     </span>
                                     <span className="text-gray-500 text-sm font-bold">/ 5</span>
                                 </div>
-                                {displayedPencils < MAX_PENCILS && (
+                                {availablePencils < MAX_PENCILS && (
                                     <div className="text-xs text-slate-500 dark:text-gray-400 font-mono flex items-center gap-1.5 mt-0.5">
                                         <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
                                         <RechargeTimer remainingMs={displayedRechargeMs} />
@@ -1059,7 +1115,9 @@ const Home = () => {
                                                 )}
                                             </div>
                                         </div>
-                                        <div className="text-blue-300 font-mono font-bold text-xs mt-1">{(profile?.mmr ?? 1000).toLocaleString()} MMR</div>
+                                        {showRankSummary && (
+                                            <div className="text-blue-300 font-mono font-bold text-xs mt-1">{(profile?.mmr ?? 1000).toLocaleString()} MMR</div>
+                                        )}
                                     </motion.div>
 
                                     {/* Timer */}
@@ -1197,7 +1255,9 @@ const Home = () => {
                             </div>
                             <div>
                                 <h3 className="text-2xl font-bold group-hover:text-blue-400 group-active:text-blue-200 transition-colors">{t('menu.normal.title')}</h3>
-                                <p className="text-gray-500 text-sm mt-1">{t('menu.normal.subtitle')}</p>
+                                <p className="text-gray-500 text-sm mt-1">
+                                    {t('menu.normal.subtitle')} · {t('menu.normal.matchRule', '3판 2선승')}
+                                </p>
                             </div>
                         </button>
 
@@ -1217,7 +1277,9 @@ const Home = () => {
                             </div>
                             <div className="relative z-10">
                                 <h3 className="text-2xl font-bold group-hover:text-purple-400 group-active:text-purple-200 transition-colors">{t('menu.rank.title')}</h3>
-                                <p className="text-gray-500 text-sm mt-1">{t('menu.rank.subtitle')}</p>
+                                <p className="text-gray-500 text-sm mt-1">
+                                    {t('menu.rank.subtitle')} · {t('menu.rank.matchRule', '5판 3선승')}
+                                </p>
                             </div>
 
                             {!user && (
@@ -1298,12 +1360,12 @@ const Home = () => {
                                 className="p-4 bg-white dark:bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-slate-100 dark:bg-gray-700 active:bg-blue-400/20 active:border-blue-300 active:shadow-[0_0_22px_rgba(59,130,246,0.45)] active:brightness-125 active:saturate-150 active:scale-[0.98] transition-all duration-150 flex items-center justify-center gap-2 group cursor-pointer"
                             >
                                 <span className="relative">
-                                    <User className="w-5 h-5 text-blue-400 group-hover:text-slate-900 dark:text-white group-active:text-blue-200 transition-colors" />
+                                    <User className="w-5 h-5 text-blue-400 group-hover:text-slate-900 dark:text-blue-400 dark:group-hover:text-blue-200 group-active:text-blue-200 transition-colors" />
                                     {hasSocialNotifications && (
                                         <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-gray-900" aria-hidden="true"></span>
                                     )}
                                 </span>
-                                <span className="text-blue-300 group-hover:text-slate-900 dark:text-white group-active:text-blue-100 transition-colors">{t('menu.profile')}</span>
+                                <span className="text-blue-300 group-hover:text-slate-900 dark:text-blue-300 dark:group-hover:text-blue-200 group-active:text-blue-100 transition-colors">{t('menu.profile')}</span>
                             </button>
                         ) : (
                             <button
@@ -1312,8 +1374,8 @@ const Home = () => {
                                 onClick={() => { playSound('click'); navigate('/login'); }}
                                 className="p-4 bg-white dark:bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-slate-100 dark:bg-gray-700 active:bg-slate-300/20 active:border-slate-200 active:shadow-[0_0_22px_rgba(148,163,184,0.35)] active:brightness-125 active:scale-[0.98] transition-all duration-150 flex items-center justify-center gap-2 group cursor-pointer"
                             >
-                                <User className="w-5 h-5 text-slate-500 dark:text-gray-400 group-hover:text-slate-900 dark:text-white group-active:text-slate-200 transition-colors" />
-                                <span className="text-slate-600 dark:text-gray-300 group-hover:text-slate-900 dark:text-white group-active:text-slate-100 transition-colors">{t('menu.login')}</span>
+                                <User className="w-5 h-5 text-slate-500 dark:text-gray-400 group-hover:text-slate-900 dark:group-hover:text-gray-200 group-active:text-slate-200 transition-colors" />
+                                <span className="text-slate-600 dark:text-gray-300 group-hover:text-slate-900 dark:group-hover:text-gray-200 group-active:text-slate-100 transition-colors">{t('menu.login')}</span>
                             </button>
                         )}
                     </motion.div>

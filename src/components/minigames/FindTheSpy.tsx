@@ -35,6 +35,12 @@ const SYMBOLS = [
     { id: 'skull', icon: Skull, color: 'text-gray-400' },
 ];
 
+const getRoundConfig = (tileCount: number) => {
+    if (tileCount >= 9) return { spyCount: 2, hitScore: 160, missPenalty: 140 };
+    if (tileCount >= 6) return { spyCount: 2, hitScore: 150, missPenalty: 130 };
+    return { spyCount: 1, hitScore: 140, missPenalty: 120 };
+};
+
 const FindTheSpy: React.FC<FindTheSpyProps> = ({ seed, onScore, isPlaying }) => {
     const { t } = useTranslation();
     const { playSound } = useSound();
@@ -97,7 +103,7 @@ const FindTheSpy: React.FC<FindTheSpyProps> = ({ seed, onScore, isPlaying }) => 
     const prepareShuffleLogic = () => {
         if (!rng.current) return;
 
-        const changeCount = tiles.length >= 9 ? 3 : tiles.length >= 6 ? 2 : 1;
+        const { spyCount: changeCount } = getRoundConfig(tiles.length);
 
         // 1. Pick indices to change (keep order, only replace symbols)
         const indices = Array.from({ length: tiles.length }, (_, i) => i);
@@ -143,8 +149,7 @@ const FindTheSpy: React.FC<FindTheSpyProps> = ({ seed, onScore, isPlaying }) => 
         if (targetSymbolIds.includes(symbolId)) {
             // Correct
             playSound('correct');
-            const difficultyBonus = Math.max(0, targetSymbolIds.length - 1) * 60;
-            const scorePerHit = 160 + difficultyBonus;
+            const { hitScore: scorePerHit } = getRoundConfig(tiles.length);
             onScore(scorePerHit);
             const nextFound = [...foundSpyIds, symbolId];
             setFoundSpyIds(nextFound);
@@ -156,9 +161,8 @@ const FindTheSpy: React.FC<FindTheSpyProps> = ({ seed, onScore, isPlaying }) => 
         } else {
             // Wrong
             playSound('error');
-            const difficultyBonus = Math.max(0, targetSymbolIds.length - 1) * 60;
-            const scorePerHit = 160 + difficultyBonus;
-            onScore(-Math.round(scorePerHit / 2));
+            const { missPenalty } = getRoundConfig(tiles.length);
+            onScore(-missPenalty);
             // Visual feedback could be added here (shake etc), 
             // but for fast pace we might just deduct score.
         }

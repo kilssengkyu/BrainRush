@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -11,6 +11,21 @@ interface AvatarModalProps {
 
 const AvatarModal: React.FC<AvatarModalProps> = ({ isOpen, onClose, src, alt }) => {
     const { t } = useTranslation();
+
+    useEffect(() => {
+        if (!isOpen || !src) return;
+        const handleModalCloseRequest = (event: Event) => {
+            const customEvent = event as CustomEvent<{ handled?: boolean }>;
+            if (customEvent.detail?.handled) return;
+            if (customEvent.detail) customEvent.detail.handled = true;
+            onClose();
+        };
+        window.addEventListener('brainrush:request-modal-close', handleModalCloseRequest as EventListener);
+        return () => {
+            window.removeEventListener('brainrush:request-modal-close', handleModalCloseRequest as EventListener);
+        };
+    }, [isOpen, src, onClose]);
+
     if (!isOpen || !src) return null;
 
     return (

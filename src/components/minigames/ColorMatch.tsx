@@ -95,7 +95,9 @@ const ColorMatch: React.FC<ColorMatchProps> = ({ seed, onScore, isPlaying }) => 
         // Usually clicking a wrong item acts as penalty.
 
         if (item.isMatch) {
-            // Correct item selected. Check if ALL are selected.
+            // Correct item selected. Award per-correct hit.
+            onScore(60);
+            // Check if ALL are selected.
             const correctIndices = currentPanel.items
                 .map((it, idx) => it.isMatch ? idx : -1)
                 .filter(idx => idx !== -1);
@@ -108,9 +110,9 @@ const ColorMatch: React.FC<ColorMatchProps> = ({ seed, onScore, isPlaying }) => 
             const noWrongSelected = Array.from(newSelected).every(idx => currentPanel.items[idx].isMatch);
 
             if (allCorrectSelected && noWrongSelected) {
-                // Level Complete
+                // Level Complete bonus
                 setIsSolved(true);
-                onScore(100);
+                onScore(30);
                 playSound('correct');
 
                 setTimeout(() => {

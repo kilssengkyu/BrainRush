@@ -140,6 +140,21 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
         }
     }, [isOpen]);
 
+    useEffect(() => {
+        if (!isOpen) return;
+        const handleModalCloseRequest = (event: Event) => {
+            const customEvent = event as CustomEvent<{ handled?: boolean }>;
+            if (customEvent.detail?.handled) return;
+            if (adState === 'loading' || adState === 'playing') return;
+            if (customEvent.detail) customEvent.detail.handled = true;
+            onClose();
+        };
+        window.addEventListener('brainrush:request-modal-close', handleModalCloseRequest as EventListener);
+        return () => {
+            window.removeEventListener('brainrush:request-modal-close', handleModalCloseRequest as EventListener);
+        };
+    }, [isOpen, adState, onClose]);
+
     const startAd = async () => {
         playSound('click');
         if (isLimitReached) {

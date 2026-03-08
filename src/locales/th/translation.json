@@ -20,7 +20,9 @@
       "hour": "{{count}} ชม. ที่แล้ว",
       "day": "{{count}} วันที่แล้ว",
       "longAgo": "นานมาแล้ว"
-    }
+    },
+    "exitAppTitle": "ออกจากแอป",
+    "exitAppConfirm": "ต้องการออกจากแอปหรือไม่?"
   },
   "auth": {
     "loginRequired": "ต้องเข้าสู่ระบบ",
@@ -89,11 +91,13 @@
   "menu": {
     "normal": {
       "title": "โหมดปกติ",
-      "subtitle": "ฝึกสมองพื้นฐาน"
+      "subtitle": "ฝึกสมองพื้นฐาน",
+      "matchRule": "ชนะ 2 ใน 3 เกม"
     },
     "rank": {
       "title": "โหมดแรงก์",
-      "subtitle": "แข่งขันระดับโลก"
+      "subtitle": "แข่งขันระดับโลก",
+      "matchRule": "ชนะ 3 ใน 5 เกม"
     },
     "all": "ทั้งหมด",
     "friendly": {
@@ -170,6 +174,7 @@
     "global": "ทั่วโลก",
     "country": "ประเทศ",
     "myRank": "MY RANK",
+    "placementNotice": "คุณจะแสดงในแรงก์หลังจบเกมจัดอันดับ {{count}} เกม",
     "mmrLabel": "MMR",
     "avatarPreview": "{{nickname}} avatar"
   },
@@ -237,7 +242,16 @@
     "goToSupport": "เปิดหน้าช่วยเหลือ",
     "notifications": "Notifications",
     "pushNotifications": "Push/Local Notifications",
-    "notificationNativeHint": "Notification toggle is disabled on the web."
+    "notificationNativeHint": "Notification toggle is disabled on the web.",
+    "recommended": "แนะนำ",
+    "theme": "ธีม",
+    "themeMode": "โหมดการแสดงผล",
+    "systemThemeDesc": "ใช้การตั้งค่าของอุปกรณ์",
+    "darkMode": "โหมดมืด",
+    "lightMode": "โหมดสว่าง",
+    "light": "สว่าง",
+    "dark": "มืด",
+    "system": "ระบบ"
   },
   "report": {
     "button": "รายงาน",
@@ -552,7 +566,23 @@
     "undoHint": "แตะสมการเพื่อยกเลิก"
   },
   "practice": {
-    "random": "สุ่ม"
+    "random": "สุ่ม",
+    "descriptionPending": "Description coming soon",
+    "myHighscoreLabel": "My High Score",
+    "statGainLabel": "Stat Gain",
+    "none": "None",
+    "guideTitle": "Practice Guide",
+    "guideAtAGlance": "At a glance",
+    "guideObjective": "Objective",
+    "guideHowTo": "How to play",
+    "guideTip": "Tip",
+    "autoGuide": {
+      "summary": "Practice {{title}} and learn the core rule quickly.",
+      "tip": "Read the rule once, then focus on speed and accuracy.",
+      "objectiveFallback": "Start and follow the on-screen rule."
+    },
+    "viewGrid": "Grid view",
+    "viewList": "List view"
   },
   "update": {
     "title": "จำเป็นต้องอัปเดต",

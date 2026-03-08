@@ -22,6 +22,21 @@ const ReportReasonModal = ({ isOpen, targetName, onClose, onSubmit }: ReportReas
     }
   }, [isOpen]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleModalCloseRequest = (event: Event) => {
+      const customEvent = event as CustomEvent<{ handled?: boolean }>;
+      if (customEvent.detail?.handled) return;
+      if (isSubmitting) return;
+      if (customEvent.detail) customEvent.detail.handled = true;
+      onClose();
+    };
+    window.addEventListener('brainrush:request-modal-close', handleModalCloseRequest as EventListener);
+    return () => {
+      window.removeEventListener('brainrush:request-modal-close', handleModalCloseRequest as EventListener);
+    };
+  }, [isOpen, isSubmitting, onClose]);
+
   const trimmed = useMemo(() => reason.trim(), [reason]);
   const canSubmit = !isSubmitting && trimmed.length >= 3;
 

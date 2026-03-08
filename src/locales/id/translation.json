@@ -20,7 +20,9 @@
       "hour": "{{count}} j lalu",
       "day": "{{count}} h lalu",
       "longAgo": "Lama sekali"
-    }
+    },
+    "exitAppTitle": "Keluar Aplikasi",
+    "exitAppConfirm": "Apakah Anda ingin keluar dari aplikasi?"
   },
   "auth": {
     "loginRequired": "Login diperlukan.",
@@ -89,11 +91,13 @@
   "menu": {
     "normal": {
       "title": "Mode Normal",
-      "subtitle": "Latihan otak dasar"
+      "subtitle": "Latihan otak dasar",
+      "matchRule": "Best of 3 (menang 2)"
     },
     "rank": {
       "title": "Mode Rank",
-      "subtitle": "Bersaing secara global"
+      "subtitle": "Bersaing secara global",
+      "matchRule": "Best of 5 (menang 3)"
     },
     "all": "Semua",
     "friendly": {
@@ -170,6 +174,7 @@
     "global": "Global",
     "country": "Negara",
     "myRank": "MY RANK",
+    "placementNotice": "Kamu akan tampil di ranking setelah {{count}} pertandingan penempatan.",
     "mmrLabel": "MMR",
     "avatarPreview": "{{nickname}} avatar"
   },
@@ -237,7 +242,16 @@
     "goToSupport": "Buka dukungan",
     "notifications": "Notifications",
     "pushNotifications": "Push/Local Notifications",
-    "notificationNativeHint": "Notification toggle is disabled on the web."
+    "notificationNativeHint": "Notification toggle is disabled on the web.",
+    "recommended": "Rekomendasi",
+    "theme": "Tema",
+    "themeMode": "Tampilan",
+    "systemThemeDesc": "Mengikuti pengaturan perangkat.",
+    "darkMode": "Mode gelap",
+    "lightMode": "Mode terang",
+    "light": "Terang",
+    "dark": "Gelap",
+    "system": "Sistem"
   },
   "report": {
     "button": "Laporkan",
@@ -552,7 +566,23 @@
     "undoHint": "Ketuk persamaan untuk membatalkan"
   },
   "practice": {
-    "random": "Acak"
+    "random": "Acak",
+    "descriptionPending": "Description coming soon",
+    "myHighscoreLabel": "My High Score",
+    "statGainLabel": "Stat Gain",
+    "none": "None",
+    "guideTitle": "Practice Guide",
+    "guideAtAGlance": "At a glance",
+    "guideObjective": "Objective",
+    "guideHowTo": "How to play",
+    "guideTip": "Tip",
+    "autoGuide": {
+      "summary": "Practice {{title}} and learn the core rule quickly.",
+      "tip": "Read the rule once, then focus on speed and accuracy.",
+      "objectiveFallback": "Start and follow the on-screen rule."
+    },
+    "viewGrid": "Grid view",
+    "viewList": "List view"
   },
   "update": {
     "title": "Pembaruan Diperlukan",

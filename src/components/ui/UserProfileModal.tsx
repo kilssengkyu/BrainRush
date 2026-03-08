@@ -59,6 +59,20 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose, us
         fetchProfile();
     }, [isOpen, userId]);
 
+    useEffect(() => {
+        if (!isOpen) return;
+        const handleModalCloseRequest = (event: Event) => {
+            const customEvent = event as CustomEvent<{ handled?: boolean }>;
+            if (customEvent.detail?.handled) return;
+            if (customEvent.detail) customEvent.detail.handled = true;
+            onClose();
+        };
+        window.addEventListener('brainrush:request-modal-close', handleModalCloseRequest as EventListener);
+        return () => {
+            window.removeEventListener('brainrush:request-modal-close', handleModalCloseRequest as EventListener);
+        };
+    }, [isOpen, onClose]);
+
     if (!isOpen) return null;
 
     const rank = profile?.mmr ?? 1000;

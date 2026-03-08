@@ -133,7 +133,7 @@ const FillBlanks: React.FC<FillBlanksProps> = ({ seed, onScore, isPlaying }) => 
     const handleOptionClick = (selected: number) => {
         if (!currentProblem || !isPlaying) return;
 
-        const scoreBase = 60 + (panelIndex * 5);
+        const scoreBase = 75 + (panelIndex * 6);
 
         if (selected === currentProblem.answer) {
             // Correct
