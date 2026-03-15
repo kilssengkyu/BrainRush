@@ -50,33 +50,48 @@ export const AdLogic = {
         }
     },
 
-    // Show Interstitial Ad
+    // Show Interstitial Ad (with retry on NoFill)
     showInterstitial: async () => {
-        try {
-            const platform = Capacitor.getPlatform();
-            const adsMode = String(import.meta.env.VITE_ADS_MODE ?? import.meta.env.VITE_APP_ENV ?? '').toLowerCase();
-            const isProd = adsMode === 'prod' || adsMode === 'production';
+        const platform = Capacitor.getPlatform();
+        const adsMode = String(import.meta.env.VITE_ADS_MODE ?? import.meta.env.VITE_APP_ENV ?? '').toLowerCase();
+        const isProd = adsMode === 'prod' || adsMode === 'production';
 
-            // Determine ID
-            let adId = '';
-            if (isProd) {
-                adId = platform === 'ios' ? ADS.ios.interstitial : ADS.android.interstitial;
-            } else {
-                adId = platform === 'ios' ? TEST_ADS.ios.interstitial : TEST_ADS.android.interstitial;
-            }
+        let adId = '';
+        if (isProd) {
+            adId = platform === 'ios' ? ADS.ios.interstitial : ADS.android.interstitial;
+        } else {
+            adId = platform === 'ios' ? TEST_ADS.ios.interstitial : TEST_ADS.android.interstitial;
+        }
 
-            if (adId.includes('xxx')) {
-                console.warn('[AdLogic] Android Interstitial ID missing, skipping.');
-                return false;
-            }
-
-            await AdMob.prepareInterstitial({ adId });
-            await AdMob.showInterstitial();
-            return true;
-        } catch (error) {
-            console.error('[AdLogic] Failed to show interstitial:', error);
+        if (adId.includes('xxx')) {
+            console.warn('[AdLogic] Android Interstitial ID missing, skipping.');
             return false;
         }
+
+        const MAX_RETRIES = 2;
+        const RETRY_DELAYS = [1500, 3000]; // ms
+
+        for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+            try {
+                if (attempt > 0) {
+                    console.log(`[AdLogic] Interstitial retry ${attempt}/${MAX_RETRIES}...`);
+                    await new Promise(r => setTimeout(r, RETRY_DELAYS[attempt - 1]));
+                }
+                await AdMob.prepareInterstitial({ adId });
+                await AdMob.showInterstitial();
+                return true;
+            } catch (error: any) {
+                const msg = error?.message || error?.errorMessage || String(error);
+                const isNoFill = msg.toLowerCase().includes('no fill') || msg.toLowerCase().includes('nofill');
+                if (isNoFill && attempt < MAX_RETRIES) {
+                    console.warn(`[AdLogic] Interstitial NoFill (attempt ${attempt + 1}), will retry...`);
+                    continue;
+                }
+                console.error('[AdLogic] Failed to show interstitial:', error);
+                return false;
+            }
+        }
+        return false;
     },
 
     // Reset counter (Fair Ad Logic - Call this when user watches Rewarded Ad)

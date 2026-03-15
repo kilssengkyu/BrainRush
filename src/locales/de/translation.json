@@ -22,7 +22,8 @@
       "longAgo": "Vor langer Zeit"
     },
     "exitAppTitle": "App beenden",
-    "exitAppConfirm": "Möchtest du die App beenden?"
+    "exitAppConfirm": "Möchtest du die App beenden?",
+    "open": "Öffnen"
   },
   "auth": {
     "loginRequired": "Anmeldung erforderlich.",
@@ -86,7 +87,8 @@
     "challenge": "Herausfordern",
     "accept": "Annehmen",
     "reject": "Ablehnen",
-    "newMessage": "Neue Nachricht von {{nickname}}"
+    "newMessage": "Neue Nachricht von {{nickname}}",
+    "chatRateLimited": "Sendelimit erreicht: In {{seconds}}s erneut senden."
   },
   "menu": {
     "normal": {
@@ -199,7 +201,9 @@
     "playing": "Werbung wird abgespielt...",
     "pencils": "Stifte",
     "practiceNotes": "Übungsnotizen",
-    "success": "Belohnung erfolgreich erhalten."
+    "success": "Belohnung erfolgreich erhalten.",
+    "noFillTitle": "Derzeit keine Werbung verfügbar",
+    "noFillDesc": "Bitte versuche es gleich noch einmal."
   },
   "notifications": {
     "fullTitle": "Stifte voll",
@@ -232,17 +236,17 @@
     "tutorial": "Tutorial",
     "tutorialDesc": "Wenn du die App-Nutzung noch einmal sehen möchtest, öffne das Tutorial erneut.",
     "viewTutorial": "Tutorial erneut ansehen",
-    "notificationNativeOnly": "Notification settings are only available in the mobile app.",
-    "notificationOff": "Notifications turned off.",
-    "notificationDeniedIos": "Please allow notifications in iPhone Settings > Notifications.",
-    "notificationDeniedAndroid": "Please allow notifications in Android Settings > Notifications.",
-    "notificationOn": "Notifications turned on.",
+    "notificationNativeOnly": "Benachrichtigungseinstellungen sind nur in der mobilen App verfügbar.",
+    "notificationOff": "Benachrichtigungen wurden deaktiviert.",
+    "notificationDeniedIos": "Bitte erlauben Sie Benachrichtigungen in den iPhone-Einstellungen > Mitteilungen.",
+    "notificationDeniedAndroid": "Bitte erlauben Sie Benachrichtigungen in den Android-Einstellungen > Benachrichtigungen.",
+    "notificationOn": "Benachrichtigungen wurden aktiviert.",
     "support": "Support kontaktieren",
     "supportDesc": "Hier findest du Hilfe für Bugs, Probleme und andere Anfragen.",
     "goToSupport": "Support öffnen",
-    "notifications": "Notifications",
-    "pushNotifications": "Push/Local Notifications",
-    "notificationNativeHint": "Notification toggle is disabled on the web.",
+    "notifications": "Benachrichtigungen",
+    "pushNotifications": "Push-/Lokale Benachrichtigungen",
+    "notificationNativeHint": "Der Benachrichtigungsschalter ist im Web deaktiviert.",
     "recommended": "Empfohlen",
     "theme": "Design",
     "themeMode": "Darstellung",
@@ -251,7 +255,26 @@
     "lightMode": "Heller Modus",
     "light": "Hell",
     "dark": "Dunkel",
-    "system": "System"
+    "system": "System",
+    "assetCredits": "Asset-Credits",
+    "assetCreditsDesc": "Einige visuelle Assets stammen von Drittanbieter-Erstellern und werden gemäß ihren Lizenzen (z. B. CC BY 4.0) genannt.",
+    "viewMakers": "Macher und Credits anzeigen",
+    "makers": "Macher und Credits",
+    "localCredit": "Lokale Nennung",
+    "announcements": "Ankündigungen",
+    "announcementsDesc": "Die neueste Ankündigung erneut anzeigen.",
+    "viewAnnouncementAgain": "Ankündigung erneut anzeigen",
+    "announcementWillShowOnHome": "Die neueste Ankündigung wird auf der Startseite erneut angezeigt.",
+    "announcementResetFail": "Zurücksetzen der Ankündigungs-Sichtbarkeit fehlgeschlagen.",
+    "versionLabel": "Version",
+    "makersRoleCreator": "Ersteller",
+    "makersRoleRankingBadges": "Ranking-Abzeichen (CC BY 4.0)",
+    "makersRoleCcBy": "CC BY 4.0 Lizenz",
+    "admin": "Admin",
+    "adminDesc": "Zur Admin-Seite wechseln.",
+    "goToAdmin": "Admin-Bereich öffnen",
+    "guestModeWarningTitle": "Hinweis zum Gastkonto",
+    "guestModeWarningDesc": "Gastkonten können beim Abmelden, Löschen der App oder Gerätewechsel Daten verlieren. Verknüpfe ein Konto, um deinen Fortschritt zu sichern."
   },
   "report": {
     "button": "Melden",
@@ -317,8 +340,11 @@
     "updateFail": "Profil konnte nicht aktualisiert werden",
     "deleteSuccess": "Konto erfolgreich gelöscht.",
     "deleteFail": "Konto konnte nicht gelöscht werden.",
-    "guestDescIOS": "Guest accounts can be lost if you sign out, delete the app, or change devices. Link an Apple or Google account to keep your progress. Also, guest accounts may be deleted after 7 days of inactivity.",
-    "linkApple": "Link Apple Account"
+    "guestDescIOS": "Gastkonten können verloren gehen, wenn du dich abmeldest, die App löschst oder das Gerät wechselst. Verknüpfe ein Apple- oder Google-Konto, um deinen Fortschritt zu behalten. Gastkonten können außerdem nach 7 Tagen Inaktivität gelöscht werden.",
+    "linkApple": "Apple-Konto verknüpfen",
+    "nicknameChangedSuccess": "Nickname wurde geändert.",
+    "rankPlacement": "Platzierung",
+    "rankPlacementRemaining": "Noch {{count}} Spiel"
   },
   "game": {
     "waiting": "Warte auf Spiel...",
@@ -597,7 +623,8 @@
     "resumeLater": "Later",
     "resumeNow": "Resume",
     "levelProgressLevel": "Lv. {{level}}",
-    "levelUp": "LEVEL UP!"
+    "levelUp": "LEVEL UP!",
+    "hideAnnouncementToday": "Heute nicht mehr anzeigen"
   },
   "login": {
     "bannedTitle": "Account Suspended",
@@ -607,5 +634,11 @@
     "bannedAppeal": "If you want to appeal the suspension, please contact support.",
     "contactSupport": "Contact Support",
     "tryLaterKeyword": "later"
+  },
+  "review": {
+    "enjoyTitle": "Macht dir das Spiel Spaß?",
+    "enjoySubtitle": "Eine Bewertung hilft uns sehr!",
+    "enjoyYes": "Ja! 😊",
+    "enjoyNo": "Nicht wirklich 😐"
   }
 }

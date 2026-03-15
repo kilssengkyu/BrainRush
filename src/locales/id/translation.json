@@ -22,7 +22,8 @@
       "longAgo": "Lama sekali"
     },
     "exitAppTitle": "Keluar Aplikasi",
-    "exitAppConfirm": "Apakah Anda ingin keluar dari aplikasi?"
+    "exitAppConfirm": "Apakah Anda ingin keluar dari aplikasi?",
+    "open": "Buka"
   },
   "auth": {
     "loginRequired": "Login diperlukan.",
@@ -86,7 +87,8 @@
     "challenge": "Tantang",
     "accept": "Terima",
     "reject": "Tolak",
-    "newMessage": "Pesan baru dari {{nickname}}"
+    "newMessage": "Pesan baru dari {{nickname}}",
+    "chatRateLimited": "Batas kirim: kirim lagi dalam {{seconds}} dtk."
   },
   "menu": {
     "normal": {
@@ -199,7 +201,9 @@
     "playing": "Iklan sedang diputar...",
     "pencils": "Pensil",
     "practiceNotes": "Catatan latihan",
-    "success": "Hadiah berhasil didapatkan."
+    "success": "Hadiah berhasil didapatkan.",
+    "noFillTitle": "Tidak ada iklan saat ini",
+    "noFillDesc": "Silakan coba lagi nanti."
   },
   "notifications": {
     "fullTitle": "Pensil penuh",
@@ -232,17 +236,17 @@
     "tutorial": "Tutorial",
     "tutorialDesc": "Jika ingin melihat kembali cara menggunakan aplikasi, buka lagi tutorialnya.",
     "viewTutorial": "Lihat tutorial lagi",
-    "notificationNativeOnly": "Notification settings are only available in the mobile app.",
-    "notificationOff": "Notifications turned off.",
-    "notificationDeniedIos": "Please allow notifications in iPhone Settings > Notifications.",
-    "notificationDeniedAndroid": "Please allow notifications in Android Settings > Notifications.",
-    "notificationOn": "Notifications turned on.",
+    "notificationNativeOnly": "Pengaturan notifikasi hanya tersedia di aplikasi seluler.",
+    "notificationOff": "Notifikasi dimatikan.",
+    "notificationDeniedIos": "Izinkan notifikasi di iPhone: Pengaturan > Notifikasi.",
+    "notificationDeniedAndroid": "Izinkan notifikasi di Android: Pengaturan > Notifikasi.",
+    "notificationOn": "Notifikasi dinyalakan.",
     "support": "Hubungi dukungan",
     "supportDesc": "Lihat bantuan untuk bug, masalah, dan pertanyaan lainnya.",
     "goToSupport": "Buka dukungan",
-    "notifications": "Notifications",
-    "pushNotifications": "Push/Local Notifications",
-    "notificationNativeHint": "Notification toggle is disabled on the web.",
+    "notifications": "Notifikasi",
+    "pushNotifications": "Notifikasi Push/Lokal",
+    "notificationNativeHint": "Tombol notifikasi dinonaktifkan di web.",
     "recommended": "Rekomendasi",
     "theme": "Tema",
     "themeMode": "Tampilan",
@@ -251,7 +255,26 @@
     "lightMode": "Mode terang",
     "light": "Terang",
     "dark": "Gelap",
-    "system": "Sistem"
+    "system": "Sistem",
+    "assetCredits": "Kredit Aset",
+    "assetCreditsDesc": "Beberapa aset visual berasal dari kreator pihak ketiga dan dicantumkan sesuai lisensinya (mis. CC BY 4.0).",
+    "viewMakers": "Lihat Pembuat & Kredit",
+    "makers": "Pembuat & Kredit",
+    "localCredit": "Kredit lokal",
+    "announcements": "Pengumuman",
+    "announcementsDesc": "Lihat kembali pengumuman terbaru.",
+    "viewAnnouncementAgain": "Lihat lagi pengumuman",
+    "announcementWillShowOnHome": "Pengumuman terbaru akan ditampilkan lagi di Beranda.",
+    "announcementResetFail": "Gagal mengatur ulang visibilitas pengumuman.",
+    "versionLabel": "Versi",
+    "makersRoleCreator": "Pembuat",
+    "makersRoleRankingBadges": "Lencana peringkat (CC BY 4.0)",
+    "makersRoleCcBy": "Lisensi CC BY 4.0",
+    "admin": "Admin",
+    "adminDesc": "Buka halaman khusus admin.",
+    "goToAdmin": "Buka halaman admin",
+    "guestModeWarningTitle": "Peringatan akun tamu",
+    "guestModeWarningDesc": "Akun tamu dapat kehilangan data saat keluar, menghapus aplikasi, atau ganti perangkat. Tautkan akun untuk menyimpan progres."
   },
   "report": {
     "button": "Laporkan",
@@ -317,8 +340,11 @@
     "updateFail": "Gagal memperbarui profil",
     "deleteSuccess": "Akun berhasil dihapus.",
     "deleteFail": "Gagal menghapus akun.",
-    "guestDescIOS": "Guest accounts can be lost if you sign out, delete the app, or change devices. Link an Apple or Google account to keep your progress. Also, guest accounts may be deleted after 7 days of inactivity.",
-    "linkApple": "Link Apple Account"
+    "guestDescIOS": "Akun tamu bisa hilang jika Anda keluar, menghapus aplikasi, atau mengganti perangkat. Tautkan akun Apple atau Google untuk menyimpan progres Anda. Selain itu, akun tamu dapat dihapus setelah 7 hari tidak aktif.",
+    "linkApple": "Tautkan Akun Apple",
+    "nicknameChangedSuccess": "Nickname berhasil diubah.",
+    "rankPlacement": "Penempatan",
+    "rankPlacementRemaining": "Sisa {{count}} pertandingan"
   },
   "game": {
     "waiting": "Menunggu game...",
@@ -597,7 +623,8 @@
     "resumeLater": "Later",
     "resumeNow": "Resume",
     "levelProgressLevel": "Lv. {{level}}",
-    "levelUp": "LEVEL UP!"
+    "levelUp": "LEVEL UP!",
+    "hideAnnouncementToday": "Jangan tampilkan lagi hari ini"
   },
   "login": {
     "bannedTitle": "Account Suspended",
@@ -607,5 +634,11 @@
     "bannedAppeal": "If you want to appeal the suspension, please contact support.",
     "contactSupport": "Contact Support",
     "tryLaterKeyword": "later"
+  },
+  "review": {
+    "enjoyTitle": "Suka dengan gamenya?",
+    "enjoySubtitle": "Review singkat sangat membantu kami!",
+    "enjoyYes": "Ya! 😊",
+    "enjoyNo": "Kurang 😐"
   }
 }

@@ -5,6 +5,8 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 import translationKO from '../locales/ko/translation.json';
 import translationEN from '../locales/en/translation.json';
 import translationZH from '../locales/zh/translation.json';
+import translationZHHans from '../locales/zh-Hans/translation.json';
+import translationZHHant from '../locales/zh-Hant/translation.json';
 import translationJA from '../locales/ja/translation.json';
 import translationES from '../locales/es/translation.json';
 import translationPTBR from '../locales/pt-BR/translation.json';
@@ -18,6 +20,13 @@ const resources = {
     ko: { translation: translationKO },
     en: { translation: translationEN },
     zh: { translation: translationZH },
+    'zh-Hans': { translation: translationZHHans },
+    'zh-Hant': { translation: translationZHHant },
+    'zh-CN': { translation: translationZHHans },
+    'zh-SG': { translation: translationZHHans },
+    'zh-TW': { translation: translationZHHant },
+    'zh-HK': { translation: translationZHHant },
+    'zh-MO': { translation: translationZHHant },
     ja: { translation: translationJA },
     es: { translation: translationES },
     'pt-BR': { translation: translationPTBR },
@@ -34,7 +43,11 @@ i18n
     .init({
         resources,
         fallbackLng: 'en', // Default to English if unsupported
-        supportedLngs: ['ko', 'en', 'zh', 'ja', 'es', 'pt-BR', 'de', 'fr', 'id', 'th', 'vi'],
+        supportedLngs: [
+            'ko', 'en',
+            'zh', 'zh-Hans', 'zh-Hant', 'zh-CN', 'zh-SG', 'zh-TW', 'zh-HK', 'zh-MO',
+            'ja', 'es', 'pt-BR', 'de', 'fr', 'id', 'th', 'vi'
+        ],
         nonExplicitSupportedLngs: true,
         interpolation: {
             escapeValue: false, // React already escapes values

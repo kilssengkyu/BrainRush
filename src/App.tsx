@@ -115,6 +115,7 @@ import Admin from './pages/Admin';
 import AdminMember from './pages/AdminMember';
 import AdminCatalogGames from './pages/AdminCatalogGames';
 import AdminCatalogShop from './pages/AdminCatalogShop';
+import AdminNotices from './pages/AdminNotices';
 
 import GameInviteListener from './components/social/GameInviteListener';
 import RematchListener from './components/social/RematchListener';
@@ -197,6 +198,7 @@ function App() {
                     <Route path="/admin/member" element={<AdminMember />} />
                     <Route path="/admin/games" element={<AdminCatalogGames />} />
                     <Route path="/admin/shop" element={<AdminCatalogShop />} />
+                    <Route path="/admin/notices" element={<AdminNotices />} />
                   </Routes>
                 </div>
               </BrowserRouter>

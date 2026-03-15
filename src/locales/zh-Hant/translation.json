@@ -1,0 +1,644 @@
+{
+  "common": {
+    "cancel": "取消",
+    "confirm": "確認",
+    "close": "關閉",
+    "retry": "重試",
+    "loading": "載入中...",
+    "noResults": "搜尋結果為空",
+    "add": "新增",
+    "error": "發生錯誤。",
+    "google": "Google",
+    "or": "或",
+    "timeAgo": {
+      "justNow": "剛剛",
+      "minute": "{{count}}分鐘前",
+      "hour": "{{count}}小時前",
+      "day": "{{count}}天前",
+      "longAgo": "很久以前"
+    },
+    "exitAppTitle": "退出應用",
+    "exitAppConfirm": "要退出應用嗎？",
+    "open": "開啟"
+  },
+  "auth": {
+    "loginRequired": "需要登入。",
+    "guestMode": "訪客模式",
+    "guestWarning": "訪客模式可能會丟失儲存的紀錄。",
+    "terms": "繼續即表示您同意我們的服務條款。",
+    "loggedOutByOtherDevice": "由於該帳號在其他裝置上被使用，您已被登出。"
+  },
+  "streak": {
+    "bonusActive": "獎勵生效中",
+    "bonusIncluded": "連勝獎勵 +{{bonus}}",
+    "nextBonus": "連勝時 +{{bonus}}",
+    "loseBonusTitle": "連敗禮物",
+    "loseBonusMessage": "連輸3局了，送你一支鼓勵鉛筆！",
+    "loseBonusSubtext": "不會一直送的，下一局一定要贏哦！💪"
+  },
+  "menu": {
+    "normal": {
+      "title": "普通模式",
+      "subtitle": "基礎腦力训練",
+      "matchRule": "三局兩勝"
+    },
+    "rank": {
+      "title": "排位模式",
+      "subtitle": "全球玩家競技",
+      "matchRule": "五局三勝"
+    },
+    "friendly": {
+      "title": "好友對戰",
+      "subtitle": "與好友1v1"
+    },
+    "practice": {
+      "title": "練習模式",
+      "subtitle": "自由練習迷你遊戲"
+    },
+    "shop": "商店",
+    "settings": "設定",
+    "login": "登入",
+    "logout": "登出",
+    "profile": "個人資料",
+    "all": "All"
+  },
+  "shop": {
+    "title": "商店",
+    "subtitle": "玩得更久一點",
+    "removeAds": {
+      "title": "去廣告包",
+      "desc": "無需看廣告，立刻獲得鉛筆。"
+    },
+    "pencils5": {
+      "title": "鉛筆 x5",
+      "desc": "短時間游玩的小份補充。"
+    },
+    "pencils20": {
+      "title": "鉛筆 x20",
+      "desc": "日常游玩剛剛好。"
+    },
+    "pencils100": {
+      "title": "鉛筆 x100",
+      "desc": "適合長期游玩的超值包。"
+    },
+    "practiceNotes5": {
+      "title": "10個練習筆記",
+      "desc": "適合快速練習。"
+    },
+    "practiceNotes20": {
+      "title": "練習筆記 x20",
+      "desc": "適合穩定練習的補充。"
+    },
+    "practiceNotes100": {
+      "title": "練習筆記 x100",
+      "desc": "適合長時間練習的超值包。"
+    },
+    "nicknameChangeTicket": {
+      "title": "暱稱更改券",
+      "desc": "無需等待30天，立即更改暱稱。",
+      "unit": "暱稱更改券"
+    },
+    "buy": "購買",
+    "premium": "高級",
+    "popular": "熱門",
+    "bestValue": "超值",
+    "notice": "付款將通過 App Store 處理。",
+    "comingSoon": "購買流程准備中...",
+    "priceTbd": "價格待定",
+    "loading": "載入中...",
+    "purchased": "已購買",
+    "purchaseSuccess": "購買成功。",
+    "purchaseRewardDesc": "已發放您購買的道具。",
+    "removeAdsApplied": "已應用去廣告。",
+    "purchaseFail": "購買失敗。",
+    "billingUnavailable": "此設備不支持購買。",
+    "sessionRefreshFailed": "重新整理工作階段失敗：{{message}}",
+    "sessionExpired": "您的登入工作階段已過期，請重新登入。",
+    "purchaseFailWithReason": "購買失敗：{{message}}"
+  },
+  "social": {
+    "friends": "好友",
+    "friendList": "好友列表",
+    "friendRequests": "好友請求",
+    "addFriend": "新增好友",
+    "searchNickname": "搜索暱稱",
+    "searchError": "搜索時發生錯誤。",
+    "userNotFound": "未找到使用者。",
+    "cannotAddSelf": "不能新增自己。",
+    "alreadyFriends": "你們已經是好友了。",
+    "requestPending": "請求已發送或正在等待處理。",
+    "blocked": "對方已屏蔽你或你已屏蔽對方。",
+    "requestSent": "好友請求已發送！",
+    "requestFail": "好友請求發送失敗。",
+    "loadingFriends": "正在載入好友列表...",
+    "noFriends": "暫無好友。",
+    "deleteFriend": "刪除好友",
+    "deleteFriendConfirm": "確定要移除 '{{nickname}}' 嗎？",
+    "deleteFriendFail": "刪除好友失敗",
+    "online": "在線",
+    "ingame": "遊戲中",
+    "offline": "離線",
+    "challengeTitle": "挑戰好友",
+    "challengeConfirm": "要向該好友發起挑戰嗎？",
+    "challengeFail": "挑戰失敗：",
+    "challengeInGame": "對方正在遊戲中，無法邀請。",
+    "challengeOffline": "只能邀請在線的好友。",
+    "challengeWaiting": "邀請已發送，等待接受...",
+    "challengeWaitingTitle": "好友對戰等待中",
+    "challengeWaitingDesc": "正在等待對方接受。",
+    "challengeWaitingTime": "剩餘時間 {{seconds}}秒",
+    "challengeAccepted": "好友對戰已接受！",
+    "challengeRejected": "好友對戰被拒絕。",
+    "challengeTimeout": "邀請已超時。",
+    "challengeCancelled": "邀請已取消。",
+    "challengeAlreadyPending": "已有待處理的邀請。",
+    "inviteSenderFallback": "好友",
+    "inviteTitle": "好友對戰邀請",
+    "inviteBody": "'{{nickname}}' 向你發起好友對戰邀請，是否接受？",
+    "inviteInvalidSession": "遊戲會話無效或已開始。",
+    "inviteJoinFail": "進入遊戲失敗。",
+    "typeMessage": "輸入消息...",
+    "sendFail": "發送消息失敗",
+    "chat": "聊天",
+    "challenge": "挑戰",
+    "accept": "接受",
+    "reject": "拒絕",
+    "newMessage": "{{nickname}} 給你發來消息",
+    "chatRateLimited": "發送受限：{{seconds}}秒後可再次發送。"
+  },
+  "leaderboard": {
+    "button": "排行榜",
+    "title": "排行榜",
+    "global": "全體",
+    "country": "國家",
+    "myRank": "我的排名",
+    "placementNotice": "完成{{count}}場定位賽後將顯示在排行榜。",
+    "mmrLabel": "MMR",
+    "avatarPreview": "{{nickname}} 頭像"
+  },
+  "ad": {
+    "remaining": "今日剩餘：{{count}}/{{limit}}",
+    "limitReached": "今日廣告次數已用完。",
+    "limitReachedDesc": "請明天再來觀看。",
+    "adFreeDesc": "無需廣告，立刻獲得 1 支鉛筆。",
+    "adFreeDescPracticeNotes": "無需廣告，立刻獲得練習筆記。",
+    "claimBtn": "领取鉛筆",
+    "claimBtnPracticeNotes": "领取練習筆記",
+    "granting": "正在發放獎勵...",
+    "rewardFailed": "獎勵發放失敗。",
+    "rewardFailedDesc": "請稍後再試。",
+    "title": "领取鉛筆",
+    "titlePracticeNotes": "领取練習筆記",
+    "loading": "正在載入廣告...",
+    "watchDesc": "觀看短廣告即可獲得 1 支鉛筆！",
+    "watchDescPracticeNotes": "觀看短廣告即可獲得 2 本練習筆記！",
+    "watchBtn": "觀看廣告",
+    "watching": "正在觀看廣告...",
+    "playing": "廣告播放中...",
+    "pencils": "鉛筆",
+    "practiceNotes": "練習筆記",
+    "success": "獎勵领取成功。",
+    "noFillTitle": "目前沒有廣告",
+    "noFillDesc": "請稍後再試。"
+  },
+  "notifications": {
+    "fullTitle": "鉛筆已滿",
+    "fullBody": "鉛筆滿啦，快來動動腦！",
+    "reminderTitle": "動動腦的時間",
+    "reminderBody": "已經 24 小時了，回來玩一局吧！"
+  },
+  "settings": {
+    "title": "設定",
+    "language": "語言",
+    "sound": "音效",
+    "masterVolume": "主音量",
+    "vibration": "振動",
+    "deleteAccount": "刪除帳戶",
+    "deleteAccountConfirm": "確定要刪除帳戶嗎？帳戶將被永久刪除且無法撤銷。",
+    "logoutConfirm": "您確定要登出嗎？",
+    "restorePurchases": "恢復購買",
+    "restorePurchasesDesc": "恢復去廣告等非消耗型購買。",
+    "restorePurchasesSuccess": "購買已恢復。",
+    "restorePurchasesFail": "恢復購買失敗。",
+    "restorePurchasesUnavailable": "此設備不支持購買。",
+    "restorePurchasesEmpty": "沒有可恢復的購買。",
+    "privacyPolicy": "隱私政策",
+    "privacyPolicyDesc": "查看我們如何處理服務所需的個人資料。",
+    "viewPrivacyPolicy": "查看隱私政策",
+    "tutorial": "教學",
+    "tutorialDesc": "如果你想再次確認應用使用方法，請重新查看教學。",
+    "viewTutorial": "重新查看教學",
+    "notificationNativeOnly": "通知設定僅可在手機 App 使用。",
+    "notificationOff": "通知已關閉。",
+    "notificationDeniedIos": "請至 iPhone「設定 > 通知」允許通知權限。",
+    "notificationDeniedAndroid": "請至 Android「設定 > 通知」允許通知權限。",
+    "notificationOn": "通知已開啟。",
+    "support": "聯絡我們",
+    "supportDesc": "查看問題回饋、錯誤回報和其他諮詢。",
+    "goToSupport": "打開支援頁面",
+    "notifications": "通知",
+    "pushNotifications": "推播/本機通知",
+    "notificationNativeHint": "網頁版無法切換通知開關。",
+    "recommended": "推薦",
+    "theme": "主題",
+    "themeMode": "顯示模式",
+    "systemThemeDesc": "跟隨設備設定。",
+    "darkMode": "深色模式",
+    "lightMode": "淺色模式",
+    "light": "淺色",
+    "dark": "深色",
+    "system": "系統",
+    "assetCredits": "素材鳴謝",
+    "assetCreditsDesc": "部分視覺素材來自第三方創作者，並按其許可證（例如 CC BY 4.0）進行署名。",
+    "viewMakers": "查看作者與鳴謝",
+    "makers": "作者與鳴謝",
+    "localCredit": "本地署名",
+    "announcements": "公告",
+    "announcementsDesc": "可再次查看最新公告。",
+    "viewAnnouncementAgain": "重新查看公告",
+    "announcementWillShowOnHome": "將在首頁再次顯示最新公告。",
+    "announcementResetFail": "重設公告隱藏狀態失敗。",
+    "versionLabel": "版本",
+    "makersRoleCreator": "創作者",
+    "makersRoleRankingBadges": "排名徽章 (CC BY 4.0)",
+    "makersRoleCcBy": "CC BY 4.0 授權",
+    "admin": "管理員",
+    "adminDesc": "前往管理員專用頁面。",
+    "goToAdmin": "進入管理頁面",
+    "guestModeWarningTitle": "訪客帳號提示",
+    "guestModeWarningDesc": "訪客帳號在登出、卸載或更換裝置時可能遺失資料。請綁定帳號以保留進度。"
+  },
+  "report": {
+    "button": "舉報",
+    "title": "舉報玩家",
+    "description": "請輸入舉報原因。",
+    "descriptionWithTarget": "請輸入舉報 {{target}} 的原因。",
+    "placeholder": "填寫舉報原因。",
+    "submit": "提交舉報",
+    "success": "舉報已提交。",
+    "fail": "舉報提交失敗。"
+  },
+  "game": {
+    "waiting": "等待遊戲...",
+    "victory": "勝利",
+    "defeat": "失敗",
+    "returnMenu": "返回選單",
+    "setScore": "盤分",
+    "practiceComplete": "練習完成！",
+    "greatJob": "辛苦了！",
+    "rematchIncomingTitle": "再戰請求",
+    "rematchIncomingBody": "'{{nickname}}' 請求再戰。要接受嗎？",
+    "rematchCreateFail": "無法開始再戰。",
+    "rematchAccepted": "即將開始再戰。",
+    "rematchRejected": "對手拒絕了再戰。",
+    "rematchExpired": "再戰申請時間已結束。",
+    "rematchConfirmTitle": "申請再戰",
+    "rematchConfirmBody": "要請求再戰嗎？",
+    "rematchRequesterCostNotice": "只有發起申請的人會消耗1支鉛筆。",
+    "rematchReceiverFreeNotice": "接受再戰不會消耗鉛筆。",
+    "rematchWaiting": "已發送再戰請求。",
+    "rematchRequestFail": "請求再戰時發生錯誤。",
+    "rematchPending": "等待中",
+    "rematchClosed": "結束",
+    "rematchRequest": "申請再戰",
+    "rematchExpiredShort": "結束",
+    "rematchNoPencilsShort": "不足",
+    "rematchCostCountdownShort": "申請1個 · {{seconds}}秒",
+    "rematchNoPencils": "鉛筆不足",
+    "reconnecting": "等待對手...",
+    "reconnectingDesc": "對手斷開連接。自動獲勝倒計時:",
+    "myTime": "我的紀錄",
+    "rank": "排位",
+    "normal": "普通",
+    "unknownPlayer": "未知玩家",
+    "guest": "訪客",
+    "you": "你",
+    "opponent": "對手",
+    "opponentWaiting": "對手正在等待...",
+    "draw": "平局",
+    "roundResult": "第 {{round}} 回合結果",
+    "matchResult": "比賽結果",
+    "startingIn": "開始倒計時",
+    "roundFinished": "回合結束",
+    "total": "總分",
+    "great": "太棒了!",
+    "tier": "段位",
+    "table": {
+      "round": "回合",
+      "myScore": "我的分數",
+      "opScore": "對手分數",
+      "result": "結果",
+      "win": "勝",
+      "lose": "負",
+      "draw": "平"
+    },
+    "timeLeft": "剩餘時間",
+    "connectionLost": "連線中斷，正在重新連線...",
+    "connectionUnstable": "連線不穩定...",
+    "connecting": "連線中...",
+    "aiBot": "AI Bot",
+    "me": "Me",
+    "disconnected": "已斷線",
+    "devGhostPreview": "開發用 Ghost 預覽",
+    "devGhostPreviewGame": "遊戲",
+    "devGhostPreviewRoundHighscore": "回合最高分",
+    "devGhostPreviewBotGhost": "Bot Ghost",
+    "devGhostPreviewGap": "差距"
+  },
+  "user": {
+    "level": "等級",
+    "rank": "排名"
+  },
+  "profile": {
+    "nicknameSetupTitle": "設定暱稱",
+    "nicknameSetupDesc": "請輸入你在遊戲中要使用的暱稱。",
+    "nicknamePlaceholder": "輸入暱稱",
+    "nicknameTicketsLabel": "暱稱更改券",
+    "nicknameChangeAvailableNow": "現在可更改暱稱",
+    "nicknameChangeUnavailableNow": "現在不可更改暱稱",
+    "nicknameFreeChangeNow": "免費更改可用：現在",
+    "nicknameFreeChangeAt": "免費更改可用：{{date}}",
+    "edit": "編辑",
+    "highscoresTitle": "最高分",
+    "highscoresColumns": {
+      "game": "遊戲",
+      "highscore": "最高分",
+      "rankWinRate": "排位勝率"
+    },
+    "highscoreLeaderboardTitle": "前10名",
+    "highscoreLeaderboardEmpty": "暫無紀錄。",
+    "highscoreLeaderboardColumns": {
+      "rank": "#",
+      "player": "玩家",
+      "score": "分數"
+    },
+    "guestTitle": "訪客帳號",
+    "guestDesc": "訪客帳號在登出、卸載或更換裝置時可能遺失資料。請綁定 Google 帳號以保留進度。",
+    "linkGoogle": "關聯 Google 帳號",
+    "statsTitle": "能力值",
+    "stats": {
+      "speed": "速度",
+      "memory": "記憶力",
+      "judgment": "判斷力",
+      "calculation": "計算力",
+      "accuracy": "準確性",
+      "observation": "觀察力"
+    },
+    "changeAvatar": "更換頭像",
+    "removeAvatar": "刪除頭像",
+    "removeAvatarConfirm": "要刪除目前頭像嗎？",
+    "avatarUploading": "上傳中...",
+    "avatarInvalidType": "不支持的圖片格式。",
+    "avatarTooLarge": "文件太大。",
+    "avatarUploadSuccess": "頭像已更新。",
+    "avatarUploadFail": "頭像上傳失敗",
+    "avatarRemoveSuccess": "頭像已刪除。",
+    "avatarRemoveFail": "頭像刪除失敗",
+    "record": "戰績",
+    "disconnects": "掉線",
+    "updateSuccess": "更新成功",
+    "nicknameCooldownOrTicket": "暱稱每30天可免費更改一次。若要立即更改，需要更改券。",
+    "updateFail": "更新失敗",
+    "deleteSuccess": "帳戶已刪除",
+    "deleteFail": "刪除失敗",
+    "selectCountry": "選擇國家",
+    "guestDescIOS": "訪客帳號在登出、刪除 App 或更換裝置時可能遺失資料。請綁定 Apple 或 Google 帳號以保留進度。此外，訪客帳號若 7 天未登入，可能會被刪除。",
+    "linkApple": "綁定 Apple 帳號",
+    "noRecord": "沒有對戰紀錄。",
+    "nicknameChangedSuccess": "暱稱已變更。",
+    "rankPlacement": "定位中",
+    "rankPlacementRemaining": "還剩{{count}}場"
+  },
+  "matchmaking": {
+    "searching": "搜索中...",
+    "description": "正在尋找合適的對手",
+    "cancel": "取消",
+    "found": "配對成功!",
+    "entering": "正在進入遊戲...",
+    "timeout": "配對超時",
+    "timeoutDesc": "未找到對手",
+    "range": "範圍",
+    "rankLevelRequired": "達到{{level}}級後解鎖排位。",
+    "searchingOpponent": "正在尋找對手..."
+  },
+  "rps": {
+    "ready": "准備...",
+    "beatIt": "贏他!",
+    "lose": "輸給他!",
+    "reverse": "反向",
+    "round": "回合",
+    "titleWin": "勝者猜拳",
+    "titleLose": "敗者猜拳",
+    "title": "剪刀石頭布",
+    "instruction": "請根據指示選擇要贏或要輸的出拳！"
+  },
+  "number": {
+    "title": "數字排序",
+    "instruction": "按從小到大的顺序點擊數字！",
+    "asc": "從小到大按數字!",
+    "desc": "從大到小按數字!",
+    "ready": "准備",
+    "panel": "面板",
+    "titleDesc": "數字逆序",
+    "instructionDesc": "從大到小按數字!"
+  },
+  "math": {
+    "title": "心算挑戰",
+    "instruction": "計算算式並選擇正確答案"
+  },
+  "ten": {
+    "title": "湊十",
+    "instruction": "讓所選數字的總和變成10。"
+  },
+  "color": {
+    "title": "颜色配對",
+    "instruction": "選擇文字和邊框颜色配對的按鈕",
+    "red": "紅色",
+    "blue": "藍色",
+    "green": "綠色",
+    "yellow": "黃色"
+  },
+  "memory": {
+    "title": "記憶配對",
+    "instruction": "記住卡片位置後點擊“已記住”按鈕，然後選擇配對。",
+    "btn_memorized": "記住了!",
+    "memorize_hint": "記住卡片!",
+    "find_pairs": "找出配對!"
+  },
+  "sequence": {
+    "title": "逆序",
+    "instruction": "按出現的相反顺序點擊",
+    "titleNormal": "顺序記憶",
+    "instructionNormal": "按出現的顺序點擊"
+  },
+  "largest": {
+    "title": "尋找最大值",
+    "instruction": "點擊結果最大的算式"
+  },
+  "pair": {
+    "title": "尋找配對",
+    "instruction": "找出唯一的一對配對!"
+  },
+  "updown": {
+    "title": "上下",
+    "instruction": "比前一個數字更大就上滑，更小就下滑。",
+    "prev": "上一個數字",
+    "start": "開始"
+  },
+  "slider": {
+    "title": "數字滑塊",
+    "instruction": "滑動使相鄰數字之和達到目標值!",
+    "target": "目標總和"
+  },
+  "arrow": {
+    "title": "箭頭滑塊",
+    "blue": "藍 = 同向",
+    "red": "紅 = 反向",
+    "instruction": "藍色按箭頭方向滑，紅色按反方向滑!"
+  },
+  "fillBlanks": {
+    "title": "填空",
+    "instruction": "請選擇填入空缺後能成為正確答案的數字。"
+  },
+  "findOperator": {
+    "title": "尋找符號",
+    "instruction": "請選擇合適的运算符號，使答案正確。"
+  },
+  "ladder": {
+    "title": "爬梯子",
+    "instruction": "沿著路線找到正確的終點!"
+  },
+  "path": {
+    "title": "路徑衝刺",
+    "instruction": "使用按鈕將綠色方塊移動到藍色方塊。請注意，按鈕位置可能會變化。",
+    "shuffle": "打亂"
+  },
+  "blindPath": {
+    "title": "盲行路徑",
+    "instruction": "先記住白色路徑，再用按鈕把綠色方塊移動到藍色方塊。開始移動後路徑會消失。撞到牆會扣分，但路徑會再次顯示。",
+    "memorizeHint": "記住路線！",
+    "runHint": "沿路前進！",
+    "memorized": "記住了！"
+  },
+  "balls": {
+    "title": "數球",
+    "instruction": "數清移動的球並點擊正確數字。"
+  },
+  "catchColor": {
+    "title": "颜色接球",
+    "instruction": "滑動擋板接住與擋板同色的小球。接到不同颜色會扣分，而且擋板颜色會持續變化。",
+    "switchSoon": "颜色即將切換"
+  },
+  "tapTheColor": {
+    "title": "點擊颜色",
+    "instruction": "記住颜色位置後點擊“已記住”按鈕。然後按上方顯示的颜色顺序選擇你記住的按鈕。",
+    "memorize": "記住颜色的位置!",
+    "remembered": "記住了!"
+  },
+  "aim": {
+    "title": "瞄准遊戲",
+    "instruction": "快速點擊紅色目標並將其消除。不要消除藍色目標。"
+  },
+  "mostColor": {
+    "title": "尋找最多颜色",
+    "instruction": "請選擇屏幕上出現次數最多的颜色。"
+  },
+  "sorting": {
+    "title": "分类遊戲",
+    "instruction": "第一張卡可滑向任意方向。之後，相同符號的卡按與上一張相同方向滑動，不同符號的卡按相反方向滑動。你可以先看上方的下一張卡來提前准備。",
+    "firstMoveHint": "第一張隨意滑！"
+  },
+  "spy": {
+    "title": "尋找間諜",
+    "instruction": "記住符號後點擊“已記住”按鈕。然後找出變化的符號。間諜數量可能會逐渐增加。",
+    "memorize": "記住這些！",
+    "find": "哪個變了？",
+    "ready": "記住了！"
+  },
+  "timingBar": {
+    "title": "節奏條",
+    "instruction": "下落條與目標條重合時點擊即可。"
+  },
+  "colorTiming": {
+    "title": "颜色時机",
+    "instruction": "當藍球進入左側圓圈、紅球進入右側圓圈時點擊。點擊相反颜色會扣分。"
+  },
+  "stairway": {
+    "title": "天国階梯",
+    "instruction": "按下有樓梯的方向，沿著樓梯向上。",
+    "scoreLabel": "階梯"
+  },
+  "tutorial": {
+    "normal": "🌍 和全球玩家一起玩迷你遊戲對戰！",
+    "rank": "🏆 與實力相近的玩家進行排位賽！",
+    "practice": "💪 隨時練習你喜歡的遊戲！",
+    "ranking": "👑 查看世界上最聰明的玩家！",
+    "shop": "🛒 購買鉛筆或移除廣告！",
+    "settings": "⚙️ 修改聲音、語言等設定！",
+    "login": "👤 綁定帳號，安全游玩！",
+    "profile": "📊 查看實力、能力值和高分紀錄！",
+    "next": "下一步",
+    "done": "完成",
+    "skip": "跳過",
+    "loginNow": "立即登入"
+  },
+  "zero": {
+    "title": "湊成零",
+    "instruction": "按顺序填入數字，完成結果為0的算式。點擊算式可撤銷。",
+    "undoHint": "點擊算式可撤銷"
+  },
+  "practice": {
+    "random": "隨机",
+    "descriptionPending": "說明准備中",
+    "myHighscoreLabel": "我的最高分",
+    "statGainLabel": "能力值提升",
+    "none": "無",
+    "guideTitle": "練習指南",
+    "guideAtAGlance": "一覽",
+    "guideObjective": "目標",
+    "guideHowTo": "玩法",
+    "guideTip": "提示",
+    "autoGuide": {
+      "summary": "這是快速掌握{{title}}核心規則的練習。",
+      "tip": "先看清規則，再專注於速度和准確度。",
+      "objectiveFallback": "開始遊戲並按照屏幕規則進行。"
+    },
+    "viewGrid": "網格視圖",
+    "viewList": "列表視圖"
+  },
+  "update": {
+    "title": "需要更新",
+    "message": "新版本已發布，請更新以獲得最佳體验。",
+    "button": "更新",
+    "storeNotReady": "商店準備中。",
+    "versionInfo": "目前：{{current}} / 最低需求：{{min}}"
+  },
+  "home": {
+    "resumeMatchTitle": "你有一場進行中的對戰",
+    "resumeMatchDesc": "你已回到首頁，要返回正在進行的對戰嗎？",
+    "resumeLater": "稍後",
+    "resumeNow": "返回對戰",
+    "levelProgressLevel": "Lv. {{level}}",
+    "levelUp": "升級！",
+    "hideAnnouncementToday": "今天不再顯示"
+  },
+  "login": {
+    "bannedTitle": "帳號已停權",
+    "bannedMessage": "你的帳號已被停權。",
+    "bannedUntil": "停權結束時間：{{date}}",
+    "bannedDurationUnknown": "停權期間由管理員決定。",
+    "bannedAppeal": "如需申訴停權，請聯絡客服。",
+    "contactSupport": "聯絡客服",
+    "tryLaterKeyword": "later"
+  },
+  "app": {
+    "title": "BrainRush",
+    "subtitle": "Speed & Intelligence"
+  },
+  "review": {
+    "enjoyTitle": "遊戲好玩嗎？",
+    "enjoySubtitle": "一則評價就是對我們最大的支持！",
+    "enjoyYes": "好玩！😊",
+    "enjoyNo": "一般 😐"
+  }
+}

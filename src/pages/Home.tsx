@@ -18,6 +18,7 @@ import LevelBadge from '../components/ui/LevelBadge';
 import { getLevelFromXp, getLevelProgress, getXpSnapshotStorageKey } from '../utils/levelUtils';
 import { useTutorial } from '../contexts/TutorialContext';
 import SpotlightOverlay from '../components/ui/SpotlightOverlay';
+import TierMMRBadge from '../components/ui/TierMMRBadge';
 
 type RadarStats = {
     speed: number;
@@ -37,8 +38,45 @@ type XpAnimationPayload = {
     xpGain: number;
 };
 
+type AnnouncementRow = {
+    id: number;
+    title: string;
+    content: string;
+    starts_at: string;
+    ends_at: string | null;
+    created_at: string;
+};
+
 const MAX_PENCILS = 5;
 const PENCIL_RECHARGE_MS = 30 * 60 * 1000;
+const ANNOUNCEMENT_FORCE_SHOW_KEY = 'announcement_force_show_once';
+const getLocalDateKey = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+const getAnnouncementHideKey = (noticeId: number, dateKey: string) => `announcement_hidden:${noticeId}:${dateKey}`;
+const normalizeNoticeLocale = (language: string): string => {
+    const normalized = String(language || '').toLowerCase();
+    if (!normalized) return 'en';
+    if (normalized.startsWith('zh-hant') || normalized.startsWith('zh-tw') || normalized.startsWith('zh-hk') || normalized.startsWith('zh-mo')) {
+        return 'zh-Hant';
+    }
+    if (normalized.startsWith('zh-hans') || normalized.startsWith('zh-cn') || normalized.startsWith('zh-sg')) {
+        return 'zh-Hans';
+    }
+    if (normalized.startsWith('zh')) {
+        return 'zh-Hant';
+    }
+    return normalized.split('-')[0];
+};
+const buildNoticeLocaleCandidates = (language: string): string[] => {
+    const preferred = normalizeNoticeLocale(language);
+    const list = [preferred, 'en', 'ko'];
+    return list.filter((value, index) => value && list.indexOf(value) === index);
+};
 
 const getLivePencilState = (
     pencils: number | null | undefined,
@@ -98,7 +136,7 @@ const RechargeTimer = ({ remainingMs }: { remainingMs: number }) => {
 
 const Home = () => {
     const navigate = useNavigate();
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const { playSound } = useSound();
     const { user, profile, refreshProfile, loading: authLoading } = useAuth();
     const { showToast } = useUI();
@@ -210,7 +248,8 @@ const Home = () => {
     const tier = getTierFromMMR(rank);
     const tierColor = getTierColor(tier);
     const TierIcon = getTierIcon(tier);
-    const placementRequiredGames = 5;
+    const isMyShinyTier = tier === 'Diamond' || tier === 'Master';
+    const placementRequiredGames = 1;
     const rankGamesPlayed = Math.max(0, Number((profile as any)?.rank_games_played ?? 0));
     const showRankSummary = rankGamesPlayed >= placementRequiredGames;
     const level = typeof profile?.level === 'number'
@@ -524,6 +563,9 @@ const Home = () => {
         accuracy: matchedOpponentId?.startsWith('bot_') ? (matchedBotRadarStats?.accuracy || 0) : (matchedOpProfile?.accuracy || 0),
         observation: matchedOpponentId?.startsWith('bot_') ? (matchedBotRadarStats?.observation || 0) : (matchedOpProfile?.observation || 0)
     };
+    const matchedTier = getTierFromMMR(Number(matchedOpProfile?.mmr ?? 1000));
+    const matchedTierColor = getTierColor(matchedTier);
+    const isMatchedShinyTier = matchedTier === 'Diamond' || matchedTier === 'Master';
     const radarLabels = {
         speed: t('profile.stats.speed'),
         memory: t('profile.stats.memory'),
@@ -553,10 +595,14 @@ const Home = () => {
     const [showAdModal, setShowAdModal] = useState(false);
     const [showLeaderboard, setShowLeaderboard] = useState(false);
     const [activeSessionPrompt, setActiveSessionPrompt] = useState<{ roomId: string; opponentId: string } | null>(null);
+    const [announcement, setAnnouncement] = useState<AnnouncementRow | null>(null);
+    const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
+    const [announcementLoaded, setAnnouncementLoaded] = useState(false);
     const [showNicknameModal, setShowNicknameModal] = useState(false);
     const [nicknameInput, setNicknameInput] = useState('');
     const [isSavingNickname, setIsSavingNickname] = useState(false);
     const shouldSuggestNicknameSetup = Boolean(user && profile?.needs_nickname_setup);
+    const isNicknameGateActive = Boolean(user && profile?.needs_nickname_setup);
     const mobileMainInsetClass = 'pt-[calc(env(safe-area-inset-top)+15vh)] pb-[calc(env(safe-area-inset-bottom)+7rem)]';
 
     // Tutorial refs
@@ -576,6 +622,10 @@ const Home = () => {
         return window.innerWidth < 768;
     });
     const dismissedActiveRoomRef = useRef<string | null>(null);
+
+    useEffect(() => {
+        setAnnouncementLoaded(false);
+    }, [i18n.language]);
 
     useEffect(() => {
         const onResize = () => setIsMobileLayout(window.innerWidth < 768);
@@ -638,6 +688,107 @@ const Home = () => {
         };
     }, [user, checkActiveSessionAndPrompt]);
 
+    useEffect(() => {
+        if (announcementLoaded) return;
+        if (authLoading || status !== 'idle') return;
+        if (isHomeTutorialActive) return;
+        if (showNicknameModal || activeSessionPrompt) return;
+
+        let cancelled = false;
+        const loadAnnouncement = async () => {
+            try {
+                const nowIso = new Date().toISOString();
+                const localeCandidates = buildNoticeLocaleCandidates(i18n.language);
+                const forceShowOnce = window.localStorage.getItem(ANNOUNCEMENT_FORCE_SHOW_KEY) === '1';
+                if (forceShowOnce) {
+                    window.localStorage.removeItem(ANNOUNCEMENT_FORCE_SHOW_KEY);
+                }
+                const { data, error } = await (supabase as any)
+                    .from('announcements')
+                    .select('id, title, content, starts_at, ends_at, created_at')
+                    .eq('is_active', true)
+                    .order('starts_at', { ascending: false })
+                    .order('created_at', { ascending: false })
+                    .limit(20);
+
+                if (error) throw error;
+                const row = (data || []).find((item: any) => {
+                    const startsAt = String(item.starts_at ?? '');
+                    const endsAt = item.ends_at ? String(item.ends_at) : null;
+                    if (!startsAt) return false;
+                    if (startsAt > nowIso) return false;
+                    if (endsAt && endsAt < nowIso) return false;
+                    return true;
+                });
+                if (!row || cancelled) return;
+
+                const { data: translationRows, error: translationError } = await (supabase as any)
+                    .from('announcement_translations')
+                    .select('locale, title, content')
+                    .eq('announcement_id', Number(row.id));
+                if (translationError) throw translationError;
+
+                const translationMap = new Map<string, { title: string; content: string }>();
+                (translationRows || []).forEach((item: any) => {
+                    const locale = String(item.locale ?? '');
+                    if (!locale) return;
+                    translationMap.set(locale, {
+                        title: String(item.title ?? ''),
+                        content: String(item.content ?? ''),
+                    });
+                });
+
+                let resolvedTitle = '';
+                let resolvedContent = '';
+                for (const locale of localeCandidates) {
+                    const translated = translationMap.get(locale);
+                    if (translated?.title && translated?.content) {
+                        resolvedTitle = translated.title;
+                        resolvedContent = translated.content;
+                        break;
+                    }
+                }
+
+                const notice: AnnouncementRow = {
+                    id: Number(row.id),
+                    title: resolvedTitle || String(row.title ?? ''),
+                    content: resolvedContent || String(row.content ?? ''),
+                    starts_at: String(row.starts_at ?? ''),
+                    ends_at: row.ends_at ? String(row.ends_at) : null,
+                    created_at: String(row.created_at ?? ''),
+                };
+
+                const hiddenToday = window.localStorage.getItem(getAnnouncementHideKey(notice.id, getLocalDateKey())) === '1';
+                if (hiddenToday && !forceShowOnce) return;
+
+                setAnnouncement(notice);
+                setShowAnnouncementModal(true);
+            } catch (error) {
+                console.error('Failed to load announcement:', error);
+            } finally {
+                if (!cancelled) {
+                    setAnnouncementLoaded(true);
+                }
+            }
+        };
+
+        loadAnnouncement();
+        return () => {
+            cancelled = true;
+        };
+    }, [announcementLoaded, authLoading, status, isHomeTutorialActive, showNicknameModal, activeSessionPrompt, i18n.language]);
+
+    const handleCloseAnnouncementModal = () => {
+        setShowAnnouncementModal(false);
+    };
+
+    const handleHideAnnouncementToday = () => {
+        if (announcement) {
+            window.localStorage.setItem(getAnnouncementHideKey(announcement.id, getLocalDateKey()), '1');
+        }
+        setShowAnnouncementModal(false);
+    };
+
     // Map step id to ref
     const tutorialRefs: Record<string, React.RefObject<HTMLButtonElement | null>> = {
         normal: normalModeRef,
@@ -678,6 +829,15 @@ const Home = () => {
     };
 
     const handleModeSelect = async (mode: string) => {
+        if (isNicknameGateActive) {
+            if (!showNicknameModal) {
+                setShowNicknameModal(true);
+                showToast(t('profile.nicknameSetupRequired', '닉네임을 먼저 설정해 주세요.'), 'info');
+            }
+            playSound('error');
+            return;
+        }
+
         playSound('click');
         currentMode.current = mode;
         setActiveSessionPrompt(null);
@@ -701,6 +861,8 @@ const Home = () => {
             startSearch('rank');
         } else if (mode === 'normal') {
             startSearch('normal');
+        } else if (mode === 'practice') {
+            navigate('/practice');
         } else {
             console.log(`Selected mode: ${mode} `);
             navigate('/game', { state: { mode } });
@@ -767,6 +929,12 @@ const Home = () => {
                 return;
             }
 
+            if (showAnnouncementModal) {
+                setShowAnnouncementModal(false);
+                if (customEvent.detail) customEvent.detail.handled = true;
+                return;
+            }
+
             if (activeSessionPrompt && status === 'idle') {
                 dismissedActiveRoomRef.current = activeSessionPrompt.roomId;
                 setActiveSessionPrompt(null);
@@ -777,7 +945,7 @@ const Home = () => {
         return () => {
             window.removeEventListener('brainrush:request-modal-close', handleModalCloseRequest as EventListener);
         };
-    }, [showNicknameModal, isSavingNickname, activeSessionPrompt, status]);
+    }, [showNicknameModal, isSavingNickname, showAnnouncementModal, activeSessionPrompt, status]);
 
     return (
         <div className={`min-h-[100dvh] bg-slate-50 dark:bg-gray-900 text-slate-900 dark:text-white flex flex-col items-center p-4 relative overflow-hidden`}>
@@ -997,6 +1165,33 @@ const Home = () => {
                 </div>
             )}
 
+            {showAnnouncementModal && announcement && status === 'idle' && !isHomeTutorialActive && !showNicknameModal && !activeSessionPrompt && (
+                <div className="fixed inset-0 z-[123] bg-black/75 backdrop-blur-sm flex items-center justify-center px-4">
+                    <div className="w-full max-w-md rounded-3xl border border-cyan-400/30 bg-slate-50 dark:bg-gray-900/95 p-6 shadow-2xl">
+                        <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-2">
+                            {announcement.title || t('home.announcementTitle', '공지사항')}
+                        </h2>
+                        <p className="text-sm text-slate-600 dark:text-gray-300 mb-5 whitespace-pre-wrap break-words">
+                            {announcement.content}
+                        </p>
+                        <div className="grid grid-cols-2 gap-2">
+                            <button
+                                onClick={handleHideAnnouncementToday}
+                                className="rounded-xl border border-cyan-500/40 bg-cyan-500/15 py-3 font-semibold text-cyan-300 transition-colors hover:bg-cyan-500/25"
+                            >
+                                {t('home.hideAnnouncementToday', '오늘 다시 보지 않기')}
+                            </button>
+                            <button
+                                onClick={handleCloseAnnouncementModal}
+                                className="rounded-xl border border-gray-600 bg-transparent py-3 font-semibold text-slate-600 dark:text-gray-300 transition-colors hover:bg-white dark:bg-gray-800"
+                            >
+                                {t('common.close')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {activeSessionPrompt && status === 'idle' && (
                 <div className="fixed inset-0 z-[125] bg-black/75 backdrop-blur-sm flex items-center justify-center px-4">
                     <div className="w-full max-w-md rounded-3xl border border-yellow-400/30 bg-slate-50 dark:bg-gray-900/95 p-6 shadow-2xl">
@@ -1096,7 +1291,7 @@ const Home = () => {
                                     <div className="absolute inset-0 bg-white mix-blend-overlay animate-lightning pointer-events-none" />
                                 )}
 
-                                <div className="relative z-10 flex flex-col items-center w-full h-full pt-[calc(env(safe-area-inset-top)+1rem)] pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+                                <div className="relative z-10 flex flex-col items-center w-full h-full pt-[calc(env(safe-area-inset-top)+1.25rem)] pb-[calc(env(safe-area-inset-bottom)+1rem)]">
                                     {/* My Profile - Top */}
                                     <motion.div
                                         initial={{ y: -30, opacity: 0 }}
@@ -1104,24 +1299,45 @@ const Home = () => {
                                         transition={{ delay: 0.1 }}
                                         className="mt-4 flex flex-col items-center"
                                     >
-                                        <div className="flex items-center gap-3 bg-slate-50 dark:bg-gray-900/70 border border-blue-400/30 rounded-2xl px-5 py-3 shadow-xl backdrop-blur-sm">
-                                            <Flag code={countryCode} className="w-6 h-4" />
-                                            <span className="text-base font-bold text-slate-900 dark:text-white">{nickname}</span>
-                                            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-blue-500 bg-white dark:bg-gray-800 flex items-center justify-center">
-                                                {avatarUrl ? (
-                                                    <img src={avatarUrl} className="w-full h-full object-cover" />
-                                                ) : (
-                                                    <User size={20} className="text-blue-500" />
+                                        <div className={`relative overflow-hidden bg-gradient-to-br ${tierColor} border border-white/35 rounded-2xl px-5 py-4 shadow-xl backdrop-blur-sm min-w-[260px]`}>
+                                            <div className="absolute inset-0 pointer-events-none bg-black/10 dark:bg-black/20" />
+                                            <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(120deg,rgba(255,255,255,0.42)_0%,rgba(255,255,255,0.1)_36%,rgba(0,0,0,0.14)_100%)]" />
+                                            {isMyShinyTier && (
+                                                <motion.div
+                                                    className="absolute inset-y-0 -left-1/2 w-1/2 pointer-events-none"
+                                                    initial={{ x: '-130%' }}
+                                                    animate={{ x: '300%' }}
+                                                    transition={{ duration: 2.0, repeat: Infinity, ease: 'linear' }}
+                                                    style={{ background: 'linear-gradient(105deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.0) 20%, rgba(255,255,255,0.45) 50%, rgba(255,255,255,0) 85%)' }}
+                                                />
+                                            )}
+                                            <div className="absolute inset-[1px] rounded-[15px] border border-white/25 dark:border-white/20 pointer-events-none" />
+                                            <div className="relative z-10">
+                                                <div className="flex items-center justify-between gap-3">
+                                                    <div className="flex items-center gap-2 min-w-0">
+                                                        <Flag code={countryCode} className="w-6 h-4 shrink-0" />
+                                                        <span className="text-base font-bold text-white truncate drop-shadow-[0_1px_1px_rgba(0,0,0,0.25)]">{nickname}</span>
+                                                    </div>
+                                                    <div className="w-11 h-11 rounded-full overflow-hidden border-2 border-blue-500 bg-white dark:bg-gray-800 flex items-center justify-center shrink-0">
+                                                        {avatarUrl ? (
+                                                            <img src={avatarUrl} className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            <User size={20} className="text-blue-500" />
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                {showRankSummary && (
+                                                    <TierMMRBadge
+                                                        mmr={profile?.mmr ?? 1000}
+                                                        className="mt-2"
+                                                    />
                                                 )}
                                             </div>
                                         </div>
-                                        {showRankSummary && (
-                                            <div className="text-blue-300 font-mono font-bold text-xs mt-1">{(profile?.mmr ?? 1000).toLocaleString()} MMR</div>
-                                        )}
                                     </motion.div>
 
                                     {/* Timer */}
-                                    <div className="flex flex-col items-center justify-center mt-6 min-h-[48px]">
+                                    <div className="flex flex-col items-center justify-center mt-5 min-h-[52px]">
                                         {status === 'searching' && (
                                             <motion.p
                                                 initial={{ opacity: 0, y: 10 }}
@@ -1143,7 +1359,7 @@ const Home = () => {
                                     </div>
 
                                     {/* Hex Radar - Center */}
-                                    <div className="flex-1 flex items-center justify-center">
+                                    <div className="flex-1 min-h-[220px] flex items-center justify-center">
                                         <motion.div
                                             initial={{ scale: 0.8, opacity: 0 }}
                                             animate={{ scale: 1, opacity: 1 }}
@@ -1167,39 +1383,60 @@ const Home = () => {
                                         initial={{ y: 30, opacity: 0 }}
                                         animate={{ y: 0, opacity: 1 }}
                                         transition={{ delay: 0.15 }}
-                                        className="mb-2 flex flex-col items-center"
+                                        className="mb-3 flex flex-col items-center"
                                     >
                                         {status === 'matched' && matchedOpProfile ? (
                                             /* Matched - Show real opponent profile */
                                             <>
-                                                <div className="text-red-300 font-mono font-bold text-xs mb-1">
-                                                    {matchedOpProfile.mmr ? `${matchedOpProfile.mmr.toLocaleString()} MMR` : ''}
-                                                </div>
                                                 <motion.div
                                                     initial={{ scale: 0.9, opacity: 0 }}
                                                     animate={{ scale: 1, opacity: 1 }}
-                                                    className="flex items-center gap-3 bg-slate-50 dark:bg-gray-900/70 border border-red-400/30 rounded-2xl px-5 py-3 shadow-xl backdrop-blur-sm"
+                                                    className={`relative overflow-hidden bg-gradient-to-br ${matchedTierColor} border border-white/35 rounded-2xl px-5 py-4 shadow-xl backdrop-blur-sm min-w-[260px]`}
                                                 >
-                                                    <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-red-500 bg-white dark:bg-gray-800 flex items-center justify-center">
-                                                        {matchedOpProfile.avatar_url ? (
-                                                            <img src={matchedOpProfile.avatar_url} className="w-full h-full object-cover" />
-                                                        ) : (
-                                                            <User size={20} className="text-red-500" />
-                                                        )}
+                                                    <div className="absolute inset-0 pointer-events-none bg-black/10 dark:bg-black/20" />
+                                                    <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(120deg,rgba(255,255,255,0.42)_0%,rgba(255,255,255,0.1)_36%,rgba(0,0,0,0.14)_100%)]" />
+                                                    {isMatchedShinyTier && (
+                                                        <motion.div
+                                                            className="absolute inset-y-0 -left-1/2 w-1/2 pointer-events-none"
+                                                            initial={{ x: '-130%' }}
+                                                            animate={{ x: '300%' }}
+                                                            transition={{ duration: 2.0, repeat: Infinity, ease: 'linear' }}
+                                                            style={{ background: 'linear-gradient(105deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.0) 20%, rgba(255,255,255,0.45) 50%, rgba(255,255,255,0) 85%)' }}
+                                                        />
+                                                    )}
+                                                    <div className="absolute inset-[1px] rounded-[15px] border border-white/25 dark:border-white/20 pointer-events-none" />
+                                                    <div className="relative z-10">
+                                                        <div className="flex items-center justify-between gap-3">
+                                                            <div className="w-11 h-11 rounded-full overflow-hidden border-2 border-red-500 bg-white dark:bg-gray-800 flex items-center justify-center shrink-0">
+                                                                {matchedOpProfile.avatar_url ? (
+                                                                    <img src={matchedOpProfile.avatar_url} className="w-full h-full object-cover" />
+                                                                ) : (
+                                                                    <User size={20} className="text-red-500" />
+                                                                )}
+                                                            </div>
+                                                            <div className="flex items-center gap-2 min-w-0">
+                                                                <span className="text-base font-bold text-white truncate drop-shadow-[0_1px_1px_rgba(0,0,0,0.25)]">{matchedOpProfile.nickname || t('game.unknownPlayer')}</span>
+                                                                <Flag code={matchedOpProfile.country} className="w-6 h-4 shrink-0" />
+                                                            </div>
+                                                        </div>
+                                                        <TierMMRBadge
+                                                            mmr={matchedOpProfile.mmr}
+                                                            className="mt-2"
+                                                        />
                                                     </div>
-                                                    <span className="text-base font-bold text-slate-900 dark:text-white">{matchedOpProfile.nickname || t('game.unknownPlayer')}</span>
-                                                    <Flag code={matchedOpProfile.country} className="w-6 h-4" />
                                                 </motion.div>
                                             </>
                                         ) : (
                                             /* Searching - Show skeleton */
                                             <>
-                                                <div className="text-red-300/50 font-mono font-bold text-xs mb-1">&nbsp;</div>
-                                                <div className="flex items-center gap-3 bg-slate-50 dark:bg-gray-900/70 border border-red-400/20 rounded-2xl px-5 py-3 shadow-xl backdrop-blur-sm">
-                                                    <div className="w-10 h-10 rounded-full border-2 border-red-500/40 bg-white dark:bg-gray-800 flex items-center justify-center animate-pulse">
-                                                        <User size={20} className="text-red-500/40" />
+                                                <div className="bg-slate-50 dark:bg-gray-900/75 border border-red-400/20 rounded-2xl px-5 py-4 shadow-xl backdrop-blur-sm min-w-[260px]">
+                                                    <div className="flex items-center justify-between gap-3">
+                                                        <div className="w-11 h-11 rounded-full border-2 border-red-500/40 bg-white dark:bg-gray-800 flex items-center justify-center animate-pulse shrink-0">
+                                                            <User size={20} className="text-red-500/40" />
+                                                        </div>
+                                                        <span className="text-base font-bold text-gray-500 animate-pulse truncate">{t('matchmaking.searchingOpponent', '상대를 찾는 중...')}</span>
                                                     </div>
-                                                    <span className="text-base font-bold text-gray-500 animate-pulse">{t('matchmaking.searchingOpponent', '상대를 찾는 중...')}</span>
+                                                    <div className="mt-2 h-6 rounded-lg bg-gray-300/50 dark:bg-gray-700/60 animate-pulse" />
                                                 </div>
                                             </>
                                         )}
@@ -1247,7 +1484,8 @@ const Home = () => {
                             ref={normalModeRef}
                             onMouseEnter={() => playSound('hover')}
                             onClick={() => handleModeSelect('normal')}
-                            className={`group relative w-full p-6 bg-white dark:bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-200 hover:border-blue-500 hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] active:scale-[0.98] active:border-blue-300 active:bg-blue-400/20 active:shadow-[0_0_28px_rgba(59,130,246,0.5)] active:brightness-125 active:saturate-150 cursor-pointer flex items-center gap-4 text-left`}
+                            disabled={isNicknameGateActive}
+                            className={`group relative w-full p-6 bg-white dark:bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-200 ${isNicknameGateActive ? 'opacity-60 cursor-not-allowed' : 'hover:border-blue-500 hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] active:scale-[0.98] active:border-blue-300 active:bg-blue-400/20 active:shadow-[0_0_28px_rgba(59,130,246,0.5)] active:brightness-125 active:saturate-150 cursor-pointer'} flex items-center gap-4 text-left`}
                         >
                             <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-300" />
                             <div className="p-3 rounded-full bg-blue-500/20 group-hover:bg-blue-500/30 group-active:bg-blue-500/40 transition-colors">
@@ -1266,7 +1504,8 @@ const Home = () => {
                             ref={rankModeRef}
                             onMouseEnter={() => playSound('hover')}
                             onClick={() => handleModeSelect('rank')}
-                            className={`group relative w-full p-6 bg-white dark:bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-200 ${canPlayRank ? 'hover:border-purple-500 hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] active:scale-[0.98] active:border-purple-300 active:bg-purple-400/20 active:shadow-[0_0_28px_rgba(168,85,247,0.5)] active:brightness-125 active:saturate-150 cursor-pointer' : 'opacity-50 grayscale cursor-not-allowed'} ${shouldHighlightRankButton ? 'rank-cta-highlight border-purple-400/80' : ''} flex items-center gap-4 text-left`}
+                            disabled={isNicknameGateActive}
+                            className={`group relative w-full p-6 bg-white dark:bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-200 ${isNicknameGateActive ? 'opacity-60 cursor-not-allowed' : canPlayRank ? 'hover:border-purple-500 hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] active:scale-[0.98] active:border-purple-300 active:bg-purple-400/20 active:shadow-[0_0_28px_rgba(168,85,247,0.5)] active:brightness-125 active:saturate-150 cursor-pointer' : 'opacity-50 grayscale cursor-not-allowed'} ${shouldHighlightRankButton ? 'rank-cta-highlight border-purple-400/80' : ''} flex items-center gap-4 text-left`}
                         >
                             {shouldHighlightRankButton && (
                                 <div className="rank-cta-sheen absolute inset-0 z-0 pointer-events-none" />
@@ -1309,8 +1548,9 @@ const Home = () => {
                         <button
                             ref={practiceModeRef}
                             onMouseEnter={() => playSound('hover')}
-                            onClick={() => { playSound('click'); navigate('/practice'); }}
-                            className={`group relative w-full p-6 bg-white dark:bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-200 hover:border-green-500 hover:shadow-[0_0_20px_rgba(34,197,94,0.5)] active:scale-[0.98] active:border-green-300 active:bg-green-400/20 active:shadow-[0_0_28px_rgba(34,197,94,0.5)] active:brightness-125 active:saturate-150 cursor-pointer flex items-center gap-4 text-left`}
+                            onClick={() => handleModeSelect('practice')}
+                            disabled={isNicknameGateActive}
+                            className={`group relative w-full p-6 bg-white dark:bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-200 ${isNicknameGateActive ? 'opacity-60 cursor-not-allowed' : 'hover:border-green-500 hover:shadow-[0_0_20px_rgba(34,197,94,0.5)] active:scale-[0.98] active:border-green-300 active:bg-green-400/20 active:shadow-[0_0_28px_rgba(34,197,94,0.5)] active:brightness-125 active:saturate-150 cursor-pointer'} flex items-center gap-4 text-left`}
                         >
                             <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-transparent opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-300" />
                             <div className="p-3 rounded-full bg-green-500/20 group-hover:bg-green-500/30 group-active:bg-green-500/40 transition-colors">

@@ -22,7 +22,8 @@
       "longAgo": "Đã lâu"
     },
     "exitAppTitle": "Thoát ứng dụng",
-    "exitAppConfirm": "Bạn có muốn thoát ứng dụng không?"
+    "exitAppConfirm": "Bạn có muốn thoát ứng dụng không?",
+    "open": "Mở"
   },
   "auth": {
     "loginRequired": "Yêu cầu đăng nhập.",
@@ -86,7 +87,8 @@
     "challenge": "Thách đấu",
     "accept": "Chấp nhận",
     "reject": "Từ chối",
-    "newMessage": "Tin nhắn mới từ {{nickname}}"
+    "newMessage": "Tin nhắn mới từ {{nickname}}",
+    "chatRateLimited": "Đang giới hạn gửi: gửi lại sau {{seconds}} giây."
   },
   "menu": {
     "normal": {
@@ -199,7 +201,9 @@
     "playing": "Quảng cáo đang phát...",
     "pencils": "Bút chì",
     "practiceNotes": "Ghi chú luyện tập",
-    "success": "Nhận thưởng thành công."
+    "success": "Nhận thưởng thành công.",
+    "noFillTitle": "Hiện không có quảng cáo",
+    "noFillDesc": "Vui lòng thử lại sau giây lát."
   },
   "notifications": {
     "fullTitle": "Bút chì đã đầy",
@@ -232,17 +236,17 @@
     "tutorial": "Hướng dẫn",
     "tutorialDesc": "Nếu muốn xem lại cách sử dụng ứng dụng, hãy mở lại phần hướng dẫn.",
     "viewTutorial": "Xem lại hướng dẫn",
-    "notificationNativeOnly": "Notification settings are only available in the mobile app.",
-    "notificationOff": "Notifications turned off.",
-    "notificationDeniedIos": "Please allow notifications in iPhone Settings > Notifications.",
-    "notificationDeniedAndroid": "Please allow notifications in Android Settings > Notifications.",
-    "notificationOn": "Notifications turned on.",
+    "notificationNativeOnly": "Cài đặt thông báo chỉ khả dụng trên ứng dụng di động.",
+    "notificationOff": "Đã tắt thông báo.",
+    "notificationDeniedIos": "Vui lòng cho phép thông báo trong iPhone: Cài đặt > Thông báo.",
+    "notificationDeniedAndroid": "Vui lòng cho phép thông báo trong Android: Cài đặt > Thông báo.",
+    "notificationOn": "Đã bật thông báo.",
     "support": "Liên hệ hỗ trợ",
     "supportDesc": "Xem trợ giúp cho lỗi, sự cố và các yêu cầu khác.",
     "goToSupport": "Mở hỗ trợ",
-    "notifications": "Notifications",
-    "pushNotifications": "Push/Local Notifications",
-    "notificationNativeHint": "Notification toggle is disabled on the web.",
+    "notifications": "Thông báo",
+    "pushNotifications": "Thông báo Đẩy/Cục bộ",
+    "notificationNativeHint": "Nút bật/tắt thông báo bị vô hiệu hóa trên web.",
     "recommended": "Đề xuất",
     "theme": "Giao diện",
     "themeMode": "Chế độ hiển thị",
@@ -251,7 +255,26 @@
     "lightMode": "Chế độ sáng",
     "light": "Sáng",
     "dark": "Tối",
-    "system": "Hệ thống"
+    "system": "Hệ thống",
+    "assetCredits": "Ghi công tài nguyên",
+    "assetCreditsDesc": "Một số tài nguyên hình ảnh đến từ bên thứ ba và được ghi công theo giấy phép của họ (ví dụ: CC BY 4.0).",
+    "viewMakers": "Xem tác giả & ghi công",
+    "makers": "Tác giả & ghi công",
+    "localCredit": "Ghi công nội bộ",
+    "announcements": "Thông báo",
+    "announcementsDesc": "Xem lại thông báo mới nhất.",
+    "viewAnnouncementAgain": "Xem lại thông báo",
+    "announcementWillShowOnHome": "Thông báo mới nhất sẽ hiển thị lại ở Trang chủ.",
+    "announcementResetFail": "Không thể đặt lại trạng thái ẩn thông báo.",
+    "versionLabel": "Phiên bản",
+    "makersRoleCreator": "Nhà phát triển",
+    "makersRoleRankingBadges": "Huy hiệu xếp hạng (CC BY 4.0)",
+    "makersRoleCcBy": "Giấy phép CC BY 4.0",
+    "admin": "Quản trị",
+    "adminDesc": "Đi tới trang chỉ dành cho quản trị viên.",
+    "goToAdmin": "Mở trang quản trị",
+    "guestModeWarningTitle": "Lưu ý tài khoản khách",
+    "guestModeWarningDesc": "Tài khoản khách có thể mất dữ liệu khi đăng xuất, gỡ ứng dụng hoặc đổi thiết bị. Hãy liên kết tài khoản để giữ tiến trình."
   },
   "report": {
     "button": "Báo cáo",
@@ -317,8 +340,11 @@
     "updateFail": "Cập nhật hồ sơ thất bại",
     "deleteSuccess": "Đã xóa tài khoản thành công.",
     "deleteFail": "Xóa tài khoản thất bại.",
-    "guestDescIOS": "Guest accounts can be lost if you sign out, delete the app, or change devices. Link an Apple or Google account to keep your progress. Also, guest accounts may be deleted after 7 days of inactivity.",
-    "linkApple": "Link Apple Account"
+    "guestDescIOS": "Tài khoản khách có thể bị mất nếu bạn đăng xuất, xóa ứng dụng hoặc đổi thiết bị. Hãy liên kết tài khoản Apple hoặc Google để giữ tiến trình. Ngoài ra, tài khoản khách có thể bị xóa sau 7 ngày không hoạt động.",
+    "linkApple": "Liên kết tài khoản Apple",
+    "nicknameChangedSuccess": "Đã đổi biệt danh.",
+    "rankPlacement": "Phân hạng",
+    "rankPlacementRemaining": "Còn {{count}} trận"
   },
   "game": {
     "waiting": "Đang chờ trận...",
@@ -597,7 +623,8 @@
     "resumeLater": "Later",
     "resumeNow": "Resume",
     "levelProgressLevel": "Lv. {{level}}",
-    "levelUp": "LEVEL UP!"
+    "levelUp": "LEVEL UP!",
+    "hideAnnouncementToday": "Hôm nay không hiển thị lại"
   },
   "login": {
     "bannedTitle": "Account Suspended",
@@ -607,5 +634,11 @@
     "bannedAppeal": "If you want to appeal the suspension, please contact support.",
     "contactSupport": "Contact Support",
     "tryLaterKeyword": "later"
+  },
+  "review": {
+    "enjoyTitle": "Bạn thích trò chơi không?",
+    "enjoySubtitle": "Đánh giá nhanh giúp chúng tôi rất nhiều!",
+    "enjoyYes": "Có! 😊",
+    "enjoyNo": "Không hẳn 😐"
   }
 }

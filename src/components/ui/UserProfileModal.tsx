@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, User as UserIcon } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../../lib/supabaseClient';
 import Flag from './Flag';
@@ -79,6 +81,7 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose, us
     const tier = getTierFromMMR(rank);
     const tierColor = getTierColor(tier);
     const TierIcon = getTierIcon(tier);
+    const isShinyTier = tier === 'Diamond' || tier === 'Master';
     const wins = profile?.wins ?? 0;
     const losses = profile?.losses ?? 0;
     const casualWins = profile?.casual_wins ?? 0;
@@ -92,15 +95,15 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose, us
         observation: profile?.observation ?? 0
     };
 
-    return (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-md p-4" onClick={onClose}>
+    return createPortal(
+        <div className="fixed inset-0 z-[180] flex items-center justify-center bg-black/80 backdrop-blur-md p-4" onClick={onClose}>
             <div
                 className="bg-slate-50 dark:bg-gray-900 w-full max-w-md rounded-3xl border border-gray-700 shadow-2xl flex flex-col max-h-[85vh] overflow-hidden"
                 onClick={(e) => e.stopPropagation()}
             >
-                <div className="flex justify-between items-center p-5 border-b border-gray-800 bg-slate-50 dark:bg-gray-900/95 sticky top-0 z-10">
+                <div className="flex justify-between items-center p-5 pt-[calc(env(safe-area-inset-top)+1rem)] border-b border-gray-800 bg-slate-50 dark:bg-gray-900/95 sticky top-0 z-10">
                     <h3 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
-                        <img src="/images/icon/Mobile.png" alt="Profile" className="w-6 h-6 object-contain" />
+                        <UserIcon className="w-6 h-6 text-slate-500 dark:text-gray-400" />
                         {t('menu.profile', '프로필')}
                     </h3>
                     <button onClick={onClose} className="p-2 rounded-full hover:bg-white dark:bg-gray-800 transition-colors">
@@ -136,11 +139,29 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose, us
                                 </h2>
                             </div>
 
-                            <div className={`mt-3 px-2.5 py-1 rounded-lg text-sm font-black bg-gradient-to-r ${tierColor} text-black flex items-center gap-1.5 shadow-md`}>
-                                <TierIcon className="w-4 h-4" />
-                                <span>{tier}</span>
-                                <span className="opacity-60">|</span>
-                                <span className="font-mono">{rank}</span>
+                            <div className={`mt-4 w-full rounded-2xl shadow-lg transform hover:scale-[1.01] transition-transform overflow-hidden bg-gradient-to-br ${tierColor} p-0`}>
+                                <div className="w-full h-full rounded-2xl p-4 relative bg-black/10 dark:bg-black/20">
+                                    <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(120deg,rgba(255,255,255,0.42)_0%,rgba(255,255,255,0.1)_36%,rgba(0,0,0,0.14)_100%)]" />
+                                    {isShinyTier && (
+                                        <motion.div
+                                            className="absolute inset-y-0 -left-1/2 w-1/2 pointer-events-none"
+                                            initial={{ x: '-130%' }}
+                                            animate={{ x: '300%' }}
+                                            transition={{ duration: 2.1, repeat: Infinity, ease: 'linear' }}
+                                            style={{ background: 'linear-gradient(105deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.0) 20%, rgba(255,255,255,0.45) 50%, rgba(255,255,255,0) 85%)' }}
+                                        />
+                                    )}
+                                    <div className="absolute inset-[1px] rounded-[15px] border border-white/25 dark:border-white/20 pointer-events-none" />
+                                    <div className="relative z-10 flex items-center justify-center gap-4">
+                                        <div className="w-16 h-16 rounded-xl bg-black/5 dark:bg-black/20 border border-black/5 dark:border-white/10 flex items-center justify-center shrink-0">
+                                            <TierIcon className="w-12 h-12 object-contain drop-shadow-sm dark:drop-shadow-md" />
+                                        </div>
+                                        <div className="min-w-0 leading-tight text-left">
+                                            <div className="text-2xl font-black text-white truncate drop-shadow-[0_1px_1px_rgba(0,0,0,0.35)]">{tier}</div>
+                                            <div className="text-xl font-black text-white/95 font-mono mt-1 drop-shadow-[0_1px_1px_rgba(0,0,0,0.35)]">{rank}</div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             <div className="grid grid-cols-1 gap-3 w-full mt-6">
@@ -211,7 +232,8 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose, us
                     )}
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
 

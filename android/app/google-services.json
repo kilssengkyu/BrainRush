@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1077286836593",
+    "project_id": "brainrush-1a72e",
+    "storage_bucket": "brainrush-1a72e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1077286836593:android:c293892e46e086166c3ed0",
+        "android_client_info": {
+          "package_name": "com.kilssengkyu.brainrush"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDo8x-nYGwELqjETOuIAiaBhcdwyR80mAE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

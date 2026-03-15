@@ -1,7 +1,7 @@
 import { Brain, BookOpen, CircleDot, EyeOff, Ghost, Hash, MousePointer2, Route, Shuffle, Star, Zap } from 'lucide-react';
 
 export const PRACTICE_GAMES = [
-    { id: 'RANDOM', title: 'practice.random', icon: null, defaultIcon: <Shuffle className="w-12 h-12 text-white" />, type: 'random' },
+    { id: 'RANDOM', title: 'practice.random', icon: null, defaultIcon: <Shuffle className="w-12 h-12 text-slate-500 dark:text-white" />, type: 'random' },
     { id: 'RPS', title: 'rps.title', icon: <img src="/icons/rps.png" alt="RPS" className="w-full h-full object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <MousePointer2 className="w-12 h-12 text-yellow-400" />, type: 'speed' },
     { id: 'NUMBER', title: 'number.title', icon: <img src="/icons/number_asc.png" alt="Number Asc" className="w-full h-full object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Hash className="w-12 h-12 text-blue-400" />, type: 'speed' },
     { id: 'NUMBER_DESC', title: 'number.titleDesc', icon: <img src="/icons/number_desc.png" alt="Number Desc" className="w-full h-full object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Hash className="w-12 h-12 text-red-400" />, type: 'speed' },

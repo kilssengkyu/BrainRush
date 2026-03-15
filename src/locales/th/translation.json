@@ -22,7 +22,8 @@
       "longAgo": "นานมาแล้ว"
     },
     "exitAppTitle": "ออกจากแอป",
-    "exitAppConfirm": "ต้องการออกจากแอปหรือไม่?"
+    "exitAppConfirm": "ต้องการออกจากแอปหรือไม่?",
+    "open": "เปิด"
   },
   "auth": {
     "loginRequired": "ต้องเข้าสู่ระบบ",
@@ -86,7 +87,8 @@
     "challenge": "ท้า",
     "accept": "ยอมรับ",
     "reject": "ปฏิเสธ",
-    "newMessage": "มีข้อความใหม่จาก {{nickname}}"
+    "newMessage": "มีข้อความใหม่จาก {{nickname}}",
+    "chatRateLimited": "ส่งได้อีกครั้งใน {{seconds}} วินาที"
   },
   "menu": {
     "normal": {
@@ -199,7 +201,9 @@
     "playing": "โฆษณากำลังเล่น...",
     "pencils": "ดินสอ",
     "practiceNotes": "โน้ตฝึก",
-    "success": "รับรางวัลสำเร็จ"
+    "success": "รับรางวัลสำเร็จ",
+    "noFillTitle": "ไม่มีโฆษณาในขณะนี้",
+    "noFillDesc": "กรุณาลองใหม่ในอีกสักครู่"
   },
   "notifications": {
     "fullTitle": "ดินสอเต็มแล้ว",
@@ -232,17 +236,17 @@
     "tutorial": "บทแนะนำ",
     "tutorialDesc": "หากต้องการทบทวนวิธีใช้งานแอป สามารถดูบทแนะนำอีกครั้งได้",
     "viewTutorial": "ดูบทแนะนำอีกครั้ง",
-    "notificationNativeOnly": "Notification settings are only available in the mobile app.",
-    "notificationOff": "Notifications turned off.",
-    "notificationDeniedIos": "Please allow notifications in iPhone Settings > Notifications.",
-    "notificationDeniedAndroid": "Please allow notifications in Android Settings > Notifications.",
-    "notificationOn": "Notifications turned on.",
+    "notificationNativeOnly": "การตั้งค่าการแจ้งเตือนใช้งานได้เฉพาะในแอปมือถือเท่านั้น",
+    "notificationOff": "ปิดการแจ้งเตือนแล้ว",
+    "notificationDeniedIos": "โปรดอนุญาตการแจ้งเตือนใน iPhone: การตั้งค่า > การแจ้งเตือน",
+    "notificationDeniedAndroid": "โปรดอนุญาตการแจ้งเตือนใน Android: การตั้งค่า > การแจ้งเตือน",
+    "notificationOn": "เปิดการแจ้งเตือนแล้ว",
     "support": "ติดต่อฝ่ายช่วยเหลือ",
     "supportDesc": "ดูความช่วยเหลือสำหรับบั๊ก ปัญหา และคำถามอื่น ๆ",
     "goToSupport": "เปิดหน้าช่วยเหลือ",
-    "notifications": "Notifications",
-    "pushNotifications": "Push/Local Notifications",
-    "notificationNativeHint": "Notification toggle is disabled on the web.",
+    "notifications": "การแจ้งเตือน",
+    "pushNotifications": "การแจ้งเตือนแบบพุช/ภายในเครื่อง",
+    "notificationNativeHint": "ปุ่มสลับการแจ้งเตือนถูกปิดใช้งานบนเว็บ",
     "recommended": "แนะนำ",
     "theme": "ธีม",
     "themeMode": "โหมดการแสดงผล",
@@ -251,7 +255,26 @@
     "lightMode": "โหมดสว่าง",
     "light": "สว่าง",
     "dark": "มืด",
-    "system": "ระบบ"
+    "system": "ระบบ",
+    "assetCredits": "เครดิตทรัพยากร",
+    "assetCreditsDesc": "สื่อภาพบางส่วนมาจากผู้สร้างภายนอก และมีการให้เครดิตตามเงื่อนไขไลเซนส์ (เช่น CC BY 4.0)",
+    "viewMakers": "ดูผู้สร้างและเครดิต",
+    "makers": "ผู้สร้างและเครดิต",
+    "localCredit": "เครดิตภายในแอป",
+    "announcements": "ประกาศ",
+    "announcementsDesc": "ดูประกาศล่าสุดอีกครั้งได้",
+    "viewAnnouncementAgain": "ดูประกาศอีกครั้ง",
+    "announcementWillShowOnHome": "จะแสดงประกาศล่าสุดอีกครั้งที่หน้าแรก",
+    "announcementResetFail": "รีเซ็ตการซ่อนประกาศไม่สำเร็จ",
+    "versionLabel": "เวอร์ชัน",
+    "makersRoleCreator": "ผู้สร้าง",
+    "makersRoleRankingBadges": "ป้ายอันดับ (CC BY 4.0)",
+    "makersRoleCcBy": "สัญญาอนุญาต CC BY 4.0",
+    "admin": "ผู้ดูแลระบบ",
+    "adminDesc": "ไปยังหน้าสำหรับผู้ดูแลระบบเท่านั้น",
+    "goToAdmin": "เปิดหน้าแอดมิน",
+    "guestModeWarningTitle": "คำเตือนบัญชีผู้เยี่ยมชม",
+    "guestModeWarningDesc": "บัญชีผู้เยี่ยมชมอาจสูญเสียข้อมูลเมื่อออกจากระบบ ลบแอป หรือเปลี่ยนอุปกรณ์ กรุณาเชื่อมบัญชีเพื่อเก็บความคืบหน้า"
   },
   "report": {
     "button": "รายงาน",
@@ -317,8 +340,11 @@
     "updateFail": "อัปเดตโปรไฟล์ไม่สำเร็จ",
     "deleteSuccess": "ลบบัญชีสำเร็จ",
     "deleteFail": "ลบบัญชีไม่สำเร็จ",
-    "guestDescIOS": "Guest accounts can be lost if you sign out, delete the app, or change devices. Link an Apple or Google account to keep your progress. Also, guest accounts may be deleted after 7 days of inactivity.",
-    "linkApple": "Link Apple Account"
+    "guestDescIOS": "บัญชีผู้เยี่ยมชมอาจหายไปเมื่อออกจากระบบ ลบแอป หรือเปลี่ยนอุปกรณ์ กรุณาเชื่อมบัญชี Apple หรือ Google เพื่อเก็บความคืบหน้า และบัญชีผู้เยี่ยมชมอาจถูกลบหากไม่มีการใช้งาน 7 วัน",
+    "linkApple": "เชื่อมบัญชี Apple",
+    "nicknameChangedSuccess": "เปลี่ยนชื่อเล่นเรียบร้อยแล้ว",
+    "rankPlacement": "จัดอันดับ",
+    "rankPlacementRemaining": "เหลืออีก {{count}} เกม"
   },
   "game": {
     "waiting": "กำลังรอเกม...",
@@ -597,7 +623,8 @@
     "resumeLater": "Later",
     "resumeNow": "Resume",
     "levelProgressLevel": "Lv. {{level}}",
-    "levelUp": "LEVEL UP!"
+    "levelUp": "LEVEL UP!",
+    "hideAnnouncementToday": "วันนี้ไม่ต้องแสดงอีก"
   },
   "login": {
     "bannedTitle": "Account Suspended",
@@ -607,5 +634,11 @@
     "bannedAppeal": "If you want to appeal the suspension, please contact support.",
     "contactSupport": "Contact Support",
     "tryLaterKeyword": "later"
+  },
+  "review": {
+    "enjoyTitle": "สนุกกับเกมไหม?",
+    "enjoySubtitle": "รีวิวสั้นๆ ช่วยเราได้มาก!",
+    "enjoyYes": "ใช่! 😊",
+    "enjoyNo": "ไม่ค่อย 😐"
   }
 }

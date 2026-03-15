@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Gamepad2, Shield, ShoppingBag, Users } from 'lucide-react';
+import { Gamepad2, Megaphone, Shield, ShoppingBag, Users } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useSound } from '../contexts/SoundContext';
 
@@ -88,6 +88,20 @@ const Admin = () => {
             </div>
             <div className="text-lg font-semibold">상점 상품 관리</div>
             <div className="mt-1 text-sm text-slate-900 dark:text-white/70">사용 여부, 노출 순서, 아이콘 URL 관리</div>
+          </button>
+
+          <button
+            onClick={() => {
+              playSound('click');
+              navigate('/admin/notices');
+            }}
+            className="rounded-2xl border border-white/10 bg-white/5 p-5 text-left transition-colors hover:bg-white/10"
+          >
+            <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/20 text-amber-300">
+              <Megaphone className="h-5 w-5" />
+            </div>
+            <div className="text-lg font-semibold">공지사항 관리</div>
+            <div className="mt-1 text-sm text-slate-900 dark:text-white/70">홈 진입 공지 작성, 활성화, 기간 설정</div>
           </button>
         </div>
       </div>

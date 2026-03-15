@@ -14,6 +14,10 @@ import { App as CapApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { getNotificationsEnabled, setNotificationsEnabled } from '../lib/notificationPrefs';
+
+const ANNOUNCEMENT_FORCE_SHOW_KEY = 'announcement_force_show_once';
+const ANNOUNCEMENT_HIDDEN_PREFIX = 'announcement_hidden:';
+
 const Settings = () => {
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
@@ -24,6 +28,7 @@ const Settings = () => {
     const { themeMode, themePreference, setThemePreference } = useTheme();
     const [isRestoring, setIsRestoring] = useState(false);
     const [isLanguageModalOpen, setIsLanguageModalOpen] = useState(false);
+    const [isMakersModalOpen, setIsMakersModalOpen] = useState(false);
     const [languageSearch, setLanguageSearch] = useState('');
     const [isNotificationsEnabled, setIsNotificationsEnabled] = useState<boolean>(() => getNotificationsEnabled());
     const edgeSwipeStartRef = useRef<{ x: number; y: number } | null>(null);
@@ -32,6 +37,23 @@ const Settings = () => {
     const profileRole = (profile as any)?.role;
     const isAdmin = appRole === 'admin' || profileRole === 'admin';
     const [appVersion, setAppVersion] = useState<string>('');
+    const makers = [
+        {
+            name: 'SK.GIL',
+            role: t('settings.makersRoleCreator'),
+            href: ''
+        },
+        {
+            name: 'ore ·˖',
+            role: t('settings.makersRoleRankingBadges'),
+            href: 'https://www.figma.com/community/file/1410231454021596126/ranking-badges'
+        },
+        {
+            name: 'Creative Commons',
+            role: t('settings.makersRoleCcBy'),
+            href: 'https://creativecommons.org/licenses/by/4.0/'
+        }
+    ];
 
     useEffect(() => {
         if (Capacitor.isNativePlatform()) {
@@ -41,10 +63,22 @@ const Settings = () => {
         }
     }, []);
 
+    const normalizeLanguageCode = (lng: string): string => {
+        const normalized = (lng || '').toLowerCase();
+        if (normalized === 'zh' || normalized.startsWith('zh-cn') || normalized.startsWith('zh-sg') || normalized.startsWith('zh-hans')) {
+            return 'zh-Hans';
+        }
+        if (normalized.startsWith('zh-tw') || normalized.startsWith('zh-hk') || normalized.startsWith('zh-mo') || normalized.startsWith('zh-hant')) {
+            return 'zh-Hant';
+        }
+        return lng;
+    };
+
     const languages = [
         { code: 'ko', label: '한국어', flag: '🇰🇷' },
         { code: 'en', label: 'English', flag: '🇺🇸' },
-        { code: 'zh', label: '中文', flag: '🇨🇳' },
+        { code: 'zh-Hans', label: '简体中文', flag: '🇨🇳' },
+        { code: 'zh-Hant', label: '繁體中文', flag: '🇹🇼' },
         { code: 'ja', label: '日本語', flag: '🇯🇵' },
         { code: 'es', label: 'Español', flag: '🇪🇸' },
         { code: 'pt-BR', label: 'Português (Brasil)', flag: '🇧🇷' },
@@ -56,13 +90,13 @@ const Settings = () => {
     ];
 
     const changeLanguage = (lng: string) => {
-        i18n.changeLanguage(lng);
+        i18n.changeLanguage(normalizeLanguageCode(lng));
         playSound('click');
         setIsLanguageModalOpen(false);
     };
 
     const isLanguageSelected = (code: string) => {
-        const current = i18n.resolvedLanguage || i18n.language || '';
+        const current = normalizeLanguageCode(i18n.resolvedLanguage || i18n.language || '');
         return current === code || current.startsWith(`${code}-`) || code.startsWith(`${current}-`);
     };
 
@@ -96,7 +130,7 @@ const Settings = () => {
             if (fetchError) throw fetchError;
 
             if (!rows || rows.length === 0) {
-                showToast(t('settings.restorePurchasesEmpty', 'No purchases to restore.'), 'info');
+                showToast(t('settings.restorePurchasesEmpty'), 'info');
                 return;
             }
 
@@ -104,13 +138,13 @@ const Settings = () => {
             if (error) throw error;
 
             await refreshProfile();
-            showToast(t('settings.restorePurchasesSuccess', 'Purchases restored.'), 'success');
+            showToast(t('settings.restorePurchasesSuccess'), 'success');
 
         } catch (err: any) {
             console.error('[restorePurchases] failed:', err);
             const message = err?.message?.includes('Billing not supported')
-                ? t('settings.restorePurchasesUnavailable', 'Billing not supported on this device.')
-                : t('settings.restorePurchasesFail', 'Failed to restore purchases.');
+                ? t('settings.restorePurchasesUnavailable')
+                : t('settings.restorePurchasesFail');
             showToast(message, 'error');
         } finally {
             setIsRestoring(false);
@@ -186,6 +220,45 @@ const Settings = () => {
         edgeSwipeStartRef.current = null;
         edgeSwipeTriggeredRef.current = false;
     };
+
+    const clearAnnouncementHiddenFlags = () => {
+        let removedCount = 0;
+        try {
+            const keysToRemove: string[] = [];
+            for (let i = 0; i < window.localStorage.length; i += 1) {
+                const key = window.localStorage.key(i);
+                if (key && key.startsWith(ANNOUNCEMENT_HIDDEN_PREFIX)) {
+                    keysToRemove.push(key);
+                }
+            }
+            keysToRemove.forEach((key) => {
+                window.localStorage.removeItem(key);
+                removedCount += 1;
+            });
+            window.localStorage.removeItem(ANNOUNCEMENT_FORCE_SHOW_KEY);
+        } catch (error) {
+            console.error('Failed to clear announcement hidden flags:', error);
+            return { ok: false, removedCount: 0 };
+        }
+        return { ok: true, removedCount };
+    };
+
+    const handleViewAnnouncementAgain = () => {
+        const result = clearAnnouncementHiddenFlags();
+        if (!result.ok) {
+            showToast(t('settings.announcementResetFail'), 'error');
+            return;
+        }
+        try {
+            window.localStorage.setItem(ANNOUNCEMENT_FORCE_SHOW_KEY, '1');
+        } catch (error) {
+            console.error('Failed to set announcement force-show flag:', error);
+        }
+        showToast(t('settings.announcementWillShowOnHome'), 'success');
+        playSound('click');
+        navigate('/');
+    };
+
 
     useEffect(() => {
         const handleModalCloseRequest = (event: Event) => {
@@ -266,46 +339,46 @@ const Settings = () => {
                                 : themeMode === 'dark'
                                     ? <Moon size={24} />
                                     : <Sun size={24} />}
-                            <h2 className="text-xl font-semibold">{t('settings.theme', 'Theme')}</h2>
+                            <h2 className="text-xl font-semibold">{t('settings.theme')}</h2>
                         </div>
 
                         <div className="bg-white dark:bg-white/5 p-6 rounded-xl border border-slate-200 dark:border-white/10 backdrop-blur-md shadow-sm dark:shadow-none">
                             <div className="space-y-4">
                                 <div>
-                                    <div className="text-lg">{t('settings.themeMode', 'Appearance')}</div>
+                                    <div className="text-lg">{t('settings.themeMode')}</div>
                                     <p className="text-sm text-slate-500 dark:text-gray-400 mt-1">
                                         {themePreference === 'system'
-                                            ? t('settings.systemThemeDesc', 'Follow device display settings (iOS/Android system mode).')
+                                            ? t('settings.systemThemeDesc')
                                             : themeMode === 'dark'
-                                                ? t('settings.darkMode', 'Dark mode')
-                                                : t('settings.lightMode', 'Light mode')}
+                                                ? t('settings.darkMode')
+                                                : t('settings.lightMode')}
                                     </p>
                                 </div>
                                 <div className="grid grid-cols-3 gap-2">
                                     <button
                                         onClick={() => { setThemePreference('light'); playSound('click'); }}
                                         className={`px-3 py-2 rounded-lg border text-sm font-semibold transition-colors ${themePreference === 'light' ? 'bg-amber-100 dark:bg-amber-500 text-amber-700 dark:text-black border-amber-300 dark:border-amber-400' : 'bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/15 text-slate-600 dark:text-gray-200 hover:bg-slate-100 dark:hover:bg-white/10'}`}
-                                        aria-label={t('settings.lightMode', 'Light mode')}
+                                        aria-label={t('settings.lightMode')}
                                     >
-                                        {t('settings.light', 'Light')}
+                                        {t('settings.light')}
                                     </button>
                                     <button
                                         onClick={() => { setThemePreference('dark'); playSound('click'); }}
                                         className={`relative px-3 py-2 rounded-lg border text-sm font-semibold transition-colors ${themePreference === 'dark' ? 'bg-amber-100 dark:bg-amber-500 text-amber-700 dark:text-black border-amber-300 dark:border-amber-400' : 'bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/15 text-slate-600 dark:text-gray-200 hover:bg-slate-100 dark:hover:bg-white/10'}`}
-                                        aria-label={t('settings.darkMode', 'Dark mode')}
+                                        aria-label={t('settings.darkMode')}
                                     >
-                                        <span>{t('settings.dark', 'Dark')}</span>
+                                        <span>{t('settings.dark')}</span>
                                         <span className="pointer-events-none absolute -top-2 -right-2 inline-flex items-center gap-1 rounded-full border border-emerald-300/60 bg-emerald-400/20 px-1.5 py-0.5 text-[10px] font-bold leading-none text-emerald-700 dark:text-emerald-200">
                                             <Sparkles size={10} />
-                                            {t('settings.recommended', '추천')}
+                                            {t('settings.recommended')}
                                         </span>
                                     </button>
                                     <button
                                         onClick={() => { setThemePreference('system'); playSound('click'); }}
                                         className={`px-3 py-2 rounded-lg border text-sm font-semibold transition-colors ${themePreference === 'system' ? 'bg-amber-100 dark:bg-amber-500 text-amber-700 dark:text-black border-amber-300 dark:border-amber-400' : 'bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/15 text-slate-600 dark:text-gray-200 hover:bg-slate-100 dark:hover:bg-white/10'}`}
-                                        aria-label={t('settings.system', 'System')}
+                                        aria-label={t('settings.system')}
                                     >
-                                        {t('settings.system', 'System')}
+                                        {t('settings.system')}
                                     </button>
                                 </div>
                             </div>
@@ -335,7 +408,7 @@ const Settings = () => {
 
                             {/* Vibration Toggle */}
                             <div className="flex items-center justify-between">
-                                <span className="text-lg">{t('settings.vibration', '진동')}</span>
+                                <span className="text-lg">{t('settings.vibration')}</span>
                                 <button
                                     onClick={() => { toggleVibration(); playSound('click'); }}
                                     className={`relative w-14 h-8 rounded-full transition-colors duration-200 ease-in-out focus:outline-none flex items-center p-1 ${isVibrationEnabled ? 'bg-purple-500 dark:bg-purple-600' : 'bg-slate-300 dark:bg-gray-600'}`}
@@ -375,22 +448,41 @@ const Settings = () => {
                         </div>
                     </section>
 
+                    {/* Announcement Section */}
+                    <section className="space-y-4">
+                        <div className="flex items-center gap-3 text-cyan-400 mb-2">
+                            <Bell size={24} />
+                            <h2 className="text-xl font-semibold">{t('settings.announcements')}</h2>
+                        </div>
+                        <div className="bg-white dark:bg-white/5 p-6 rounded-xl border border-slate-200 dark:border-white/10 space-y-4 backdrop-blur-md shadow-sm dark:shadow-none">
+                            <p className="text-sm text-slate-500 dark:text-gray-400">
+                                {t('settings.announcementsDesc')}
+                            </p>
+                            <button
+                                onClick={handleViewAnnouncementAgain}
+                                className="w-full px-5 py-3 rounded-xl bg-cyan-100 dark:bg-cyan-600/80 hover:bg-cyan-200 dark:hover:bg-cyan-600 text-cyan-700 dark:text-white font-bold transition-colors"
+                            >
+                                {t('settings.viewAnnouncementAgain')}
+                            </button>
+                        </div>
+                    </section>
+
                     {/* Purchases Section */}
                     <section className="space-y-4">
                         <div className="flex items-center gap-3 text-emerald-400 mb-2">
                             <RefreshCcw size={24} />
-                            <h2 className="text-xl font-semibold">{t('settings.restorePurchases', 'Restore Purchases')}</h2>
+                            <h2 className="text-xl font-semibold">{t('settings.restorePurchases')}</h2>
                         </div>
                         <div className="bg-white dark:bg-white/5 p-6 rounded-xl border border-slate-200 dark:border-white/10 space-y-4 backdrop-blur-md shadow-sm dark:shadow-none">
                             <p className="text-sm text-slate-500 dark:text-gray-400">
-                                {t('settings.restorePurchasesDesc', 'Restore non-consumable purchases such as ad removal.')}
+                                {t('settings.restorePurchasesDesc')}
                             </p>
                             <button
                                 onClick={() => { playSound('click'); handleRestorePurchases(); }}
                                 disabled={isRestoring}
                                 className="w-full px-5 py-3 rounded-xl bg-emerald-100 dark:bg-emerald-600/80 hover:bg-emerald-200 dark:hover:bg-emerald-600 text-emerald-700 dark:text-white font-bold transition-colors disabled:opacity-50"
                             >
-                                {isRestoring ? t('common.loading') : t('settings.restorePurchases', 'Restore Purchases')}
+                                {isRestoring ? t('common.loading') : t('settings.restorePurchases')}
                             </button>
                         </div>
                     </section>
@@ -399,11 +491,11 @@ const Settings = () => {
                     <section className="space-y-4">
                         <div className="flex items-center gap-3 text-amber-400 mb-2">
                             <BookOpen size={24} />
-                            <h2 className="text-xl font-semibold">{t('settings.tutorial', '튜토리얼')}</h2>
+                            <h2 className="text-xl font-semibold">{t('settings.tutorial')}</h2>
                         </div>
                         <div className="bg-white dark:bg-white/5 p-6 rounded-xl border border-slate-200 dark:border-white/10 space-y-4 backdrop-blur-md shadow-sm dark:shadow-none">
                             <p className="text-sm text-slate-500 dark:text-gray-400">
-                                {t('settings.tutorialDesc', '앱 사용 방법을 다시 확인하고 싶다면 튜토리얼을 다시 보세요.')}
+                                {t('settings.tutorialDesc')}
                             </p>
                             <button
                                 onClick={() => {
@@ -413,7 +505,7 @@ const Settings = () => {
                                 }}
                                 className="w-full px-5 py-3 rounded-xl bg-amber-100 dark:bg-amber-600/80 hover:bg-amber-200 dark:hover:bg-amber-600 text-amber-700 dark:text-white font-bold transition-colors"
                             >
-                                {t('settings.viewTutorial', '튜토리얼 다시 보기')}
+                                {t('settings.viewTutorial')}
                             </button>
                         </div>
                     </section>
@@ -422,17 +514,17 @@ const Settings = () => {
                     <section className="space-y-4">
                         <div className="flex items-center gap-3 text-emerald-400 mb-2">
                             <MessageCircleQuestion size={24} />
-                            <h2 className="text-xl font-semibold">{t('settings.support', '문의하기')}</h2>
+                            <h2 className="text-xl font-semibold">{t('settings.support')}</h2>
                         </div>
                         <div className="bg-white dark:bg-white/5 p-6 rounded-xl border border-slate-200 dark:border-white/10 space-y-4 backdrop-blur-md shadow-sm dark:shadow-none">
                             <p className="text-sm text-slate-500 dark:text-gray-400">
-                                {t('settings.supportDesc', '문제 신고, 오류 제보, 기타 문의를 남길 수 있습니다.')}
+                                {t('settings.supportDesc')}
                             </p>
                             <button
                                 onClick={() => { playSound('click'); navigate('/support'); }}
                                 className="w-full px-5 py-3 rounded-xl bg-emerald-100 dark:bg-emerald-600/80 hover:bg-emerald-200 dark:hover:bg-emerald-600 text-emerald-700 dark:text-white font-bold transition-colors"
                             >
-                                {t('settings.goToSupport', '고객지원 열기')}
+                                {t('settings.goToSupport')}
                             </button>
                         </div>
                     </section>
@@ -441,17 +533,39 @@ const Settings = () => {
                     <section className="space-y-4">
                         <div className="flex items-center gap-3 text-sky-400 mb-2">
                             <Shield size={24} />
-                            <h2 className="text-xl font-semibold">{t('settings.privacyPolicy', '개인정보 처리방침')}</h2>
+                            <h2 className="text-xl font-semibold">{t('settings.privacyPolicy')}</h2>
                         </div>
                         <div className="bg-white dark:bg-white/5 p-6 rounded-xl border border-slate-200 dark:border-white/10 space-y-4 backdrop-blur-md shadow-sm dark:shadow-none">
                             <p className="text-sm text-slate-500 dark:text-gray-400">
-                                {t('settings.privacyPolicyDesc', '서비스 이용에 필요한 개인정보 처리 내용을 확인할 수 있습니다.')}
+                                {t('settings.privacyPolicyDesc')}
                             </p>
                             <button
                                 onClick={() => { playSound('click'); navigate('/privacy'); }}
                                 className="w-full px-5 py-3 rounded-xl bg-sky-100 dark:bg-sky-600/80 hover:bg-sky-200 dark:hover:bg-sky-600 text-sky-700 dark:text-white font-bold transition-colors"
                             >
-                                {t('settings.viewPrivacyPolicy', '개인정보 처리방침 보기')}
+                                {t('settings.viewPrivacyPolicy')}
+                            </button>
+                        </div>
+                    </section>
+
+                    {/* Asset Credits Section */}
+                    <section className="space-y-4">
+                        <div className="flex items-center gap-3 text-violet-400 mb-2">
+                            <Shield size={24} />
+                            <h2 className="text-xl font-semibold">{t('settings.assetCredits')}</h2>
+                        </div>
+                        <div className="bg-white dark:bg-white/5 p-6 rounded-xl border border-slate-200 dark:border-white/10 space-y-4 backdrop-blur-md shadow-sm dark:shadow-none">
+                            <p className="text-sm text-slate-500 dark:text-gray-400">
+                                {t('settings.assetCreditsDesc')}
+                            </p>
+                            <button
+                                onClick={() => {
+                                    playSound('click');
+                                    setIsMakersModalOpen(true);
+                                }}
+                                className="w-full px-5 py-3 rounded-xl bg-violet-100 dark:bg-violet-600/80 hover:bg-violet-200 dark:hover:bg-violet-600 text-violet-700 dark:text-white font-bold transition-colors"
+                            >
+                                {t('settings.viewMakers')}
                             </button>
                         </div>
                     </section>
@@ -460,17 +574,17 @@ const Settings = () => {
                         <section className="space-y-4">
                             <div className="flex items-center gap-3 text-red-400 mb-2">
                                 <Shield size={24} />
-                                <h2 className="text-xl font-semibold">{t('settings.admin', '관리자')}</h2>
+                                <h2 className="text-xl font-semibold">{t('settings.admin')}</h2>
                             </div>
                             <div className="bg-white dark:bg-white/5 p-6 rounded-xl border border-red-200 dark:border-red-400/30 space-y-4 backdrop-blur-md shadow-sm dark:shadow-none">
                                 <p className="text-sm text-slate-500 dark:text-gray-400">
-                                    {t('settings.adminDesc', '관리자 전용 페이지로 이동합니다.')}
+                                    {t('settings.adminDesc')}
                                 </p>
                                 <button
                                     onClick={() => { playSound('click'); navigate('/admin'); }}
                                     className="w-full px-5 py-3 rounded-xl bg-red-100 dark:bg-red-600/80 hover:bg-red-200 dark:hover:bg-red-600 text-red-700 dark:text-white font-bold transition-colors"
                                 >
-                                    {t('settings.goToAdmin', '관리자 화면 가기')}
+                                    {t('settings.goToAdmin')}
                                 </button>
                             </div>
                         </section>
@@ -479,7 +593,7 @@ const Settings = () => {
                     {/* App Version */}
                     {appVersion && (
                         <div className="text-center text-gray-500 text-sm mt-8 pb-4">
-                            version : {appVersion}
+                            {t('settings.versionLabel')} : {appVersion}
                         </div>
                     )}
 
@@ -532,9 +646,57 @@ const Settings = () => {
                             ))}
                             {filteredLanguages.length === 0 && (
                                 <div className="text-center text-sm text-slate-500 dark:text-gray-400 py-6">
-                                    {t('common.noResults', 'No results')}
+                                    {t('common.noResults')}
                                 </div>
                             )}
+                        </div>
+                    </motion.div>
+                </div>
+            )}
+            {isMakersModalOpen && (
+                <div className="fixed inset-0 z-[120] bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
+                    <motion.div
+                        initial={{ opacity: 0, y: 24 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="w-full max-w-md max-h-[75vh] bg-slate-50 dark:bg-gray-900 border border-white/10 rounded-2xl overflow-hidden shadow-2xl"
+                    >
+                        <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+                            <h3 className="text-lg font-bold">{t('settings.makers')}</h3>
+                            <button
+                                onClick={() => { playSound('click'); setIsMakersModalOpen(false); }}
+                                className="p-2 rounded-full hover:bg-white/10 transition-colors"
+                            >
+                                <X size={18} />
+                            </button>
+                        </div>
+                        <div className="max-h-[52vh] overflow-y-auto p-3 space-y-2">
+                            {makers.map((item) => (
+                                <div
+                                    key={`${item.name}-${item.role}`}
+                                    className="w-full p-4 rounded-xl flex items-center justify-between border bg-white dark:bg-white/5 border-slate-200 dark:border-white/10"
+                                >
+                                    <div className="min-w-0">
+                                        <div className="text-base font-semibold truncate">{item.name}</div>
+                                        <div className="text-xs text-slate-500 dark:text-gray-400 truncate">{item.role}</div>
+                                    </div>
+                                    {item.href ? (
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                playSound('click');
+                                                if (typeof window !== 'undefined') {
+                                                    window.open(item.href, '_blank', 'noopener,noreferrer');
+                                                }
+                                            }}
+                                            className="ml-3 px-3 py-1.5 rounded-lg bg-violet-100 dark:bg-violet-600/80 text-violet-700 dark:text-white text-xs font-bold hover:bg-violet-200 dark:hover:bg-violet-600 transition-colors"
+                                        >
+                                            {t('common.open')}
+                                        </button>
+                                    ) : (
+                                        <span className="ml-3 text-xs text-slate-400 dark:text-gray-500">{t('settings.localCredit')}</span>
+                                    )}
+                                </div>
+                            ))}
                         </div>
                     </motion.div>
                 </div>

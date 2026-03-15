@@ -498,6 +498,10 @@ const Profile = () => {
 
         try {
             const nextNickname = nickname.trim();
+            const prevNickname = String(profile?.nickname || '').trim();
+            const prevCountry = profile?.country || null;
+            const nicknameChanged = prevNickname !== nextNickname;
+            const countryChanged = prevCountry !== (country || null);
             const { error } = await supabase.rpc('update_my_profile', {
                 p_nickname: nextNickname,
                 p_country: country || null
@@ -507,17 +511,21 @@ const Profile = () => {
 
             await refreshProfile();
             setIsEditing(false);
-            showToast(t('profile.updateSuccess'), 'success');
+            if (nicknameChanged) {
+                showToast(t('profile.nicknameChangedSuccess'), 'success');
+            } else if (countryChanged) {
+                showToast(t('profile.updateSuccess'), 'success');
+            }
         } catch (error: any) {
             console.error('Error updating profile:', error);
             const message = (error?.message || '').toString().toLowerCase();
 
             if (message.includes('already in use')) {
-                showToast(t('profile.nicknameTaken', '이미 사용 중인 닉네임입니다.'), 'error');
+                showToast(t('profile.nicknameTaken'), 'error');
             } else if (message.includes('between 2 and 20')) {
-                showToast(t('profile.nicknameInvalid', '닉네임은 2~20자로 입력해 주세요.'), 'error');
+                showToast(t('profile.nicknameInvalid'), 'error');
             } else if (message.includes('once every 30 days') || message.includes('with a ticket')) {
-                showToast(t('profile.nicknameCooldownOrTicket', '닉네임은 30일마다 무료 변경 가능하며, 즉시 변경하려면 변경권이 필요합니다.'), 'error');
+                showToast(t('profile.nicknameCooldownOrTicket'), 'error');
             } else {
                 showToast(`${t('profile.updateFail')}: ${error.message || error}`, 'error');
             }
@@ -592,8 +600,8 @@ const Profile = () => {
         if (!user || !profile?.avatar_url) return;
 
         const confirmed = await confirm(
-            t('profile.removeAvatar', '사진 삭제'),
-            t('profile.removeAvatarConfirm', '현재 프로필 사진을 삭제하시겠습니까?')
+            t('profile.removeAvatar'),
+            t('profile.removeAvatarConfirm')
         );
         if (!confirmed) return;
 
@@ -606,10 +614,10 @@ const Profile = () => {
 
             if (error) throw error;
             await refreshProfile();
-            showToast(t('profile.avatarRemoveSuccess', '프로필 사진이 삭제되었습니다.'), 'success');
+            showToast(t('profile.avatarRemoveSuccess'), 'success');
         } catch (error: any) {
             console.error('Avatar remove error:', error);
-            showToast(`${t('profile.avatarRemoveFail', '프로필 사진 삭제 실패')}: ${error.message || error}`, 'error');
+            showToast(`${t('profile.avatarRemoveFail')}: ${error.message || error}`, 'error');
         } finally {
             setIsUploadingAvatar(false);
         }
@@ -691,11 +699,12 @@ const Profile = () => {
 
     // Calculate stats
     const rank = profile?.mmr || 1000;
-    const placementRequiredGames = 5;
+    const placementRequiredGames = 1;
     const rankGamesPlayed = Math.max(0, Number((profile as any)?.rank_games_played ?? 0));
     const isPlacement = rankGamesPlayed < placementRequiredGames;
     const rankGamesRemaining = Math.max(0, placementRequiredGames - rankGamesPlayed);
     const tier = getTierFromMMR(rank);
+    const isShinyTier = tier === 'Diamond' || tier === 'Master';
     const tierColor = getTierColor(tier);
     const TierIcon = getTierIcon(tier);
     const level = typeof profile?.level === 'number'
@@ -805,7 +814,7 @@ const Profile = () => {
                                                 }}
                                                 className="inline-flex items-center justify-center rounded-full border border-amber-300 bg-amber-100 px-4 py-2 text-xs font-bold text-amber-900 hover:bg-amber-200 transition-colors dark:border-white/10 dark:bg-white/10 dark:text-amber-100 dark:hover:bg-white/20"
                                             >
-                                                {t('profile.linkApple', 'Apple 계정 연동')}
+                                                {t('profile.linkApple')}
                                             </button>
                                         )}
                                         <button
@@ -852,7 +861,7 @@ const Profile = () => {
                                             type="button"
                                             onClick={handleAvatarRemove}
                                             disabled={isUploadingAvatar || isLoading}
-                                            aria-label={t('profile.removeAvatar', '사진 삭제')}
+                                            aria-label={t('profile.removeAvatar')}
                                             className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-red-600/90 hover:bg-red-500 text-slate-900 dark:text-white border border-white/20 flex items-center justify-center transition-colors disabled:opacity-50"
                                         >
                                             <X className="w-4 h-4" />
@@ -920,7 +929,7 @@ const Profile = () => {
                                                     disabled={isLoading}
                                                     className="p-2 bg-slate-200 dark:bg-gray-600 text-slate-700 dark:text-white rounded-lg hover:bg-slate-300 dark:hover:bg-gray-500 disabled:opacity-50 w-full flex justify-center items-center text-sm font-bold shadow-sm"
                                                 >
-                                                    {t('common.cancel', '취소')}
+                                                    {t('common.cancel')}
                                                 </button>
                                                 <button
                                                     onClick={handleSave}
@@ -933,20 +942,19 @@ const Profile = () => {
 
                                             <div className={`mt-2 rounded-lg border px-3 py-2 text-left ${canChangeNicknameNow ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-red-500/10 border-red-500/30'}`}>
                                                 <div className="flex items-center justify-between gap-2 text-xs">
-                                                    <span className="text-slate-600 dark:text-gray-300">{t('profile.nicknameTicketsLabel', '닉네임 변경권')}</span>
+                                                    <span className="text-slate-600 dark:text-gray-300">{t('profile.nicknameTicketsLabel')}</span>
                                                     <span className="font-bold text-slate-900 dark:text-white">{nicknameChangeTickets}</span>
                                                 </div>
                                                 <div className={`mt-1 text-xs font-semibold ${canChangeNicknameNow ? 'text-emerald-300' : 'text-red-300'}`}>
                                                     {canChangeNicknameNow
-                                                        ? t('profile.nicknameChangeAvailableNow', '지금 닉네임 변경 가능')
-                                                        : t('profile.nicknameChangeUnavailableNow', '지금 닉네임 변경 불가')}
+                                                        ? t('profile.nicknameChangeAvailableNow')
+                                                        : t('profile.nicknameChangeUnavailableNow')}
                                                 </div>
                                                 <div className="mt-1 text-[11px] text-slate-500 dark:text-gray-400 leading-tight">
                                                     {isNicknameFreeChangeAvailable
-                                                        ? t('profile.nicknameFreeChangeNow', '무료 변경 가능: 지금')
+                                                        ? t('profile.nicknameFreeChangeNow')
                                                         : t('profile.nicknameFreeChangeAt', {
-                                                            date: nextFreeNicknameChangeText || '-',
-                                                            defaultValue: '무료 변경 가능: {{date}}'
+                                                            date: nextFreeNicknameChangeText || '-'
                                                         })}
                                                 </div>
                                             </div>
@@ -983,25 +991,45 @@ const Profile = () => {
 
                             {/* Stats Grid */}
                             <div className="grid grid-cols-2 gap-4">
-                                <div className={`col-span-2 bg-gradient-to-br ${isPlacement ? 'from-slate-300 to-slate-200 dark:from-slate-700 dark:to-slate-600' : tierColor} p-[2px] rounded-2xl shadow-lg transform hover:scale-[1.01] transition-transform`}>
-                                    <div className="bg-white dark:bg-gray-800 w-full h-full rounded-2xl p-4 flex flex-col items-center justify-center gap-3">
-                                        <div className="min-w-0 flex flex-col justify-center items-center text-center leading-tight">
+                                <div className={`col-span-2 rounded-2xl shadow-lg transform hover:scale-[1.01] transition-transform overflow-hidden ${isPlacement
+                                    ? 'bg-gradient-to-br from-slate-300 to-slate-200 dark:from-slate-700 dark:to-slate-600 p-[2px]'
+                                    : `bg-gradient-to-br ${tierColor} p-0`
+                                    }`}>
+                                    <div className={`w-full h-full rounded-2xl p-4 flex items-center justify-center ${isPlacement ? 'bg-white dark:bg-gray-800' : 'relative bg-black/10 dark:bg-black/20'}`}>
+                                        {!isPlacement && (
+                                            <>
+                                                <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(120deg,rgba(255,255,255,0.42)_0%,rgba(255,255,255,0.1)_36%,rgba(0,0,0,0.14)_100%)]" />
+                                                {isShinyTier && (
+                                                    <motion.div
+                                                        className="absolute inset-y-0 -left-1/2 w-1/2 pointer-events-none"
+                                                        initial={{ x: '-130%' }}
+                                                        animate={{ x: '300%' }}
+                                                        transition={{ duration: 2.1, repeat: Infinity, ease: 'linear' }}
+                                                        style={{ background: 'linear-gradient(105deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.0) 20%, rgba(255,255,255,0.45) 50%, rgba(255,255,255,0) 85%)' }}
+                                                    />
+                                                )}
+                                                <div className="absolute inset-[1px] rounded-[15px] border border-white/25 dark:border-white/20 pointer-events-none" />
+                                            </>
+                                        )}
+                                        <div className={`min-w-0 w-full ${isPlacement ? 'flex flex-col justify-center items-center text-center leading-tight' : 'relative z-10 flex items-center justify-center gap-4'}`}>
                                             {isPlacement ? (
                                                 <>
                                                     <div className="text-2xl font-black text-slate-900 dark:text-white truncate">
-                                                        {t('profile.rankPlacement', '배치 중')}
+                                                        {t('profile.rankPlacement')}
                                                     </div>
                                                     <div className="text-xs font-semibold text-amber-600 dark:text-amber-300 mt-2">
-                                                        {t('profile.rankPlacementRemaining', '{{count}}판 후 랭크 반영', { count: rankGamesRemaining })}
+                                                        {t('profile.rankPlacementRemaining', { count: rankGamesRemaining })}
                                                     </div>
                                                 </>
                                             ) : (
                                                 <>
-                                                    <div className="w-16 h-16 rounded-xl bg-black/5 dark:bg-black/20 border border-black/5 dark:border-white/10 flex items-center justify-center mb-1">
+                                                    <div className="w-16 h-16 rounded-xl bg-black/5 dark:bg-black/20 border border-black/5 dark:border-white/10 flex items-center justify-center shrink-0">
                                                         <TierIcon className="w-12 h-12 object-contain drop-shadow-sm dark:drop-shadow-md" />
                                                     </div>
-                                                    <div className="text-2xl font-black text-slate-900 dark:text-white truncate">{tier}</div>
-                                                    <div className="text-xl font-black text-slate-800 dark:text-white/90 font-mono mt-1">{rank}</div>
+                                                    <div className="min-w-0 leading-tight text-left">
+                                                        <div className="text-2xl font-black text-white truncate drop-shadow-[0_1px_1px_rgba(0,0,0,0.35)]">{tier}</div>
+                                                        <div className="text-xl font-black text-white/95 font-mono mt-1 drop-shadow-[0_1px_1px_rgba(0,0,0,0.35)]">{rank}</div>
+                                                    </div>
                                                 </>
                                             )}
                                         </div>

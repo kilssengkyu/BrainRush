@@ -100,10 +100,21 @@ export const useMatchmaking = (
                 : typeof profile?.xp === 'number'
                     ? getLevelFromXp(profile.xp)
                     : 1;
+            const rankGamesPlayed = Math.max(
+                0,
+                Number((profile as any)?.rank_games_played ?? (profile?.wins || 0) + (profile?.losses || 0))
+            );
+            const normalGamesPlayed = Math.max(
+                0,
+                Number((profile?.casual_wins || 0) + (profile?.casual_losses || 0))
+            );
+            const totalGamesPlayed = rankGamesPlayed + normalGamesPlayed;
+            const isNewPlayer = totalGamesPlayed <= 5;
             const isBotEligible =
                 (mode === 'normal' || mode === 'rank') &&
                 (playerLevel <= 5 || elapsedMs >= 15000);
-            const botDelayMs = playerLevel <= 5 ? 10000 : 15000;
+            const earlyBotDelayMs = 1000 + Math.floor(Math.random() * 2001); // 1~3s
+            const botDelayMs = isNewPlayer ? earlyBotDelayMs : (playerLevel <= 5 ? 10000 : 15000);
             const forceBot = playerLevel > 5 && elapsedMs >= 15000;
 
             if (isBotEligible && !botMatchTriggered.current && elapsedMs >= botDelayMs) {

@@ -22,7 +22,8 @@
       "longAgo": "Há muito tempo"
     },
     "exitAppTitle": "Sair do app",
-    "exitAppConfirm": "Deseja sair do app?"
+    "exitAppConfirm": "Deseja sair do app?",
+    "open": "Abrir"
   },
   "auth": {
     "loginRequired": "Login obrigatório.",
@@ -86,7 +87,8 @@
     "challenge": "Desafiar",
     "accept": "Aceitar",
     "reject": "Recusar",
-    "newMessage": "Nova mensagem de {{nickname}}"
+    "newMessage": "Nova mensagem de {{nickname}}",
+    "chatRateLimited": "Limite de envio: envie novamente em {{seconds}}s."
   },
   "menu": {
     "normal": {
@@ -199,7 +201,9 @@
     "playing": "Anúncio em reprodução...",
     "pencils": "Lápis",
     "practiceNotes": "Notas de treino",
-    "success": "Recompensa recebida com sucesso."
+    "success": "Recompensa recebida com sucesso.",
+    "noFillTitle": "Nenhum anúncio disponível no momento",
+    "noFillDesc": "Tente novamente em instantes."
   },
   "notifications": {
     "fullTitle": "Lápis cheios",
@@ -232,17 +236,17 @@
     "tutorial": "Tutorial",
     "tutorialDesc": "Se quiser revisar como usar o app, veja o tutorial novamente.",
     "viewTutorial": "Ver tutorial novamente",
-    "notificationNativeOnly": "Notification settings are only available in the mobile app.",
-    "notificationOff": "Notifications turned off.",
-    "notificationDeniedIos": "Please allow notifications in iPhone Settings > Notifications.",
-    "notificationDeniedAndroid": "Please allow notifications in Android Settings > Notifications.",
-    "notificationOn": "Notifications turned on.",
+    "notificationNativeOnly": "As configurações de notificação estão disponíveis apenas no app móvel.",
+    "notificationOff": "Notificações desativadas.",
+    "notificationDeniedIos": "Permita notificações no iPhone: Ajustes > Notificações.",
+    "notificationDeniedAndroid": "Permita notificações no Android: Configurações > Notificações.",
+    "notificationOn": "Notificações ativadas.",
     "support": "Fale com o suporte",
     "supportDesc": "Veja ajuda para bugs, problemas e outras dúvidas.",
     "goToSupport": "Abrir suporte",
-    "notifications": "Notifications",
-    "pushNotifications": "Push/Local Notifications",
-    "notificationNativeHint": "Notification toggle is disabled on the web.",
+    "notifications": "Notificações",
+    "pushNotifications": "Notificações Push/Locais",
+    "notificationNativeHint": "O botão de notificação está desativado na web.",
     "recommended": "Recomendado",
     "theme": "Tema",
     "themeMode": "Aparência",
@@ -251,7 +255,26 @@
     "lightMode": "Modo claro",
     "light": "Claro",
     "dark": "Escuro",
-    "system": "Sistema"
+    "system": "Sistema",
+    "assetCredits": "Créditos de recursos",
+    "assetCreditsDesc": "Alguns recursos visuais são de criadores terceiros e recebem crédito conforme suas licenças (ex.: CC BY 4.0).",
+    "viewMakers": "Ver criadores e créditos",
+    "makers": "Criadores e créditos",
+    "localCredit": "Crédito local",
+    "announcements": "Avisos",
+    "announcementsDesc": "Veja novamente o aviso mais recente.",
+    "viewAnnouncementAgain": "Ver aviso novamente",
+    "announcementWillShowOnHome": "O aviso mais recente será mostrado novamente na Home.",
+    "announcementResetFail": "Falha ao redefinir a visibilidade dos avisos.",
+    "versionLabel": "Versão",
+    "makersRoleCreator": "Criador",
+    "makersRoleRankingBadges": "Emblemas de ranking (CC BY 4.0)",
+    "makersRoleCcBy": "Licença CC BY 4.0",
+    "admin": "Administrador",
+    "adminDesc": "Ir para páginas exclusivas de admin.",
+    "goToAdmin": "Abrir painel admin",
+    "guestModeWarningTitle": "Aviso de conta visitante",
+    "guestModeWarningDesc": "Contas de visitante podem perder dados ao sair, desinstalar o app ou trocar de aparelho. Vincule uma conta para manter seu progresso."
   },
   "report": {
     "button": "Denunciar",
@@ -317,8 +340,11 @@
     "updateFail": "Falha ao atualizar perfil",
     "deleteSuccess": "Conta excluída com sucesso.",
     "deleteFail": "Falha ao excluir conta.",
-    "guestDescIOS": "Guest accounts can be lost if you sign out, delete the app, or change devices. Link an Apple or Google account to keep your progress. Also, guest accounts may be deleted after 7 days of inactivity.",
-    "linkApple": "Link Apple Account"
+    "guestDescIOS": "Contas de visitante podem ser perdidas ao sair, excluir o app ou trocar de dispositivo. Vincule uma conta Apple ou Google para manter seu progresso. Além disso, contas de visitante podem ser removidas após 7 dias de inatividade.",
+    "linkApple": "Vincular conta Apple",
+    "nicknameChangedSuccess": "Apelido alterado com sucesso.",
+    "rankPlacement": "Partida de colocação",
+    "rankPlacementRemaining": "Falta {{count}} partida"
   },
   "game": {
     "waiting": "Aguardando jogo...",
@@ -597,7 +623,8 @@
     "resumeLater": "Later",
     "resumeNow": "Resume",
     "levelProgressLevel": "Lv. {{level}}",
-    "levelUp": "LEVEL UP!"
+    "levelUp": "LEVEL UP!",
+    "hideAnnouncementToday": "Não mostrar novamente hoje"
   },
   "login": {
     "bannedTitle": "Account Suspended",
@@ -607,5 +634,11 @@
     "bannedAppeal": "If you want to appeal the suspension, please contact support.",
     "contactSupport": "Contact Support",
     "tryLaterKeyword": "later"
+  },
+  "review": {
+    "enjoyTitle": "Está gostando do jogo?",
+    "enjoySubtitle": "Uma avaliação nos ajuda muito!",
+    "enjoyYes": "Sim! 😊",
+    "enjoyNo": "Não muito 😐"
   }
 }

@@ -185,28 +185,49 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
         }
 
         // Native AdMob Mode
-        try {
-            setAdState('loading');
-            const platform = Capacitor.getPlatform();
-            const adsMode = String(import.meta.env.VITE_ADS_MODE ?? import.meta.env.VITE_APP_ENV ?? '').toLowerCase();
-            const isProdAds = adsMode === 'prod' || adsMode === 'production';
-            const adId = isProdAds
-                ? (platform === 'ios'
-                    ? 'ca-app-pub-4893861547827379/8300296145'
-                    : 'ca-app-pub-4893861547827379/1519157571')
-                : (platform === 'ios'
-                    ? 'ca-app-pub-3940256099942544/1712485313'
-                    : 'ca-app-pub-3940256099942544/5224354917');
+        setAdState('loading');
+        const platform = Capacitor.getPlatform();
+        const adsMode = String(import.meta.env.VITE_ADS_MODE ?? import.meta.env.VITE_APP_ENV ?? '').toLowerCase();
+        const isProdAds = adsMode === 'prod' || adsMode === 'production';
+        const adId = isProdAds
+            ? (platform === 'ios'
+                ? 'ca-app-pub-4893861547827379/8300296145'
+                : 'ca-app-pub-4893861547827379/1519157571')
+            : (platform === 'ios'
+                ? 'ca-app-pub-3940256099942544/1712485313'
+                : 'ca-app-pub-3940256099942544/5224354917');
 
-            await AdMob.prepareRewardVideoAd({ adId });
-            await AdMob.showRewardVideoAd();
-            // State change to 'playing' is handled implicitly by the view overlay, 
-            // but we can set it here to update our background modal UI if visible.
-            setAdState('playing');
-        } catch (err) {
-            console.error('Ad preparation failed', err);
-            setAdState('idle');
-            // Allow retry
+        const MAX_RETRIES = 2;
+        const RETRY_DELAYS = [1500, 3000];
+
+        for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+            try {
+                if (attempt > 0) {
+                    console.log(`[AdModal] Rewarded retry ${attempt}/${MAX_RETRIES}...`);
+                    await new Promise(r => setTimeout(r, RETRY_DELAYS[attempt - 1]));
+                }
+                await AdMob.prepareRewardVideoAd({ adId });
+                await AdMob.showRewardVideoAd();
+                setAdState('playing');
+                return;
+            } catch (err: any) {
+                const msg = err?.message || err?.errorMessage || String(err);
+                const isNoFill = msg.toLowerCase().includes('no fill') || msg.toLowerCase().includes('nofill');
+                if (isNoFill && attempt < MAX_RETRIES) {
+                    console.warn(`[AdModal] Rewarded NoFill (attempt ${attempt + 1}), retrying...`);
+                    continue;
+                }
+                console.error('Ad preparation failed', err);
+                if (isNoFill) {
+                    // NoFill = 서버에 광고가 없는 것이므로 사용자에게 무료로 보상 지급
+                    console.log('[AdModal] NoFill after all retries — granting free reward');
+                    resetForcedAdCounter();
+                    await grantReward();
+                } else {
+                    setAdState('idle');
+                }
+                return;
+            }
         }
     };
 

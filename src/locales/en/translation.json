@@ -22,7 +22,8 @@
       "longAgo": "Long ago"
     },
     "exitAppTitle": "Exit App",
-    "exitAppConfirm": "Do you want to exit the app?"
+    "exitAppConfirm": "Do you want to exit the app?",
+    "open": "Open"
   },
   "auth": {
     "loginRequired": "Login required.",
@@ -86,7 +87,8 @@
     "challenge": "Challenge",
     "accept": "Accept",
     "reject": "Reject",
-    "newMessage": "New message from {{nickname}}"
+    "newMessage": "New message from {{nickname}}",
+    "chatRateLimited": "Rate limited: send again in {{seconds}}s."
   },
   "menu": {
     "normal": {
@@ -199,7 +201,9 @@
     "playing": "Ad is playing...",
     "pencils": "Pencils",
     "practiceNotes": "Practice Notes",
-    "success": "Reward earned successfully."
+    "success": "Reward earned successfully.",
+    "noFillTitle": "No ads available right now",
+    "noFillDesc": "Please try again in a moment."
   },
   "notifications": {
     "fullTitle": "Pencils full",
@@ -251,7 +255,26 @@
     "lightMode": "Light mode",
     "light": "Light",
     "dark": "Dark",
-    "system": "System"
+    "system": "System",
+    "assetCredits": "Asset Credits",
+    "assetCreditsDesc": "Some visual assets are from third-party creators and are credited under their licenses (e.g. CC BY 4.0).",
+    "viewMakers": "View Makers & Credits",
+    "makers": "Makers & Credits",
+    "localCredit": "Local credit",
+    "announcements": "Announcements",
+    "announcementsDesc": "View the latest announcement again.",
+    "viewAnnouncementAgain": "View Announcement Again",
+    "announcementWillShowOnHome": "The latest announcement will be shown again on Home.",
+    "announcementResetFail": "Failed to reset announcement visibility.",
+    "versionLabel": "Version",
+    "makersRoleCreator": "Creator",
+    "makersRoleRankingBadges": "Ranking Badges (CC BY 4.0)",
+    "makersRoleCcBy": "CC BY 4.0 License",
+    "admin": "Admin",
+    "adminDesc": "Go to admin-only pages.",
+    "goToAdmin": "Open Admin Panel",
+    "guestModeWarningTitle": "Guest Account Notice",
+    "guestModeWarningDesc": "Guest accounts may lose data when signing out, uninstalling, or changing devices. Link an account to keep your progress."
   },
   "report": {
     "button": "Report",
@@ -318,7 +341,10 @@
     "nicknameCooldownOrTicket": "Nickname changes are free every 30 days. Use a ticket for instant changes.",
     "updateFail": "Failed to update profile",
     "deleteSuccess": "Account deleted successfully.",
-    "deleteFail": "Failed to delete account."
+    "deleteFail": "Failed to delete account.",
+    "nicknameChangedSuccess": "Nickname changed successfully.",
+    "rankPlacement": "Placement",
+    "rankPlacementRemaining": "{{count}} game left"
   },
   "game": {
     "waiting": "Waiting for game...",
@@ -405,7 +431,8 @@
     "resumeLater": "Later",
     "resumeNow": "Resume",
     "levelProgressLevel": "Lv. {{level}}",
-    "levelUp": "LEVEL UP!"
+    "levelUp": "LEVEL UP!",
+    "hideAnnouncementToday": "Don't show again today"
   },
   "rps": {
     "ready": "READY...",
@@ -607,5 +634,11 @@
     "bannedAppeal": "If you want to appeal the suspension, please contact support.",
     "contactSupport": "Contact Support",
     "tryLaterKeyword": "later"
+  },
+  "review": {
+    "enjoyTitle": "Enjoying the game?",
+    "enjoySubtitle": "A quick review helps us a lot!",
+    "enjoyYes": "Yes! 😊",
+    "enjoyNo": "Not really 😐"
   }
 }

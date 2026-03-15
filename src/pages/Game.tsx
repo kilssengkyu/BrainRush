@@ -44,9 +44,15 @@ import { useAuth } from '../contexts/AuthContext';
 import ReportReasonModal from '../components/ui/ReportReasonModal';
 import { resolveRoundWinner } from '../effects/roundWinner';
 import { getLevelFromXp, getXpSnapshotStorageKey } from '../utils/levelUtils';
+import TierMMRBadge from '../components/ui/TierMMRBadge';
+import { getTierFromMMR, getTierIcon } from '../utils/rankUtils';
+import ReviewPromptModal from '../components/ui/ReviewPromptModal';
 // useTheme removed — Game board uses Tailwind dark: variants directly
 
 const IS_DEV = import.meta.env.DEV;
+const REVIEW_PROMPT_THRESHOLD = 1; // TODO: change to 5 for production release
+const REVIEW_LS_PLAYED_KEY = 'brainrush_games_played';
+const REVIEW_LS_PROMPTED_KEY = 'brainrush_review_prompted';
 const BOT_EMOJI_POOL = ['🙂', '😭', '😂', '☹️', '❤️', '💔', '👍', '👎'];
 const BOT_EMOJI_BURST = ['😂', '😭', '👍', '👎'];
 const BOT_EMOJI_REACTIVE = {
@@ -1048,6 +1054,7 @@ const Game: React.FC = () => {
     const [mmrDelta, setMmrDelta] = useState<number | null>(null);
     const [streakBonus, setStreakBonus] = useState<number>(0);
     const [showLosePencilModal, setShowLosePencilModal] = useState(false);
+    const [showReviewPrompt, setShowReviewPrompt] = useState(false);
 
     useEffect(() => {
         const handleModalCloseRequest = (event: Event) => {
@@ -1119,6 +1126,36 @@ const Game: React.FC = () => {
 
     const isMatchWin = Boolean(gameState.winnerId && gameState.winnerId === myId);
     const isMatchLoss = Boolean(gameState.winnerId && gameState.winnerId !== myId);
+    const isMyWinnerCard = isMatchWin;
+    const isOpWinnerCard = isMatchLoss;
+    const myFinalMMR = gameState.mode === 'rank' && displayMMR !== null ? displayMMR : (myProfile?.mmr ?? 1000);
+    const opFinalMMR = opponentProfile?.mmr ?? 1000;
+    const myFinalTier = getTierFromMMR(myFinalMMR);
+    const opFinalTier = getTierFromMMR(opFinalMMR);
+    const MyFinalTierIcon = getTierIcon(myFinalTier);
+    const OpFinalTierIcon = getTierIcon(opFinalTier);
+
+    // Review prompt: track games played and trigger on win
+    useEffect(() => {
+        if (!showFinalResult || gameState.mode === 'practice') return;
+        const alreadyPrompted = localStorage.getItem(REVIEW_LS_PROMPTED_KEY) === 'true';
+        if (alreadyPrompted) return;
+
+        const prev = parseInt(localStorage.getItem(REVIEW_LS_PLAYED_KEY) || '0', 10);
+        const next = prev + 1;
+        localStorage.setItem(REVIEW_LS_PLAYED_KEY, String(next));
+
+        if (next >= REVIEW_PROMPT_THRESHOLD && isMatchWin) {
+            // Small delay so it doesn't compete with MMR animation / lose-pencil modal
+            const timer = setTimeout(() => setShowReviewPrompt(true), 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [showFinalResult, gameState.mode, isMatchWin]);
+
+    const handleReviewPromptClose = useCallback(() => {
+        setShowReviewPrompt(false);
+        localStorage.setItem(REVIEW_LS_PROMPTED_KEY, 'true');
+    }, []);
 
     const getRoundGameTitle = (gameType: string | null | undefined) => {
         switch (gameType) {
@@ -1222,13 +1259,13 @@ const Game: React.FC = () => {
                                 <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-yellow-300 border-t-transparent animate-spin bg-slate-50 dark:bg-gray-900/80" />
                             )}
                         </div>
-                        <div className="min-w-0">
-                            <div className="font-bold text-sm flex items-center gap-1 truncate">
-                                <Flag code={myProfile?.country} />
-                                <span className="hidden sm:inline truncate">{myProfile?.nickname}</span>
+                            <div className="min-w-0">
+                                <div className="font-bold text-sm flex items-center gap-1 truncate">
+                                    <Flag code={myProfile?.country} />
+                                    <span className="hidden sm:inline truncate">{myProfile?.nickname}</span>
+                                </div>
+                                <AnimatedScore value={displayMyScore} useGrouping={false} className="text-2xl font-black text-blue-400 font-mono" />
                             </div>
-                            <AnimatedScore value={displayMyScore} useGrouping={false} className="text-2xl font-black text-blue-400 font-mono" />
-                        </div>
                     </div>
 
                     {/* Center Timer */}
@@ -1415,7 +1452,10 @@ const Game: React.FC = () => {
                                     )}
                                 </div>
                             </div>
-                            <div className="text-blue-300 font-mono font-bold text-xs mt-1">{(myProfile?.mmr ?? 1000).toLocaleString()} MMR</div>
+                            <TierMMRBadge
+                                mmr={myProfile?.mmr}
+                                className="mt-1"
+                            />
                         </div>
 
                         {/* Hex Radar - Center with Labels */}
@@ -1435,9 +1475,10 @@ const Game: React.FC = () => {
 
                         {/* Opponent Profile - Above Emoji Bar (mirrored layout) */}
                         <div className="mb-4 flex flex-col items-center">
-                            <div className="text-red-300 font-mono font-bold text-xs mb-1">
-                                {opponentProfile?.mmr ? `${opponentProfile.mmr.toLocaleString()} MMR` : t('game.opponentWaiting')}
-                            </div>
+                            <TierMMRBadge
+                                mmr={opponentProfile?.mmr}
+                                className="mb-1"
+                            />
                             <div className="flex items-center gap-3 bg-slate-50 dark:bg-gray-900/70 border border-red-400/30 rounded-2xl px-5 py-3 shadow-xl backdrop-blur-sm">
                                 <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-red-500 bg-white dark:bg-gray-800 flex items-center justify-center">
                                     {opponentProfile?.avatar_url ? (
@@ -1768,19 +1809,79 @@ const Game: React.FC = () => {
                                                 delay: 0.2 + (gameState.roundScores.length + 1) * 0.4,
                                                 type: "spring", stiffness: 200, damping: 15
                                             }}
-                                            className="mb-8 flex flex-col items-center"
+                                            className="mb-8 w-full grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 md:gap-5"
                                         >
-                                            <h3 className={`text-4xl md:text-6xl font-black tracking-[0.08em] drop-shadow-2xl ${isMatchWin
-                                                ? 'text-blue-300'
-                                                : isMatchLoss
-                                                    ? 'text-red-300'
-                                                    : 'text-slate-200'
-                                                }`}>
-                                                {myWinsForLives} : {opWinsForLives}
-                                            </h3>
-                                            <p className="mt-2 text-xs md:text-sm font-semibold tracking-[0.2em] text-slate-900 dark:text-white/60">
-                                                {t('game.setScore', '세트 스코어')}
-                                            </p>
+                                            <motion.div
+                                                className={`relative overflow-hidden justify-self-start min-w-0 max-w-[170px] md:max-w-[240px] rounded-xl border bg-slate-50/80 dark:bg-gray-900/70 px-2 py-2 md:px-3 md:py-2.5 ${isMyWinnerCard ? 'border-amber-300/80 ring-1 ring-amber-300/50 dark:ring-amber-300/35' : 'border-blue-300/30'}`}
+                                            >
+                                                {isMyWinnerCard && (
+                                                    <motion.div
+                                                        className="absolute inset-y-0 -left-1/2 w-1/2 pointer-events-none"
+                                                        initial={{ x: '-130%' }}
+                                                        animate={{ x: '300%' }}
+                                                        transition={{ duration: 1.9, repeat: Infinity, ease: 'linear' }}
+                                                        style={{ background: 'linear-gradient(105deg, rgba(255,255,255,0) 0%, rgba(251,191,36,0.0) 20%, rgba(251,191,36,0.35) 50%, rgba(255,255,255,0) 85%)' }}
+                                                    />
+                                                )}
+                                                <div className="relative z-10">
+                                                    <div className="flex items-center gap-1.5 min-w-0">
+                                                        <Flag code={myProfile?.country} className="w-5 h-3.5 shrink-0" />
+                                                        <span
+                                                            className="text-xs md:text-sm font-bold text-slate-900 dark:text-white truncate min-w-0 max-w-[90px] md:max-w-[140px]"
+                                                            title={myProfile?.nickname || t('game.unknownPlayer')}
+                                                        >
+                                                            {myProfile?.nickname || t('game.unknownPlayer')}
+                                                        </span>
+                                                    </div>
+                                                    <div className="mt-1 inline-flex items-center gap-1 rounded-md bg-blue-100/80 dark:bg-blue-500/20 px-1.5 py-0.5 text-[10px] md:text-xs font-bold text-blue-800 dark:text-blue-200">
+                                                        <MyFinalTierIcon className="w-3 h-3 md:w-3.5 md:h-3.5" />
+                                                        <span>{myFinalTier}</span>
+                                                    </div>
+                                                </div>
+                                            </motion.div>
+
+                                            <div className="flex flex-col items-center px-2">
+                                                <h3 className={`text-4xl md:text-6xl font-black tracking-[0.08em] drop-shadow-2xl ${isMatchWin
+                                                    ? 'text-blue-300'
+                                                    : isMatchLoss
+                                                        ? 'text-red-300'
+                                                        : 'text-slate-200'
+                                                    }`}>
+                                                    {myWinsForLives} : {opWinsForLives}
+                                                </h3>
+                                                <p className="mt-2 text-xs md:text-sm font-semibold tracking-[0.2em] text-slate-900 dark:text-white/60">
+                                                    {t('game.setScore', '세트 스코어')}
+                                                </p>
+                                            </div>
+
+                                            <motion.div
+                                                className={`relative overflow-hidden justify-self-end min-w-0 max-w-[170px] md:max-w-[240px] rounded-xl border bg-slate-50/80 dark:bg-gray-900/70 px-2 py-2 md:px-3 md:py-2.5 text-right ${isOpWinnerCard ? 'border-amber-300/80 ring-1 ring-amber-300/50 dark:ring-amber-300/35' : 'border-red-300/30'}`}
+                                            >
+                                                {isOpWinnerCard && (
+                                                    <motion.div
+                                                        className="absolute inset-y-0 -left-1/2 w-1/2 pointer-events-none"
+                                                        initial={{ x: '-130%' }}
+                                                        animate={{ x: '300%' }}
+                                                        transition={{ duration: 1.9, repeat: Infinity, ease: 'linear' }}
+                                                        style={{ background: 'linear-gradient(105deg, rgba(255,255,255,0) 0%, rgba(251,191,36,0.0) 20%, rgba(251,191,36,0.35) 50%, rgba(255,255,255,0) 85%)' }}
+                                                    />
+                                                )}
+                                                <div className="relative z-10">
+                                                    <div className="flex items-center justify-end gap-1.5 min-w-0">
+                                                        <span
+                                                            className="text-xs md:text-sm font-bold text-slate-900 dark:text-white truncate min-w-0 max-w-[90px] md:max-w-[140px]"
+                                                            title={opponentProfile?.nickname || t('game.unknownPlayer')}
+                                                        >
+                                                            {opponentProfile?.nickname || t('game.unknownPlayer')}
+                                                        </span>
+                                                        <Flag code={opponentProfile?.country} className="w-5 h-3.5 shrink-0" />
+                                                    </div>
+                                                    <div className="mt-1 inline-flex items-center gap-1 rounded-md bg-red-100/80 dark:bg-red-500/20 px-1.5 py-0.5 text-[10px] md:text-xs font-bold text-red-800 dark:text-red-200">
+                                                        <OpFinalTierIcon className="w-3 h-3 md:w-3.5 md:h-3.5" />
+                                                        <span>{opFinalTier}</span>
+                                                    </div>
+                                                </div>
+                                            </motion.div>
                                         </motion.div>
 
                                         {/* Scoreboard Table */}
@@ -2018,6 +2119,9 @@ const Game: React.FC = () => {
                         </motion.div>
                     )}
                 </AnimatePresence>
+
+                {/* Review Prompt Modal */}
+                <ReviewPromptModal isOpen={showReviewPrompt} onClose={handleReviewPromptClose} />
 
                 {showEmojiOverlay && (
                     <div className="absolute inset-0 z-[70] pointer-events-none">

@@ -1466,6 +1466,9 @@ BEGIN
                      v_new_p2_mmr := round(v_p2_mmr + v_k_factor * (1 - v_p2_exp)) + v_streak_bonus;
                  END IF;
 
+                 v_new_p1_mmr := GREATEST(0, v_new_p1_mmr);
+                 v_new_p2_mmr := GREATEST(0, v_new_p2_mmr);
+
                  v_p1_delta := v_new_p1_mmr - v_p1_mmr;
                  v_p2_delta := v_new_p2_mmr - v_p2_mmr;
 
@@ -1980,10 +1983,11 @@ CREATE FUNCTION public.get_tier_name(p_mmr integer) RETURNS text
     LANGUAGE plpgsql IMMUTABLE
     AS $$
 BEGIN
-    IF p_mmr >= 2500 THEN RETURN 'Diamond';
-    ELSIF p_mmr >= 2000 THEN RETURN 'Platinum';
-    ELSIF p_mmr >= 1500 THEN RETURN 'Gold';
-    ELSIF p_mmr >= 1200 THEN RETURN 'Silver';
+    IF p_mmr >= 2400 THEN RETURN 'Master';
+    ELSIF p_mmr >= 2000 THEN RETURN 'Diamond';
+    ELSIF p_mmr >= 1600 THEN RETURN 'Platinum';
+    ELSIF p_mmr >= 1200 THEN RETURN 'Gold';
+    ELSIF p_mmr >= 800 THEN RETURN 'Silver';
     ELSE RETURN 'Bronze';
     END IF;
 END;
@@ -2140,13 +2144,13 @@ BEGIN
       
       -- Update Leaver Profile (Disconnect +1, MMR down, NO Loss increase)
       update public.profiles 
-      set mmr = mmr + v_leaver_chg, 
+      set mmr = GREATEST(0, mmr + v_leaver_chg), 
           disconnects = disconnects + 1 
       where id = p_leaver_id::uuid;
 
       -- Update Winner Profile (Win +1, MMR up)
       update public.profiles 
-      set mmr = mmr + v_winner_chg, 
+      set mmr = GREATEST(0, mmr + v_winner_chg), 
           wins = wins + 1 
       where id = v_winner_id::uuid;
 
@@ -3179,12 +3183,15 @@ CREATE FUNCTION public.cleanup_stale_guest_accounts(p_inactive_days integer DEFA
     AS $$
 DECLARE
     v_deleted_count integer := 0;
+    v_stale_ids uuid[];
 BEGIN
     IF p_inactive_days < 1 THEN
         RAISE EXCEPTION 'p_inactive_days must be at least 1';
     END IF;
 
-    WITH stale_guests AS (
+    SELECT COALESCE(array_agg(sg.id), ARRAY[]::uuid[])
+    INTO v_stale_ids
+    FROM (
         SELECT u.id
         FROM auth.users u
         JOIN public.profiles p ON p.id = u.id
@@ -3196,10 +3203,26 @@ BEGIN
               WHERE i.user_id = u.id
                 AND i.provider IN ('google', 'apple')
           )
-    )
+    ) sg;
+
+    IF array_length(v_stale_ids, 1) IS NULL THEN
+        RETURN 0;
+    END IF;
+
+    -- Clean dependent rows first for FK-safe deletion
+    DELETE FROM public.friendships f
+    WHERE f.user_id = ANY(v_stale_ids)
+       OR f.friend_id = ANY(v_stale_ids);
+
+    DELETE FROM public.chat_messages c
+    WHERE c.sender_id = ANY(v_stale_ids)
+       OR c.receiver_id = ANY(v_stale_ids);
+
+    DELETE FROM public.profiles p
+    WHERE p.id = ANY(v_stale_ids);
+
     DELETE FROM auth.users u
-    USING stale_guests sg
-    WHERE u.id = sg.id;
+    WHERE u.id = ANY(v_stale_ids);
 
     GET DIAGNOSTICS v_deleted_count = ROW_COUNT;
     RETURN v_deleted_count;
@@ -3296,13 +3319,13 @@ BEGIN
 
   -- Update DB (Rank Stats)
   update public.profiles 
-  set mmr = mmr + v_p1_chg, 
+  set mmr = GREATEST(0, mmr + v_p1_chg), 
       wins = wins + (case when v_actual_p1 = 1.0 then 1 else 0 end), 
       losses = losses + (case when v_actual_p1 = 0.0 then 1 else 0 end) 
   where id = v_p1;
 
   update public.profiles 
-  set mmr = mmr + v_p2_chg, 
+  set mmr = GREATEST(0, mmr + v_p2_chg), 
       wins = wins + (case when v_actual_p1 = 0.0 then 1 else 0 end), 
       losses = losses + (case when v_actual_p1 = 1.0 then 1 else 0 end) 
   where id = v_p2;

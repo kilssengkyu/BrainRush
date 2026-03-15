@@ -18,7 +18,8 @@
       "longAgo": "ずっと前"
     },
     "exitAppTitle": "アプリ終了",
-    "exitAppConfirm": "アプリを終了しますか？"
+    "exitAppConfirm": "アプリを終了しますか？",
+    "open": "開く"
   },
   "auth": {
     "loginRequired": "ログインが必要です。",
@@ -162,7 +163,8 @@
     "challenge": "挑戦",
     "accept": "承諾",
     "reject": "拒否",
-    "newMessage": "{{nickname}}からメッセージが届きました"
+    "newMessage": "{{nickname}}からメッセージが届きました",
+    "chatRateLimited": "送信制限中: {{seconds}}秒後に再送信できます。"
   },
   "leaderboard": {
     "button": "ランキング",
@@ -195,7 +197,9 @@
     "playing": "広告を再生中...",
     "pencils": "鉛筆",
     "practiceNotes": "練習ノート",
-    "success": "報酬を獲得しました。"
+    "success": "報酬を獲得しました。",
+    "noFillTitle": "現在広告がありません",
+    "noFillDesc": "しばらくしてからもう一度お試しください。"
   },
   "notifications": {
     "fullTitle": "鉛筆が満タン！",
@@ -224,17 +228,17 @@
     "tutorial": "チュートリアル",
     "tutorialDesc": "アプリの使い方をもう一度確認したい場合は、チュートリアルを再表示してください。",
     "viewTutorial": "チュートリアルをもう一度見る",
-    "notificationNativeOnly": "Notification settings are only available in the mobile app.",
-    "notificationOff": "Notifications turned off.",
-    "notificationDeniedIos": "Please allow notifications in iPhone Settings > Notifications.",
-    "notificationDeniedAndroid": "Please allow notifications in Android Settings > Notifications.",
-    "notificationOn": "Notifications turned on.",
+    "notificationNativeOnly": "通知設定はモバイルアプリでのみ利用できます。",
+    "notificationOff": "通知をオフにしました。",
+    "notificationDeniedIos": "iPhoneの「設定 > 通知」で通知を許可してください。",
+    "notificationDeniedAndroid": "Androidの「設定 > 通知」で通知を許可してください。",
+    "notificationOn": "通知をオンにしました。",
     "support": "お問い合わせ",
     "supportDesc": "不具合報告、エラー報告、その他のお問い合わせを確認できます。",
     "goToSupport": "サポートを開く",
-    "notifications": "Notifications",
-    "pushNotifications": "Push/Local Notifications",
-    "notificationNativeHint": "Notification toggle is disabled on the web.",
+    "notifications": "通知",
+    "pushNotifications": "プッシュ/ローカル通知",
+    "notificationNativeHint": "Web版では通知トグルは無効です。",
     "recommended": "おすすめ",
     "theme": "テーマ",
     "themeMode": "表示モード",
@@ -243,7 +247,26 @@
     "lightMode": "ライトモード",
     "light": "ライト",
     "dark": "ダーク",
-    "system": "システム"
+    "system": "システム",
+    "assetCredits": "アセットクレジット",
+    "assetCreditsDesc": "一部のビジュアル素材はサードパーティ製で、各ライセンス（例: CC BY 4.0）に基づいてクレジット表記しています。",
+    "viewMakers": "制作者とクレジットを見る",
+    "makers": "制作者とクレジット",
+    "localCredit": "ローカルクレジット",
+    "announcements": "お知らせ",
+    "announcementsDesc": "最新のお知らせをもう一度確認できます。",
+    "viewAnnouncementAgain": "お知らせを再表示",
+    "announcementWillShowOnHome": "ホームで最新のお知らせを再表示します。",
+    "announcementResetFail": "お知らせの非表示設定を初期化できませんでした。",
+    "versionLabel": "バージョン",
+    "makersRoleCreator": "作成者",
+    "makersRoleRankingBadges": "ランキングバッジ (CC BY 4.0)",
+    "makersRoleCcBy": "CC BY 4.0 ライセンス",
+    "admin": "管理者",
+    "adminDesc": "管理者専用ページへ移動します。",
+    "goToAdmin": "管理者ページへ",
+    "guestModeWarningTitle": "ゲストアカウントのご案内",
+    "guestModeWarningDesc": "ゲストアカウントは、ログアウト・アプリ削除・端末変更時にデータが失われる可能性があります。アカウント連携で進行状況を保護してください。"
   },
   "report": {
     "button": "通報",
@@ -379,9 +402,12 @@
     "updateFail": "更新失敗",
     "deleteSuccess": "削除成功",
     "deleteFail": "削除失敗",
-    "guestDescIOS": "Guest accounts can be lost if you sign out, delete the app, or change devices. Link an Apple or Google account to keep your progress. Also, guest accounts may be deleted after 7 days of inactivity.",
-    "linkApple": "Link Apple Account",
-    "noRecord": "No match history."
+    "guestDescIOS": "ゲストアカウントは、ログアウト・アプリ削除・端末変更時にデータが失われる可能性があります。進行状況を保持するには Apple または Google アカウントを連携してください。また、7日間未接続の場合、ゲストアカウントは削除されることがあります。",
+    "linkApple": "Appleアカウント連携",
+    "noRecord": "No match history.",
+    "nicknameChangedSuccess": "ニックネームが変更されました。",
+    "rankPlacement": "配置戦中",
+    "rankPlacementRemaining": "残り{{count}}試合"
   },
   "matchmaking": {
     "searching": "検索中...",
@@ -593,7 +619,8 @@
     "resumeLater": "Later",
     "resumeNow": "Resume",
     "levelProgressLevel": "Lv. {{level}}",
-    "levelUp": "LEVEL UP!"
+    "levelUp": "LEVEL UP!",
+    "hideAnnouncementToday": "今日は表示しない"
   },
   "login": {
     "bannedTitle": "Account Suspended",
@@ -607,5 +634,11 @@
   "app": {
     "title": "BrainRush",
     "subtitle": "Speed & Intelligence"
+  },
+  "review": {
+    "enjoyTitle": "ゲーム楽しかったですか？",
+    "enjoySubtitle": "レビューが大きな力になります！",
+    "enjoyYes": "はい！😊",
+    "enjoyNo": "いまいち 😐"
   }
 }

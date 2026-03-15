@@ -5,7 +5,7 @@ import { X, Trophy, User as UserIcon, Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import Flag from './Flag';
-import { getTierColor, getTierIcon } from '../../utils/rankUtils';
+import { getTierColor, getTierFromMMR, getTierIcon } from '../../utils/rankUtils';
 import UserProfileModal from './UserProfileModal';
 import LevelBadge from './LevelBadge';
 import AvatarModal from './AvatarModal';
@@ -36,7 +36,7 @@ const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onClose }) 
     const [avatarPreview, setAvatarPreview] = useState<{ src: string; alt: string } | null>(null);
     const [scope, setScope] = useState<'global' | 'country'>('global');
     const myCountry = profile?.country ?? null;
-    const placementRequiredGames = 5;
+    const placementRequiredGames = 1;
     const rankGamesPlayed = Math.max(0, Number((profile as any)?.rank_games_played ?? 0));
     const placementGamesRemaining = Math.max(0, placementRequiredGames - rankGamesPlayed);
     const isPlacementPending = Boolean(user) && rankGamesPlayed < placementRequiredGames;
@@ -251,8 +251,9 @@ const RankItem = ({
     onAvatarClick?: () => void;
 }) => {
     const { t } = useTranslation();
-    const TierIcon = getTierIcon(player.tier);
-    const tierColor = getTierColor(player.tier);
+    const resolvedTier = getTierFromMMR(player.mmr ?? 0);
+    const TierIcon = getTierIcon(resolvedTier);
+    const tierColor = getTierColor(resolvedTier);
     const isTopThree = player.rank <= 3;
 
     // Top 3 Styles
@@ -328,7 +329,7 @@ const RankItem = ({
                     {/* Tier Badge */}
                     <div className={`px-1.5 py-0.5 rounded text-[10px] font-bold bg-gradient-to-r ${tierColor} text-black flex items-center gap-1`}>
                         <TierIcon className="w-3 h-3" />
-                        {player.tier}
+                        {resolvedTier}
                     </div>
                 </div>
             </div>

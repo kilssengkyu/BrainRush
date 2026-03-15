@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -58,6 +58,8 @@ const PracticeMode = () => {
     const [enabledPracticeGameIds, setEnabledPracticeGameIds] = useState<Set<string> | null>(null);
     const [highscores, setHighscores] = useState<Record<string, number>>({});
     const [viewMode, setViewMode] = useState<PracticeViewMode>('grid');
+    const edgeSwipeStartRef = useRef<{ x: number; y: number } | null>(null);
+    const edgeSwipeTriggeredRef = useRef(false);
     const language = i18n.resolvedLanguage || i18n.language || 'en';
     const isKoreanLanguage = language.toLowerCase().startsWith('ko');
 
@@ -165,6 +167,42 @@ const PracticeMode = () => {
     const handleBack = () => {
         playSound('click');
         navigate('/');
+    };
+
+    const handleEdgeSwipeStart = (event: React.TouchEvent<HTMLDivElement>) => {
+        if (loading || showAdModal || !!guideGameId || event.touches.length !== 1) {
+            edgeSwipeStartRef.current = null;
+            edgeSwipeTriggeredRef.current = false;
+            return;
+        }
+
+        const touch = event.touches[0];
+        if (touch.clientX > 24) {
+            edgeSwipeStartRef.current = null;
+            edgeSwipeTriggeredRef.current = false;
+            return;
+        }
+
+        edgeSwipeStartRef.current = { x: touch.clientX, y: touch.clientY };
+        edgeSwipeTriggeredRef.current = false;
+    };
+
+    const handleEdgeSwipeMove = (event: React.TouchEvent<HTMLDivElement>) => {
+        if (!edgeSwipeStartRef.current || edgeSwipeTriggeredRef.current || event.touches.length !== 1) return;
+
+        const touch = event.touches[0];
+        const deltaX = touch.clientX - edgeSwipeStartRef.current.x;
+        const deltaY = touch.clientY - edgeSwipeStartRef.current.y;
+
+        if (deltaX > 72 && deltaX > Math.abs(deltaY) * 1.35) {
+            edgeSwipeTriggeredRef.current = true;
+            handleBack();
+        }
+    };
+
+    const handleEdgeSwipeEnd = () => {
+        edgeSwipeStartRef.current = null;
+        edgeSwipeTriggeredRef.current = false;
     };
 
     const handleGameSelect = async (gameId: string) => {
@@ -298,7 +336,13 @@ const PracticeMode = () => {
     );
 
     return (
-        <div className={`h-[100dvh] flex flex-col p-4 pt-[calc(env(safe-area-inset-top)+1rem)] pb-[calc(env(safe-area-inset-bottom)+1rem)] relative overflow-hidden bg-slate-50 dark:bg-gray-900 text-slate-900 dark:text-white`}>
+        <div
+            className={`h-[100dvh] flex flex-col p-4 pt-[calc(env(safe-area-inset-top)+1rem)] pb-[calc(env(safe-area-inset-bottom)+1rem)] relative overflow-hidden bg-slate-50 dark:bg-gray-900 text-slate-900 dark:text-white`}
+            onTouchStart={handleEdgeSwipeStart}
+            onTouchMove={handleEdgeSwipeMove}
+            onTouchEnd={handleEdgeSwipeEnd}
+            onTouchCancel={handleEdgeSwipeEnd}
+        >
             {/* Background Effects */}
             <div className={`absolute top-0 left-0 w-full h-full pointer-events-none bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white via-slate-100 to-slate-200 dark:from-gray-800 dark:via-gray-900 dark:to-black`} />
 
