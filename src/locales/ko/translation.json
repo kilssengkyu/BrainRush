@@ -203,7 +203,8 @@
     "practiceNotes": "연습노트",
     "success": "보상을 획득했어요.",
     "noFillTitle": "지금은 광고가 없어요",
-    "noFillDesc": "잠시 후 다시 시도해 주세요."
+    "noFillDesc": "잠시 후 다시 시도해 주세요.",
+    "noFillRewarded": "앗, 지금은 재생할 광고가 없어요! 보상은 바로 드릴게요."
   },
   "notifications": {
     "fullTitle": "연필 가득!",
@@ -432,7 +433,13 @@
     "resumeNow": "복귀",
     "levelProgressLevel": "Lv. {{level}}",
     "levelUp": "레벨 업!",
-    "hideAnnouncementToday": "오늘 다시 보지 않기"
+    "hideAnnouncementToday": "오늘 다시 보지 않기",
+    "noPencilTitle": "연필이 부족해요",
+    "noPencilDesc": "일반/랭크 모드를 플레이하려면 연필이 필요합니다.",
+    "nextPencilIn": "다음 연필 충전까지 {{time}}",
+    "watchAdForPencil": "광고 보기",
+    "goToShopForPencil": "상점에서 구매하기",
+    "waitForRecharge": "기다리기"
   },
   "rps": {
     "ready": "준비...",
@@ -617,7 +624,12 @@
       "objectiveFallback": "게임을 시작하고 화면의 규칙을 따라 플레이하세요."
     },
     "viewGrid": "그리드로 보기",
-    "viewList": "줄로 보기"
+    "viewList": "줄로 보기",
+    "noNotesTitle": "연습노트가 부족해요",
+    "noNotesDesc": "연습모드를 플레이하려면 연습노트가 필요합니다.",
+    "watchAdForNotes": "연습노트 광고보기",
+    "goToShopForNotes": "상점에서 구매하기",
+    "waitForRecharge": "기다리기"
   },
   "update": {
     "title": "업데이트 필요",
@@ -640,5 +652,20 @@
     "enjoySubtitle": "리뷰 한 줄이 큰 힘이 됩니다!",
     "enjoyYes": "네! 😊",
     "enjoyNo": "별로요 😐"
+  },
+  "mailbox": {
+    "title": "우편함",
+    "unread": "안읽은 우편",
+    "read": "읽은 우편",
+    "empty": "우편이 없습니다.",
+    "selectHint": "우편을 선택해 주세요.",
+    "untitled": "제목 없음",
+    "noContent": "내용이 없습니다.",
+    "rewardTitle": "수령 가능한 보상",
+    "rewardPencils": "연필 +{{count}}",
+    "rewardPracticeNotes": "연습노트 +{{count}}",
+    "claim": "수령",
+    "claimed": "수령 완료",
+    "claimSuccess": "보상을 수령했습니다. (+{{pencils}} 연필, +{{notes}} 연습노트)"
   }
 }

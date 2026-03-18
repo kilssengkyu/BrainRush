@@ -203,7 +203,8 @@
     "practiceNotes": "Ghi chú luyện tập",
     "success": "Nhận thưởng thành công.",
     "noFillTitle": "Hiện không có quảng cáo",
-    "noFillDesc": "Vui lòng thử lại sau giây lát."
+    "noFillDesc": "Vui lòng thử lại sau giây lát.",
+    "noFillRewarded": "Rất tiếc, hiện chưa có quảng cáo để xem. Phần thưởng sẽ được trao ngay."
   },
   "notifications": {
     "fullTitle": "Bút chì đã đầy",
@@ -608,7 +609,12 @@
       "objectiveFallback": "Start and follow the on-screen rule."
     },
     "viewGrid": "Grid view",
-    "viewList": "List view"
+    "viewList": "List view",
+    "noNotesTitle": "Không đủ ghi chú luyện tập",
+    "noNotesDesc": "Bạn cần ghi chú luyện tập để chơi chế độ Luyện tập.",
+    "watchAdForNotes": "Xem quảng cáo để nhận ghi chú luyện tập",
+    "goToShopForNotes": "Mua tại cửa hàng",
+    "waitForRecharge": "Chờ"
   },
   "update": {
     "title": "Cần cập nhật",
@@ -624,7 +630,13 @@
     "resumeNow": "Resume",
     "levelProgressLevel": "Lv. {{level}}",
     "levelUp": "LEVEL UP!",
-    "hideAnnouncementToday": "Hôm nay không hiển thị lại"
+    "hideAnnouncementToday": "Hôm nay không hiển thị lại",
+    "noPencilTitle": "Không đủ bút chì",
+    "noPencilDesc": "Bạn cần bút chì để chơi chế độ Thường/Xếp hạng.",
+    "nextPencilIn": "Bút chì tiếp theo sau {{time}}",
+    "watchAdForPencil": "Xem quảng cáo",
+    "goToShopForPencil": "Mua tại cửa hàng",
+    "waitForRecharge": "Chờ"
   },
   "login": {
     "bannedTitle": "Account Suspended",
@@ -640,5 +652,20 @@
     "enjoySubtitle": "Đánh giá nhanh giúp chúng tôi rất nhiều!",
     "enjoyYes": "Có! 😊",
     "enjoyNo": "Không hẳn 😐"
+  },
+  "mailbox": {
+    "title": "Mailbox",
+    "unread": "Unread",
+    "read": "Read",
+    "empty": "No mail.",
+    "selectHint": "Select a mail.",
+    "untitled": "Untitled",
+    "noContent": "No content.",
+    "rewardTitle": "Claimable Reward",
+    "rewardPencils": "Pencils +{{count}}",
+    "rewardPracticeNotes": "Practice Notes +{{count}}",
+    "claim": "Claim",
+    "claimed": "Claimed",
+    "claimSuccess": "Reward claimed. (+{{pencils}} pencils, +{{notes}} practice notes)"
   }
 }

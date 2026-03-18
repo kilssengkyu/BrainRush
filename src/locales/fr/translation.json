@@ -203,7 +203,8 @@
     "practiceNotes": "Notes d'entraînement",
     "success": "Récompense obtenue avec succès.",
     "noFillTitle": "Aucune publicité disponible pour le moment",
-    "noFillDesc": "Veuillez réessayer dans un instant."
+    "noFillDesc": "Veuillez réessayer dans un instant.",
+    "noFillRewarded": "Oups, aucune pub n'est disponible pour le moment. La récompense est accordée immédiatement."
   },
   "notifications": {
     "fullTitle": "Crayons pleins",
@@ -608,7 +609,12 @@
       "objectiveFallback": "Start and follow the on-screen rule."
     },
     "viewGrid": "Grid view",
-    "viewList": "List view"
+    "viewList": "List view",
+    "noNotesTitle": "Plus de notes d'entraînement",
+    "noNotesDesc": "Vous avez besoin de notes d'entraînement pour jouer en mode Entraînement.",
+    "watchAdForNotes": "Regarder une pub pour des notes",
+    "goToShopForNotes": "Acheter dans la boutique",
+    "waitForRecharge": "Attendre"
   },
   "update": {
     "title": "Mise à jour requise",
@@ -624,7 +630,13 @@
     "resumeNow": "Resume",
     "levelProgressLevel": "Lv. {{level}}",
     "levelUp": "LEVEL UP!",
-    "hideAnnouncementToday": "Ne plus afficher aujourd'hui"
+    "hideAnnouncementToday": "Ne plus afficher aujourd'hui",
+    "noPencilTitle": "Plus de crayons",
+    "noPencilDesc": "Vous avez besoin de crayons pour jouer en mode Normal/Classé.",
+    "nextPencilIn": "Prochain crayon dans {{time}}",
+    "watchAdForPencil": "Regarder une pub",
+    "goToShopForPencil": "Acheter dans la boutique",
+    "waitForRecharge": "Attendre"
   },
   "login": {
     "bannedTitle": "Account Suspended",
@@ -640,5 +652,20 @@
     "enjoySubtitle": "Un avis nous aide beaucoup !",
     "enjoyYes": "Oui ! 😊",
     "enjoyNo": "Pas vraiment 😐"
+  },
+  "mailbox": {
+    "title": "Mailbox",
+    "unread": "Unread",
+    "read": "Read",
+    "empty": "No mail.",
+    "selectHint": "Select a mail.",
+    "untitled": "Untitled",
+    "noContent": "No content.",
+    "rewardTitle": "Claimable Reward",
+    "rewardPencils": "Pencils +{{count}}",
+    "rewardPracticeNotes": "Practice Notes +{{count}}",
+    "claim": "Claim",
+    "claimed": "Claimed",
+    "claimSuccess": "Reward claimed. (+{{pencils}} pencils, +{{notes}} practice notes)"
   }
 }

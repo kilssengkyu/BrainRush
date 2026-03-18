@@ -199,7 +199,8 @@
     "practiceNotes": "練習ノート",
     "success": "報酬を獲得しました。",
     "noFillTitle": "現在広告がありません",
-    "noFillDesc": "しばらくしてからもう一度お試しください。"
+    "noFillDesc": "しばらくしてからもう一度お試しください。",
+    "noFillRewarded": "あっ、今は再生できる広告がありません！報酬はすぐにお渡しします。"
   },
   "notifications": {
     "fullTitle": "鉛筆が満タン！",
@@ -604,7 +605,12 @@
       "objectiveFallback": "ゲームを開始し、画面のルールに従ってプレイしてください。"
     },
     "viewGrid": "グリッド表示",
-    "viewList": "リスト表示"
+    "viewList": "リスト表示",
+    "noNotesTitle": "練習ノートが足りません",
+    "noNotesDesc": "練習モードをプレイするには練習ノートが必要です。",
+    "watchAdForNotes": "練習ノートの広告を見る",
+    "goToShopForNotes": "ショップで購入",
+    "waitForRecharge": "待つ"
   },
   "update": {
     "title": "アップデートが必要です",
@@ -620,7 +626,13 @@
     "resumeNow": "Resume",
     "levelProgressLevel": "Lv. {{level}}",
     "levelUp": "LEVEL UP!",
-    "hideAnnouncementToday": "今日は表示しない"
+    "hideAnnouncementToday": "今日は表示しない",
+    "noPencilTitle": "鉛筆が足りません",
+    "noPencilDesc": "ノーマル/ランクモードをプレイするには鉛筆が必要です。",
+    "nextPencilIn": "次の鉛筆まで {{time}}",
+    "watchAdForPencil": "広告を見る",
+    "goToShopForPencil": "ショップで購入",
+    "waitForRecharge": "待つ"
   },
   "login": {
     "bannedTitle": "Account Suspended",
@@ -640,5 +652,20 @@
     "enjoySubtitle": "レビューが大きな力になります！",
     "enjoyYes": "はい！😊",
     "enjoyNo": "いまいち 😐"
+  },
+  "mailbox": {
+    "title": "メールボックス",
+    "unread": "未読",
+    "read": "既読",
+    "empty": "メールはありません。",
+    "selectHint": "メールを選択してください。",
+    "untitled": "無題",
+    "noContent": "内容がありません。",
+    "rewardTitle": "受け取れる報酬",
+    "rewardPencils": "鉛筆 +{{count}}",
+    "rewardPracticeNotes": "練習ノート +{{count}}",
+    "claim": "受け取る",
+    "claimed": "受け取り済み",
+    "claimSuccess": "報酬を受け取りました。(+{{pencils}} 鉛筆, +{{notes}} 練習ノート)"
   }
 }

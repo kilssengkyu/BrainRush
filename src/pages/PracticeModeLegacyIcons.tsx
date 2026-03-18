@@ -45,7 +45,7 @@ const PracticeMode = () => {
 
     const handleGameSelect = async (gameId: string) => {
         if (!user) {
-            showToast(t('auth.loginRequired'), 'error');
+            navigate('/login');
             return;
         }
 

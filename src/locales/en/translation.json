@@ -203,7 +203,8 @@
     "practiceNotes": "Practice Notes",
     "success": "Reward earned successfully.",
     "noFillTitle": "No ads available right now",
-    "noFillDesc": "Please try again in a moment."
+    "noFillDesc": "Please try again in a moment.",
+    "noFillRewarded": "Oops, there is no ad to play right now! We'll give you the reward right away."
   },
   "notifications": {
     "fullTitle": "Pencils full",
@@ -432,7 +433,13 @@
     "resumeNow": "Resume",
     "levelProgressLevel": "Lv. {{level}}",
     "levelUp": "LEVEL UP!",
-    "hideAnnouncementToday": "Don't show again today"
+    "hideAnnouncementToday": "Don't show again today",
+    "noPencilTitle": "You're out of pencils",
+    "noPencilDesc": "You need pencils to play Normal/Rank mode.",
+    "nextPencilIn": "Next pencil in {{time}}",
+    "watchAdForPencil": "Watch Ad",
+    "goToShopForPencil": "Buy in Shop",
+    "waitForRecharge": "Wait"
   },
   "rps": {
     "ready": "READY...",
@@ -617,7 +624,12 @@
       "objectiveFallback": "Start and follow the on-screen rule."
     },
     "viewGrid": "Grid view",
-    "viewList": "List view"
+    "viewList": "List view",
+    "noNotesTitle": "You're out of Practice Notes",
+    "noNotesDesc": "You need Practice Notes to play Practice mode.",
+    "watchAdForNotes": "Watch Ad for Practice Notes",
+    "goToShopForNotes": "Buy in Shop",
+    "waitForRecharge": "Wait"
   },
   "update": {
     "title": "Update Required",
@@ -640,5 +652,20 @@
     "enjoySubtitle": "A quick review helps us a lot!",
     "enjoyYes": "Yes! 😊",
     "enjoyNo": "Not really 😐"
+  },
+  "mailbox": {
+    "title": "Mailbox",
+    "unread": "Unread",
+    "read": "Read",
+    "empty": "No mail.",
+    "selectHint": "Select a mail.",
+    "untitled": "Untitled",
+    "noContent": "No content.",
+    "rewardTitle": "Claimable Reward",
+    "rewardPencils": "Pencils +{{count}}",
+    "rewardPracticeNotes": "Practice Notes +{{count}}",
+    "claim": "Claim",
+    "claimed": "Claimed",
+    "claimSuccess": "Reward claimed. (+{{pencils}} pencils, +{{notes}} practice notes)"
   }
 }

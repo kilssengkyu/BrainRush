@@ -3,10 +3,9 @@ require_relative '../../node_modules/@capacitor/ios/scripts/pods_helpers'
 platform :ios, '15.0'
 use_frameworks!
 
-# workaround to avoid Xcode caching of Pods that requires
-# Product -> Clean Build Folder after new Cordova plugins installed
-# Requires CocoaPods 1.6 or newer
-install! 'cocoapods', :disable_input_output_paths => true
+# Keep CocoaPods input/output paths enabled so Xcode can run script phases
+# with dependency analysis and avoid noisy "run every build" warnings.
+install! 'cocoapods', :disable_input_output_paths => false
 
 def capacitor_pods
   pod 'Capacitor', :path => '../../node_modules/@capacitor/ios'
@@ -26,6 +25,7 @@ end
 target 'App' do
   capacitor_pods
   # Add your Pods here
+  pod 'GoogleMobileAdsMediationUnity'
 end
 
 post_install do |installer|

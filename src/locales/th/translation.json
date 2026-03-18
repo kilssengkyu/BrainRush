@@ -203,7 +203,8 @@
     "practiceNotes": "โน้ตฝึก",
     "success": "รับรางวัลสำเร็จ",
     "noFillTitle": "ไม่มีโฆษณาในขณะนี้",
-    "noFillDesc": "กรุณาลองใหม่ในอีกสักครู่"
+    "noFillDesc": "กรุณาลองใหม่ในอีกสักครู่",
+    "noFillRewarded": "อ๊ะ ตอนนี้ยังไม่มีโฆษณาให้รับชม! เราจะมอบรางวัลให้ทันที"
   },
   "notifications": {
     "fullTitle": "ดินสอเต็มแล้ว",
@@ -608,7 +609,12 @@
       "objectiveFallback": "Start and follow the on-screen rule."
     },
     "viewGrid": "Grid view",
-    "viewList": "List view"
+    "viewList": "List view",
+    "noNotesTitle": "โน้ตฝึกซ้อมไม่พอ",
+    "noNotesDesc": "ต้องใช้โน้ตฝึกซ้อมเพื่อเล่นโหมดฝึกซ้อม",
+    "watchAdForNotes": "ดูโฆษณาเพื่อรับโน้ตฝึกซ้อม",
+    "goToShopForNotes": "ซื้อที่ร้านค้า",
+    "waitForRecharge": "รอ"
   },
   "update": {
     "title": "จำเป็นต้องอัปเดต",
@@ -624,7 +630,13 @@
     "resumeNow": "Resume",
     "levelProgressLevel": "Lv. {{level}}",
     "levelUp": "LEVEL UP!",
-    "hideAnnouncementToday": "วันนี้ไม่ต้องแสดงอีก"
+    "hideAnnouncementToday": "วันนี้ไม่ต้องแสดงอีก",
+    "noPencilTitle": "ดินสอไม่พอ",
+    "noPencilDesc": "ต้องใช้ดินสอเพื่อเล่นโหมดทั่วไป/แรงค์",
+    "nextPencilIn": "ดินสอแท่งถัดไปในอีก {{time}}",
+    "watchAdForPencil": "ดูโฆษณา",
+    "goToShopForPencil": "ซื้อที่ร้านค้า",
+    "waitForRecharge": "รอ"
   },
   "login": {
     "bannedTitle": "Account Suspended",
@@ -640,5 +652,20 @@
     "enjoySubtitle": "รีวิวสั้นๆ ช่วยเราได้มาก!",
     "enjoyYes": "ใช่! 😊",
     "enjoyNo": "ไม่ค่อย 😐"
+  },
+  "mailbox": {
+    "title": "Mailbox",
+    "unread": "Unread",
+    "read": "Read",
+    "empty": "No mail.",
+    "selectHint": "Select a mail.",
+    "untitled": "Untitled",
+    "noContent": "No content.",
+    "rewardTitle": "Claimable Reward",
+    "rewardPencils": "Pencils +{{count}}",
+    "rewardPracticeNotes": "Practice Notes +{{count}}",
+    "claim": "Claim",
+    "claimed": "Claimed",
+    "claimSuccess": "Reward claimed. (+{{pencils}} pencils, +{{notes}} practice notes)"
   }
 }

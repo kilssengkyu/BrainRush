@@ -54,6 +54,7 @@ const PracticeMode = () => {
     const { showToast } = useUI();
     const [loading, setLoading] = useState(false);
     const [showAdModal, setShowAdModal] = useState(false);
+    const [showNoPracticeNoteChoiceModal, setShowNoPracticeNoteChoiceModal] = useState(false);
     const [guideGameId, setGuideGameId] = useState<string | null>(null);
     const [enabledPracticeGameIds, setEnabledPracticeGameIds] = useState<Set<string> | null>(null);
     const [highscores, setHighscores] = useState<Record<string, number>>({});
@@ -207,7 +208,7 @@ const PracticeMode = () => {
 
     const handleGameSelect = async (gameId: string) => {
         if (!user) {
-            showToast(t('auth.loginRequired'), 'error');
+            navigate('/login');
             return;
         }
 
@@ -225,7 +226,7 @@ const PracticeMode = () => {
         const notes = profile?.practice_notes ?? 0;
         if (notes < 1) {
             playSound('error');
-            setShowAdModal(true);
+            setShowNoPracticeNoteChoiceModal(true);
             return;
         }
 
@@ -243,7 +244,7 @@ const PracticeMode = () => {
             if (error) {
                 if (error.message?.toLowerCase().includes('practice notes')) {
                     playSound('error');
-                    setShowAdModal(true);
+                    setShowNoPracticeNoteChoiceModal(true);
                     return;
                 }
                 throw error;
@@ -504,6 +505,50 @@ const PracticeMode = () => {
             {loading && (
                 <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
                     <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin" />
+                </div>
+            )}
+
+            {showNoPracticeNoteChoiceModal && (
+                <div className="absolute inset-0 z-[55] bg-black/70 backdrop-blur-sm flex items-center justify-center px-4">
+                    <div className="w-full max-w-md rounded-3xl border border-green-400/30 bg-slate-50 dark:bg-gray-900/95 p-6 shadow-2xl">
+                        <h2 className="text-xl font-black text-slate-900 dark:text-white mb-2">
+                            {t('practice.noNotesTitle')}
+                        </h2>
+                        <p className="text-sm text-slate-600 dark:text-gray-300 mb-5">
+                            {t('practice.noNotesDesc')}
+                        </p>
+                        <div className="grid grid-cols-1 gap-2">
+                            <button
+                                onClick={() => {
+                                    playSound('click');
+                                    setShowNoPracticeNoteChoiceModal(false);
+                                    setShowAdModal(true);
+                                }}
+                                className="rounded-xl bg-blue-600 py-3 font-black text-white transition-colors hover:bg-blue-500"
+                            >
+                                {t('practice.watchAdForNotes')}
+                            </button>
+                            <button
+                                onClick={() => {
+                                    playSound('click');
+                                    setShowNoPracticeNoteChoiceModal(false);
+                                    navigate('/shop');
+                                }}
+                                className="rounded-xl border border-cyan-500/40 bg-cyan-500/15 py-3 font-semibold text-cyan-300 transition-colors hover:bg-cyan-500/25"
+                            >
+                                {t('practice.goToShopForNotes')}
+                            </button>
+                            <button
+                                onClick={() => {
+                                    playSound('click');
+                                    setShowNoPracticeNoteChoiceModal(false);
+                                }}
+                                className="rounded-xl border border-gray-600 bg-transparent py-3 font-semibold text-slate-600 dark:text-gray-300 transition-colors hover:bg-white dark:bg-gray-800"
+                            >
+                                {t('practice.waitForRecharge')}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
 

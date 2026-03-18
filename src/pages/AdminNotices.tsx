@@ -13,11 +13,24 @@ type TranslationInput = {
   content: string;
 };
 
+type MailType = 'announcement' | 'mail';
+type TargetType = 'all' | 'user';
+type RecurrenceType = 'daily' | null;
+
 type NoticeRow = {
   id: number;
   is_active: boolean;
+  mail_type: MailType;
+  target_type: TargetType;
+  target_user_id: string | null;
+  is_recurring: boolean;
+  recurrence_type: RecurrenceType;
+  recurrence_until: string | null;
+  daily_send_time: string;
   starts_at: string;
   ends_at: string | null;
+  reward_pencils: number;
+  reward_practice_notes: number;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -88,8 +101,16 @@ const AdminNotices = () => {
   const [deletingKeys, setDeletingKeys] = useState<Record<number, boolean>>({});
   const [isCreating, setIsCreating] = useState(false);
   const [newActive, setNewActive] = useState(true);
+  const [newMailType, setNewMailType] = useState<MailType>('announcement');
+  const [newTargetType, setNewTargetType] = useState<TargetType>('all');
+  const [newTargetUserId, setNewTargetUserId] = useState('');
+  const [newIsRecurring, setNewIsRecurring] = useState(false);
+  const [newRecurrenceUntil, setNewRecurrenceUntil] = useState('');
+  const [newDailySendTime, setNewDailySendTime] = useState('09:00');
   const [newStartsAt, setNewStartsAt] = useState('');
   const [newEndsAt, setNewEndsAt] = useState('');
+  const [newRewardPencils, setNewRewardPencils] = useState(0);
+  const [newRewardPracticeNotes, setNewRewardPracticeNotes] = useState(0);
   const [newTranslations, setNewTranslations] = useState<Record<SupportedNoticeLocale, TranslationInput>>(cloneEmptyTranslations());
   const [createLocaleTab, setCreateLocaleTab] = useState<SupportedNoticeLocale>('ko');
   const [editLocaleTab, setEditLocaleTab] = useState<Record<number, SupportedNoticeLocale>>({});
@@ -110,7 +131,7 @@ const AdminNotices = () => {
     try {
       const { data: announcements, error: announcementError } = await (supabase as any)
         .from('announcements')
-        .select('id, is_active, starts_at, ends_at, created_by, created_at, updated_at')
+        .select('id, is_active, mail_type, target_type, target_user_id, is_recurring, recurrence_type, recurrence_until, daily_send_time, starts_at, ends_at, reward_pencils, reward_practice_notes, created_by, created_at, updated_at')
         .order('created_at', { ascending: false })
         .limit(100);
 
@@ -146,8 +167,17 @@ const AdminNotices = () => {
       const mapped = (announcements || []).map((row: any) => ({
         id: Number(row.id),
         is_active: Boolean(row.is_active),
+        mail_type: String(row.mail_type ?? 'announcement') === 'mail' ? 'mail' : 'announcement',
+        target_type: String(row.target_type ?? 'all') === 'user' ? 'user' : 'all',
+        target_user_id: row.target_user_id ? String(row.target_user_id) : null,
+        is_recurring: Boolean(row.is_recurring),
+        recurrence_type: String(row.recurrence_type ?? '') === 'daily' ? 'daily' : null,
+        recurrence_until: row.recurrence_until ? String(row.recurrence_until) : null,
+        daily_send_time: String(row.daily_send_time ?? '00:00:00').slice(0, 5),
         starts_at: String(row.starts_at ?? new Date().toISOString()),
         ends_at: row.ends_at ? String(row.ends_at) : null,
+        reward_pencils: Math.max(0, Number(row.reward_pencils ?? 0)),
+        reward_practice_notes: Math.max(0, Number(row.reward_practice_notes ?? 0)),
         created_by: row.created_by ? String(row.created_by) : null,
         created_at: String(row.created_at ?? new Date().toISOString()),
         updated_at: String(row.updated_at ?? new Date().toISOString()),
@@ -212,6 +242,7 @@ const AdminNotices = () => {
   const saveRow = async (row: NoticeRow) => {
     const startsAtIso = toIsoOrNull(toDatetimeLocal(row.starts_at));
     const endsAtIso = toIsoOrNull(toDatetimeLocal(row.ends_at ?? ''));
+    const recurrenceUntilIso = toIsoOrNull(toDatetimeLocal(row.recurrence_until ?? ''));
 
     if (!startsAtIso) {
       showToast('시작 시각이 올바르지 않습니다.', 'error');
@@ -219,6 +250,14 @@ const AdminNotices = () => {
     }
     if (endsAtIso && endsAtIso < startsAtIso) {
       showToast('종료 시각은 시작 시각 이후여야 합니다.', 'error');
+      return;
+    }
+    if (recurrenceUntilIso && recurrenceUntilIso < startsAtIso) {
+      showToast('반복 종료 시각은 시작 시각 이후여야 합니다.', 'error');
+      return;
+    }
+    if (row.target_type === 'user' && !row.target_user_id) {
+      showToast('개별 우편은 대상 유저 ID가 필요합니다.', 'error');
       return;
     }
 
@@ -230,6 +269,8 @@ const AdminNotices = () => {
     }
 
     const translationPayload = collectTranslationPayload(row.translations, row.id);
+    const rewardPencils = Math.max(0, Number(row.reward_pencils || 0));
+    const rewardPracticeNotes = Math.max(0, Number(row.reward_practice_notes || 0));
 
     setSavingKeys((prev) => ({ ...prev, [row.id]: true }));
     try {
@@ -237,8 +278,17 @@ const AdminNotices = () => {
         .from('announcements')
         .update({
           is_active: row.is_active,
+          mail_type: row.mail_type,
+          target_type: row.target_type,
+          target_user_id: row.target_type === 'user' ? row.target_user_id : null,
+          is_recurring: row.is_recurring,
+          recurrence_type: row.is_recurring ? 'daily' : null,
+          recurrence_until: row.is_recurring ? recurrenceUntilIso : null,
+          daily_send_time: row.is_recurring ? `${row.daily_send_time || '00:00'}:00` : '00:00:00',
           starts_at: startsAtIso,
           ends_at: endsAtIso,
+          reward_pencils: rewardPencils,
+          reward_practice_notes: rewardPracticeNotes,
           title: koTitle,
           content: koContent,
         })
@@ -285,9 +335,18 @@ const AdminNotices = () => {
   const createNotice = async () => {
     const startsAtIso = toIsoOrNull(newStartsAt) || new Date().toISOString();
     const endsAtIso = toIsoOrNull(newEndsAt);
+    const recurrenceUntilIso = toIsoOrNull(newRecurrenceUntil);
 
     if (endsAtIso && endsAtIso < startsAtIso) {
       showToast('종료 시각은 시작 시각 이후여야 합니다.', 'error');
+      return;
+    }
+    if (recurrenceUntilIso && recurrenceUntilIso < startsAtIso) {
+      showToast('반복 종료 시각은 시작 시각 이후여야 합니다.', 'error');
+      return;
+    }
+    if (newTargetType === 'user' && !newTargetUserId.trim()) {
+      showToast('개별 우편은 대상 유저 ID가 필요합니다.', 'error');
       return;
     }
 
@@ -304,8 +363,17 @@ const AdminNotices = () => {
         .from('announcements')
         .insert({
           is_active: newActive,
+          mail_type: newMailType,
+          target_type: newTargetType,
+          target_user_id: newTargetType === 'user' ? newTargetUserId.trim() : null,
+          is_recurring: newIsRecurring,
+          recurrence_type: newIsRecurring ? 'daily' : null,
+          recurrence_until: newIsRecurring ? recurrenceUntilIso : null,
+          daily_send_time: newIsRecurring ? `${newDailySendTime || '00:00'}:00` : '00:00:00',
           starts_at: startsAtIso,
           ends_at: endsAtIso,
+          reward_pencils: Math.max(0, Number(newRewardPencils || 0)),
+          reward_practice_notes: Math.max(0, Number(newRewardPracticeNotes || 0)),
           created_by: user?.id ?? null,
           title: koTitle,
           content: koContent,
@@ -325,8 +393,16 @@ const AdminNotices = () => {
       }
 
       setNewActive(true);
+      setNewMailType('announcement');
+      setNewTargetType('all');
+      setNewTargetUserId('');
+      setNewIsRecurring(false);
+      setNewRecurrenceUntil('');
+      setNewDailySendTime('09:00');
       setNewStartsAt('');
       setNewEndsAt('');
+      setNewRewardPencils(0);
+      setNewRewardPracticeNotes(0);
       setNewTranslations(cloneEmptyTranslations());
       setCreateLocaleTab('ko');
 
@@ -414,18 +490,114 @@ const AdminNotices = () => {
                 />
                 활성화
               </label>
-              <input
-                type="datetime-local"
-                value={newStartsAt}
-                onChange={(e) => setNewStartsAt(e.target.value)}
-                className="rounded-xl border border-white/20 bg-slate-900/60 px-3 py-2 text-sm outline-none focus:border-cyan-300"
-              />
-              <input
-                type="datetime-local"
-                value={newEndsAt}
-                onChange={(e) => setNewEndsAt(e.target.value)}
-                className="rounded-xl border border-white/20 bg-slate-900/60 px-3 py-2 text-sm outline-none focus:border-cyan-300 md:col-span-2"
-              />
+              <div className="space-y-1">
+                <div className="text-xs text-white/60">우편 타입</div>
+                <select
+                  value={newMailType}
+                  onChange={(e) => setNewMailType(e.target.value as MailType)}
+                  className="w-full rounded-xl border border-white/20 bg-slate-900/60 px-3 py-2 text-sm outline-none focus:border-cyan-300"
+                >
+                  <option value="announcement">공지사항</option>
+                  <option value="mail">일반 우편</option>
+                </select>
+              </div>
+              <div className="space-y-1">
+                <div className="text-xs text-white/60">발송 대상</div>
+                <select
+                  value={newTargetType}
+                  onChange={(e) => setNewTargetType(e.target.value as TargetType)}
+                  className="w-full rounded-xl border border-white/20 bg-slate-900/60 px-3 py-2 text-sm outline-none focus:border-cyan-300"
+                >
+                  <option value="all">전체 발송</option>
+                  <option value="user">개별 발송</option>
+                </select>
+              </div>
+              {newTargetType === 'user' && (
+                <div className="space-y-1 md:col-span-2">
+                  <div className="text-xs text-white/60">대상 유저 UUID</div>
+                  <input
+                    type="text"
+                    value={newTargetUserId}
+                    onChange={(e) => setNewTargetUserId(e.target.value)}
+                    placeholder="대상 유저 UUID"
+                    className="w-full rounded-xl border border-white/20 bg-slate-900/60 px-3 py-2 text-sm outline-none focus:border-cyan-300"
+                  />
+                </div>
+              )}
+              <label className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-slate-900/60 px-3 py-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={newIsRecurring}
+                  onChange={(e) => setNewIsRecurring(e.target.checked)}
+                  className="h-4 w-4"
+                />
+                반복 우편(매일)
+              </label>
+              {newIsRecurring && (
+                <div className="space-y-1">
+                  <div className="text-xs text-white/60">매일 발송 시각</div>
+                  <input
+                    type="time"
+                    value={newDailySendTime}
+                    onChange={(e) => setNewDailySendTime(e.target.value)}
+                    className="w-full rounded-xl border border-white/20 bg-slate-900/60 px-3 py-2 text-sm outline-none focus:border-cyan-300"
+                  />
+                </div>
+              )}
+              <div className="space-y-1">
+                <div className="text-xs text-white/60">시작 시각</div>
+                <input
+                  type="datetime-local"
+                  value={newStartsAt}
+                  onChange={(e) => setNewStartsAt(e.target.value)}
+                  className="w-full rounded-xl border border-white/20 bg-slate-900/60 px-3 py-2 text-sm outline-none focus:border-cyan-300"
+                />
+              </div>
+              <div className="space-y-1">
+                <div className="text-xs text-white/60">종료 시각(선택)</div>
+                <input
+                  type="datetime-local"
+                  value={newEndsAt}
+                  onChange={(e) => setNewEndsAt(e.target.value)}
+                  className="w-full rounded-xl border border-white/20 bg-slate-900/60 px-3 py-2 text-sm outline-none focus:border-cyan-300"
+                />
+              </div>
+              {newIsRecurring && (
+                <div className="space-y-1 md:col-span-2">
+                  <div className="text-xs text-white/60">반복 종료 시각(선택)</div>
+                  <input
+                    type="datetime-local"
+                    value={newRecurrenceUntil}
+                    onChange={(e) => setNewRecurrenceUntil(e.target.value)}
+                    placeholder="반복 종료 시각"
+                    className="w-full rounded-xl border border-white/20 bg-slate-900/60 px-3 py-2 text-sm outline-none focus:border-cyan-300"
+                  />
+                </div>
+              )}
+              <div className="space-y-1">
+                <div className="text-xs text-white/60">연필 보상 수량</div>
+                <input
+                  type="number"
+                  min={0}
+                  step={1}
+                  value={newRewardPencils}
+                  onChange={(e) => setNewRewardPencils(Math.max(0, Number(e.target.value || 0)))}
+                  placeholder="연필 보상 수량"
+                  className="w-full rounded-xl border border-white/20 bg-slate-900/60 px-3 py-2 text-sm outline-none focus:border-cyan-300"
+                />
+              </div>
+              <div className="space-y-1">
+                <div className="text-xs text-white/60">연습노트 보상 수량</div>
+                <input
+                  type="number"
+                  min={0}
+                  step={1}
+                  value={newRewardPracticeNotes}
+                  onChange={(e) => setNewRewardPracticeNotes(Math.max(0, Number(e.target.value || 0)))}
+                  placeholder="연습노트 보상 수량"
+                  className="w-full rounded-xl border border-white/20 bg-slate-900/60 px-3 py-2 text-sm outline-none focus:border-cyan-300"
+                />
+              </div>
             </div>
 
             <div className="mt-3 flex flex-wrap gap-2">
@@ -499,18 +671,112 @@ const AdminNotices = () => {
                         />
                         활성화
                       </label>
-                      <input
-                        type="datetime-local"
-                        value={toDatetimeLocal(row.starts_at)}
-                        onChange={(e) => patchRow(row.id, { starts_at: toIsoOrNull(e.target.value) || row.starts_at })}
-                        className="rounded-xl border border-white/20 bg-slate-900/60 px-3 py-2 text-sm outline-none focus:border-cyan-300"
-                      />
-                      <input
-                        type="datetime-local"
-                        value={toDatetimeLocal(row.ends_at)}
-                        onChange={(e) => patchRow(row.id, { ends_at: toIsoOrNull(e.target.value) })}
-                        className="rounded-xl border border-white/20 bg-slate-900/60 px-3 py-2 text-sm outline-none focus:border-cyan-300 md:col-span-2"
-                      />
+                      <div className="space-y-1">
+                        <div className="text-xs text-white/60">우편 타입</div>
+                        <select
+                          value={row.mail_type}
+                          onChange={(e) => patchRow(row.id, { mail_type: e.target.value as MailType })}
+                          className="w-full rounded-xl border border-white/20 bg-slate-900/60 px-3 py-2 text-sm outline-none focus:border-cyan-300"
+                        >
+                          <option value="announcement">공지사항</option>
+                          <option value="mail">일반 우편</option>
+                        </select>
+                      </div>
+                      <div className="space-y-1">
+                        <div className="text-xs text-white/60">발송 대상</div>
+                        <select
+                          value={row.target_type}
+                          onChange={(e) => patchRow(row.id, { target_type: e.target.value as TargetType })}
+                          className="w-full rounded-xl border border-white/20 bg-slate-900/60 px-3 py-2 text-sm outline-none focus:border-cyan-300"
+                        >
+                          <option value="all">전체 발송</option>
+                          <option value="user">개별 발송</option>
+                        </select>
+                      </div>
+                      {row.target_type === 'user' && (
+                        <div className="space-y-1 md:col-span-2">
+                          <div className="text-xs text-white/60">대상 유저 UUID</div>
+                          <input
+                            type="text"
+                            value={row.target_user_id ?? ''}
+                            onChange={(e) => patchRow(row.id, { target_user_id: e.target.value })}
+                            placeholder="대상 유저 UUID"
+                            className="w-full rounded-xl border border-white/20 bg-slate-900/60 px-3 py-2 text-sm outline-none focus:border-cyan-300"
+                          />
+                        </div>
+                      )}
+                      <label className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-slate-900/60 px-3 py-2 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={row.is_recurring}
+                          onChange={(e) => patchRow(row.id, { is_recurring: e.target.checked, recurrence_type: e.target.checked ? 'daily' : null })}
+                          className="h-4 w-4"
+                        />
+                        반복 우편(매일)
+                      </label>
+                      {row.is_recurring && (
+                        <div className="space-y-1">
+                          <div className="text-xs text-white/60">매일 발송 시각</div>
+                          <input
+                            type="time"
+                            value={row.daily_send_time}
+                            onChange={(e) => patchRow(row.id, { daily_send_time: e.target.value })}
+                            className="w-full rounded-xl border border-white/20 bg-slate-900/60 px-3 py-2 text-sm outline-none focus:border-cyan-300"
+                          />
+                        </div>
+                      )}
+                      <div className="space-y-1">
+                        <div className="text-xs text-white/60">시작 시각</div>
+                        <input
+                          type="datetime-local"
+                          value={toDatetimeLocal(row.starts_at)}
+                          onChange={(e) => patchRow(row.id, { starts_at: toIsoOrNull(e.target.value) || row.starts_at })}
+                          className="w-full rounded-xl border border-white/20 bg-slate-900/60 px-3 py-2 text-sm outline-none focus:border-cyan-300"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <div className="text-xs text-white/60">종료 시각(선택)</div>
+                        <input
+                          type="datetime-local"
+                          value={toDatetimeLocal(row.ends_at)}
+                          onChange={(e) => patchRow(row.id, { ends_at: toIsoOrNull(e.target.value) })}
+                          className="w-full rounded-xl border border-white/20 bg-slate-900/60 px-3 py-2 text-sm outline-none focus:border-cyan-300"
+                        />
+                      </div>
+                      {row.is_recurring && (
+                        <div className="space-y-1 md:col-span-2">
+                          <div className="text-xs text-white/60">반복 종료 시각(선택)</div>
+                          <input
+                            type="datetime-local"
+                            value={toDatetimeLocal(row.recurrence_until)}
+                            onChange={(e) => patchRow(row.id, { recurrence_until: toIsoOrNull(e.target.value) })}
+                            placeholder="반복 종료 시각"
+                            className="w-full rounded-xl border border-white/20 bg-slate-900/60 px-3 py-2 text-sm outline-none focus:border-cyan-300"
+                          />
+                        </div>
+                      )}
+                      <div className="space-y-1">
+                        <div className="text-xs text-white/60">연필 보상 수량</div>
+                        <input
+                          type="number"
+                          min={0}
+                          step={1}
+                          value={row.reward_pencils}
+                          onChange={(e) => patchRow(row.id, { reward_pencils: Math.max(0, Number(e.target.value || 0)) })}
+                          className="w-full rounded-xl border border-white/20 bg-slate-900/60 px-3 py-2 text-sm outline-none focus:border-cyan-300"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <div className="text-xs text-white/60">연습노트 보상 수량</div>
+                        <input
+                          type="number"
+                          min={0}
+                          step={1}
+                          value={row.reward_practice_notes}
+                          onChange={(e) => patchRow(row.id, { reward_practice_notes: Math.max(0, Number(e.target.value || 0)) })}
+                          className="w-full rounded-xl border border-white/20 bg-slate-900/60 px-3 py-2 text-sm outline-none focus:border-cyan-300"
+                        />
+                      </div>
                     </div>
 
                     <div className="mt-3 flex flex-wrap gap-2">

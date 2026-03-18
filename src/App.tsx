@@ -143,6 +143,7 @@ const ForceLogoutListener = () => {
 
 import BGMManager from './components/audio/BGMManager';
 import ForceUpdateCheck from './components/ForceUpdateCheck';
+import { primeRewardedAd } from './utils/rewardedAd';
 
 function App() {
   useEffect(() => {
@@ -161,7 +162,13 @@ function App() {
       }
       // Initialize AdMob globally
       if (Capacitor.isNativePlatform()) {
-        AdMob.initialize().catch(e => console.error('Global AdMob init failed:', e));
+        try {
+          await AdMob.initialize();
+          // Preload rewarded ad once at app start (throttled, no infinite retry).
+          void primeRewardedAd(false);
+        } catch (e) {
+          console.error('Global AdMob init failed:', e);
+        }
       }
     };
     requestTracking();

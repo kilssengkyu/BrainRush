@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Settings, User, Trophy, Zap, Loader2, Lock, AlertTriangle, Dumbbell, ShoppingBag, Flame } from 'lucide-react';
+import { Settings, User, Trophy, Zap, Loader2, Lock, AlertTriangle, Dumbbell, ShoppingBag, Flame, Mail } from 'lucide-react';
 import HexRadar from '../components/ui/HexRadar';
 import { useMatchmaking } from '../hooks/useMatchmaking';
 import { useSound } from '../contexts/SoundContext';
@@ -19,6 +19,7 @@ import { getLevelFromXp, getLevelProgress, getXpSnapshotStorageKey } from '../ut
 import { useTutorial } from '../contexts/TutorialContext';
 import SpotlightOverlay from '../components/ui/SpotlightOverlay';
 import TierMMRBadge from '../components/ui/TierMMRBadge';
+import MailboxModal from '../components/ui/MailboxModal';
 
 type RadarStats = {
     speed: number;
@@ -38,45 +39,8 @@ type XpAnimationPayload = {
     xpGain: number;
 };
 
-type AnnouncementRow = {
-    id: number;
-    title: string;
-    content: string;
-    starts_at: string;
-    ends_at: string | null;
-    created_at: string;
-};
-
 const MAX_PENCILS = 5;
 const PENCIL_RECHARGE_MS = 30 * 60 * 1000;
-const ANNOUNCEMENT_FORCE_SHOW_KEY = 'announcement_force_show_once';
-const getLocalDateKey = () => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-};
-const getAnnouncementHideKey = (noticeId: number, dateKey: string) => `announcement_hidden:${noticeId}:${dateKey}`;
-const normalizeNoticeLocale = (language: string): string => {
-    const normalized = String(language || '').toLowerCase();
-    if (!normalized) return 'en';
-    if (normalized.startsWith('zh-hant') || normalized.startsWith('zh-tw') || normalized.startsWith('zh-hk') || normalized.startsWith('zh-mo')) {
-        return 'zh-Hant';
-    }
-    if (normalized.startsWith('zh-hans') || normalized.startsWith('zh-cn') || normalized.startsWith('zh-sg')) {
-        return 'zh-Hans';
-    }
-    if (normalized.startsWith('zh')) {
-        return 'zh-Hant';
-    }
-    return normalized.split('-')[0];
-};
-const buildNoticeLocaleCandidates = (language: string): string[] => {
-    const preferred = normalizeNoticeLocale(language);
-    const list = [preferred, 'en', 'ko'];
-    return list.filter((value, index) => value && list.indexOf(value) === index);
-};
 
 const getLivePencilState = (
     pencils: number | null | undefined,
@@ -593,11 +557,11 @@ const Home = () => {
     };
 
     const [showAdModal, setShowAdModal] = useState(false);
+    const [showNoPencilChoiceModal, setShowNoPencilChoiceModal] = useState(false);
+    const [showMailboxModal, setShowMailboxModal] = useState(false);
+    const [mailboxUnreadCount, setMailboxUnreadCount] = useState(0);
     const [showLeaderboard, setShowLeaderboard] = useState(false);
     const [activeSessionPrompt, setActiveSessionPrompt] = useState<{ roomId: string; opponentId: string } | null>(null);
-    const [announcement, setAnnouncement] = useState<AnnouncementRow | null>(null);
-    const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
-    const [announcementLoaded, setAnnouncementLoaded] = useState(false);
     const [showNicknameModal, setShowNicknameModal] = useState(false);
     const [nicknameInput, setNicknameInput] = useState('');
     const [isSavingNickname, setIsSavingNickname] = useState(false);
@@ -622,10 +586,6 @@ const Home = () => {
         return window.innerWidth < 768;
     });
     const dismissedActiveRoomRef = useRef<string | null>(null);
-
-    useEffect(() => {
-        setAnnouncementLoaded(false);
-    }, [i18n.language]);
 
     useEffect(() => {
         const onResize = () => setIsMobileLayout(window.innerWidth < 768);
@@ -689,105 +649,31 @@ const Home = () => {
     }, [user, checkActiveSessionAndPrompt]);
 
     useEffect(() => {
-        if (announcementLoaded) return;
-        if (authLoading || status !== 'idle') return;
-        if (isHomeTutorialActive) return;
-        if (showNicknameModal || activeSessionPrompt) return;
-
+        if (!user) {
+            setMailboxUnreadCount(0);
+            return;
+        }
         let cancelled = false;
-        const loadAnnouncement = async () => {
+
+        const fetchUnreadCount = async () => {
             try {
-                const nowIso = new Date().toISOString();
-                const localeCandidates = buildNoticeLocaleCandidates(i18n.language);
-                const forceShowOnce = window.localStorage.getItem(ANNOUNCEMENT_FORCE_SHOW_KEY) === '1';
-                if (forceShowOnce) {
-                    window.localStorage.removeItem(ANNOUNCEMENT_FORCE_SHOW_KEY);
-                }
-                const { data, error } = await (supabase as any)
-                    .from('announcements')
-                    .select('id, title, content, starts_at, ends_at, created_at')
-                    .eq('is_active', true)
-                    .order('starts_at', { ascending: false })
-                    .order('created_at', { ascending: false })
-                    .limit(20);
-
+                const { data, error } = await (supabase as any).rpc('get_mailbox_unread_count');
                 if (error) throw error;
-                const row = (data || []).find((item: any) => {
-                    const startsAt = String(item.starts_at ?? '');
-                    const endsAt = item.ends_at ? String(item.ends_at) : null;
-                    if (!startsAt) return false;
-                    if (startsAt > nowIso) return false;
-                    if (endsAt && endsAt < nowIso) return false;
-                    return true;
-                });
-                if (!row || cancelled) return;
-
-                const { data: translationRows, error: translationError } = await (supabase as any)
-                    .from('announcement_translations')
-                    .select('locale, title, content')
-                    .eq('announcement_id', Number(row.id));
-                if (translationError) throw translationError;
-
-                const translationMap = new Map<string, { title: string; content: string }>();
-                (translationRows || []).forEach((item: any) => {
-                    const locale = String(item.locale ?? '');
-                    if (!locale) return;
-                    translationMap.set(locale, {
-                        title: String(item.title ?? ''),
-                        content: String(item.content ?? ''),
-                    });
-                });
-
-                let resolvedTitle = '';
-                let resolvedContent = '';
-                for (const locale of localeCandidates) {
-                    const translated = translationMap.get(locale);
-                    if (translated?.title && translated?.content) {
-                        resolvedTitle = translated.title;
-                        resolvedContent = translated.content;
-                        break;
-                    }
-                }
-
-                const notice: AnnouncementRow = {
-                    id: Number(row.id),
-                    title: resolvedTitle || String(row.title ?? ''),
-                    content: resolvedContent || String(row.content ?? ''),
-                    starts_at: String(row.starts_at ?? ''),
-                    ends_at: row.ends_at ? String(row.ends_at) : null,
-                    created_at: String(row.created_at ?? ''),
-                };
-
-                const hiddenToday = window.localStorage.getItem(getAnnouncementHideKey(notice.id, getLocalDateKey())) === '1';
-                if (hiddenToday && !forceShowOnce) return;
-
-                setAnnouncement(notice);
-                setShowAnnouncementModal(true);
-            } catch (error) {
-                console.error('Failed to load announcement:', error);
-            } finally {
                 if (!cancelled) {
-                    setAnnouncementLoaded(true);
+                    setMailboxUnreadCount(Math.max(0, Number(data ?? 0)));
                 }
+            } catch (error) {
+                console.error('Failed to load mailbox unread count:', error);
             }
         };
 
-        loadAnnouncement();
+        fetchUnreadCount();
+        const interval = window.setInterval(fetchUnreadCount, 45000);
         return () => {
             cancelled = true;
+            window.clearInterval(interval);
         };
-    }, [announcementLoaded, authLoading, status, isHomeTutorialActive, showNicknameModal, activeSessionPrompt, i18n.language]);
-
-    const handleCloseAnnouncementModal = () => {
-        setShowAnnouncementModal(false);
-    };
-
-    const handleHideAnnouncementToday = () => {
-        if (announcement) {
-            window.localStorage.setItem(getAnnouncementHideKey(announcement.id, getLocalDateKey()), '1');
-        }
-        setShowAnnouncementModal(false);
-    };
+    }, [user]);
 
     // Map step id to ref
     const tutorialRefs: Record<string, React.RefObject<HTMLButtonElement | null>> = {
@@ -852,7 +738,7 @@ const Home = () => {
             const pencils = displayedPencils;
             if (pencils < 1) {
                 playSound('error');
-                setShowAdModal(true);
+                setShowNoPencilChoiceModal(true);
                 return;
             }
         }
@@ -867,6 +753,13 @@ const Home = () => {
             console.log(`Selected mode: ${mode} `);
             navigate('/game', { state: { mode } });
         }
+    };
+
+    const formatRemainingTime = (remainingMs: number) => {
+        const safeRemaining = Math.max(0, remainingMs);
+        const minutes = Math.floor(safeRemaining / 60000);
+        const seconds = Math.floor((safeRemaining % 60000) / 1000);
+        return `${minutes}:${String(seconds).padStart(2, '0')}`;
     };
 
     const handleNicknameSubmit = async () => {
@@ -929,8 +822,14 @@ const Home = () => {
                 return;
             }
 
-            if (showAnnouncementModal) {
-                setShowAnnouncementModal(false);
+            if (showMailboxModal) {
+                setShowMailboxModal(false);
+                if (customEvent.detail) customEvent.detail.handled = true;
+                return;
+            }
+
+            if (showNoPencilChoiceModal) {
+                setShowNoPencilChoiceModal(false);
                 if (customEvent.detail) customEvent.detail.handled = true;
                 return;
             }
@@ -945,7 +844,7 @@ const Home = () => {
         return () => {
             window.removeEventListener('brainrush:request-modal-close', handleModalCloseRequest as EventListener);
         };
-    }, [showNicknameModal, isSavingNickname, showAnnouncementModal, activeSessionPrompt, status]);
+    }, [showNicknameModal, isSavingNickname, showMailboxModal, showNoPencilChoiceModal, activeSessionPrompt, status]);
 
     return (
         <div className={`min-h-[100dvh] bg-slate-50 dark:bg-gray-900 text-slate-900 dark:text-white flex flex-col items-center p-4 relative overflow-hidden`}>
@@ -1107,6 +1006,24 @@ const Home = () => {
                             />
                         </button>
                     </div>
+
+                    <div className="absolute top-[calc(env(safe-area-inset-top)+4.65rem+var(--home-top-offset))] right-4 z-50">
+                        <button
+                            onClick={() => {
+                                playSound('click');
+                                setShowMailboxModal(true);
+                            }}
+                            className="relative bg-white dark:bg-gray-800/80 backdrop-blur-md border border-gray-700 rounded-full py-2 px-4 flex items-center gap-2 hover:bg-slate-100 dark:bg-gray-700 transition-all shadow-lg active:scale-95"
+                        >
+                            <Mail className="w-4 h-4 text-cyan-300" />
+                            <span className="text-xs font-bold text-slate-600 dark:text-gray-200">{t('mailbox.title', '우편함')}</span>
+                            {mailboxUnreadCount > 0 && (
+                                <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-red-500 text-[10px] leading-4 text-white text-center font-black">
+                                    {mailboxUnreadCount > 9 ? '9+' : mailboxUnreadCount}
+                                </span>
+                            )}
+                        </button>
+                    </div>
                 </>
             )}
 
@@ -1165,33 +1082,6 @@ const Home = () => {
                 </div>
             )}
 
-            {showAnnouncementModal && announcement && status === 'idle' && !isHomeTutorialActive && !showNicknameModal && !activeSessionPrompt && (
-                <div className="fixed inset-0 z-[123] bg-black/75 backdrop-blur-sm flex items-center justify-center px-4">
-                    <div className="w-full max-w-md rounded-3xl border border-cyan-400/30 bg-slate-50 dark:bg-gray-900/95 p-6 shadow-2xl">
-                        <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-2">
-                            {announcement.title || t('home.announcementTitle', '공지사항')}
-                        </h2>
-                        <p className="text-sm text-slate-600 dark:text-gray-300 mb-5 whitespace-pre-wrap break-words">
-                            {announcement.content}
-                        </p>
-                        <div className="grid grid-cols-2 gap-2">
-                            <button
-                                onClick={handleHideAnnouncementToday}
-                                className="rounded-xl border border-cyan-500/40 bg-cyan-500/15 py-3 font-semibold text-cyan-300 transition-colors hover:bg-cyan-500/25"
-                            >
-                                {t('home.hideAnnouncementToday', '오늘 다시 보지 않기')}
-                            </button>
-                            <button
-                                onClick={handleCloseAnnouncementModal}
-                                className="rounded-xl border border-gray-600 bg-transparent py-3 font-semibold text-slate-600 dark:text-gray-300 transition-colors hover:bg-white dark:bg-gray-800"
-                            >
-                                {t('common.close')}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
             {activeSessionPrompt && status === 'idle' && (
                 <div className="fixed inset-0 z-[125] bg-black/75 backdrop-blur-sm flex items-center justify-center px-4">
                     <div className="w-full max-w-md rounded-3xl border border-yellow-400/30 bg-slate-50 dark:bg-gray-900/95 p-6 shadow-2xl">
@@ -1226,6 +1116,68 @@ const Home = () => {
                                 className="rounded-xl bg-yellow-500 py-3 font-black text-black transition-colors hover:bg-yellow-400"
                             >
                                 {t('home.resumeNow')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <MailboxModal
+                isOpen={showMailboxModal}
+                onClose={() => setShowMailboxModal(false)}
+                userId={user?.id}
+                language={i18n.language}
+                onRequireLogin={() => navigate('/login')}
+                onClaimed={refreshProfile}
+                onUnreadCountChange={setMailboxUnreadCount}
+            />
+
+            {showNoPencilChoiceModal && (
+                <div className="fixed inset-0 z-[126] bg-black/75 backdrop-blur-sm flex items-center justify-center px-4">
+                    <div className="w-full max-w-md rounded-3xl border border-yellow-400/30 bg-slate-50 dark:bg-gray-900/95 p-6 shadow-2xl">
+                        <h2 className="text-xl font-black text-slate-900 dark:text-white mb-2">
+                            {t('home.noPencilTitle')}
+                        </h2>
+                        <p className="text-sm text-slate-600 dark:text-gray-300 mb-1">
+                            {t('home.noPencilDesc')}
+                        </p>
+                        {availablePencils < MAX_PENCILS && (
+                            <p className="text-xs text-yellow-300 mb-5">
+                                {t('home.nextPencilIn', {
+                                    time: formatRemainingTime(displayedRechargeMs)
+                                })}
+                            </p>
+                        )}
+
+                        <div className="grid grid-cols-1 gap-2">
+                            <button
+                                onClick={() => {
+                                    playSound('click');
+                                    setShowNoPencilChoiceModal(false);
+                                    setShowAdModal(true);
+                                }}
+                                className="rounded-xl bg-blue-600 py-3 font-black text-white transition-colors hover:bg-blue-500"
+                            >
+                                {t('home.watchAdForPencil')}
+                            </button>
+                            <button
+                                onClick={() => {
+                                    playSound('click');
+                                    setShowNoPencilChoiceModal(false);
+                                    navigate('/shop');
+                                }}
+                                className="rounded-xl border border-cyan-500/40 bg-cyan-500/15 py-3 font-semibold text-cyan-300 transition-colors hover:bg-cyan-500/25"
+                            >
+                                {t('home.goToShopForPencil')}
+                            </button>
+                            <button
+                                onClick={() => {
+                                    playSound('click');
+                                    setShowNoPencilChoiceModal(false);
+                                }}
+                                className="rounded-xl border border-gray-600 bg-transparent py-3 font-semibold text-slate-600 dark:text-gray-300 transition-colors hover:bg-white dark:bg-gray-800"
+                            >
+                                {t('home.waitForRecharge')}
                             </button>
                         </div>
                     </div>

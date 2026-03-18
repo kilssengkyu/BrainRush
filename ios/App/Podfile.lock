@@ -26,7 +26,11 @@ PODS:
     - Capacitor
   - Google-Mobile-Ads-SDK (12.14.0):
     - GoogleUserMessagingPlatform (>= 1.1)
+  - GoogleMobileAdsMediationUnity (4.16.6.0):
+    - Google-Mobile-Ads-SDK (~> 12.0)
+    - UnityAds (= 4.16.5)
   - GoogleUserMessagingPlatform (3.1.0)
+  - UnityAds (4.16.5)
 
 DEPENDENCIES:
   - "Capacitor (from `../../node_modules/@capacitor/ios`)"
@@ -41,11 +45,14 @@ DEPENDENCIES:
   - "CapacitorStatusBar (from `../../node_modules/@capacitor/status-bar`)"
   - "CapgoNativeAudio (from `../../node_modules/@capgo/native-audio`)"
   - "CapgoNativePurchases (from `../../node_modules/@capgo/native-purchases`)"
+  - GoogleMobileAdsMediationUnity
 
 SPEC REPOS:
   trunk:
     - Google-Mobile-Ads-SDK
+    - GoogleMobileAdsMediationUnity
     - GoogleUserMessagingPlatform
+    - UnityAds
 
 EXTERNAL SOURCES:
   Capacitor:
@@ -87,8 +94,10 @@ SPEC CHECKSUMS:
   CapgoNativeAudio: af16819c730f0bad24361a2aa40e6e2327113bed
   CapgoNativePurchases: 260513c14dadae1e5b32e885adb63e8cb19f9d7a
   Google-Mobile-Ads-SDK: 4534fd2dfcd3f705c5485a6633c5188d03d4eed2
+  GoogleMobileAdsMediationUnity: 85fd40e2b42371341446745899e2963faaaaaba9
   GoogleUserMessagingPlatform: befe603da6501006420c206222acd449bba45a9c
+  UnityAds: 8b9e0ecf7c4aa7334d15f81efb58db279e28f502
 
-PODFILE CHECKSUM: f9e22443c7260f69a985b4d3e2569955c101af9c
+PODFILE CHECKSUM: 43a85aac991f6ff7891c902a513bf6b2888a57be
 
 COCOAPODS: 1.16.2

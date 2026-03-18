@@ -5,6 +5,7 @@ import { X, Loader2, Gift } from 'lucide-react';
 import { useSound } from '../../contexts/SoundContext';
 import { Capacitor } from '@capacitor/core';
 import { AdMob, RewardAdPluginEvents } from '@capacitor-community/admob';
+import { isNoFillError, primeRewardedAd, showRewardedAd } from '../../utils/rewardedAd';
 
 interface AdModalProps {
     isOpen: boolean;
@@ -20,6 +21,7 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
     const { t } = useTranslation();
     const { playSound } = useSound();
     const [adState, setAdState] = useState<'idle' | 'loading' | 'playing' | 'rewarded' | 'limit' | 'error'>('idle');
+    const [rewardedByNoFill, setRewardedByNoFill] = useState(false);
     const [timeLeft, setTimeLeft] = useState(5);
     const hasLimit = typeof adRemaining === 'number' && typeof adLimit === 'number';
     const isLimitReached = hasLimit && adRemaining <= 0;
@@ -68,18 +70,22 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
         import('../../utils/AdLogic').then(({ AdLogic }) => AdLogic.resetAdCounter());
     }, []);
 
-    const grantReward = useCallback(async () => {
+    const grantReward = useCallback(async (source: 'ad' | 'no_fill' = 'ad') => {
         try {
             const result = await onReward();
             if (result === 'ok') {
+                setRewardedByNoFill(source === 'no_fill');
                 setAdState('rewarded');
             } else if (result === 'limit') {
+                setRewardedByNoFill(false);
                 setAdState('limit');
             } else {
+                setRewardedByNoFill(false);
                 setAdState('error');
             }
         } catch (err) {
             console.error('Reward grant failed:', err);
+            setRewardedByNoFill(false);
             setAdState('error');
         }
     }, [onReward]);
@@ -88,6 +94,7 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
     useEffect(() => {
         if (Capacitor.isNativePlatform()) {
             AdMob.initialize().catch(err => console.error('AdMob init failed', err));
+            void primeRewardedAd(false);
         }
     }, []);
 
@@ -97,6 +104,7 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
 
         let rewardListener: any;
         let dismissListener: any;
+        let loadedListener: any;
         let failedLoadListener: any;
 
         const setupListeners = async () => {
@@ -107,6 +115,13 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
                 grantReward();
             });
 
+            loadedListener = await AdMob.addListener(RewardAdPluginEvents.Loaded, (info: any) => {
+                console.log('AdMob Rewarded Loaded:', info);
+                if (info?.mediationAdapterClassName) {
+                    console.log(`[AdMob] mediationAdapterClassName=${info.mediationAdapterClassName}`);
+                }
+            });
+
             dismissListener = await AdMob.addListener(RewardAdPluginEvents.Dismissed, () => {
                 console.log('AdMob Dismissed');
                 // Use a timeout to ensure state updates if dismissed immediately after reward
@@ -114,6 +129,7 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
                 // But if 'rewarded' state is set, we let the user close the modal via "Close" button.
                 // If closed without reward, just reset.
                 setAdState(prev => prev === 'rewarded' ? 'rewarded' : 'idle');
+                void primeRewardedAd(false);
             });
 
             failedLoadListener = await AdMob.addListener(RewardAdPluginEvents.FailedToLoad, (err) => {
@@ -127,6 +143,7 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
 
         return () => {
             if (rewardListener) rewardListener.remove();
+            if (loadedListener) loadedListener.remove();
             if (dismissListener) dismissListener.remove();
             if (failedLoadListener) failedLoadListener.remove();
         };
@@ -137,6 +154,7 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
         if (!isOpen) {
             setAdState('idle');
             setTimeLeft(5);
+            setRewardedByNoFill(false);
         }
     }, [isOpen]);
 
@@ -186,47 +204,26 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
 
         // Native AdMob Mode
         setAdState('loading');
-        const platform = Capacitor.getPlatform();
-        const adsMode = String(import.meta.env.VITE_ADS_MODE ?? import.meta.env.VITE_APP_ENV ?? '').toLowerCase();
-        const isProdAds = adsMode === 'prod' || adsMode === 'production';
-        const adId = isProdAds
-            ? (platform === 'ios'
-                ? 'ca-app-pub-4893861547827379/8300296145'
-                : 'ca-app-pub-4893861547827379/1519157571')
-            : (platform === 'ios'
-                ? 'ca-app-pub-3940256099942544/1712485313'
-                : 'ca-app-pub-3940256099942544/5224354917');
-
-        const MAX_RETRIES = 2;
-        const RETRY_DELAYS = [1500, 3000];
-
-        for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-            try {
-                if (attempt > 0) {
-                    console.log(`[AdModal] Rewarded retry ${attempt}/${MAX_RETRIES}...`);
-                    await new Promise(r => setTimeout(r, RETRY_DELAYS[attempt - 1]));
-                }
-                await AdMob.prepareRewardVideoAd({ adId });
-                await AdMob.showRewardVideoAd();
-                setAdState('playing');
+        try {
+            const prepared = await primeRewardedAd(false);
+            if (!prepared) {
+                // Most likely no-fill/cooldown. Avoid request spam and grant fallback reward.
+                console.log('[AdModal] Rewarded not ready (cooldown/no fill) — granting free reward');
+                resetForcedAdCounter();
+                await grantReward('no_fill');
                 return;
-            } catch (err: any) {
-                const msg = err?.message || err?.errorMessage || String(err);
-                const isNoFill = msg.toLowerCase().includes('no fill') || msg.toLowerCase().includes('nofill');
-                if (isNoFill && attempt < MAX_RETRIES) {
-                    console.warn(`[AdModal] Rewarded NoFill (attempt ${attempt + 1}), retrying...`);
-                    continue;
-                }
-                console.error('Ad preparation failed', err);
-                if (isNoFill) {
-                    // NoFill = 서버에 광고가 없는 것이므로 사용자에게 무료로 보상 지급
-                    console.log('[AdModal] NoFill after all retries — granting free reward');
-                    resetForcedAdCounter();
-                    await grantReward();
-                } else {
-                    setAdState('idle');
-                }
-                return;
+            }
+
+            await showRewardedAd();
+            setAdState('playing');
+        } catch (err) {
+            console.error('Ad preparation failed', err);
+            if (isNoFillError(err)) {
+                console.log('[AdModal] NoFill while showing rewarded — granting free reward');
+                resetForcedAdCounter();
+                await grantReward('no_fill');
+            } else {
+                setAdState('idle');
             }
         }
     };
@@ -354,7 +351,9 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
                                         +{rewardAmount} {t(copy.rewardLabelKey, copy.rewardLabelFallback)}!
                                     </h4>
                                     <p className="text-slate-500 dark:text-gray-400 mb-6">
-                                        {t('ad.success', 'Reward earned successfully.')}
+                                        {rewardedByNoFill
+                                            ? t('ad.noFillRewarded', '앗, 지금은 재생할 광고가 없어요! 보상은 바로 드릴게요.')
+                                            : t('ad.success', 'Reward earned successfully.')}
                                     </p>
                                     <button
                                         onClick={() => { playSound('click'); onClose(); }}

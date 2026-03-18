@@ -203,7 +203,8 @@
     "practiceNotes": "Catatan latihan",
     "success": "Hadiah berhasil didapatkan.",
     "noFillTitle": "Tidak ada iklan saat ini",
-    "noFillDesc": "Silakan coba lagi nanti."
+    "noFillDesc": "Silakan coba lagi nanti.",
+    "noFillRewarded": "Ups, saat ini tidak ada iklan yang bisa diputar. Hadiah akan langsung diberikan."
   },
   "notifications": {
     "fullTitle": "Pensil penuh",
@@ -608,7 +609,12 @@
       "objectiveFallback": "Start and follow the on-screen rule."
     },
     "viewGrid": "Grid view",
-    "viewList": "List view"
+    "viewList": "List view",
+    "noNotesTitle": "Catatan latihan habis",
+    "noNotesDesc": "Kamu butuh catatan latihan untuk bermain mode Latihan.",
+    "watchAdForNotes": "Tonton iklan untuk catatan latihan",
+    "goToShopForNotes": "Beli di toko",
+    "waitForRecharge": "Tunggu"
   },
   "update": {
     "title": "Pembaruan Diperlukan",
@@ -624,7 +630,13 @@
     "resumeNow": "Resume",
     "levelProgressLevel": "Lv. {{level}}",
     "levelUp": "LEVEL UP!",
-    "hideAnnouncementToday": "Jangan tampilkan lagi hari ini"
+    "hideAnnouncementToday": "Jangan tampilkan lagi hari ini",
+    "noPencilTitle": "Pensil habis",
+    "noPencilDesc": "Kamu butuh pensil untuk bermain mode Normal/Rank.",
+    "nextPencilIn": "Pensil berikutnya dalam {{time}}",
+    "watchAdForPencil": "Tonton iklan",
+    "goToShopForPencil": "Beli di toko",
+    "waitForRecharge": "Tunggu"
   },
   "login": {
     "bannedTitle": "Account Suspended",
@@ -640,5 +652,20 @@
     "enjoySubtitle": "Review singkat sangat membantu kami!",
     "enjoyYes": "Ya! 😊",
     "enjoyNo": "Kurang 😐"
+  },
+  "mailbox": {
+    "title": "Mailbox",
+    "unread": "Unread",
+    "read": "Read",
+    "empty": "No mail.",
+    "selectHint": "Select a mail.",
+    "untitled": "Untitled",
+    "noContent": "No content.",
+    "rewardTitle": "Claimable Reward",
+    "rewardPencils": "Pencils +{{count}}",
+    "rewardPracticeNotes": "Practice Notes +{{count}}",
+    "claim": "Claim",
+    "claimed": "Claimed",
+    "claimSuccess": "Reward claimed. (+{{pencils}} pencils, +{{notes}} practice notes)"
   }
 }

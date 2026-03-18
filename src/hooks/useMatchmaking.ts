@@ -3,6 +3,10 @@ import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
 import { getLevelFromXp } from '../utils/levelUtils';
 
+const DEFAULT_BOT_DELAY_MIN_MS = 3000;
+const DEFAULT_BOT_DELAY_MAX_MS = 8000;
+const DEFAULT_BOT_FORCE_AFTER_MS = 8000;
+
 export const useMatchmaking = (
     onMatchFound: (roomId: string, opponentId: string) => void
 ) => {
@@ -15,6 +19,8 @@ export const useMatchmaking = (
     const searchStartTime = useRef<number>(0);
     const botMatchTriggered = useRef<boolean>(false);
     const pencilConsumed = useRef<boolean>(false);
+    const botDelayMsRef = useRef<number>(DEFAULT_BOT_DELAY_MAX_MS);
+    const botForceAfterMsRef = useRef<number>(DEFAULT_BOT_FORCE_AFTER_MS);
 
     // Generate a transient Guest ID if not logged in
     const guestId = useRef(`guest_${Math.random().toString(36).substring(2, 9)}`);
@@ -37,6 +43,43 @@ export const useMatchmaking = (
             return null;
         }
         return data;
+    };
+
+    const loadBotDelayConfig = async () => {
+        try {
+            const keys = ['bot_delay_min_ms', 'bot_delay_max_ms', 'bot_force_after_ms'];
+            const { data, error } = await supabase
+                .from('app_config')
+                .select('key, value')
+                .in('key', keys);
+            if (error || !data) throw error;
+
+            const valueByKey = new Map<string, string>();
+            data.forEach((row: any) => {
+                valueByKey.set(String(row.key), String(row.value ?? '').trim());
+            });
+
+            const parsedMin = Number.parseInt(valueByKey.get('bot_delay_min_ms') ?? '', 10);
+            const parsedMax = Number.parseInt(valueByKey.get('bot_delay_max_ms') ?? '', 10);
+            const parsedForce = Number.parseInt(valueByKey.get('bot_force_after_ms') ?? '', 10);
+
+            const minMs = Number.isFinite(parsedMin) ? parsedMin : DEFAULT_BOT_DELAY_MIN_MS;
+            const maxMs = Number.isFinite(parsedMax) ? parsedMax : DEFAULT_BOT_DELAY_MAX_MS;
+            const safeMin = Math.max(1000, Math.min(minMs, maxMs));
+            const safeMax = Math.max(safeMin, Math.max(minMs, maxMs));
+            const forceAfterMs = Number.isFinite(parsedForce)
+                ? Math.max(1000, parsedForce)
+                : Math.max(DEFAULT_BOT_FORCE_AFTER_MS, safeMax);
+
+            return { minMs: safeMin, maxMs: safeMax, forceAfterMs };
+        } catch (err) {
+            console.warn('[Matchmaking] Failed to load bot delay config. Using fallback 3~8s.', err);
+            return {
+                minMs: DEFAULT_BOT_DELAY_MIN_MS,
+                maxMs: DEFAULT_BOT_DELAY_MAX_MS,
+                forceAfterMs: DEFAULT_BOT_FORCE_AFTER_MS
+            };
+        }
     };
 
     const startSearch = async (mode: 'rank' | 'normal' = 'rank') => {
@@ -69,6 +112,21 @@ export const useMatchmaking = (
         botMatchTriggered.current = false;
         pencilConsumed.current = false;
 
+        // Decide bot fallback delay once per search.
+        // If app_config keys are missing, fallback stays at 3~8s.
+        const botConfig = await loadBotDelayConfig();
+        const randomSpan = botConfig.maxMs - botConfig.minMs + 1;
+        botDelayMsRef.current = botConfig.minMs + Math.floor(Math.random() * randomSpan);
+        botForceAfterMsRef.current = botConfig.forceAfterMs;
+        console.log(
+            '[Matchmaking] Bot delay(ms):',
+            botDelayMsRef.current,
+            'range:',
+            `${botConfig.minMs}~${botConfig.maxMs}`,
+            'forceAfter:',
+            botForceAfterMsRef.current
+        );
+
         // If Normal Mode, Start with huge range immediately (Ignore Elo)
         const initialRange = mode === 'normal' ? 100 : 50;
         setSearchRange(initialRange);
@@ -100,22 +158,12 @@ export const useMatchmaking = (
                 : typeof profile?.xp === 'number'
                     ? getLevelFromXp(profile.xp)
                     : 1;
-            const rankGamesPlayed = Math.max(
-                0,
-                Number((profile as any)?.rank_games_played ?? (profile?.wins || 0) + (profile?.losses || 0))
-            );
-            const normalGamesPlayed = Math.max(
-                0,
-                Number((profile?.casual_wins || 0) + (profile?.casual_losses || 0))
-            );
-            const totalGamesPlayed = rankGamesPlayed + normalGamesPlayed;
-            const isNewPlayer = totalGamesPlayed <= 5;
+            const botDelayMs = botDelayMsRef.current;
+            const forceAfterMs = botForceAfterMsRef.current;
             const isBotEligible =
                 (mode === 'normal' || mode === 'rank') &&
-                (playerLevel <= 5 || elapsedMs >= 15000);
-            const earlyBotDelayMs = 1000 + Math.floor(Math.random() * 2001); // 1~3s
-            const botDelayMs = isNewPlayer ? earlyBotDelayMs : (playerLevel <= 5 ? 10000 : 15000);
-            const forceBot = playerLevel > 5 && elapsedMs >= 15000;
+                (playerLevel <= 5 || elapsedMs >= forceAfterMs);
+            const forceBot = playerLevel > 5 && elapsedMs >= forceAfterMs;
 
             if (isBotEligible && !botMatchTriggered.current && elapsedMs >= botDelayMs) {
                 botMatchTriggered.current = true;

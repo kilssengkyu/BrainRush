@@ -199,7 +199,8 @@
     "practiceNotes": "練習筆記",
     "success": "獎勵领取成功。",
     "noFillTitle": "目前沒有廣告",
-    "noFillDesc": "請稍後再試。"
+    "noFillDesc": "請稍後再試。",
+    "noFillRewarded": "哎呀，現在沒有可播放的廣告！獎勵將立即發放給您。"
   },
   "notifications": {
     "fullTitle": "鉛筆已滿",
@@ -604,7 +605,12 @@
       "objectiveFallback": "開始遊戲並按照屏幕規則進行。"
     },
     "viewGrid": "網格視圖",
-    "viewList": "列表視圖"
+    "viewList": "列表視圖",
+    "noNotesTitle": "練習筆記不足",
+    "noNotesDesc": "遊玩練習模式需要練習筆記。",
+    "watchAdForNotes": "觀看廣告獲取練習筆記",
+    "goToShopForNotes": "前往商店購買",
+    "waitForRecharge": "等待"
   },
   "update": {
     "title": "需要更新",
@@ -620,7 +626,13 @@
     "resumeNow": "返回對戰",
     "levelProgressLevel": "Lv. {{level}}",
     "levelUp": "升級！",
-    "hideAnnouncementToday": "今天不再顯示"
+    "hideAnnouncementToday": "今天不再顯示",
+    "noPencilTitle": "鉛筆不足",
+    "noPencilDesc": "遊玩一般/排位模式需要鉛筆。",
+    "nextPencilIn": "下一支鉛筆充能還需 {{time}}",
+    "watchAdForPencil": "觀看廣告",
+    "goToShopForPencil": "前往商店購買",
+    "waitForRecharge": "等待"
   },
   "login": {
     "bannedTitle": "帳號已停權",
@@ -640,5 +652,20 @@
     "enjoySubtitle": "一則評價就是對我們最大的支持！",
     "enjoyYes": "好玩！😊",
     "enjoyNo": "一般 😐"
+  },
+  "mailbox": {
+    "title": "信箱",
+    "unread": "未讀",
+    "read": "已讀",
+    "empty": "暫無郵件。",
+    "selectHint": "請選擇一封郵件。",
+    "untitled": "無標題",
+    "noContent": "暫無內容。",
+    "rewardTitle": "可領取獎勵",
+    "rewardPencils": "鉛筆 +{{count}}",
+    "rewardPracticeNotes": "練習筆記 +{{count}}",
+    "claim": "領取",
+    "claimed": "已領取",
+    "claimSuccess": "獎勵已領取。(+{{pencils}} 鉛筆, +{{notes}} 練習筆記)"
   }
 }
