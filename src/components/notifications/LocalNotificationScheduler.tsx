@@ -10,7 +10,7 @@ import { getNotificationsEnabled } from '../../lib/notificationPrefs';
 const FULL_PENCILS_ID = 2001;
 const REMINDER_24H_ID = 2002;
 const MAX_PENCILS = 5;
-const RECHARGE_MINUTES = 30;
+const RECHARGE_MINUTES = 15;
 
 const scheduleNotification = async (id: number, title: string, body: string, at: Date) => {
     await LocalNotifications.schedule({

@@ -1,6 +1,6 @@
 // Backup of the legacy icon-card practice mode screen.
 // Keep this file for quick rollback when final icon assets are ready.
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -22,6 +22,8 @@ const PracticeMode = () => {
     const [loading, setLoading] = useState(false);
     const [showAdModal, setShowAdModal] = useState(false);
     const [guideGameId, setGuideGameId] = useState<string | null>(null);
+    const touchHandledAtRef = useRef(0);
+    const cardPointerDownRef = useRef<{ gameId: string; x: number; y: number } | null>(null);
 
     const NOTE_MAX = 5;
     const AD_DAILY_LIMIT = 10;
@@ -41,6 +43,42 @@ const PracticeMode = () => {
     const handleBack = () => {
         playSound('click');
         navigate('/');
+    };
+
+    const getPracticeGameTitle = (titleKey: string) => {
+        if (titleKey === 'mathOx.title') return t(titleKey, 'Math OX');
+        if (titleKey === 'oneStroke.title') return t(titleKey, 'One Stroke');
+        return t(titleKey);
+    };
+
+    const playHoverIfDesktop = () => {
+        if (typeof window === 'undefined') return;
+        if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+            playSound('hover');
+        }
+    };
+
+    const handleCardPointerDown = (gameId: string, event: React.PointerEvent<HTMLButtonElement>) => {
+        if (event.pointerType === 'mouse') return;
+        cardPointerDownRef.current = { gameId, x: event.clientX, y: event.clientY };
+    };
+
+    const handleCardPointerUp = (gameId: string, event: React.PointerEvent<HTMLButtonElement>) => {
+        if (event.pointerType === 'mouse') return;
+        const down = cardPointerDownRef.current;
+        cardPointerDownRef.current = null;
+        if (!down || down.gameId !== gameId) return;
+
+        const moved = Math.hypot(event.clientX - down.x, event.clientY - down.y);
+        if (moved > 12) return;
+
+        touchHandledAtRef.current = Date.now();
+        void handleGameSelect(gameId);
+    };
+
+    const handleCardClick = (gameId: string) => {
+        if (Date.now() - touchHandledAtRef.current < 650) return;
+        void handleGameSelect(gameId);
     };
 
     const handleGameSelect = async (gameId: string) => {
@@ -205,10 +243,13 @@ const PracticeMode = () => {
                         >
                             <button
                                 type="button"
-                                onClick={() => handleGameSelect(game.id)}
-                                onMouseEnter={() => playSound('hover')}
+                                onClick={() => handleCardClick(game.id)}
+                                onPointerDown={(event) => handleCardPointerDown(game.id, event)}
+                                onPointerUp={(event) => handleCardPointerUp(game.id, event)}
+                                onPointerCancel={() => { cardPointerDownRef.current = null; }}
+                                onMouseEnter={playHoverIfDesktop}
                                 disabled={loading}
-                                className="w-full h-full flex flex-col items-center justify-between text-left"
+                                className="w-full h-full flex flex-col items-center justify-between text-left touch-manipulation"
                             >
                                 <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity z-0" />
 
@@ -220,7 +261,7 @@ const PracticeMode = () => {
 
                                 <div className="text-center p-3 w-full bg-black/20 backdrop-blur-md z-10 border-t border-white/5">
                                     <h3 className="font-bold text-base text-slate-700 dark:text-gray-200 group-hover:text-slate-900 dark:text-white transition-colors truncate w-full">
-                                        {t(game.title)}
+                                        {getPracticeGameTitle(game.title)}
                                     </h3>
                                     <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-0.5">
                                         {game.type}
@@ -240,7 +281,7 @@ const PracticeMode = () => {
                                     setGuideGameId(game.id);
                                 }}
                                 className="absolute top-2 left-2 z-20 rounded-full bg-black/50 border border-white/10 p-1.5 text-slate-900 dark:text-white/80 hover:text-slate-900 dark:text-white hover:bg-black/70 transition-colors"
-                                aria-label={`${t(game.title)} 설명`}
+                                aria-label={`${getPracticeGameTitle(game.title)} 설명`}
                             >
                                 <HelpCircle size={15} />
                             </button>
@@ -277,7 +318,7 @@ const PracticeMode = () => {
                         <div className="flex items-center justify-between gap-3 p-5 border-b border-white/10 bg-slate-50 dark:bg-gray-900/95">
                             <div className="min-w-0">
                                 <div className="text-xs uppercase tracking-[0.24em] text-emerald-300/80 mb-1">Practice Guide</div>
-                                <h3 className="text-xl font-black text-slate-900 dark:text-white truncate">{t(selectedGuideGame.title)}</h3>
+                                <h3 className="text-xl font-black text-slate-900 dark:text-white truncate">{getPracticeGameTitle(selectedGuideGame.title)}</h3>
                             </div>
                             <button
                                 type="button"
@@ -336,8 +377,8 @@ const PracticeRechargeTimer = ({ lastRecharge }: { lastRecharge: string }) => {
             const last = new Date(lastRecharge).getTime();
             const now = new Date().getTime();
             const diff = now - last;
-            const thirtyMinutes = 30 * 60 * 1000;
-            const remaining = thirtyMinutes - diff;
+            const fifteenMinutes = 15 * 60 * 1000;
+            const remaining = fifteenMinutes - diff;
 
             if (remaining <= 0) {
                 setTimeLeft('00:00');

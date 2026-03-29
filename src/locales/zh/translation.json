@@ -447,6 +447,15 @@
     "title": "心算挑战",
     "instruction": "计算算式并选择正确答案"
   },
+  "mathOx": {
+    "title": "心算 OX",
+    "instruction": "算式正确按 O，错误按 X。"
+  },
+  "oneStroke": {
+    "title": "一笔连线",
+    "instruction": "从彩色格子开始，一笔将所有白色格子各填满一次。",
+    "progress": "路径"
+  },
   "ten": {
     "title": "凑十",
     "instruction": "让所选数字的总和变成10。"
@@ -578,6 +587,8 @@
     "settings": "⚙️ 修改声音、语言等设置！",
     "login": "👤 绑定账号，安全游玩！",
     "profile": "📊 查看实力、能力值和高分记录！",
+    "tryNormalHighlight": "请先点击普通模式，开始你的第一场对战！",
+    "startNormalNow": "开始普通模式",
     "next": "下一步",
     "done": "完成",
     "skip": "跳过",

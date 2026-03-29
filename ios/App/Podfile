@@ -26,6 +26,7 @@ target 'App' do
   capacitor_pods
   # Add your Pods here
   pod 'GoogleMobileAdsMediationUnity'
+  pod 'FBSDKCoreKit'   # Facebook SDK for App Events & Conversion Tracking
 end
 
 post_install do |installer|

@@ -451,6 +451,15 @@
     "title": "TANTANGAN MATEMATIKA",
     "instruction": "Hitung ekspresi lalu pilih jawaban yang benar"
   },
+  "mathOx": {
+    "title": "MATH OX",
+    "instruction": "Tekan O jika persamaan benar, dan X jika salah."
+  },
+  "oneStroke": {
+    "title": "SATU GORESAN",
+    "instruction": "Mulai dari kotak berwarna dan isi setiap kotak putih tepat satu kali dalam satu garis.",
+    "progress": "Jalur"
+  },
   "ten": {
     "title": "BUAT 10",
     "instruction": "Buat jumlah angka yang dipilih menjadi 10."
@@ -582,6 +591,8 @@
     "settings": "⚙️ Ubah suara, bahasa, dan pengaturan lain!",
     "login": "👤 Hubungkan akunmu agar bermain lebih aman!",
     "profile": "📊 Cek kemampuan, statistik, dan skor terbaikmu!",
+    "tryNormalHighlight": "Ketuk mode Normal dulu untuk memulai pertandingan pertamamu!",
+    "startNormalNow": "Mulai Mode Normal",
     "next": "Berikutnya",
     "done": "Selesai",
     "skip": "Lewati",

@@ -19,6 +19,8 @@ const GUIDE_INSTRUCTION_KEY_BY_GAME: Record<string, string> = {
     NUMBER: 'number.instruction',
     NUMBER_DESC: 'number.instructionDesc',
     MATH: 'math.instruction',
+    MATH_OX: 'mathOx.instruction',
+    ONE_STROKE: 'oneStroke.instruction',
     TEN: 'ten.instruction',
     COLOR: 'color.instruction',
     MEMORY: 'memory.instruction',
@@ -61,6 +63,8 @@ const PracticeMode = () => {
     const [viewMode, setViewMode] = useState<PracticeViewMode>('grid');
     const edgeSwipeStartRef = useRef<{ x: number; y: number } | null>(null);
     const edgeSwipeTriggeredRef = useRef(false);
+    const touchHandledAtRef = useRef(0);
+    const cardPointerDownRef = useRef<{ gameId: string; x: number; y: number } | null>(null);
     const language = i18n.resolvedLanguage || i18n.language || 'en';
     const isKoreanLanguage = language.toLowerCase().startsWith('ko');
 
@@ -170,6 +174,12 @@ const PracticeMode = () => {
         navigate('/');
     };
 
+    const getPracticeGameTitle = (titleKey: string) => {
+        if (titleKey === 'mathOx.title') return t(titleKey, 'Math OX');
+        if (titleKey === 'oneStroke.title') return t(titleKey, 'One Stroke');
+        return t(titleKey);
+    };
+
     const handleEdgeSwipeStart = (event: React.TouchEvent<HTMLDivElement>) => {
         if (loading || showAdModal || !!guideGameId || event.touches.length !== 1) {
             edgeSwipeStartRef.current = null;
@@ -204,6 +214,39 @@ const PracticeMode = () => {
     const handleEdgeSwipeEnd = () => {
         edgeSwipeStartRef.current = null;
         edgeSwipeTriggeredRef.current = false;
+    };
+
+    const playHoverIfDesktop = () => {
+        if (typeof window === 'undefined') return;
+        if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+            playSound('hover');
+        }
+    };
+
+    const handleCardPointerDown = (gameId: string, event: React.PointerEvent<HTMLButtonElement>) => {
+        if (event.pointerType === 'mouse') return;
+        cardPointerDownRef.current = { gameId, x: event.clientX, y: event.clientY };
+    };
+
+    const handleCardPointerUp = (gameId: string, event: React.PointerEvent<HTMLButtonElement>) => {
+        if (event.pointerType === 'mouse') return;
+        const down = cardPointerDownRef.current;
+        cardPointerDownRef.current = null;
+        if (!down || down.gameId !== gameId) return;
+
+        const dx = event.clientX - down.x;
+        const dy = event.clientY - down.y;
+        const moved = Math.hypot(dx, dy);
+        if (moved > 12) return; // likely scroll/drag, not intentional tap
+
+        touchHandledAtRef.current = Date.now();
+        void handleGameSelect(gameId);
+    };
+
+    const handleCardClick = (gameId: string) => {
+        // Ignore synthetic click immediately after touch pointerup handling
+        if (Date.now() - touchHandledAtRef.current < 650) return;
+        void handleGameSelect(gameId);
     };
 
     const handleGameSelect = async (gameId: string) => {
@@ -317,7 +360,7 @@ const PracticeMode = () => {
             if (isKoreanLanguage) return baseGuide;
 
             const selectedGame = practiceGames.find((game) => game.id === guideGameId);
-            const title = selectedGame ? t(selectedGame.title) : guideGameId;
+            const title = selectedGame ? getPracticeGameTitle(selectedGame.title) : guideGameId;
             const instructionKey = GUIDE_INSTRUCTION_KEY_BY_GAME[guideGameId];
             const localizedInstruction = instructionKey ? t(instructionKey, '') : '';
             const objective = localizedInstruction || t('practice.autoGuide.objectiveFallback', 'Start and follow the on-screen rule.');
@@ -431,10 +474,13 @@ const PracticeMode = () => {
                                 {viewMode === 'grid' ? (
                                     <button
                                         type="button"
-                                        onClick={() => handleGameSelect(game.id)}
-                                        onMouseEnter={() => playSound('hover')}
+                                        onClick={() => handleCardClick(game.id)}
+                                        onPointerDown={(event) => handleCardPointerDown(game.id, event)}
+                                        onPointerUp={(event) => handleCardPointerUp(game.id, event)}
+                                        onPointerCancel={() => { cardPointerDownRef.current = null; }}
+                                        onMouseEnter={playHoverIfDesktop}
                                         disabled={loading}
-                                        className="relative w-full aspect-square text-left overflow-hidden"
+                                        className="relative w-full aspect-square text-left overflow-hidden touch-manipulation"
                                     >
                                         <div className="absolute inset-0 bg-slate-50 dark:bg-gray-900/50 z-0" />
                                         <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity z-0" />
@@ -445,7 +491,7 @@ const PracticeMode = () => {
                                         </div>
                                         <div className="absolute inset-x-0 bottom-0 text-center px-3 py-2 bg-black/35 backdrop-blur-md z-20 border-t border-white/10">
                                             <h3 className="font-bold text-base text-slate-700 dark:text-gray-200 group-hover:text-slate-900 dark:group-hover:text-white transition-colors truncate w-full">
-                                                {t(game.title)}
+                                                {getPracticeGameTitle(game.title)}
                                             </h3>
                                             <p className="text-[11px] mt-1 text-blue-600 dark:text-blue-300 font-semibold">
                                                 {t('practice.myHighscoreLabel', '내 하이스코어')}: <span className="font-black tabular-nums">{highscore.toLocaleString()}</span>
@@ -455,14 +501,17 @@ const PracticeMode = () => {
                                 ) : (
                                     <button
                                         type="button"
-                                        onClick={() => handleGameSelect(game.id)}
-                                        onMouseEnter={() => playSound('hover')}
+                                        onClick={() => handleCardClick(game.id)}
+                                        onPointerDown={(event) => handleCardPointerDown(game.id, event)}
+                                        onPointerUp={(event) => handleCardPointerUp(game.id, event)}
+                                        onPointerCancel={() => { cardPointerDownRef.current = null; }}
+                                        onMouseEnter={playHoverIfDesktop}
                                         disabled={loading}
-                                        className="w-full rounded-2xl border border-gray-700 bg-white dark:bg-gray-800/60 px-4 py-4 text-left transition-all hover:bg-slate-100 dark:hover:bg-gray-700/90 hover:border-green-500 active:scale-[0.995] disabled:opacity-70"
+                                        className="w-full rounded-2xl border border-gray-700 bg-white dark:bg-gray-800/60 px-4 py-4 text-left transition-all hover:bg-slate-100 dark:hover:bg-gray-700/90 hover:border-green-500 active:scale-[0.995] disabled:opacity-70 touch-manipulation"
                                     >
                                         <div className="pr-12">
                                             <div className="text-base md:text-lg font-black text-slate-900 dark:text-white">
-                                                {t(game.title)}
+                                                {getPracticeGameTitle(game.title)}
                                             </div>
                                             <div className="mt-1 text-xs md:text-sm text-slate-600 dark:text-gray-300 line-clamp-2">
                                                 {localizedSummary}
@@ -487,7 +536,7 @@ const PracticeMode = () => {
                                         ? 'absolute top-2 left-2 z-20 rounded-full bg-black/50 border border-white/10 p-1.5 text-white/85 hover:text-white hover:bg-black/70 transition-colors'
                                         : 'absolute right-3 top-1/2 -translate-y-1/2 z-20 rounded-full border border-white/15 bg-slate-200/70 dark:bg-gray-900/70 p-2 text-slate-700 dark:text-gray-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-300/80 dark:hover:bg-gray-800 transition-colors'
                                     }
-                                    aria-label={`${t(game.title)} 설명`}
+                                    aria-label={`${getPracticeGameTitle(game.title)} 설명`}
                                 >
                                     <HelpCircle size={viewMode === 'grid' ? 15 : 16} />
                                 </button>
@@ -574,7 +623,7 @@ const PracticeMode = () => {
                         <div className="flex items-center justify-between gap-3 p-5 border-b border-white/10 bg-slate-50 dark:bg-gray-900/95">
                             <div className="min-w-0">
                                 <div className="text-xs uppercase tracking-[0.24em] text-emerald-300/80 mb-1">{t('practice.guideTitle', 'Practice Guide')}</div>
-                                <h3 className="text-xl font-black text-slate-900 dark:text-white truncate">{t(selectedGuideGame.title)}</h3>
+                                <h3 className="text-xl font-black text-slate-900 dark:text-white truncate">{getPracticeGameTitle(selectedGuideGame.title)}</h3>
                             </div>
                             <button
                                 type="button"
@@ -633,8 +682,8 @@ const PracticeRechargeTimer = ({ lastRecharge }: { lastRecharge: string }) => {
             const last = new Date(lastRecharge).getTime();
             const now = new Date().getTime();
             const diff = now - last;
-            const thirtyMinutes = 30 * 60 * 1000;
-            const remaining = thirtyMinutes - diff;
+            const fifteenMinutes = 15 * 60 * 1000;
+            const remaining = fifteenMinutes - diff;
 
             if (remaining <= 0) {
                 setTimeLeft('00:00');

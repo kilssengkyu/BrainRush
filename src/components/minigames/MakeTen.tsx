@@ -17,13 +17,11 @@ type PanelConfig = {
     count: number;
     minAnswerSize: number;
     maxAnswerSize: number;
-    allowNegative: boolean;
 };
 
 const TARGET_COMBINATIONS: Record<number, number[][]> = {
     2: [[1, 9], [2, 8], [3, 7], [4, 6]],
-    3: [[1, 2, 7], [1, 3, 6], [1, 4, 5], [2, 3, 5]],
-    4: [[1, 2, 3, 4]]
+    3: [[1, 2, 7], [1, 3, 6], [1, 4, 5], [2, 3, 5]]
 };
 
 const MakeTen: React.FC<MakeTenProps> = ({ seed, onScore, isPlaying }) => {
@@ -38,38 +36,15 @@ const MakeTen: React.FC<MakeTenProps> = ({ seed, onScore, isPlaying }) => {
 
     const getPanelConfig = (index: number): PanelConfig => {
         if (index < 5) {
-            return { level: 1, count: 3, minAnswerSize: 2, maxAnswerSize: 2, allowNegative: false };
+            return { level: 1, count: 3, minAnswerSize: 2, maxAnswerSize: 2 };
+        }
+        if (index < 10) {
+            return { level: 2, count: 4, minAnswerSize: 2, maxAnswerSize: 2 };
         }
         if (index < 15) {
-            return { level: 2, count: 4, minAnswerSize: 2, maxAnswerSize: 2, allowNegative: false };
+            return { level: 3, count: 6, minAnswerSize: 2, maxAnswerSize: 3 };
         }
-        if (index < 30) {
-            return { level: 3, count: 6, minAnswerSize: 2, maxAnswerSize: 3, allowNegative: false };
-        }
-        return { level: 4, count: 8, minAnswerSize: 2, maxAnswerSize: 4, allowNegative: true };
-    };
-
-    const countTenSolutions = (numbers: number[]) => {
-        let totalSolutions = 0;
-        const n = numbers.length;
-        const solutionSizes: number[] = [];
-
-        for (let mask = 1; mask < (1 << n); mask += 1) {
-            let sum = 0;
-            let size = 0;
-            for (let i = 0; i < n; i += 1) {
-                if (mask & (1 << i)) {
-                    sum += numbers[i];
-                    size += 1;
-                }
-            }
-            if (sum === 10) {
-                totalSolutions += 1;
-                solutionSizes.push(size);
-            }
-        }
-
-        return { totalSolutions, solutionSizes };
+        return { level: 4, count: 8, minAnswerSize: 2, maxAnswerSize: 3 };
     };
 
     const currentPanel = useMemo(() => {
@@ -77,46 +52,33 @@ const MakeTen: React.FC<MakeTenProps> = ({ seed, onScore, isPlaying }) => {
 
         const rng = new SeededRandom(`${seed}_ten_${panelIndex} `);
         const config = getPanelConfig(panelIndex);
-        const distractorPool = config.allowNegative
-            ? [-5, -4, -3, -2, -1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17]
-            : [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15];
-
-        let validNumbers: number[] | null = null;
+        const distractorPool = [1, 2, 3, 4, 5, 6, 7, 8, 9];
         let answerSize = config.minAnswerSize;
-        for (let attempt = 0; attempt < 1200; attempt += 1) {
-            answerSize = config.minAnswerSize + Math.floor(rng.next() * (config.maxAnswerSize - config.minAnswerSize + 1));
-            const candidates = TARGET_COMBINATIONS[answerSize];
-            const targetCombo = candidates[Math.floor(rng.next() * candidates.length)];
-            const picked = new Set<number>(targetCombo);
-
-            while (picked.size < config.count) {
-                const candidate = distractorPool[Math.floor(rng.next() * distractorPool.length)];
-                if (candidate === 10 || picked.has(candidate)) continue;
-                picked.add(candidate);
-            }
-
-            const numbers = Array.from(picked);
-            const { totalSolutions, solutionSizes } = countTenSolutions(numbers);
-            if (totalSolutions === 1 && solutionSizes[0] === answerSize) {
-                validNumbers = numbers;
-                break;
-            }
+        // Rules:
+        // - 4 tiles: always include a 2-number solution
+        // - 6+ tiles: include either a 2-number or 3-number solution
+        if (config.count >= 6) {
+            answerSize = rng.next() < 0.5 ? 2 : 3;
+        } else {
+            answerSize = 2;
         }
 
-        const fallbackByCount: Record<number, number[]> = {
-            3: [1, 9, 4],
-            4: [1, 9, 4, 7],
-            6: [1, 2, 7, 4, 11, 13],
-            8: [1, 2, 3, 4, -2, 11, 14, 16]
-        };
-        const fallback = fallbackByCount[config.count] ?? [1, 9, 4];
-        const shuffled = rng.shuffle(validNumbers ?? fallback);
+        const candidates = TARGET_COMBINATIONS[answerSize];
+        const targetCombo = candidates[Math.floor(rng.next() * candidates.length)];
+        const picked = new Set<number>(targetCombo);
+
+        while (picked.size < config.count) {
+            const candidate = distractorPool[Math.floor(rng.next() * distractorPool.length)];
+            picked.add(candidate);
+        }
+
+        const shuffled = rng.shuffle(Array.from(picked));
 
         return {
             numbers: shuffled,
             level: config.level,
             count: config.count,
-            allowNegative: config.allowNegative,
+            allowNegative: false,
             answerSize
         };
 

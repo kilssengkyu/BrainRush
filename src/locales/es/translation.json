@@ -451,6 +451,15 @@
     "title": "DESAFÍO MATEMÁTICO",
     "instruction": "Calcula la expresión y elige la respuesta correcta"
   },
+  "mathOx": {
+    "title": "MATH OX",
+    "instruction": "Pulsa O si la ecuación es correcta y X si es incorrecta."
+  },
+  "oneStroke": {
+    "title": "UN SOLO TRAZO",
+    "instruction": "Empieza en la casilla de color y rellena cada casilla blanca exactamente una vez en un solo trazo.",
+    "progress": "Ruta"
+  },
   "ten": {
     "title": "HACER 10",
     "instruction": "Haz que la suma de los números seleccionados sea 10."
@@ -582,6 +591,8 @@
     "settings": "⚙️ ¡Cambia sonido, idioma y otras opciones!",
     "login": "👤 ¡Vincula tu cuenta para jugar de forma segura!",
     "profile": "📊 ¡Revisa tus habilidades, estadísticas y mejores puntajes!",
+    "tryNormalHighlight": "¡Toca primero el modo Normal para comenzar tu primera partida!",
+    "startNormalNow": "Iniciar modo normal",
     "next": "Siguiente",
     "done": "Listo",
     "skip": "Saltar",

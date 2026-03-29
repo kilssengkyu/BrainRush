@@ -408,6 +408,11 @@ const Shop = () => {
                 const tokenToConsume = purchaseToken || transactionId;
                 await consumePurchaseToken(tokenToConsume);
             }
+            // Fair Ad logic: successful purchase should not be followed by an immediate interstitial.
+            {
+                const { AdLogic } = await import('../utils/AdLogic');
+                AdLogic.resetAdCounter();
+            }
             await refreshProfile();
             const rewardMap: Partial<Record<ShopProductId, { amount: number; unitLabel: string }>> = {
                 [PRODUCT_IDS.nicknameChangeTicket]: { amount: 1, unitLabel: t('shop.nicknameChangeTicket.unit', '닉네임 변경권') },

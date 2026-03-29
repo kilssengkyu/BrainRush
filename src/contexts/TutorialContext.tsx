@@ -10,6 +10,7 @@ interface TutorialContextType {
     isHomeTutorialActive: boolean;
     homeTutorialStep: number;
     homeTutorialSteps: TutorialStep[];
+    isHomeTutorialReplay: boolean;
 
     // Profile Tutorial
     isProfileTutorialActive: boolean;
@@ -36,7 +37,7 @@ const HOME_TUTORIAL_STEPS: TutorialStep[] = [
     { id: 'ranking', messageKey: 'tutorial.ranking' },
     { id: 'shop', messageKey: 'tutorial.shop' },
     { id: 'settings', messageKey: 'tutorial.settings' },
-    { id: 'login', messageKey: 'tutorial.login' },
+    { id: 'profile', messageKey: 'tutorial.profile' },
 ];
 
 const STORAGE_KEYS = {
@@ -57,6 +58,7 @@ export const useTutorial = () => {
 export const TutorialProvider = ({ children }: { children: React.ReactNode }) => {
     const [isHomeTutorialActive, setIsHomeTutorialActive] = useState(false);
     const [homeTutorialStep, setHomeTutorialStep] = useState(0);
+    const [isHomeTutorialReplay, setIsHomeTutorialReplay] = useState(false);
     const [isProfileTutorialActive, setIsProfileTutorialActive] = useState(false);
 
     // Check localStorage on mount
@@ -65,6 +67,7 @@ export const TutorialProvider = ({ children }: { children: React.ReactNode }) =>
         if (!hasSeenHome) {
             // Small delay to let the UI render first
             const timer = setTimeout(() => {
+                setIsHomeTutorialReplay(false);
                 setIsHomeTutorialActive(true);
                 setHomeTutorialStep(0);
             }, 500);
@@ -81,6 +84,7 @@ export const TutorialProvider = ({ children }: { children: React.ReactNode }) =>
     }, []);
 
     const startHomeTutorial = useCallback(() => {
+        setIsHomeTutorialReplay(true);
         setIsHomeTutorialActive(true);
         setHomeTutorialStep(0);
     }, []);
@@ -98,16 +102,19 @@ export const TutorialProvider = ({ children }: { children: React.ReactNode }) =>
         localStorage.setItem(STORAGE_KEYS.HOME_TUTORIAL, 'true');
         setIsHomeTutorialActive(false);
         setHomeTutorialStep(0);
+        setIsHomeTutorialReplay(false);
     }, []);
 
     const completeHomeTutorial = useCallback(() => {
         localStorage.setItem(STORAGE_KEYS.HOME_TUTORIAL, 'true');
         setIsHomeTutorialActive(false);
         setHomeTutorialStep(0);
+        setIsHomeTutorialReplay(false);
     }, []);
 
     const resetHomeTutorial = useCallback(() => {
         localStorage.removeItem(STORAGE_KEYS.HOME_TUTORIAL);
+        setIsHomeTutorialReplay(true);
         setHomeTutorialStep(0);
         setIsHomeTutorialActive(true);
     }, []);
@@ -130,6 +137,7 @@ export const TutorialProvider = ({ children }: { children: React.ReactNode }) =>
                 isHomeTutorialActive,
                 homeTutorialStep,
                 homeTutorialSteps: HOME_TUTORIAL_STEPS,
+                isHomeTutorialReplay,
                 isProfileTutorialActive,
                 startHomeTutorial,
                 nextHomeTutorialStep,

@@ -12,6 +12,18 @@ interface FindOperatorProps {
     isPlaying: boolean;
 }
 
+const evaluateOperator = (a: number, b: number, op: string): number | null => {
+    if (op === '+') return a + b;
+    if (op === '-') return a - b;
+    if (op === '×') return a * b;
+    if (op === '÷') {
+        if (b === 0) return null;
+        const div = a / b;
+        return Number.isInteger(div) ? div : null;
+    }
+    return null;
+};
+
 const FindOperator: React.FC<FindOperatorProps> = ({ seed, onScore, isPlaying }) => {
     const { t } = useTranslation();
     const { playSound } = useSound();
@@ -35,60 +47,65 @@ const FindOperator: React.FC<FindOperatorProps> = ({ seed, onScore, isPlaying })
         const rng = new SeededRandom(`${seed}_operator_${panelIndex}`);
         const level = getLevel(panelIndex);
 
-        let a = 0;
-        let b = 0;
-        let c = 0;
-        let operator = ''; // The answer character: '+', '-', '×', '÷'
-
         // Determine available operators for this level
         const ops = ['+', '-'];
         if (level >= 2) ops.push('×');
         if (level >= 3) ops.push('÷');
 
-        // Pick an operator
-        operator = ops[Math.floor(rng.next() * ops.length)];
+        let a = 0;
+        let b = 0;
+        let c = 0;
+        let operator = ''; // The single correct answer symbol
+        const maxAttempts = 120;
+        let found = false;
 
-        // Generate numbers based on operator
-        if (operator === '+') {
-            // A + B = C
-            a = Math.floor(rng.next() * 9) + 1;
-            b = Math.floor(rng.next() * 9) + 1;
-            c = a + b;
-        } else if (operator === '-') {
-            // A - B = C
-            b = Math.floor(rng.next() * 9) + 1;
-            c = Math.floor(rng.next() * 9) + 1;
-            a = b + c; // Ensure A - B > 0
-        } else if (operator === '×') {
-            // A * B = C
-            a = Math.floor(rng.next() * 8) + 2; // 2~9
-            b = Math.floor(rng.next() * 8) + 2;
-            c = a * b;
-        } else if (operator === '÷') {
-            // A / B = C -> Generated as C * B = A
-            const divisor = Math.floor(rng.next() * 8) + 2; // B (2~9)
-            const quotient = Math.floor(rng.next() * 8) + 2; // C (2~9)
-            a = divisor * quotient; // A
-            b = divisor;
-            c = quotient;
-            // Display: A ? B = C
+        // Generate only problems that have exactly one correct operator in current option pool.
+        for (let i = 0; i < maxAttempts; i += 1) {
+            const picked = ops[Math.floor(rng.next() * ops.length)];
+            let nextA = 0;
+            let nextB = 0;
+            let nextC = 0;
+
+            if (picked === '+') {
+                nextA = Math.floor(rng.next() * 9) + 1;
+                nextB = Math.floor(rng.next() * 9) + 1;
+                nextC = nextA + nextB;
+            } else if (picked === '-') {
+                nextB = Math.floor(rng.next() * 9) + 1;
+                nextC = Math.floor(rng.next() * 9) + 1;
+                nextA = nextB + nextC;
+            } else if (picked === '×') {
+                nextA = Math.floor(rng.next() * 8) + 2; // 2~9
+                nextB = Math.floor(rng.next() * 8) + 2;
+                nextC = nextA * nextB;
+            } else if (picked === '÷') {
+                const divisor = Math.floor(rng.next() * 8) + 2; // 2~9
+                const quotient = Math.floor(rng.next() * 8) + 2; // 2~9
+                nextA = divisor * quotient;
+                nextB = divisor;
+                nextC = quotient;
+            }
+
+            const validOps = ops.filter((op) => evaluateOperator(nextA, nextB, op) === nextC);
+            if (validOps.length === 1) {
+                a = nextA;
+                b = nextB;
+                c = nextC;
+                operator = validOps[0];
+                found = true;
+                break;
+            }
         }
 
-        // --- Option Generation Logic ---
-        // Level 1: +, - (2 opts)
-        // Level 2: +, -, × (3 opts)
-        // Level 3: +, -, ×, ÷ (4 opts)
-        // Instead of random distractors, simpler logic: just use the pool of operators for that level as options.
-        // Or to make it harder/standard, always show standard set?
-        // User requested: "Location of options must change". 
-        // We will just use the `ops` array as correct options for that level.
+        // Fallback (extremely rare): force a unique subtraction problem.
+        if (!found) {
+            b = 9;
+            c = 8;
+            a = b + c; // 17 ? 9 = 8  => only '-'
+            operator = '-';
+        }
 
-        // BUT wait, level 2 has 3 options? +, -, *.
-        // Ideally we want consistent button layout or dynamic?
-        // Let's generate options from the available pool for that level.
-
-        let options = [...ops];
-        options = rng.shuffle(options);
+        const options = rng.shuffle([...ops]);
 
         // Position changes randomly because shuffle.
 

@@ -431,6 +431,7 @@
     "resumeMatchDesc": "You came back home. Do you want to return to your ongoing match?",
     "resumeLater": "Later",
     "resumeNow": "Resume",
+    "loginModalSubtitle": "Please sign in to start a Normal/Rank match.",
     "levelProgressLevel": "Lv. {{level}}",
     "levelUp": "LEVEL UP!",
     "hideAnnouncementToday": "Don't show again today",
@@ -465,6 +466,15 @@
   "math": {
     "title": "MATH CHALLENGE",
     "instruction": "Calculate the expression and choose the correct answer."
+  },
+  "mathOx": {
+    "title": "MATH OX",
+    "instruction": "Press O if the equation is correct, X if it is wrong."
+  },
+  "oneStroke": {
+    "title": "ONE STROKE",
+    "instruction": "Start from the colored tile and fill every white tile exactly once in one stroke.",
+    "progress": "Path"
   },
   "ten": {
     "title": "MAKE 10",
@@ -597,6 +607,11 @@
     "settings": "⚙️ Change sound, language and other settings!",
     "login": "👤 Link your account for safe play!",
     "profile": "📊 Check your skills, stats and high scores!",
+    "tryModesAfter": "Now tap Normal or Rank to start your first match!",
+    "tryModesTitle": "Ready for your first match?",
+    "tryModesDesc": "Tap Normal or Rank to start playing now.",
+    "tryNormalHighlight": "Tap Normal mode first to start your first match!",
+    "startNormalNow": "Start Normal Mode",
     "next": "Next",
     "done": "Done",
     "skip": "Skip",

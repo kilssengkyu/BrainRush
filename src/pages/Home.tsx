@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Settings, User, Trophy, Zap, Loader2, Lock, AlertTriangle, Dumbbell, ShoppingBag, Flame, Mail } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
 import HexRadar from '../components/ui/HexRadar';
 import { useMatchmaking } from '../hooks/useMatchmaking';
 import { useSound } from '../contexts/SoundContext';
@@ -40,7 +41,7 @@ type XpAnimationPayload = {
 };
 
 const MAX_PENCILS = 5;
-const PENCIL_RECHARGE_MS = 30 * 60 * 1000;
+const PENCIL_RECHARGE_MS = 15 * 60 * 1000;
 
 const getLivePencilState = (
     pencils: number | null | undefined,
@@ -102,7 +103,7 @@ const Home = () => {
     const navigate = useNavigate();
     const { t, i18n } = useTranslation();
     const { playSound } = useSound();
-    const { user, profile, refreshProfile, loading: authLoading } = useAuth();
+    const { user, profile, refreshProfile, loading: authLoading, signInWithGoogle, signInWithApple, signInAnonymously } = useAuth();
     const { showToast } = useUI();
     const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
     const [unreadChatCount, setUnreadChatCount] = useState(0);
@@ -120,6 +121,7 @@ const Home = () => {
     const suppressProfileClickUntilRef = useRef(0);
     const [nowMs, setNowMs] = useState(() => Date.now());
     const lastPencilRefreshAttemptRef = useRef(0);
+    const dailyActivityRecordedUserRef = useRef<string | null>(null);
 
     // Refresh profile on mount to get latest MMR after game
     useEffect(() => {
@@ -199,6 +201,32 @@ const Home = () => {
         return () => {
             supabase.removeChannel(friendRequestChannel);
             supabase.removeChannel(unreadChatChannel);
+        };
+    }, [user]);
+
+    useEffect(() => {
+        if (!user) {
+            dailyActivityRecordedUserRef.current = null;
+            return;
+        }
+        if (dailyActivityRecordedUserRef.current === user.id) return;
+
+        let cancelled = false;
+        const recordActivity = async () => {
+            try {
+                const { error } = await (supabase as any).rpc('record_daily_activity');
+                if (error) throw error;
+                if (!cancelled) {
+                    dailyActivityRecordedUserRef.current = user.id;
+                }
+            } catch (error) {
+                console.error('Failed to record daily activity:', error);
+            }
+        };
+
+        void recordActivity();
+        return () => {
+            cancelled = true;
         };
     }, [user]);
 
@@ -558,6 +586,8 @@ const Home = () => {
 
     const [showAdModal, setShowAdModal] = useState(false);
     const [showNoPencilChoiceModal, setShowNoPencilChoiceModal] = useState(false);
+    const [isLoginModalLoading, setIsLoginModalLoading] = useState(false);
+    const [showPostTutorialNormalSpotlight, setShowPostTutorialNormalSpotlight] = useState(false);
     const [showMailboxModal, setShowMailboxModal] = useState(false);
     const [mailboxUnreadCount, setMailboxUnreadCount] = useState(0);
     const [showLeaderboard, setShowLeaderboard] = useState(false);
@@ -586,6 +616,8 @@ const Home = () => {
         return window.innerWidth < 768;
     });
     const dismissedActiveRoomRef = useRef<string | null>(null);
+    const isIOS = Capacitor.getPlatform() === 'ios';
+    const shouldForceLoginModal = !authLoading && !user;
 
     useEffect(() => {
         const onResize = () => setIsMobileLayout(window.innerWidth < 768);
@@ -595,11 +627,69 @@ const Home = () => {
 
     const {
         isHomeTutorialActive,
+        isHomeTutorialReplay,
         homeTutorialStep,
         homeTutorialSteps,
         nextHomeTutorialStep,
         skipHomeTutorial,
     } = useTutorial();
+
+    const handleForcedGoogleLogin = async () => {
+        playSound('click');
+        setIsLoginModalLoading(true);
+        try {
+            await signInWithGoogle();
+        } catch (error) {
+            console.error(error);
+            const message = (error as any)?.message || t('common.error');
+            showToast(message, 'error');
+        } finally {
+            setIsLoginModalLoading(false);
+        }
+    };
+
+    const handleForcedAppleLogin = async () => {
+        playSound('click');
+        setIsLoginModalLoading(true);
+        try {
+            await signInWithApple();
+        } catch (error) {
+            console.error(error);
+            const message = (error as any)?.message || t('common.error');
+            showToast(message, 'error');
+        } finally {
+            setIsLoginModalLoading(false);
+        }
+    };
+
+    const handleForcedGuestLogin = async () => {
+        playSound('click');
+        setIsLoginModalLoading(true);
+        try {
+            await signInAnonymously();
+        } catch (error) {
+            console.error(error);
+            const message = (error as any)?.message || t('common.error');
+            showToast(message, 'error');
+        } finally {
+            setIsLoginModalLoading(false);
+        }
+    };
+
+    const handleHomeTutorialNext = useCallback(() => {
+        const isLastStep = homeTutorialStep === homeTutorialSteps.length - 1;
+        nextHomeTutorialStep();
+        if (isLastStep && !isHomeTutorialReplay) {
+            setShowPostTutorialNormalSpotlight(true);
+        }
+    }, [homeTutorialStep, homeTutorialSteps.length, isHomeTutorialReplay, nextHomeTutorialStep]);
+
+    const handleHomeTutorialSkip = useCallback(() => {
+        skipHomeTutorial();
+        if (!isHomeTutorialReplay) {
+            setShowPostTutorialNormalSpotlight(true);
+        }
+    }, [isHomeTutorialReplay, skipHomeTutorial]);
 
     const checkActiveSessionAndPrompt = useCallback(async () => {
         if (!user || authLoading || status !== 'idle') return;
@@ -683,7 +773,7 @@ const Home = () => {
         ranking: isMobileLayout ? mobileRankingBtnRef : rankingBtnRef,
         shop: isMobileLayout ? mobileShopBtnRef : shopBtnRef,
         settings: isMobileLayout ? mobileSettingsBtnRef : settingsBtnRef,
-        login: isMobileLayout ? mobileLoginProfileBtnRef : loginProfileBtnRef,
+        profile: isMobileLayout ? mobileLoginProfileBtnRef : loginProfileBtnRef,
     };
 
     const handleAdReward = async (): Promise<'ok' | 'limit' | 'error'> => {
@@ -731,7 +821,7 @@ const Home = () => {
         // Normal/Rank require an authenticated session (anonymous guest login allowed).
         if (mode === 'rank' || mode === 'normal') {
             if (!user) {
-                navigate('/login');
+                showToast(t('home.loginModalSubtitle', '일반/랭크 매치를 시작하려면 로그인해 주세요.'), 'info');
                 return;
             }
 
@@ -753,6 +843,11 @@ const Home = () => {
             console.log(`Selected mode: ${mode} `);
             navigate('/game', { state: { mode } });
         }
+    };
+
+    const handlePostTutorialNormalStart = async () => {
+        setShowPostTutorialNormalSpotlight(false);
+        await handleModeSelect('normal');
     };
 
     const formatRemainingTime = (remainingMs: number) => {
@@ -816,6 +911,16 @@ const Home = () => {
             const customEvent = event as CustomEvent<{ handled?: boolean }>;
             if (customEvent.detail?.handled) return;
 
+            if (shouldForceLoginModal) {
+                if (customEvent.detail) customEvent.detail.handled = true;
+                return;
+            }
+
+            if (showPostTutorialNormalSpotlight) {
+                if (customEvent.detail) customEvent.detail.handled = true;
+                return;
+            }
+
             if (showNicknameModal && !isSavingNickname) {
                 setShowNicknameModal(false);
                 if (customEvent.detail) customEvent.detail.handled = true;
@@ -844,7 +949,7 @@ const Home = () => {
         return () => {
             window.removeEventListener('brainrush:request-modal-close', handleModalCloseRequest as EventListener);
         };
-    }, [showNicknameModal, isSavingNickname, showMailboxModal, showNoPencilChoiceModal, activeSessionPrompt, status]);
+    }, [showNicknameModal, isSavingNickname, showMailboxModal, showNoPencilChoiceModal, activeSessionPrompt, status, shouldForceLoginModal, showPostTutorialNormalSpotlight]);
 
     return (
         <div className={`min-h-[100dvh] bg-slate-50 dark:bg-gray-900 text-slate-900 dark:text-white flex flex-col items-center p-4 relative overflow-hidden`}>
@@ -1033,6 +1138,82 @@ const Home = () => {
                     <div className="flex items-center gap-3 bg-slate-50 dark:bg-gray-900/80 border border-white/10 rounded-2xl px-5 py-4 shadow-xl">
                         <Loader2 className="w-5 h-5 text-blue-400 animate-spin" />
                         <span className="text-sm font-bold text-slate-700 dark:text-gray-200">{t('common.loading')}</span>
+                    </div>
+                </div>
+            )}
+
+            {shouldForceLoginModal && (
+                <div className="fixed inset-0 z-[140] bg-black/80 backdrop-blur-sm flex items-center justify-center px-4">
+                    <div className="w-full max-w-md bg-white dark:bg-gray-800/95 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl">
+                        <div className="text-center mb-8 mt-1">
+                            <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-2">
+                                BrainRush
+                            </h2>
+                            <p className="text-slate-600 dark:text-gray-300 font-semibold">{t('menu.login')}</p>
+                            <p className="text-xs text-slate-500 dark:text-gray-400 mt-2">{t('home.loginModalSubtitle', '일반/랭크 매치를 시작하려면 로그인해 주세요.')}</p>
+                        </div>
+
+                        <div className="space-y-3">
+                            <button
+                                onClick={handleForcedGoogleLogin}
+                                disabled={isLoginModalLoading}
+                                className="w-full p-4 bg-white text-gray-900 rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed group"
+                            >
+                                {isLoginModalLoading ? (
+                                    <Loader2 className="animate-spin" />
+                                ) : (
+                                    <>
+                                        <svg className="w-5 h-5" viewBox="0 0 24 24">
+                                            <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                                            <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                                            <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.84z" />
+                                            <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                                        </svg>
+                                        {t('common.google')}
+                                    </>
+                                )}
+                            </button>
+
+                            {isIOS && (
+                                <button
+                                    onClick={handleForcedAppleLogin}
+                                    disabled={isLoginModalLoading}
+                                    className="w-full p-4 rounded-xl font-bold flex items-center justify-center gap-3 transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-white text-black border border-black/15 hover:bg-gray-100 dark:bg-black dark:text-white dark:border-white/20 dark:hover:bg-gray-900"
+                                >
+                                    {isLoginModalLoading ? (
+                                        <Loader2 className="animate-spin" />
+                                    ) : (
+                                        <>
+                                            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                                                <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
+                                            </svg>
+                                            Apple
+                                        </>
+                                    )}
+                                </button>
+                            )}
+
+                            <div className="relative my-6">
+                                <div className="absolute inset-0 flex items-center">
+                                    <div className="w-full border-t border-gray-700"></div>
+                                </div>
+                                <div className="relative flex justify-center text-sm">
+                                    <span className="px-2 bg-white dark:bg-gray-800 text-gray-500">{t('common.or')}</span>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={handleForcedGuestLogin}
+                                disabled={isLoginModalLoading}
+                                className="w-full p-4 bg-slate-100 dark:bg-gray-700/50 border-2 border-dashed border-gray-600 rounded-xl font-medium text-slate-600 dark:text-gray-300 flex items-center justify-center gap-3 hover:bg-slate-100 dark:bg-gray-700/80 hover:border-gray-500 transition-all disabled:opacity-50"
+                            >
+                                <User className="w-5 h-5" />
+                                {t('auth.guestMode')}
+                            </button>
+                            <p className="text-xs text-gray-500 text-center">
+                                {t('auth.guestWarning')}
+                            </p>
+                        </div>
                     </div>
                 </div>
             )}
@@ -1563,7 +1744,7 @@ const Home = () => {
                             <button
                                 ref={loginProfileBtnRef}
                                 onMouseEnter={() => playSound('hover')}
-                                onClick={() => { playSound('click'); navigate('/login'); }}
+                                onClick={() => { playSound('click'); }}
                                 className="p-4 bg-white dark:bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-slate-100 dark:bg-gray-700 active:bg-slate-300/20 active:border-slate-200 active:shadow-[0_0_22px_rgba(148,163,184,0.35)] active:brightness-125 active:scale-[0.98] transition-all duration-150 flex items-center justify-center gap-2 group cursor-pointer"
                             >
                                 <User className="w-5 h-5 text-slate-500 dark:text-gray-400 group-hover:text-slate-900 dark:group-hover:text-gray-200 group-active:text-slate-200 transition-colors" />
@@ -1602,7 +1783,7 @@ const Home = () => {
                     </button>
                     <button
                         ref={mobileLoginProfileBtnRef}
-                        onClick={() => { playSound('click'); navigate(user ? '/profile' : '/login'); }}
+                        onClick={() => { playSound('click'); if (user) navigate('/profile'); }}
                         className={`group relative rounded-xl bg-white dark:bg-gray-800/70 py-2.5 flex flex-col items-center justify-center gap-1.5 text-slate-700 dark:text-gray-200 hover:bg-slate-100 dark:bg-gray-700 active:brightness-125 active:scale-[0.98] transition-all duration-150 ${user
                             ? 'active:bg-blue-400/20 active:border active:border-blue-300 active:shadow-[0_0_18px_rgba(59,130,246,0.45)] active:saturate-150'
                             : 'active:bg-slate-300/20 active:border active:border-slate-200 active:shadow-[0_0_18px_rgba(148,163,184,0.35)]'
@@ -1618,20 +1799,25 @@ const Home = () => {
             </div>
 
             {/* Tutorial Spotlight Overlay */}
-            {isHomeTutorialActive && homeTutorialSteps[homeTutorialStep] && (
+            {user && isHomeTutorialActive && homeTutorialSteps[homeTutorialStep] && (
                 <SpotlightOverlay
                     targetRef={tutorialRefs[homeTutorialSteps[homeTutorialStep].id]}
                     message={t(homeTutorialSteps[homeTutorialStep].messageKey)}
-                    onNext={nextHomeTutorialStep}
-                    onSkip={skipHomeTutorial}
+                    onNext={handleHomeTutorialNext}
+                    onSkip={handleHomeTutorialSkip}
                     isLast={homeTutorialStep === homeTutorialSteps.length - 1}
                     stepNumber={homeTutorialStep}
                     totalSteps={homeTutorialSteps.length}
-                    onAction={homeTutorialSteps[homeTutorialStep].id === 'login' && !user ? () => {
-                        skipHomeTutorial();
-                        navigate('/login');
-                    } : undefined}
-                    actionLabel={homeTutorialSteps[homeTutorialStep].id === 'login' && !user ? t('tutorial.loginNow', '바로 로그인') : undefined}
+                />
+            )}
+
+            {user && !isHomeTutorialActive && showPostTutorialNormalSpotlight && (
+                <SpotlightOverlay
+                    targetRef={normalModeRef}
+                    message={t('tutorial.tryNormalHighlight', '먼저 일반 모드를 눌러 첫 대전을 시작해보세요!')}
+                    onNext={() => void handlePostTutorialNormalStart()}
+                    isLast
+                    nextLabel={t('tutorial.startNormalNow', '일반모드 시작')}
                 />
             )}
         </div >

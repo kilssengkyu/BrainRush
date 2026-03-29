@@ -2,7 +2,10 @@ import { AdMob } from '@capacitor-community/admob';
 import { Capacitor } from '@capacitor/core';
 
 const AD_COUNTER_KEY = 'brainrush_ad_counter';
-const AD_FREQUENCY = 3;
+const AD_FREQUENCY = 2;
+const AD_LAST_OUTCOME_KEY = 'brainrush_ad_last_outcome';
+const AD_STREAK_COUNT_KEY = 'brainrush_ad_streak_count';
+const AD_LOSE_SKIP_ONCE_KEY = 'brainrush_ad_lose_skip_once';
 
 // Production Ad Unit IDs
 const ADS = {
@@ -26,15 +29,48 @@ const TEST_ADS = {
 
 export const AdLogic = {
     // Increment game counter and check if ad should be shown
-    checkAndShowInterstitial: async () => {
+    checkAndShowInterstitial: async (outcome?: 'win' | 'lose' | 'draw') => {
         if (!Capacitor.isNativePlatform()) return;
 
         let count = parseInt(localStorage.getItem(AD_COUNTER_KEY) || '0');
+        let lastOutcome = localStorage.getItem(AD_LAST_OUTCOME_KEY) || '';
+        let streakCount = parseInt(localStorage.getItem(AD_STREAK_COUNT_KEY) || '0');
+        let loseSkipOnce = localStorage.getItem(AD_LOSE_SKIP_ONCE_KEY) === '1';
+
+        if (outcome) {
+            if (outcome === lastOutcome) {
+                streakCount += 1;
+            } else {
+                streakCount = 1;
+                lastOutcome = outcome;
+            }
+
+            // Losing streak protection: if user keeps losing, skip next interstitial trigger once.
+            if (outcome === 'lose' && streakCount >= 3 && !loseSkipOnce) {
+                loseSkipOnce = true;
+                localStorage.setItem(AD_LOSE_SKIP_ONCE_KEY, '1');
+            }
+
+            if (outcome !== 'lose' && loseSkipOnce) {
+                loseSkipOnce = false;
+                localStorage.setItem(AD_LOSE_SKIP_ONCE_KEY, '0');
+            }
+
+            localStorage.setItem(AD_LAST_OUTCOME_KEY, lastOutcome);
+            localStorage.setItem(AD_STREAK_COUNT_KEY, String(streakCount));
+        }
+
         count++;
 
-        console.log(`[AdLogic] Game Count: ${count}/${AD_FREQUENCY}`);
+        console.log(`[AdLogic] Game Count: ${count}/${AD_FREQUENCY}, Streak: ${streakCount} (${lastOutcome}), LoseSkipOnce: ${loseSkipOnce}`);
 
         if (count >= AD_FREQUENCY) {
+            if (loseSkipOnce) {
+                console.log('[AdLogic] Skipping interstitial once due to losing streak');
+                localStorage.setItem(AD_COUNTER_KEY, '0');
+                localStorage.setItem(AD_LOSE_SKIP_ONCE_KEY, '0');
+                return;
+            }
             // Show Ad
             const shown = await AdLogic.showInterstitial();
             if (shown) {

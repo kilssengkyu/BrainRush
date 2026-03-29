@@ -451,6 +451,15 @@
     "title": "MATHE-CHALLENGE",
     "instruction": "Berechne den Ausdruck und wähle die richtige Antwort"
   },
+  "mathOx": {
+    "title": "MATHE OX",
+    "instruction": "Drücke O, wenn die Gleichung stimmt, und X, wenn sie falsch ist."
+  },
+  "oneStroke": {
+    "title": "EIN STRICH",
+    "instruction": "Starte am farbigen Feld und fülle jedes weiße Feld in einem Zug genau einmal aus.",
+    "progress": "Pfad"
+  },
   "ten": {
     "title": "MACH 10",
     "instruction": "Sorge dafür, dass die Summe der ausgewählten Zahlen 10 ergibt."
@@ -582,6 +591,8 @@
     "settings": "⚙️ Passe Sound, Sprache und weitere Einstellungen an!",
     "login": "👤 Verknüpfe dein Konto für sicheres Spielen!",
     "profile": "📊 Sieh dir deine Fähigkeiten, Statistiken und Bestwerte an!",
+    "tryNormalHighlight": "Tippe zuerst auf den Normalmodus, um dein erstes Match zu starten!",
+    "startNormalNow": "Normalmodus starten",
     "next": "Weiter",
     "done": "Fertig",
     "skip": "Überspringen",

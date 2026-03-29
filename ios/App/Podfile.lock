@@ -24,6 +24,12 @@ PODS:
     - Capacitor
   - CapgoNativePurchases (6.0.42):
     - Capacitor
+  - FBAEMKit (18.0.3):
+    - FBSDKCoreKit_Basics (= 18.0.3)
+  - FBSDKCoreKit (18.0.3):
+    - FBAEMKit (= 18.0.3)
+    - FBSDKCoreKit_Basics (= 18.0.3)
+  - FBSDKCoreKit_Basics (18.0.3)
   - Google-Mobile-Ads-SDK (12.14.0):
     - GoogleUserMessagingPlatform (>= 1.1)
   - GoogleMobileAdsMediationUnity (4.16.6.0):
@@ -45,10 +51,14 @@ DEPENDENCIES:
   - "CapacitorStatusBar (from `../../node_modules/@capacitor/status-bar`)"
   - "CapgoNativeAudio (from `../../node_modules/@capgo/native-audio`)"
   - "CapgoNativePurchases (from `../../node_modules/@capgo/native-purchases`)"
+  - FBSDKCoreKit
   - GoogleMobileAdsMediationUnity
 
 SPEC REPOS:
   trunk:
+    - FBAEMKit
+    - FBSDKCoreKit
+    - FBSDKCoreKit_Basics
     - Google-Mobile-Ads-SDK
     - GoogleMobileAdsMediationUnity
     - GoogleUserMessagingPlatform
@@ -93,11 +103,14 @@ SPEC CHECKSUMS:
   CapacitorStatusBar: 149cde8f1328ec3aa6cbdd872a55137ae3f98b16
   CapgoNativeAudio: af16819c730f0bad24361a2aa40e6e2327113bed
   CapgoNativePurchases: 260513c14dadae1e5b32e885adb63e8cb19f9d7a
+  FBAEMKit: 2a6b529993713c185b02bc36f8c91129bf78dfb0
+  FBSDKCoreKit: 65d7f7a7d6fcc3aa6eb6e093ec737a4184fc6049
+  FBSDKCoreKit_Basics: 7bc9d8fde8f70985fba2ed7c1d07e319f969a991
   Google-Mobile-Ads-SDK: 4534fd2dfcd3f705c5485a6633c5188d03d4eed2
   GoogleMobileAdsMediationUnity: 85fd40e2b42371341446745899e2963faaaaaba9
   GoogleUserMessagingPlatform: befe603da6501006420c206222acd449bba45a9c
   UnityAds: 8b9e0ecf7c4aa7334d15f81efb58db279e28f502
 
-PODFILE CHECKSUM: 43a85aac991f6ff7891c902a513bf6b2888a57be
+PODFILE CHECKSUM: 5bb3c6ae5f9a443c752bc29110091cb051495283
 
 COCOAPODS: 1.16.2

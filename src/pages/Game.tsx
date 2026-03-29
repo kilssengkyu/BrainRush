@@ -10,6 +10,8 @@ import { supabase } from '../lib/supabaseClient';
 import RockPaperScissors from '../components/minigames/RockPaperScissors';
 import NumberSortGame from '../components/minigames/NumberSortGame';
 import MathChallenge from '../components/minigames/MathChallenge';
+import MathOXGame from '../components/minigames/MathOXGame';
+import OneStrokePath from '../components/minigames/OneStrokePath';
 import MakeTen from '../components/minigames/MakeTen';
 import MakeZero from '../components/minigames/MakeZero';
 import ColorMatch from '../components/minigames/ColorMatch';
@@ -846,7 +848,8 @@ const Game: React.FC = () => {
                         setOpponentProfile({
                             nickname: data.nickname,
                             avatar_url: data.avatar_url,
-                            country: data.country
+                            country: data.country,
+                            mmr: data.mmr
                         });
                     } else {
                         setOpponentProfile({ nickname: t('game.unknownPlayer'), avatar_url: null });
@@ -920,15 +923,34 @@ const Game: React.FC = () => {
         if (isReturningToMenu) return;
         setIsReturningToMenu(true);
         try {
+            let outcome: 'win' | 'lose' | 'draw' = 'draw';
+            if (gameState.mode !== 'practice') {
+                if (myWinsForLives > opWinsForLives) outcome = 'win';
+                else if (myWinsForLives < opWinsForLives) outcome = 'lose';
+            }
+
             // Show interstitial only when user explicitly leaves result screen.
             if (myProfile && !myProfile.ads_removed) {
+                const normalPlayed = Math.max(
+                    0,
+                    Number(myProfile.casual_wins ?? 0) +
+                    Number(myProfile.casual_losses ?? 0)
+                );
+                const rankPlayed = Math.max(
+                    0,
+                    Number(myProfile.rank_games_played ?? (Number(myProfile.wins ?? 0) + Number(myProfile.losses ?? 0)))
+                );
+                const totalPlayedForAdGate = normalPlayed + rankPlayed;
+                if (totalPlayedForAdGate <= 5) {
+                    return;
+                }
                 const { AdLogic } = await import('../utils/AdLogic');
-                await AdLogic.checkAndShowInterstitial();
+                await AdLogic.checkAndShowInterstitial(outcome);
             }
         } finally {
-            navigate('/');
+            navigate(gameState.mode === 'practice' ? '/practice' : '/');
         }
-    }, [isReturningToMenu, myProfile, navigate]);
+    }, [isReturningToMenu, myProfile, navigate, myWinsForLives, opWinsForLives, gameState.mode]);
 
     const handleRequestRematch = useCallback(async () => {
         if (!canShowRematch || !roomId || !opponentId || isSubmittingRematch || pendingRematchInviteId) return;
@@ -1163,6 +1185,8 @@ const Game: React.FC = () => {
             case 'NUMBER': return t('number.title');
             case 'NUMBER_DESC': return t('number.titleDesc');
             case 'MATH': return t('math.title');
+            case 'MATH_OX': return t('mathOx.title', '산수 OX');
+            case 'ONE_STROKE': return t('oneStroke.title', '한 줄 긋기');
             case 'TEN': return t('ten.title');
             case 'COLOR': return t('color.title');
             case 'MEMORY': return t('memory.title');
@@ -1546,6 +1570,8 @@ const Game: React.FC = () => {
                                             {gameState.gameType === 'NUMBER' && t('number.title')}
                                             {gameState.gameType === 'NUMBER_DESC' && t('number.titleDesc')}
                                             {gameState.gameType === 'MATH' && t('math.title')}
+                                            {gameState.gameType === 'MATH_OX' && t('mathOx.title', '산수 OX')}
+                                            {gameState.gameType === 'ONE_STROKE' && t('oneStroke.title', '한 줄 긋기')}
                                             {gameState.gameType === 'TEN' && t('ten.title')}
                                             {gameState.gameType === 'COLOR' && t('color.title')}
                                             {gameState.gameType === 'MEMORY' && t('memory.title')}
@@ -1579,6 +1605,8 @@ const Game: React.FC = () => {
                                         {gameState.gameType === 'NUMBER' && t('number.instruction')}
                                         {gameState.gameType === 'NUMBER_DESC' && t('number.instructionDesc')}
                                         {gameState.gameType === 'MATH' && t('math.instruction')}
+                                        {gameState.gameType === 'MATH_OX' && t('mathOx.instruction', '수식이 맞으면 O, 틀리면 X를 누르세요.')}
+                                        {gameState.gameType === 'ONE_STROKE' && t('oneStroke.instruction', '시작점부터 길을 한 번씩만 지나가며 모두 연결하세요.')}
                                         {gameState.gameType === 'TEN' && t('ten.instruction')}
                                         {gameState.gameType === 'COLOR' && t('color.instruction')}
                                         {gameState.gameType === 'MEMORY' && t('memory.instruction')}
@@ -1624,6 +1652,12 @@ const Game: React.FC = () => {
                                     )}
                                     {gameState.gameType === 'MATH' && (
                                         <MathChallenge seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
+                                    )}
+                                    {gameState.gameType === 'MATH_OX' && (
+                                        <MathOXGame seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
+                                    )}
+                                    {gameState.gameType === 'ONE_STROKE' && (
+                                        <OneStrokePath seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'TEN' && (
                                         <MakeTen seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
@@ -1756,7 +1790,7 @@ const Game: React.FC = () => {
                                             initial={{ opacity: 0, y: 20 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: 0.5 }}
-                                            onClick={() => navigate('/practice')}
+                                            onClick={handleReturnMenu}
                                             className="px-8 py-4 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold text-xl transition-all shadow-lg hover:shadow-green-500/50"
                                         >
                                             {t('game.returnMenu')}

@@ -12,6 +12,7 @@ interface SpotlightOverlayProps {
     totalSteps?: number;
     onAction?: () => void;
     actionLabel?: string;
+    nextLabel?: string;
 }
 
 const SpotlightOverlay: React.FC<SpotlightOverlayProps> = ({
@@ -24,6 +25,7 @@ const SpotlightOverlay: React.FC<SpotlightOverlayProps> = ({
     totalSteps,
     onAction,
     actionLabel,
+    nextLabel,
 }) => {
     const { t } = useTranslation();
     const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
@@ -200,7 +202,7 @@ const SpotlightOverlay: React.FC<SpotlightOverlayProps> = ({
                                 onClick={onNext}
                                 className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-slate-900 dark:text-white font-bold rounded-xl transition-colors active:scale-95"
                             >
-                                {isLast ? t('tutorial.done', '완료') : t('tutorial.next', '다음')}
+                                {nextLabel ?? (isLast ? t('tutorial.done', '완료') : t('tutorial.next', '다음'))}
                             </button>
                         </div>
                     </div>

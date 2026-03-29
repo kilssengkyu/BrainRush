@@ -451,6 +451,15 @@
     "title": "THỬ THÁCH TOÁN HỌC",
     "instruction": "Tính phép toán và chọn đáp án đúng"
   },
+  "mathOx": {
+    "title": "MATH OX",
+    "instruction": "Nhấn O nếu phép tính đúng, nhấn X nếu sai."
+  },
+  "oneStroke": {
+    "title": "MỘT NÉT",
+    "instruction": "Bắt đầu từ ô màu và tô kín mọi ô trắng đúng một lần bằng một nét liền.",
+    "progress": "Đường đi"
+  },
   "ten": {
     "title": "TẠO SỐ 10",
     "instruction": "Hãy làm cho tổng các số đã chọn bằng 10."
@@ -582,6 +591,8 @@
     "settings": "⚙️ Đổi âm thanh, ngôn ngữ và các cài đặt khác!",
     "login": "👤 Liên kết tài khoản để chơi an toàn hơn!",
     "profile": "📊 Xem kỹ năng, chỉ số và điểm cao của bạn!",
+    "tryNormalHighlight": "Hãy nhấn chế độ Thường trước để bắt đầu trận đầu tiên!",
+    "startNormalNow": "Bắt đầu Chế độ Thường",
     "next": "Tiếp",
     "done": "Xong",
     "skip": "Bỏ qua",
