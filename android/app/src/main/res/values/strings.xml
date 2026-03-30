@@ -4,4 +4,6 @@
     <string name="title_activity_main">BrainRush</string>
     <string name="package_name">com.kilssengkyu.brainrush</string>
     <string name="custom_url_scheme">com.kilssengkyu.brainrush</string>
+    <string name="facebook_app_id">3464019873773659</string>
+    <string name="facebook_client_token">22f48cb1a3eb30afe859b3720a9a67bc</string>
 </resources>

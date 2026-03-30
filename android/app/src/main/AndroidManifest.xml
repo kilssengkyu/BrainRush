@@ -45,11 +45,11 @@
         <!-- Facebook SDK for Meta Ads Install Tracking -->
         <meta-data
             android:name="com.facebook.sdk.ApplicationId"
-            android:value="3464019873773659"
+            android:value="@string/facebook_app_id"
         />
         <meta-data
             android:name="com.facebook.sdk.ClientToken"
-            android:value="22f48cb1a3eb30afe859b3720a9a67bc"
+            android:value="@string/facebook_client_token"
         />
     </application>
 
