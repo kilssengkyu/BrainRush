@@ -435,38 +435,38 @@
     "titleWin": "Gewinnendes RPS",
     "titleLose": "Verlierendes RPS",
     "title": "SCHERE STEIN PAPIER",
-    "instruction": "Wähle gemäß Anweisung die Gewinn- oder Verlusthand!"
+    "instruction": "Wähle den gewinnenden oder verlierenden Zug!"
   },
   "number": {
     "title": "ZAHLENREIHUNG",
-    "instruction": "Aufsteigende Reihenfolge",
+    "instruction": "Tippe von niedrig nach hoch!",
     "asc": "Tippe Zahlen von klein nach groß!",
     "desc": "Tippe Zahlen von groß nach klein!",
     "ready": "BEREIT",
     "panel": "FELD",
     "titleDesc": "UMGEKEHRTE SORTIERUNG",
-    "instructionDesc": "Tippe von groß nach klein!"
+    "instructionDesc": "Tippe von hoch nach niedrig!"
   },
   "math": {
     "title": "MATHE-CHALLENGE",
-    "instruction": "Berechne den Ausdruck und wähle die richtige Antwort"
+    "instruction": "Löse die Gleichung!"
   },
   "mathOx": {
     "title": "MATHE OX",
-    "instruction": "Drücke O, wenn die Gleichung stimmt, und X, wenn sie falsch ist."
+    "instruction": "Tippe O falls richtig, X falls falsch!"
   },
   "oneStroke": {
     "title": "EIN STRICH",
-    "instruction": "Starte am farbigen Feld und fülle jedes weiße Feld in einem Zug genau einmal aus.",
+    "instruction": "Verbinde alle weißen Felder in einem Zug!",
     "progress": "Pfad"
   },
   "ten": {
     "title": "MACH 10",
-    "instruction": "Sorge dafür, dass die Summe der ausgewählten Zahlen 10 ergibt."
+    "instruction": "Wähle Zahlen, die 10 ergeben!"
   },
   "color": {
     "title": "FARBE PASSEN",
-    "instruction": "Wähle Buttons, bei denen Farbe und Text übereinstimmen",
+    "instruction": "Ordne die BEDEUTUNG des Wortes seiner RAHMENFARBE zu!",
     "red": "ROT",
     "blue": "BLAU",
     "green": "GRÜN",
@@ -474,7 +474,7 @@
   },
   "memory": {
     "title": "MEMORY MATCH",
-    "instruction": "Merke dir die Kartenpositionen und tippe auf die Gemerkt-Schaltfläche. Wähle danach die passenden Paare.",
+    "instruction": "Karten merken, 'Bereit' tippen, Paare finden!",
     "btn_memorized": "Gemerkt!",
     "memorize_hint": "Merk dir die Karten!",
     "find_pairs": "Finde die Paare!"
@@ -483,40 +483,40 @@
     "title": "UMGEKEHRTE REIHENFOLGE",
     "instruction": "Tippe in UMGEKEHRTER Reihenfolge!",
     "titleNormal": "SEQUENZ",
-    "instructionNormal": "Tippe in REIHENFOLGE!"
+    "instructionNormal": "Tippe in RICHTIGER Reihenfolge!"
   },
   "largest": {
     "title": "GRÖSSTES ERGEBNIS",
-    "instruction": "Tippe den Ausdruck mit dem größten Wert"
+    "instruction": "Tippe das größte Ergebnis an!"
   },
   "pair": {
     "title": "PAAR FINDEN",
-    "instruction": "Finde das einzige passende Paar!"
+    "instruction": "Finde das passende Paar!"
   },
   "updown": {
     "title": "HOCH RUNTER",
-    "instruction": "Wenn die Zahl größer als die vorherige ist, nach oben wischen. Wenn kleiner, nach unten wischen.",
+    "instruction": "Höher als vorher? Wische HOCH. Niedriger? Wische RUNTER.",
     "prev": "VORHER",
     "start": "START"
   },
   "slider": {
     "title": "Zahlen-Slider",
-    "instruction": "Verschiebe, um benachbarte Zahlen zur Zielsumme zu addieren!",
+    "instruction": "Wische Zahlen, um die Zielsumme zu erreichen!",
     "target": "Zielsumme"
   },
   "arrow": {
     "title": "Pfeil-Slider",
     "blue": "Blau = Gleich",
     "red": "Rot = Gegenteil",
-    "instruction": "Wische in blaue Richtung, bei Rot in die Gegenrichtung!"
+    "instruction": "Blau: Gleiche Richtung. Rot: Entgegengesetzte Richtung!"
   },
   "fillBlanks": {
     "title": "LÜCKEN FÜLLEN",
-    "instruction": "Wähle die Zahl, die die Lücke korrekt ausfüllt."
+    "instruction": "Finde die fehlende Zahl!"
   },
   "findOperator": {
     "title": "OPERATOR FINDEN",
-    "instruction": "Wähle das richtige Rechenzeichen, damit die Antwort korrekt ist."
+    "instruction": "Finde den fehlenden Operator!"
   },
   "ladder": {
     "title": "Leiterspiel",
@@ -524,62 +524,62 @@
   },
   "path": {
     "title": "Path Runner",
-    "instruction": "Bewege das grüne Feld mit den Tasten bis zum blauen Feld. Achtung: Die Tastenpositionen können sich ändern.",
+    "instruction": "Schiebe den grünen Block zum blauen Ziel!",
     "shuffle": "Mischen"
   },
   "blindPath": {
     "title": "Blindpfad",
-    "instruction": "Präge dir den weißen Weg ein und bewege dann das grüne Feld mit den Tasten zum blauen Feld. Sobald du dich bewegst, verschwindet der Weg. Wenn du gegen eine Wand stößt, verlierst du Punkte, aber der Weg wird wieder angezeigt.",
+    "instruction": "Merke dir den Pfad und erreiche das Ziel. Der Pfad verschwindet beim Bewegen!",
     "memorizeHint": "Merke dir den Pfad!",
     "runHint": "Folge dem Pfad!",
     "memorized": "Gemerkt!"
   },
   "balls": {
     "title": "Ballzähler",
-    "instruction": "Zähle die bewegten Bälle und tippe die richtige Zahl."
+    "instruction": "Zähle schnell die sich bewegenden Bälle!"
   },
   "catchColor": {
     "title": "Farbe fangen",
-    "instruction": "Bewege den Balken, um Bälle in derselben Farbe wie der Balken zu fangen. Eine andere Farbe kostet Punkte, und die Balkenfarbe ändert sich ständig.",
+    "instruction": "Fange Bälle, die zur Farbe deines Balkens passen!",
     "switchSoon": "Farbwechsel bald"
   },
   "tapTheColor": {
     "title": "Tippe die Farbe",
-    "instruction": "Präge dir die Farbpositionen ein und tippe dann auf die Gemerkt-Schaltfläche. Wähle die gemerkten Felder in der oben angezeigten Farbreihenfolge aus.",
+    "instruction": "Farben merken und in der richtigen Reihenfolge antippen!",
     "memorize": "Merk dir die Farben!",
     "remembered": "Bereit!"
   },
   "aim": {
     "title": "Zielspiel",
-    "instruction": "Tippe schnell auf die roten Ziele, um sie zu entfernen. Die blauen Ziele dürfen nicht entfernt werden."
+    "instruction": "Schieße sofort nur auf die roten Ziele!"
   },
   "mostColor": {
     "title": "Häufigste Farbe finden",
-    "instruction": "Wähle die Farbe, die auf dem Bildschirm am häufigsten erscheint."
+    "instruction": "Wähle die häufigste Farbe!"
   },
   "sorting": {
     "title": "Sortierspiel",
-    "instruction": "Schicke die erste Karte in eine beliebige Richtung. Danach werden Karten mit demselben Symbol in die gleiche Richtung wie zuvor gewischt und Karten mit anderem Symbol in die entgegengesetzte Richtung. Oben kannst du die nächste Karte vorab sehen und dich vorbereiten.",
+    "instruction": "Gleiches Symbol = Gleiche Richtung! Anderes Symbol = Entgegengesetzte!",
     "firstMoveHint": "Erste Karte: Beliebige Richtung!"
   },
   "spy": {
     "title": "Finde den Spion",
-    "instruction": "Präge dir die Symbole ein und tippe dann auf die Gemerkt-Schaltfläche. Finde anschließend das geänderte Symbol. Die Anzahl der Spione kann nach und nach steigen.",
+    "instruction": "Symbole merken und dann die neuen Spione finden!",
     "memorize": "Merk dir diese!",
     "find": "Wer ist neu?",
     "ready": "Bereit!"
   },
   "timingBar": {
     "title": "Timing-Leiste",
-    "instruction": "Tippe, wenn die fallende Leiste die Ziellinie überlappt."
+    "instruction": "Tippe genau, wenn der fallende Balken das Ziel trifft!"
   },
   "colorTiming": {
     "title": "Farb-Timing",
-    "instruction": "Tippe, wenn blaue Kugeln in den linken Kreis und rote Kugeln in den rechten Kreis gelangen. Falsche Farben geben Punktabzug."
+    "instruction": "Tippe, wenn Blau links und Rot rechts eintritt!"
   },
   "stairway": {
     "title": "Treppe zum Himmel",
-    "instruction": "Drücke die Richtung, in der die Treppe ist, um hinaufzugehen.",
+    "instruction": "Tippe in die richtige Richtung, um die Treppe zu steigen!",
     "scoreLabel": "Stufen"
   },
   "tutorial": {
@@ -600,7 +600,7 @@
   },
   "zero": {
     "title": "Mach Null",
-    "instruction": "Fülle der Reihe nach Zahlen ein, um eine Gleichung zu vervollständigen, die 0 ergibt. Tippe auf die Gleichung zum Rückgängigmachen.",
+    "instruction": "Fülle die Lücken, damit die Gleichung 0 ergibt!",
     "undoHint": "Tippe auf die Gleichung zum Rückgängigmachen"
   },
   "practice": {

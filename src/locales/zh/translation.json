@@ -431,38 +431,38 @@
     "titleWin": "胜者猜拳",
     "titleLose": "败者猜拳",
     "title": "剪刀石头布",
-    "instruction": "请根据指示选择要赢或要输的出拳！"
+    "instruction": "选出必胜或必败的选项！"
   },
   "number": {
     "title": "数字排序",
-    "instruction": "按从小到大的顺序点击数字！",
+    "instruction": "从低到高点击！",
     "asc": "从小到大按数字!",
     "desc": "从大到小按数字!",
     "ready": "准备",
     "panel": "面板",
     "titleDesc": "数字逆序",
-    "instructionDesc": "从大到小按数字!"
+    "instructionDesc": "从高到低点击！"
   },
   "math": {
     "title": "心算挑战",
-    "instruction": "计算算式并选择正确答案"
+    "instruction": "计算并选出答案！"
   },
   "mathOx": {
     "title": "心算 OX",
-    "instruction": "算式正确按 O，错误按 X。"
+    "instruction": "正确选 O，错误选 X！"
   },
   "oneStroke": {
     "title": "一笔连线",
-    "instruction": "从彩色格子开始，一笔将所有白色格子各填满一次。",
+    "instruction": "一笔连起所有白色方块！",
     "progress": "路径"
   },
   "ten": {
     "title": "凑十",
-    "instruction": "让所选数字的总和变成10。"
+    "instruction": "选出的数字总和为 10！"
   },
   "color": {
     "title": "颜色匹配",
-    "instruction": "选择文字和边框颜色匹配的按钮",
+    "instruction": "文字「含义」与边框「颜色」一致即选！",
     "red": "红色",
     "blue": "蓝色",
     "green": "绿色",
@@ -470,112 +470,112 @@
   },
   "memory": {
     "title": "记忆匹配",
-    "instruction": "记住卡片位置后点击“已记住”按钮，然后选择配对。",
+    "instruction": "记住位置，点击准备，找出相同卡片！",
     "btn_memorized": "记住了!",
     "memorize_hint": "记住卡片!",
     "find_pairs": "找出配对!"
   },
   "sequence": {
     "title": "逆序",
-    "instruction": "按出现的相反顺序点击",
+    "instruction": "通过相反顺序点击！",
     "titleNormal": "顺序记忆",
-    "instructionNormal": "按出现的顺序点击"
+    "instructionNormal": "通过原本顺序点击！"
   },
   "largest": {
     "title": "寻找最大值",
-    "instruction": "点击结果最大的算式"
+    "instruction": "点击结果最大的公式！"
   },
   "pair": {
     "title": "寻找配对",
-    "instruction": "找出唯一的一对配对!"
+    "instruction": "找出两张相同的图案！"
   },
   "updown": {
     "title": "上下",
-    "instruction": "比前一个数字更大就上滑，更小就下滑。",
+    "instruction": "比前一个数字大？向上滑。小？向下滑。",
     "prev": "上一个数字",
     "start": "开始"
   },
   "slider": {
     "title": "数字滑块",
-    "instruction": "滑动使相邻数字之和达到目标值!",
+    "instruction": "串联相邻数字使得总和相等！",
     "target": "目标总和"
   },
   "arrow": {
     "title": "箭头滑块",
     "blue": "蓝 = 同向",
     "red": "红 = 反向",
-    "instruction": "蓝色按箭头方向滑，红色按反方向滑!"
+    "instruction": "蓝色：同一方向。红色：反方向！"
   },
   "fillBlanks": {
     "title": "填空",
-    "instruction": "请选择填入空缺后能成为正确答案的数字。"
+    "instruction": "找出空缺的数字！"
   },
   "findOperator": {
     "title": "寻找符号",
-    "instruction": "请选择合适的运算符号，使答案正确。"
+    "instruction": "找出空缺的符号！"
   },
   "ladder": {
     "title": "爬梯子",
-    "instruction": "沿着路线找到正确的终点!"
+    "instruction": "沿着爬梯走！"
   },
   "path": {
     "title": "路径冲刺",
-    "instruction": "使用按钮将绿色方块移动到蓝色方块。请注意，按钮位置可能会变化。",
+    "instruction": "把绿方块移到蓝色终点！",
     "shuffle": "打乱"
   },
   "blindPath": {
     "title": "盲行路径",
-    "instruction": "先记住白色路径，再用按钮把绿色方块移动到蓝色方块。开始移动后路径会消失。撞到墙会扣分，但路径会再次显示。",
+    "instruction": "记下路径后移动，一动后路径就会隐藏！",
     "memorizeHint": "记住路线！",
     "runHint": "沿路前进！",
     "memorized": "记住了！"
   },
   "balls": {
     "title": "数球",
-    "instruction": "数清移动的球并点击正确数字。"
+    "instruction": "迅速数清移动的球！"
   },
   "catchColor": {
     "title": "颜色接球",
-    "instruction": "滑动挡板接住与挡板同色的小球。接到不同颜色会扣分，而且挡板颜色会持续变化。",
+    "instruction": "接住相同颜色的球！",
     "switchSoon": "颜色即将切换"
   },
   "tapTheColor": {
     "title": "点击颜色",
-    "instruction": "记住颜色位置后点击“已记住”按钮。然后按上方显示的颜色顺序选择你记住的按钮。",
+    "instruction": "记住颜色位置并按顺序点击！",
     "memorize": "记住颜色的位置!",
     "remembered": "记住了!"
   },
   "aim": {
     "title": "瞄准游戏",
-    "instruction": "快速点击红色目标并将其消除。不要消除蓝色目标。"
+    "instruction": "只射击红色的靶子！"
   },
   "mostColor": {
     "title": "寻找最多颜色",
-    "instruction": "请选择屏幕上出现次数最多的颜色。"
+    "instruction": "选出屏幕上出现最多的颜色！"
   },
   "sorting": {
     "title": "分类游戏",
-    "instruction": "第一张卡可滑向任意方向。之后，相同符号的卡按与上一张相同方向滑动，不同符号的卡按相反方向滑动。你可以先看上方的下一张卡来提前准备。",
+    "instruction": "同图案向同方向甩，不同就反着甩！",
     "firstMoveHint": "第一张随意滑！"
   },
   "spy": {
     "title": "寻找间谍",
-    "instruction": "记住符号后点击“已记住”按钮。然后找出变化的符号。间谍数量可能会逐渐增加。",
+    "instruction": "记住刚才出现了什么符号，找出内鬼！",
     "memorize": "记住这些！",
     "find": "哪个变了？",
     "ready": "记住了！"
   },
   "timingBar": {
     "title": "节奏条",
-    "instruction": "下落条与目标条重合时点击即可。"
+    "instruction": "落下的长条撞向标靶时，点击屏幕！"
   },
   "colorTiming": {
     "title": "颜色时机",
-    "instruction": "当蓝球进入左侧圆圈、红球进入右侧圆圈时点击。点击相反颜色会扣分。"
+    "instruction": "蓝球入左圈且红球入右圈时点击！"
   },
   "stairway": {
     "title": "天国阶梯",
-    "instruction": "按下有楼梯的方向，沿着楼梯向上。",
+    "instruction": "点击正确的楼梯方向往上爬！",
     "scoreLabel": "阶梯"
   },
   "tutorial": {
@@ -596,7 +596,7 @@
   },
   "zero": {
     "title": "凑成零",
-    "instruction": "按顺序填入数字，完成结果为0的算式。点击算式可撤销。",
+    "instruction": "填上数字使公式等于 0！",
     "undoHint": "点击算式可撤销"
   },
   "practice": {

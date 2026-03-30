@@ -435,38 +435,38 @@
     "titleWin": "RPS Menang",
     "titleLose": "RPS Kalah",
     "title": "BATU GUNTING KERTAS",
-    "instruction": "Pilih gerakan menang atau kalah sesuai instruksi!"
+    "instruction": "Pilih langkah untuk menang atau kalah!"
   },
   "number": {
     "title": "URUTAN ANGKA",
-    "instruction": "Urutan naik",
+    "instruction": "Ketuk dari terendah ke tertinggi!",
     "asc": "Tekan angka dari kecil ke besar!",
     "desc": "Tekan angka dari besar ke kecil!",
     "ready": "SIAP",
     "panel": "PANEL",
     "titleDesc": "URUT BALIK",
-    "instructionDesc": "Tekan dari besar ke kecil!"
+    "instructionDesc": "Ketuk dari tertinggi ke terendah!"
   },
   "math": {
     "title": "TANTANGAN MATEMATIKA",
-    "instruction": "Hitung ekspresi lalu pilih jawaban yang benar"
+    "instruction": "Selesaikan persamaannya!"
   },
   "mathOx": {
     "title": "MATH OX",
-    "instruction": "Tekan O jika persamaan benar, dan X jika salah."
+    "instruction": "Ketuk O jika benar, X jika salah!"
   },
   "oneStroke": {
     "title": "SATU GORESAN",
-    "instruction": "Mulai dari kotak berwarna dan isi setiap kotak putih tepat satu kali dalam satu garis.",
+    "instruction": "Hubungkan semua kotak putih dalam satu garis!",
     "progress": "Jalur"
   },
   "ten": {
     "title": "BUAT 10",
-    "instruction": "Buat jumlah angka yang dipilih menjadi 10."
+    "instruction": "Pilih angka yang jumlahnya 10!"
   },
   "color": {
     "title": "COCOKKAN WARNA",
-    "instruction": "Pilih tombol saat warna cocok dengan teks",
+    "instruction": "Cocokkan ARTI kata dengan warna BINGKAI-nya!",
     "red": "MERAH",
     "blue": "BIRU",
     "green": "HIJAU",
@@ -474,112 +474,112 @@
   },
   "memory": {
     "title": "MEMORY MATCH",
-    "instruction": "Hafalkan posisi kartu lalu tekan tombol sudah hafal. Setelah itu pilih pasangan yang cocok.",
+    "instruction": "Hafalkan kartu, ketuk Siap, lalu cari pasangannya!",
     "btn_memorized": "Sudah hafal!",
     "memorize_hint": "Hafalkan kartunya!",
     "find_pairs": "Cari pasangannya!"
   },
   "sequence": {
     "title": "URUTAN TERBALIK",
-    "instruction": "Tekan dalam urutan TERBALIK!",
+    "instruction": "Ketuk dengan urutan TERBALIK!",
     "titleNormal": "SEKUENS",
-    "instructionNormal": "Tekan sesuai URUTAN!"
+    "instructionNormal": "Ketuk sesuai URUTAN!"
   },
   "largest": {
     "title": "HASIL TERBESAR",
-    "instruction": "Tekan ekspresi dengan nilai terbesar"
+    "instruction": "Ketuk hasil yang paling besar!"
   },
   "pair": {
     "title": "CARI PASANGAN",
-    "instruction": "Cari satu-satunya pasangan yang cocok!"
+    "instruction": "Temukan pasangan yang cocok!"
   },
   "updown": {
     "title": "ATAS BAWAH",
-    "instruction": "Jika lebih besar dari angka sebelumnya, geser ke atas. Jika lebih kecil, geser ke bawah.",
+    "instruction": "Lebih tinggi dari sebelumnya? Geser ATAS. Lebih rendah? BAWAH.",
     "prev": "SEBELUMNYA",
     "start": "MULAI"
   },
   "slider": {
     "title": "Slider Angka",
-    "instruction": "Geser untuk menjumlahkan angka bersebelahan ke target!",
+    "instruction": "Geser angka untuk mencapai jumlah target!",
     "target": "Jumlah target"
   },
   "arrow": {
     "title": "Slider Panah",
     "blue": "Biru = Sama",
     "red": "Merah = Berlawanan",
-    "instruction": "Geser ke arah biru, atau kebalikannya untuk merah!"
+    "instruction": "Biru: Arah sama. Merah: Arah berlawanan!"
   },
   "fillBlanks": {
     "title": "ISI BAGIAN KOSONG",
-    "instruction": "Pilih angka yang mengisi bagian kosong agar menjadi jawaban yang benar."
+    "instruction": "Temukan angka yang hilang!"
   },
   "findOperator": {
     "title": "CARI OPERATOR",
-    "instruction": "Pilih operator yang tepat agar jawabannya benar."
+    "instruction": "Temukan operator yang hilang!"
   },
   "ladder": {
     "title": "Game Tangga",
-    "instruction": "Ikuti jalurnya!"
+    "instruction": "Ikuti jalannya!"
   },
   "path": {
     "title": "Path Runner",
-    "instruction": "Gunakan tombol untuk memindahkan blok hijau ke blok biru. Hati-hati, posisi tombol bisa berubah.",
+    "instruction": "Pindahkan blok hijau ke tujuan biru!",
     "shuffle": "Acak"
   },
   "blindPath": {
     "title": "Jalur Buta",
-    "instruction": "Hafalkan jalur putih, lalu gunakan tombol untuk memindahkan blok hijau ke blok biru. Saat mulai bergerak, jalurnya menghilang. Menabrak dinding mengurangi poin, tetapi jalurnya muncul lagi.",
+    "instruction": "Ingat jalan dan capai tujuan. Jalan menghilang setelah bergerak!",
     "memorizeHint": "Hafalkan jalurnya!",
     "runHint": "Ikuti jalurnya!",
     "memorized": "Sudah hafal!"
   },
   "balls": {
     "title": "Penghitung Bola",
-    "instruction": "Hitung bola yang bergerak dan tekan angka yang benar."
+    "instruction": "Hitung bola bergerak dengan cepat!"
   },
   "catchColor": {
     "title": "Tangkap Warna",
-    "instruction": "Geser bar untuk menangkap bola dengan warna yang sama seperti bar. Menangkap warna berbeda mengurangi poin, dan warna bar terus berubah.",
+    "instruction": "Tangkap bola yang warnanya sama dengan barmu!",
     "switchSoon": "Warna segera berubah"
   },
   "tapTheColor": {
     "title": "Tap Warna",
-    "instruction": "Hafalkan posisi warna lalu tekan tombol sudah hafal. Pilih tombol yang dihafal sesuai urutan warna yang muncul di atas.",
+    "instruction": "Ingat warna dan ketuk sesuai urutan!",
     "memorize": "Hafalkan warnanya!",
     "remembered": "Siap!"
   },
   "aim": {
     "title": "Game Bidik",
-    "instruction": "Ketuk target merah dengan cepat untuk menghapusnya. Jangan hapus target biru."
+    "instruction": "Tembak hanya target merah!"
   },
   "mostColor": {
     "title": "Cari Warna Terbanyak",
-    "instruction": "Pilih warna yang paling sering muncul di layar."
+    "instruction": "Pilih warna yang paling sering muncul!"
   },
   "sorting": {
     "title": "Game Klasifikasi",
-    "instruction": "Geser kartu pertama ke arah mana pun yang kamu mau. Setelah itu, kartu dengan simbol yang sama digeser ke arah yang sama seperti sebelumnya, dan simbol berbeda ke arah berlawanan. Kamu bisa bersiap dengan melihat kartu berikutnya di bagian atas.",
+    "instruction": "Simbol sama = Arah sama! Simbol beda = Arah berlawanan!",
     "firstMoveHint": "Kartu pertama: arah bebas!"
   },
   "spy": {
     "title": "Temukan Mata-mata",
-    "instruction": "Hafalkan simbol lalu tekan tombol sudah hafal. Setelah itu, cari simbol yang berubah. Jumlah mata-mata bisa bertambah seiring waktu.",
+    "instruction": "Ingat simbol dan temukan Mata-mata baru!",
     "memorize": "Hafalkan ini!",
     "find": "Siapa yang baru?",
     "ready": "Siap!"
   },
   "timingBar": {
     "title": "Timing Bar",
-    "instruction": "Tekan saat bar jatuh bertumpuk dengan bar target."
+    "instruction": "Ketuk tepat saat batang yang jatuh mengenai target!"
   },
   "colorTiming": {
     "title": "Timing Warna",
-    "instruction": "Ketuk saat bola biru masuk ke lingkaran kiri dan bola merah masuk ke lingkaran kanan. Warna yang terbalik akan mengurangi poin."
+    "instruction": "Ketuk saat Biru masuk Kiri, Merah masuk Kanan!"
   },
   "stairway": {
     "title": "Tangga ke Surga",
-    "instruction": "Tekan arah tempat tangga berada untuk naik.",
+    "instruction": "Ketuk arah yang benar untuk naik tangga!",
     "scoreLabel": "Langkah"
   },
   "tutorial": {
@@ -600,7 +600,7 @@
   },
   "zero": {
     "title": "Buat Nol",
-    "instruction": "Isi angka secara berurutan untuk melengkapi persamaan yang hasilnya 0. Ketuk persamaan untuk membatalkan.",
+    "instruction": "Isi ruang kosong agar persamaannya menjadi 0!",
     "undoHint": "Ketuk persamaan untuk membatalkan"
   },
   "practice": {

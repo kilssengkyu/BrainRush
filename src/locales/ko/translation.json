@@ -451,38 +451,38 @@
     "titleWin": "이기는 가위바위보",
     "titleLose": "지는 가위바위보",
     "title": "가위 바위 보",
-    "instruction": "지시에 따라 이기거나 지는 가위바위보를 선택하세요."
+    "instruction": "지시에 따라 이기거나 지는 쪽을 선택!"
   },
   "number": {
     "title": "숫자 정렬",
-    "instruction": "작은 수부터 순서대로 누르세요",
+    "instruction": "작은 수부터 순서대로 터치!",
     "asc": "작은 수에서 큰 수를 누르세요!",
     "desc": "큰 수에서 작은 수를 누르세요!",
     "ready": "준비",
     "panel": "패널",
     "titleDesc": "숫자 역정렬",
-    "instructionDesc": "큰 수부터 작은 수로 누르세요"
+    "instructionDesc": "큰 수부터 작은 수 순서로 터치!"
   },
   "math": {
     "title": "암산 챌린지",
-    "instruction": "수식을 계산하여 정답을 선택하세요."
+    "instruction": "수식을 계산해서 정답 터치!"
   },
   "mathOx": {
     "title": "산수 OX",
-    "instruction": "수식이 맞으면 O, 틀리면 X를 누르세요."
+    "instruction": "수식이 맞으면 O, 틀리면 X!"
   },
   "oneStroke": {
     "title": "한 줄 긋기",
-    "instruction": "색깔 타일에서 시작해 모든 흰색 칸을 한 번씩 이어서 칠하세요.",
+    "instruction": "색깔 칸에서 시작해 모든 빈칸을 한 번에 연결하기!",
     "progress": "경로"
   },
   "ten": {
     "title": "10 만들기",
-    "instruction": "선택한 숫자의 합이 10이 되도록 만드세요."
+    "instruction": "숫자들을 더해서 10 만들기!"
   },
   "color": {
     "title": "색깔 맞추기",
-    "instruction": "글자와 테두리 색이 일치하는 버튼을 누르세요",
+    "instruction": "단어의 '의미'와 테두리의 '색깔'이 같은 것 찾기!",
     "red": "빨강",
     "blue": "파랑",
     "green": "초록",
@@ -490,112 +490,112 @@
   },
   "memory": {
     "title": "기억력 매칭",
-    "instruction": "카드의 위치를 기억하고 기억함 버튼을 누르세요. 그 뒤 짝을 맞춰 선택하세요.",
+    "instruction": "카드를 외운 뒤 '기억함'을 누르고 같은 짝 찾기!",
     "btn_memorized": "기억함!",
     "memorize_hint": "카드를 기억하세요!",
     "find_pairs": "짝을 찾으세요!"
   },
   "sequence": {
     "title": "거꾸로 순서",
-    "instruction": "나타난 순서의 반대로 누르세요",
+    "instruction": "나타난 순서의 반대로 터치!",
     "titleNormal": "순서 기억",
-    "instructionNormal": "나타난 순서대로 누르세요"
+    "instructionNormal": "나타난 순서대로 터치!"
   },
   "largest": {
     "title": "가장 큰 값 찾기",
-    "instruction": "결과가 가장 큰 수식을 눌러주세요"
+    "instruction": "결과가 가장 큰 수식 고르기!"
   },
   "pair": {
     "title": "짝 찾기",
-    "instruction": "똑같은 그림 두 개를 찾아보세요!"
+    "instruction": "똑같은 그림 두 개 찾기!"
   },
   "updown": {
     "title": "숫자 업 다운",
-    "instruction": "이전 숫자보다 커졌으면 위로, 작으면 아래로 슬라이드 하세요.",
+    "instruction": "이전보다 크면 위로, 작으면 아래로 슬라이드!",
     "prev": "이전 숫자",
     "start": "시작"
   },
   "slider": {
     "title": "숫자 슬라이더",
-    "instruction": "이어진 숫자의 합을 목표 숫자에 맞추세요!",
+    "instruction": "숫자들을 드래그로 이어 붙여서 목표 합계 만들기!",
     "target": "목표 합계"
   },
   "arrow": {
     "title": "화살표 슬라이더",
     "blue": "파랑 = 그대로",
     "red": "빨강 = 반대로",
-    "instruction": "파란색은 방향대로, 빨간색은 반대로 미세요!"
+    "instruction": "파란 화살표는 가리키는 방향, 빨간 화살표는 반대 방향!"
   },
   "fillBlanks": {
     "title": "빈칸 채우기",
-    "instruction": "정답이 되도록 빈칸에 들어갈 숫자를 선택하세요."
+    "instruction": "빈칸에 들어갈 알맞은 숫자 고르기!"
   },
   "findOperator": {
     "title": "기호 채우기",
-    "instruction": "정답이 되도록 알맞은 연산 기호를 선택하세요."
+    "instruction": "수식을 완성할 연산 기호 고르기!"
   },
   "ladder": {
     "title": "사다리 타기",
-    "instruction": "길을 따라 정확한 도착점을 찾으세요!"
+    "instruction": "사다리를 타고 정확한 도착점 찾기!"
   },
   "path": {
     "title": "패스 러너",
-    "instruction": "초록색 칸을 버튼으로 이동해 파란색 칸에 도달하세요. 버튼의 위치가 바뀔 수 있으니 주의하세요.",
+    "instruction": "초록색 칸을 움직여 파란 목적지에 도달하기!",
     "shuffle": "셔플"
   },
   "blindPath": {
     "title": "블라인드 패스",
-    "instruction": "하얀색 길을 외운 뒤, 버튼으로 초록색 칸을 이동해 파란색 칸에 도달하세요. 이동을 시작하면 길이 사라집니다. 벽에 부딪치면 감점되지만 길이 다시 보입니다.",
+    "instruction": "길을 외운 뒤 목적지에 도달하기! (이동 시작 시 길 숨김)",
     "memorizeHint": "길을 외우세요!",
     "runHint": "길을 따라가세요!",
     "memorized": "기억함!"
   },
   "balls": {
     "title": "볼 카운트",
-    "instruction": "움직이는 공 개수를 세고 정답을 눌러주세요."
+    "instruction": "움직이는 공 개수를 빠르고 정확하게 세기!"
   },
   "catchColor": {
     "title": "컬러 캐치",
-    "instruction": "막대를 슬라이드해서 막대와 같은 색 공을 받으세요. 다른 색 공을 받으면 감점되며, 막대의 색은 계속 바뀝니다.",
+    "instruction": "막대와 같은 색깔의 공만 받기! (색이 수시로 변함)",
     "switchSoon": "곧 색이 바뀝니다"
   },
   "tapTheColor": {
     "title": "색깔 터치",
-    "instruction": "색깔의 위치를 기억한 뒤 기억함 버튼을 누르세요. 상단에 표시되는 색 순서대로 기억한 버튼을 선택하세요.",
+    "instruction": "색 위치를 외우고, 표시된 순서대로 터치!",
     "memorize": "색깔의 위치를 기억하세요!",
     "remembered": "기억 했음!"
   },
   "aim": {
     "title": "조준 사격",
-    "instruction": "빨간색 표적을 빠르게 터치해 제거하세요. 파란색 표적은 제거하면 안 됩니다."
+    "instruction": "빨간색 표적만 빠르게 터치!"
   },
   "mostColor": {
     "title": "색깔 탐색",
-    "instruction": "화면에서 가장 많이 나타난 색을 선택하세요."
+    "instruction": "가장 많이 나타난 색깔 고르기!"
   },
   "sorting": {
     "title": "정리정돈",
-    "instruction": "첫 카드는 원하는 방향으로 보내세요. 이후 같은 기호 카드는 이전과 같은 방향으로, 다른 기호 카드는 반대 방향으로 슬라이드하세요. 상단의 다음 카드를 미리 보고 준비할 수 있습니다.",
+    "instruction": "이전과 같으면 같은 방향, 다르면 반대 방향!",
     "firstMoveHint": "첫 카드는 아무 방향이나 OK!"
   },
   "spy": {
     "title": "스파이 찾기",
-    "instruction": "기호를 기억한 뒤 기억함 버튼을 누르세요. 이후 바뀐 기호를 찾으세요. 스파이는 점점 많아질 수 있습니다.",
+    "instruction": "기호를 외운 뒤, 새롭게 나타난 '스파이(달라진 기호)' 찾기!",
     "memorize": "기호를 기억하세요!",
     "find": "달라진 것은?",
     "ready": "기억함!"
   },
   "timingBar": {
     "title": "타이밍바",
-    "instruction": "떨어지는 바가 타겟 바와 겹칠 때 아무 곳이나 탭하세요."
+    "instruction": "떨어지는 바가 타겟과 겹칠 때 터치!"
   },
   "colorTiming": {
     "title": "컬러 타이밍",
-    "instruction": "왼쪽 원에는 파란 공, 오른쪽 원에는 빨간 공이 들어올 때 터치하세요. 반대 색이면 감점됩니다."
+    "instruction": "왼쪽에는 파란 공, 오른쪽에는 빨간 공 터치!"
   },
   "stairway": {
     "title": "천국의 계단",
-    "instruction": "계단이 있는 방향을 눌러 계단을 올라가세요.",
+    "instruction": "계단이 있는 방향을 눌러 위로 올라가기!",
     "scoreLabel": "계단"
   },
   "tutorial": {
@@ -619,7 +619,7 @@
   },
   "zero": {
     "title": "0을 만들어라",
-    "instruction": "순서대로 숫자를 채워 0이 되는 수식을 완성하세요. 수식부분을 터치하여 취소할 수 있습니다.",
+    "instruction": "숫자를 차례로 넣어 0이 되는 수식 만들기!",
     "undoHint": "수식을 터치하면 되돌립니다"
   },
   "practice": {

@@ -435,11 +435,11 @@
     "titleWin": "RPS para vencer",
     "titleLose": "RPS para perder",
     "title": "PEDRA PAPEL TESOURA",
-    "instruction": "Escolha a jogada para vencer ou perder conforme a instrução!"
+    "instruction": "Escolha o movimento vencedor ou perdedor!"
   },
   "number": {
     "title": "ORDEM NUMÉRICA",
-    "instruction": "Ordem crescente",
+    "instruction": "Toque do menor para o maior!",
     "asc": "Toque os números do menor para o maior!",
     "desc": "Toque os números do maior para o menor!",
     "ready": "PRONTO",
@@ -449,24 +449,24 @@
   },
   "math": {
     "title": "DESAFIO DE MATEMÁTICA",
-    "instruction": "Calcule a expressão e escolha a resposta correta"
+    "instruction": "Resolva a equação!"
   },
   "mathOx": {
     "title": "MATH OX",
-    "instruction": "Toque em O se a equação estiver correta e em X se estiver errada."
+    "instruction": "Toque em O se certo, X se errado!"
   },
   "oneStroke": {
     "title": "UM TRAÇO",
-    "instruction": "Comece no bloco colorido e preencha cada bloco branco exatamente uma vez em um único traço.",
+    "instruction": "Conecte todos os espaços brancos com um traço!",
     "progress": "Caminho"
   },
   "ten": {
     "title": "FAÇA 10",
-    "instruction": "Faça a soma dos números selecionados ser igual a 10."
+    "instruction": "Selecione números que somem 10!"
   },
   "color": {
     "title": "COMBINAÇÃO DE CORES",
-    "instruction": "Selecione botões em que a cor combina com o texto",
+    "instruction": "Combine o SIGNIFICADO da palavra com a cor da sua BORDA!",
     "red": "VERMELHO",
     "blue": "AZUL",
     "green": "VERDE",
@@ -474,49 +474,49 @@
   },
   "memory": {
     "title": "JOGO DA MEMÓRIA",
-    "instruction": "Memorize a posição das cartas e toque no botão de memorizado. Depois escolha os pares corretos.",
+    "instruction": "Memorize, toque em 'Pronto' e encontre os pares!",
     "btn_memorized": "Memorizado!",
     "memorize_hint": "Memorize as cartas!",
     "find_pairs": "Encontre os pares!"
   },
   "sequence": {
     "title": "ORDEM REVERSA",
-    "instruction": "Toque em ordem REVERSA!",
+    "instruction": "Toque na ordem INVERSA!",
     "titleNormal": "SEQUÊNCIA",
-    "instructionNormal": "Toque em ORDEM!"
+    "instructionNormal": "Toque na ORDEM correta!"
   },
   "largest": {
     "title": "MAIOR RESULTADO",
-    "instruction": "Toque na expressão com o maior valor"
+    "instruction": "Toque no maior resultado!"
   },
   "pair": {
     "title": "ENCONTRE O PAR",
-    "instruction": "Encontre o único par correspondente!"
+    "instruction": "Encontre o par correspondente!"
   },
   "updown": {
     "title": "CIMA BAIXO",
-    "instruction": "Se for maior que o número anterior, deslize para cima. Se for menor, deslize para baixo.",
+    "instruction": "Maior que antes? Deslize para CIMA. Menor? Para BAIXO.",
     "prev": "ANTERIOR",
     "start": "INÍCIO"
   },
   "slider": {
     "title": "Deslizador Numérico",
-    "instruction": "Deslize para somar números adjacentes até o alvo!",
+    "instruction": "Deslize os números para atingir a soma alvo!",
     "target": "Soma alvo"
   },
   "arrow": {
     "title": "Deslizador de Setas",
     "blue": "Azul = Igual",
     "red": "Vermelho = Oposto",
-    "instruction": "Deslize na direção azul, ou na direção oposta para vermelho!"
+    "instruction": "Azul: Mesma direção. Vermelho: Direção oposta!"
   },
   "fillBlanks": {
     "title": "PREENCHER LACUNAS",
-    "instruction": "Escolha o número que preenche a lacuna para formar a resposta correta."
+    "instruction": "Encontre o número que falta!"
   },
   "findOperator": {
     "title": "ENCONTRAR OPERADOR",
-    "instruction": "Escolha o operador correto para que a resposta esteja certa."
+    "instruction": "Encontre o operador que falta!"
   },
   "ladder": {
     "title": "Jogo da Escada",
@@ -524,62 +524,62 @@
   },
   "path": {
     "title": "Path Runner",
-    "instruction": "Use os botões para mover o bloco verde até o bloco azul. Atenção: a posição dos botões pode mudar.",
+    "instruction": "Mova o bloco verde até o alvo azul!",
     "shuffle": "Embaralhar"
   },
   "blindPath": {
     "title": "Caminho Cego",
-    "instruction": "Memorize o caminho branco e depois use os botões para mover o bloco verde até o bloco azul. Ao começar a se mover, o caminho desaparece. Bater na parede tira pontos, mas o caminho aparece novamente.",
+    "instruction": "Memorize o caminho e chegue ao alvo. Fica oculto ao se mover!",
     "memorizeHint": "Memorize o caminho!",
     "runHint": "Siga o caminho!",
     "memorized": "Memorizado!"
   },
   "balls": {
     "title": "Contador de Bolas",
-    "instruction": "Conte as bolas em movimento e toque no número correto."
+    "instruction": "Conte as bolas se movendo rapidamente!"
   },
   "catchColor": {
     "title": "Pegue a Cor",
-    "instruction": "Deslize a barra para pegar bolas da mesma cor da barra. Pegar outra cor tira pontos, e a cor da barra muda o tempo todo.",
+    "instruction": "Pegue bolas da mesma cor da sua barra!",
     "switchSoon": "Mudança de cor em breve"
   },
   "tapTheColor": {
     "title": "Toque na Cor",
-    "instruction": "Memorize a posição das cores e depois toque no botão de memorizado. Selecione os botões lembrados na ordem de cores mostrada no topo.",
+    "instruction": "Memorize as cores e toque-as na ordem certa!",
     "memorize": "Memorize as cores!",
     "remembered": "Pronto!"
   },
   "aim": {
     "title": "Jogo de Mira",
-    "instruction": "Toque rapidamente nos alvos vermelhos para removê-los. Não remova os alvos azuis."
+    "instruction": "Atire apenas nos alvos vermelhos!"
   },
   "mostColor": {
     "title": "Encontre a Cor Mais Frequente",
-    "instruction": "Selecione a cor que mais aparece na tela."
+    "instruction": "Escolha a cor mais frequente!"
   },
   "sorting": {
     "title": "Jogo de Classificação",
-    "instruction": "Envie a primeira carta para qualquer direção que quiser. Depois, deslize cartas com o mesmo símbolo na mesma direção de antes, e cartas com símbolo diferente na direção oposta. Você pode se preparar vendo a próxima carta no topo.",
+    "instruction": "Mesmo símbolo = Mesma direção! Diferente = Direção oposta!",
     "firstMoveHint": "Primeira carta: qualquer direção!"
   },
   "spy": {
     "title": "Encontre o Espião",
-    "instruction": "Memorize os símbolos e depois toque no botão de memorizado. Em seguida, encontre o símbolo que mudou. A quantidade de espiões pode aumentar com o tempo.",
+    "instruction": "Memorize os símbolos e encontre os Espiões!",
     "memorize": "Memorize estes!",
     "find": "Quem é novo?",
     "ready": "Pronto!"
   },
   "timingBar": {
     "title": "Barra de Timing",
-    "instruction": "Toque quando a barra que cai sobrepor a barra-alvo."
+    "instruction": "Toque exatamente quando a barra chegar ao alvo!"
   },
   "colorTiming": {
     "title": "Tempo das Cores",
-    "instruction": "Toque quando as bolas azuis entrarem no círculo esquerdo e as vermelhas no círculo direito. Cores opostas tiram pontos."
+    "instruction": "Toque quando Azul entrar na Esquerda e Vermelho na Direita!"
   },
   "stairway": {
     "title": "Escadaria para o Céu",
-    "instruction": "Toque na direção onde está a escada para subir.",
+    "instruction": "Toque na direção certa para subir a escada!",
     "scoreLabel": "Degraus"
   },
   "tutorial": {
@@ -600,7 +600,7 @@
   },
   "zero": {
     "title": "Faça Zero",
-    "instruction": "Preencha os números em ordem para completar uma equação igual a 0. Toque na equação para desfazer.",
+    "instruction": "Preencha os espaços e faça a equação dar 0!",
     "undoHint": "Toque na equação para desfazer"
   },
   "practice": {

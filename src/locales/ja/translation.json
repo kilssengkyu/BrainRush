@@ -431,38 +431,38 @@
     "titleWin": "勝つじゃんけん",
     "titleLose": "負けるじゃんけん",
     "title": "じゃんけん",
-    "instruction": "指示に従って、勝つか負ける手を選んで！"
+    "instruction": "指示に従って勝ち負けを選択！"
   },
   "number": {
     "title": "数字の順序",
-    "instruction": "小さい順に数字をタップ！",
+    "instruction": "小さい順にタップ！",
     "asc": "小さい数から押してください！",
     "desc": "大きい数から押してください！",
     "ready": "準備",
     "panel": "パネル",
     "titleDesc": "数字逆順序",
-    "instructionDesc": "大きい順に数字をタップ！"
+    "instructionDesc": "大きい順にタップ！"
   },
   "math": {
     "title": "暗算チャレンジ",
-    "instruction": "式を計算して正解を選んでください"
+    "instruction": "計算して答えを選択！"
   },
   "mathOx": {
     "title": "暗算 OX",
-    "instruction": "式が正しければO、間違っていればXを押してください。"
+    "instruction": "正解ならO、間違いならX！"
   },
   "oneStroke": {
     "title": "一筆書き",
-    "instruction": "色付きのマスから始め、すべての白いマスを一筆で一度ずつ塗ってください。",
+    "instruction": "一筆書きで全ての白いマスをつなげ！",
     "progress": "経路"
   },
   "ten": {
     "title": "10作り",
-    "instruction": "選んだ数字の合計が10になるようにしてください。"
+    "instruction": "足して10になる数字を選択！"
   },
   "color": {
     "title": "色合わせ",
-    "instruction": "文字と枠の色が一致するボタンを押してください",
+    "instruction": "文字の「意味」と「枠の色」が同じものを選択！",
     "red": "赤",
     "blue": "青",
     "green": "緑",
@@ -470,112 +470,112 @@
   },
   "memory": {
     "title": "記憶力マッチ",
-    "instruction": "カードの位置を覚えて「記憶完了」ボタンを押してください。その後、ペアを選んでください。",
+    "instruction": "カードを覚えて「準備完了」を押し、ペアを探せ！",
     "btn_memorized": "覚えた！",
     "memorize_hint": "カードを覚えてください！",
     "find_pairs": "ペアを見つけてください！"
   },
   "sequence": {
     "title": "逆順序",
-    "instruction": "表示された順序の逆順で押してください",
+    "instruction": "逆の順番でタップ！",
     "titleNormal": "順序記憶",
-    "instructionNormal": "表示された順序通りに押してください"
+    "instructionNormal": "順番通りにタップ！"
   },
   "largest": {
     "title": "最大値を探せ",
-    "instruction": "結果が一番大きい式をタップ"
+    "instruction": "結果が一番大きい式を選択！"
   },
   "pair": {
     "title": "ペア探し",
-    "instruction": "一つだけあるペアを見つけてください！"
+    "instruction": "同じ絵のペアを見つけろ！"
   },
   "updown": {
     "title": "アップダウン",
-    "instruction": "前の数字より大きければ上に、小さければ下にスライドしてください。",
+    "instruction": "前より大きければ上、小さければ下にスワイプ！",
     "prev": "前の数字",
     "start": "開始"
   },
   "slider": {
     "title": "数字スライダー",
-    "instruction": "隣り合う数字を足して目標値にしてください！",
+    "instruction": "数字をドラッグして目標の合計にしろ！",
     "target": "目標合計"
   },
   "arrow": {
     "title": "矢印スライダー",
     "blue": "青 = そのまま",
     "red": "赤 = 反対へ",
-    "instruction": "青は矢印方向へ、赤は反対方向へスワイプ！"
+    "instruction": "青：同じ方向。赤：逆方向！"
   },
   "fillBlanks": {
     "title": "空欄埋め",
-    "instruction": "正解になるように、空欄に入る数字を選んでください。"
+    "instruction": "空欄に入る数字を見つけろ！"
   },
   "findOperator": {
     "title": "記号埋め",
-    "instruction": "正解になるように、適切な演算記号を選んでください。"
+    "instruction": "正しい記号を見つけろ！"
   },
   "ladder": {
     "title": "あみだくじ",
-    "instruction": "道をたどって正しい到着点を見つけてください！"
+    "instruction": "道順をたどれ！"
   },
   "path": {
     "title": "パスランナー",
-    "instruction": "ボタンを使って緑のマスを青いマスまで移動してください。ボタンの位置が変わるので注意してください。",
+    "instruction": "緑のブロックを青いゴールに移動しろ！",
     "shuffle": "シャッフル"
   },
   "blindPath": {
     "title": "ブラインドパス",
-    "instruction": "白い道を覚えてから、ボタンで緑のマスを動かして青いマスに到達してください。動き始めると道は消えます。壁にぶつかると減点されますが、道は再び表示されます。",
+    "instruction": "道を覚えてゴールへ！動くと道が隠れるぞ！",
     "memorizeHint": "道を覚えて！",
     "runHint": "道を進め！",
     "memorized": "覚えた！"
   },
   "balls": {
     "title": "ボールカウント",
-    "instruction": "動くボールの数を数えて正解をタップ。"
+    "instruction": "動いているボールの数を正確に数えろ！"
   },
   "catchColor": {
     "title": "カラーキャッチ",
-    "instruction": "バーをスライドして、バーと同じ色のボールを受け取りましょう。違う色を取ると減点され、バーの色は変化し続けます。",
+    "instruction": "バーと同じ色のボールだけをキャッチ！",
     "switchSoon": "まもなく色が切り替わります"
   },
   "tapTheColor": {
     "title": "カラータップ",
-    "instruction": "色の位置を覚えたら「記憶完了」ボタンを押してください。上部に表示される色の順番どおりに、覚えたボタンを選んでください。",
+    "instruction": "色を覚えて、表示された順番にタップ！",
     "memorize": "色の位置を覚えてください！",
     "remembered": "覚えた！"
   },
   "aim": {
     "title": "エイムゲーム",
-    "instruction": "赤いターゲットを素早くタップして消してください。青いターゲットは消してはいけません。"
+    "instruction": "赤いターゲットだけを急いで撃て！"
   },
   "mostColor": {
     "title": "最多色探し",
-    "instruction": "画面で最も多く表示された色を選んでください。"
+    "instruction": "一番多い色を選択！"
   },
   "sorting": {
     "title": "仕分けゲーム",
-    "instruction": "最初のカードは好きな方向へ送ってください。その後は、同じ記号のカードは前と同じ方向に、違う記号のカードは反対方向にスライドしてください。上部の次のカードを先に見て準備できます。",
+    "instruction": "同じ記号＝同じ方向！違う記号＝逆方向！",
     "firstMoveHint": "最初はどちらでもOK！"
   },
   "spy": {
     "title": "スパイ探し",
-    "instruction": "記号を覚えたら「記憶完了」ボタンを押してください。その後、変わった記号を見つけてください。スパイの数は徐々に増えることがあります。",
+    "instruction": "記号を覚えて、新しく現れたスパイを探せ！",
     "memorize": "覚えて！",
     "find": "変わったのは？",
     "ready": "覚えた！"
   },
   "timingBar": {
     "title": "タイミングバー",
-    "instruction": "落ちてくるバーがターゲットに重なったらタップ！"
+    "instruction": "バーが重なる瞬間にタップ！"
   },
   "colorTiming": {
     "title": "カラータイミング",
-    "instruction": "青いボールが左の円に、赤いボールが右の円に入ったタイミングでタップしてください。逆の色は減点です。"
+    "instruction": "左に青、右に赤が入るタイミングでタップ！"
   },
   "stairway": {
     "title": "天国の階段",
-    "instruction": "階段がある方向を押して、階段を登ってください。",
+    "instruction": "階段のある方向をタップして登れ！",
     "scoreLabel": "階段"
   },
   "tutorial": {
@@ -596,7 +596,7 @@
   },
   "zero": {
     "title": "ゼロを作れ",
-    "instruction": "順番に数字を入れて0になる数式を完成させてください。数式をタッチで取り消せます。",
+    "instruction": "数字を入れて答えを0にしろ！",
     "undoHint": "数式をタッチで元に戻す"
   },
   "practice": {

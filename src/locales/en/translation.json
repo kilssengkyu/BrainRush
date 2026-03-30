@@ -451,38 +451,38 @@
     "titleWin": "Winning RPS",
     "titleLose": "Losing RPS",
     "title": "ROCK PAPER SCISSORS",
-    "instruction": "Choose the winning or losing move as instructed."
+    "instruction": "Pick the winning or losing move!"
   },
   "number": {
     "title": "NUMBER ORDER",
-    "instruction": "Ascending Order",
+    "instruction": "Tap from low to high!",
     "asc": "Press numbers Low to High!",
     "desc": "Press numbers High to Low!",
     "ready": "READY",
     "panel": "PANEL",
     "titleDesc": "REVERSE SORT",
-    "instructionDesc": "Tap from High to Low!"
+    "instructionDesc": "Tap from high to low!"
   },
   "math": {
     "title": "MATH CHALLENGE",
-    "instruction": "Calculate the expression and choose the correct answer."
+    "instruction": "Solve the math equation!"
   },
   "mathOx": {
     "title": "MATH OX",
-    "instruction": "Press O if the equation is correct, X if it is wrong."
+    "instruction": "Tap O if right, X if wrong!"
   },
   "oneStroke": {
     "title": "ONE STROKE",
-    "instruction": "Start from the colored tile and fill every white tile exactly once in one stroke.",
+    "instruction": "Connect all white tiles in a single stroke!",
     "progress": "Path"
   },
   "ten": {
     "title": "MAKE 10",
-    "instruction": "Make the sum of the selected numbers equal to 10."
+    "instruction": "Select numbers that add up to 10!"
   },
   "color": {
     "title": "COLOR MATCH",
-    "instruction": "Select buttons where Color matches Text",
+    "instruction": "Match the word's MEANING with its BORDER color!",
     "red": "RED",
     "blue": "BLUE",
     "green": "GREEN",
@@ -490,7 +490,7 @@
   },
   "memory": {
     "title": "MEMORY MATCH",
-    "instruction": "Memorize card positions and tap the Memorized button. Then select matching pairs.",
+    "instruction": "Memorize cards, tap Ready, then find pairs!",
     "btn_memorized": "Memorized!",
     "memorize_hint": "Memorize the cards!",
     "find_pairs": "Find the pairs!"
@@ -503,36 +503,36 @@
   },
   "largest": {
     "title": "BIGGEST RESULT",
-    "instruction": "Tap the expression with the largest value"
+    "instruction": "Tap the largest result!"
   },
   "pair": {
     "title": "FIND PAIR",
-    "instruction": "Find the single matching pair!"
+    "instruction": "Find the matching pair!"
   },
   "updown": {
     "title": "UP DOWN",
-    "instruction": "If it is bigger than the previous number, slide up. If smaller, slide down.",
+    "instruction": "Higher than previous? Swipe UP. Lower? Swipe DOWN.",
     "prev": "PREVIOUS",
     "start": "START"
   },
   "slider": {
     "title": "Number Slider",
-    "instruction": "Slide to sum adjacent numbers to the target!",
+    "instruction": "Swipe numbers to reach the target sum!",
     "target": "Target Sum"
   },
   "arrow": {
     "title": "Arrow Slider",
     "blue": "Blue = Same",
     "red": "Red = Opposite",
-    "instruction": "Swipe Blue direction, or Opposite for Red!"
+    "instruction": "Blue: Same direction. Red: Opposite direction!"
   },
   "fillBlanks": {
     "title": "FILL BLANKS",
-    "instruction": "Choose the number that fills the blank to make the correct answer."
+    "instruction": "Find the missing number!"
   },
   "findOperator": {
     "title": "FIND OPERATOR",
-    "instruction": "Choose the correct operator to make the answer correct."
+    "instruction": "Find the missing operator!"
   },
   "ladder": {
     "title": "Ladder Game",
@@ -540,62 +540,62 @@
   },
   "path": {
     "title": "Path Runner",
-    "instruction": "Use the buttons to move the green block to the blue block. Watch out, button positions may change.",
+    "instruction": "Move the green block to the blue goal!",
     "shuffle": "Shuffle"
   },
   "blindPath": {
     "title": "Blind Path",
-    "instruction": "Memorize the white path, then use the buttons to move the green block to the blue block. The path disappears when you start moving. Hitting a wall costs points, but the path appears again.",
+    "instruction": "Memorize the path and reach the goal. The path hides once you move!",
     "memorizeHint": "Memorize the path!",
     "runHint": "Follow the path!",
     "memorized": "Memorized!"
   },
   "balls": {
     "title": "Ball Counter",
-    "instruction": "Count the moving balls and tap the correct number."
+    "instruction": "Count the moving balls quickly!"
   },
   "catchColor": {
     "title": "Color Catch",
-    "instruction": "Slide the bar to catch balls with the same color as the bar. Catching a different color costs points, and the bar color keeps changing.",
+    "instruction": "Catch balls that match your bar's color!",
     "switchSoon": "Color switch soon"
   },
   "tapTheColor": {
     "title": "Tap the Color",
-    "instruction": "Memorize the color positions, then tap the Memorized button. Select the remembered buttons in the color order shown at the top.",
+    "instruction": "Memorize the colors, then tap them in the required order!",
     "memorize": "Memorize the colors!",
     "remembered": "Ready!"
   },
   "aim": {
     "title": "Aiming Game",
-    "instruction": "Tap the red targets quickly to remove them. Do not remove the blue targets."
+    "instruction": "Shoot only the red targets instantly!"
   },
   "mostColor": {
     "title": "Find Most Color",
-    "instruction": "Select the color that appears the most on the screen."
+    "instruction": "Pick the most frequent color!"
   },
   "sorting": {
     "title": "Sorting Game",
-    "instruction": "Send the first card in any direction you want. After that, slide cards with the same symbol in the same direction as before, and different symbols in the opposite direction. You can prepare in advance by checking the next card at the top.",
+    "instruction": "Same symbol = Same direction! Different symbol = Opposite direction!",
     "firstMoveHint": "First card: Any direction!"
   },
   "spy": {
     "title": "Find The Spy",
-    "instruction": "Memorize the symbols, then tap the Memorized button. After that, find the changed symbol. The number of spies can increase over time.",
+    "instruction": "Memorize the symbols, then spot the new Spies!",
     "memorize": "Memorize these!",
     "find": "Who is new?",
     "ready": "Ready!"
   },
   "timingBar": {
     "title": "Timing Bar",
-    "instruction": "Tap when the falling bar overlaps the target bar."
+    "instruction": "Tap exactly when the falling bar hits the target!"
   },
   "colorTiming": {
     "title": "Color Timing",
-    "instruction": "Tap when blue balls enter the left circle and red balls enter the right circle. Opposite colors deduct points."
+    "instruction": "Tap when Blue enters Left, Red enters Right!"
   },
   "stairway": {
     "title": "Stairway to Heaven",
-    "instruction": "Press the direction where the stairs are to climb up.",
+    "instruction": "Tap the correct direction to climb the stairs!",
     "scoreLabel": "Steps"
   },
   "tutorial": {
@@ -619,7 +619,7 @@
   },
   "zero": {
     "title": "Make Zero",
-    "instruction": "Fill in numbers in order to complete an equation that equals 0. Tap the equation to undo.",
+    "instruction": "Fill the blanks to make the equation equal 0!",
     "undoHint": "Tap the equation to undo"
   },
   "practice": {

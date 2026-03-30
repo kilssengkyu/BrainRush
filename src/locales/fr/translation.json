@@ -435,38 +435,38 @@
     "titleWin": "RPS gagnant",
     "titleLose": "RPS perdant",
     "title": "PIERRE FEUILLE CISEAUX",
-    "instruction": "Choisissez le coup gagnant ou perdant selon l'instruction !"
+    "instruction": "Choisis le coup gagnant ou perdant !"
   },
   "number": {
     "title": "ORDRE DES NOMBRES",
-    "instruction": "Ordre croissant",
+    "instruction": "Touchez de bas en haut !",
     "asc": "Touchez les nombres du plus petit au plus grand !",
     "desc": "Touchez les nombres du plus grand au plus petit !",
     "ready": "PRÊT",
     "panel": "PANNEAU",
     "titleDesc": "TRI INVERSÉ",
-    "instructionDesc": "Touchez du plus grand au plus petit !"
+    "instructionDesc": "Touchez de haut en bas !"
   },
   "math": {
     "title": "DÉFI MATHÉMATIQUE",
-    "instruction": "Calculez l'expression et choisissez la bonne réponse"
+    "instruction": "Résous l'équation !"
   },
   "mathOx": {
     "title": "MATH OX",
-    "instruction": "Appuyez sur O si l'équation est correcte, et sur X si elle est fausse."
+    "instruction": "Touche O si juste, X si faux !"
   },
   "oneStroke": {
     "title": "UN SEUL TRAIT",
-    "instruction": "Commencez sur la case colorée et remplissez chaque case blanche une seule fois en un seul trait.",
+    "instruction": "Relie toutes les cases blanches en un seul trait !",
     "progress": "Parcours"
   },
   "ten": {
     "title": "FAIRE 10",
-    "instruction": "Faites en sorte que la somme des nombres sélectionnés soit égale à 10."
+    "instruction": "Sélectionne des nombres qui donnent 10 !"
   },
   "color": {
     "title": "ASSOCIATION DE COULEURS",
-    "instruction": "Sélectionnez les boutons où la couleur correspond au texte",
+    "instruction": "Associe le SENS du mot à la couleur de sa BORDURE !",
     "red": "ROUGE",
     "blue": "BLEU",
     "green": "VERT",
@@ -474,112 +474,112 @@
   },
   "memory": {
     "title": "JEU DE MÉMOIRE",
-    "instruction": "Mémorisez la position des cartes puis appuyez sur le bouton mémorisé. Ensuite, choisissez les bonnes paires.",
+    "instruction": "Mémorise les cartes, appuie sur Prêt et trouve les paires !",
     "btn_memorized": "Mémorisé !",
     "memorize_hint": "Mémorisez les cartes !",
     "find_pairs": "Trouvez les paires !"
   },
   "sequence": {
     "title": "ORDRE INVERSÉ",
-    "instruction": "Touchez dans l'ordre INVERSÉ !",
+    "instruction": "Touche dans l'ordre INVERSE !",
     "titleNormal": "SÉQUENCE",
-    "instructionNormal": "Touchez dans l'ORDRE !"
+    "instructionNormal": "Touche dans L'ORDRE !"
   },
   "largest": {
     "title": "PLUS GRAND RÉSULTAT",
-    "instruction": "Touchez l'expression avec la plus grande valeur"
+    "instruction": "Touche le plus grand résultat !"
   },
   "pair": {
     "title": "TROUVER LA PAIRE",
-    "instruction": "Trouvez l'unique paire correspondante !"
+    "instruction": "Trouve la paire correspondante !"
   },
   "updown": {
     "title": "HAUT BAS",
-    "instruction": "Si le nombre est plus grand que le précédent, glissez vers le haut. S'il est plus petit, glissez vers le bas.",
+    "instruction": "Plus grand qu'avant ? Glisse EN HAUT. Plus petit ? EN BAS.",
     "prev": "PRÉCÉDENT",
     "start": "DÉBUT"
   },
   "slider": {
     "title": "Curseur numérique",
-    "instruction": "Faites glisser pour additionner les nombres adjacents jusqu'à la cible !",
+    "instruction": "Glisse les nombres pour atteindre la somme cible !",
     "target": "Somme cible"
   },
   "arrow": {
     "title": "Curseur fléché",
     "blue": "Bleu = Même",
     "red": "Rouge = Opposé",
-    "instruction": "Glissez dans la direction bleue, ou dans la direction opposée pour rouge !"
+    "instruction": "Bleu : Même direction. Rouge : Direction opposée !"
   },
   "fillBlanks": {
     "title": "COMPLÉTER LES BLANCS",
-    "instruction": "Choisissez le nombre à mettre dans la case vide pour obtenir la bonne réponse."
+    "instruction": "Trouve le nombre manquant !"
   },
   "findOperator": {
     "title": "TROUVER L'OPÉRATEUR",
-    "instruction": "Choisissez le bon opérateur pour obtenir la bonne réponse."
+    "instruction": "Trouve l'opérateur manquant !"
   },
   "ladder": {
     "title": "Jeu de l'échelle",
-    "instruction": "Suivez le chemin !"
+    "instruction": "Suis le chemin !"
   },
   "path": {
     "title": "Path Runner",
-    "instruction": "Utilisez les boutons pour déplacer le bloc vert jusqu'au bloc bleu. Attention, la position des boutons peut changer.",
+    "instruction": "Déplace le bloc vert vers la cible bleue !",
     "shuffle": "Mélanger"
   },
   "blindPath": {
     "title": "Chemin aveugle",
-    "instruction": "Mémorisez le chemin blanc, puis utilisez les boutons pour déplacer le bloc vert jusqu'au bloc bleu. Dès que vous commencez à bouger, le chemin disparaît. Si vous heurtez un mur, vous perdez des points, mais le chemin réapparaît.",
+    "instruction": "Mémorise le chemin et atteins la cible. Il se cache en bougeant !",
     "memorizeHint": "Mémorisez le chemin !",
     "runHint": "Suivez le chemin !",
     "memorized": "Mémorisé !"
   },
   "balls": {
     "title": "Compteur de balles",
-    "instruction": "Comptez les balles en mouvement et touchez le bon nombre."
+    "instruction": "Compte vite les boules en mouvement !"
   },
   "catchColor": {
     "title": "Attrape-couleur",
-    "instruction": "Faites glisser la barre pour attraper les balles de la même couleur que la barre. Attraper une autre couleur fait perdre des points, et la couleur de la barre change en continu.",
+    "instruction": "Attrape les boules de la couleur de ta barre !",
     "switchSoon": "Changement de couleur imminent"
   },
   "tapTheColor": {
     "title": "Touchez la couleur",
-    "instruction": "Mémorisez la position des couleurs puis appuyez sur le bouton mémorisé. Sélectionnez les boutons mémorisés dans l'ordre des couleurs affiché en haut.",
+    "instruction": "Mémorise les couleurs et touche-les dans le bon ordre !",
     "memorize": "Mémorisez les couleurs !",
     "remembered": "Prêt !"
   },
   "aim": {
     "title": "Jeu de visée",
-    "instruction": "Touchez rapidement les cibles rouges pour les supprimer. Ne supprimez pas les cibles bleues."
+    "instruction": "Tire uniquement sur les cibles rouges instantanément !"
   },
   "mostColor": {
     "title": "Trouver la couleur majoritaire",
-    "instruction": "Sélectionnez la couleur qui apparaît le plus à l'écran."
+    "instruction": "Choisis la couleur la plus fréquente !"
   },
   "sorting": {
     "title": "Jeu de tri",
-    "instruction": "Envoyez la première carte dans la direction de votre choix. Ensuite, faites glisser les cartes avec le même symbole dans la même direction qu'avant, et les cartes avec un symbole différent dans la direction opposée. Vous pouvez vous préparer en regardant la carte suivante en haut.",
+    "instruction": "Même symbole = Même direction ! Différent = Opposée !",
     "firstMoveHint": "Première carte : n'importe quelle direction !"
   },
   "spy": {
     "title": "Trouver l'espion",
-    "instruction": "Mémorisez les symboles puis appuyez sur le bouton mémorisé. Ensuite, trouvez le symbole qui a changé. Le nombre d'espions peut augmenter progressivement.",
+    "instruction": "Mémorise les symboles, puis trouve les Espions !",
     "memorize": "Mémorisez-les !",
     "find": "Qui est nouveau ?",
     "ready": "Prêt !"
   },
   "timingBar": {
     "title": "Barre de timing",
-    "instruction": "Touchez quand la barre qui tombe chevauche la barre cible."
+    "instruction": "Touche exactement quand la barre tombante touche la cible !"
   },
   "colorTiming": {
     "title": "Timing couleur",
-    "instruction": "Touchez quand les boules bleues entrent dans le cercle de gauche et les rouges dans celui de droite. Les couleurs inversées retirent des points."
+    "instruction": "Touche quand le Bleu entre à gauche et le Rouge à droite !"
   },
   "stairway": {
     "title": "Escalier vers le ciel",
-    "instruction": "Appuyez sur la direction où se trouvent les marches pour monter.",
+    "instruction": "Touche la bonne direction pour monter !",
     "scoreLabel": "Marches"
   },
   "tutorial": {
@@ -600,7 +600,7 @@
   },
   "zero": {
     "title": "Fais Zéro",
-    "instruction": "Remplissez les nombres dans l’ordre pour compléter une équation égale à 0. Touchez l’équation pour annuler.",
+    "instruction": "Remplis les blancs pour que l'équation donne 0 !",
     "undoHint": "Touchez l'équation pour annuler"
   },
   "practice": {

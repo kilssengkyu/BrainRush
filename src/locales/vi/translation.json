@@ -435,38 +435,38 @@
     "titleWin": "RPS thắng",
     "titleLose": "RPS thua",
     "title": "OẲN TÙ TÌ",
-    "instruction": "Chọn nước đi thắng hoặc thua theo hướng dẫn!"
+    "instruction": "Chọn nước đi thắng hoặc thua!"
   },
   "number": {
     "title": "THỨ TỰ SỐ",
-    "instruction": "Thứ tự tăng dần",
+    "instruction": "Chạm từ thấp đến cao!",
     "asc": "Nhấn số từ nhỏ đến lớn!",
     "desc": "Nhấn số từ lớn đến nhỏ!",
     "ready": "SẴN SÀNG",
     "panel": "BẢNG",
     "titleDesc": "SẮP XẾP NGƯỢC",
-    "instructionDesc": "Nhấn từ lớn đến nhỏ!"
+    "instructionDesc": "Chạm từ cao xuống thấp!"
   },
   "math": {
     "title": "THỬ THÁCH TOÁN HỌC",
-    "instruction": "Tính phép toán và chọn đáp án đúng"
+    "instruction": "Giải phương trình toán học!"
   },
   "mathOx": {
     "title": "MATH OX",
-    "instruction": "Nhấn O nếu phép tính đúng, nhấn X nếu sai."
+    "instruction": "Chạm O nếu đúng, X nếu sai!"
   },
   "oneStroke": {
     "title": "MỘT NÉT",
-    "instruction": "Bắt đầu từ ô màu và tô kín mọi ô trắng đúng một lần bằng một nét liền.",
+    "instruction": "Nối tất cả các ô trắng bằng một đường duy nhất!",
     "progress": "Đường đi"
   },
   "ten": {
     "title": "TẠO SỐ 10",
-    "instruction": "Hãy làm cho tổng các số đã chọn bằng 10."
+    "instruction": "Chọn các số có tổng là 10!"
   },
   "color": {
     "title": "GHÉP MÀU",
-    "instruction": "Chọn nút có Màu trùng với Chữ",
+    "instruction": "Chọn nút có Ý NGHĨA giống với MÀU VIỀN của nó!",
     "red": "ĐỎ",
     "blue": "XANH DƯƠNG",
     "green": "XANH LÁ",
@@ -474,112 +474,112 @@
   },
   "memory": {
     "title": "TRÍ NHỚ",
-    "instruction": "Ghi nhớ vị trí các thẻ rồi nhấn nút Đã ghi nhớ. Sau đó chọn các cặp đúng.",
+    "instruction": "Ghi nhớ bài, chạm Xong, tìm các cặp!",
     "btn_memorized": "Đã nhớ!",
     "memorize_hint": "Hãy ghi nhớ các lá bài!",
     "find_pairs": "Tìm các cặp!"
   },
   "sequence": {
     "title": "THỨ TỰ NGƯỢC",
-    "instruction": "Nhấn theo thứ tự NGƯỢC lại!",
+    "instruction": "Chạm theo thứ tự NGƯỢC!",
     "titleNormal": "TRÌNH TỰ",
-    "instructionNormal": "Nhấn theo đúng THỨ TỰ!"
+    "instructionNormal": "Chạm đúng THỨ TỰ!"
   },
   "largest": {
     "title": "KẾT QUẢ LỚN NHẤT",
-    "instruction": "Nhấn biểu thức có giá trị lớn nhất"
+    "instruction": "Chạm vào kết quả lớn nhất!"
   },
   "pair": {
     "title": "TÌM CẶP",
-    "instruction": "Tìm cặp giống nhau duy nhất!"
+    "instruction": "Tìm hai hình giống nhau!"
   },
   "updown": {
     "title": "LÊN XUỐNG",
-    "instruction": "Nếu lớn hơn số trước thì vuốt lên, nếu nhỏ hơn thì vuốt xuống.",
+    "instruction": "Lớn hơn trước? Vuốt LÊN. Nhỏ hơn? Vuốt XUỐNG.",
     "prev": "TRƯỚC",
     "start": "BẮT ĐẦU"
   },
   "slider": {
     "title": "Thanh trượt số",
-    "instruction": "Vuốt để cộng các số liền kề thành tổng mục tiêu!",
+    "instruction": "Vuốt để cộng số đạt tổng mục tiêu!",
     "target": "Tổng mục tiêu"
   },
   "arrow": {
     "title": "Thanh trượt mũi tên",
     "blue": "Xanh = Cùng hướng",
     "red": "Đỏ = Ngược hướng",
-    "instruction": "Vuốt theo hướng xanh, hoặc ngược lại với đỏ!"
+    "instruction": "Màu xanh: Cùng hướng. Màu đỏ: Ngược hướng!"
   },
   "fillBlanks": {
     "title": "ĐIỀN CHỖ TRỐNG",
-    "instruction": "Chọn số điền vào ô trống để tạo thành đáp án đúng."
+    "instruction": "Tìm số còn thiếu!"
   },
   "findOperator": {
     "title": "TÌM TOÁN TỬ",
-    "instruction": "Chọn phép toán phù hợp để đáp án đúng."
+    "instruction": "Tìm dấu còn thiếu!"
   },
   "ladder": {
     "title": "Trò chơi thang",
-    "instruction": "Đi theo đường đi!"
+    "instruction": "Đi theo con đường!"
   },
   "path": {
     "title": "Path Runner",
-    "instruction": "Dùng các nút để di chuyển ô xanh lá đến ô xanh dương. Lưu ý vị trí các nút có thể thay đổi.",
+    "instruction": "Di chuyển khối xanh lục đến đích xanh dương!",
     "shuffle": "Xáo trộn"
   },
   "blindPath": {
     "title": "Đường mù",
-    "instruction": "Hãy ghi nhớ đường màu trắng, sau đó dùng nút để di chuyển ô xanh lá đến ô xanh dương. Khi bắt đầu di chuyển, đường sẽ biến mất. Va vào tường sẽ bị trừ điểm, nhưng đường sẽ hiện lại.",
+    "instruction": "Ghi nhớ và đi đến đích. Đường bị ẩn đi khi chuyển động!",
     "memorizeHint": "Hãy nhớ đường đi!",
     "runHint": "Đi theo đường đi!",
     "memorized": "Đã nhớ!"
   },
   "balls": {
     "title": "Đếm bóng",
-    "instruction": "Đếm các quả bóng đang di chuyển và nhấn số đúng."
+    "instruction": "Đếm số bóng di chuyển thật nhanh!"
   },
   "catchColor": {
     "title": "Bắt màu",
-    "instruction": "Trượt thanh để bắt bóng cùng màu với thanh. Bắt sai màu sẽ bị trừ điểm và màu của thanh sẽ liên tục thay đổi.",
+    "instruction": "Chỉ hứng những quả bóng cùng màu với thanh!",
     "switchSoon": "Sắp đổi màu"
   },
   "tapTheColor": {
     "title": "Chạm màu",
-    "instruction": "Hãy ghi nhớ vị trí màu rồi nhấn nút Đã ghi nhớ. Sau đó chọn các nút đã nhớ theo thứ tự màu hiển thị ở phía trên.",
+    "instruction": "Ghi nhớ và chạm đúng theo thứ tự!",
     "memorize": "Hãy nhớ các màu!",
     "remembered": "Sẵn sàng!"
   },
   "aim": {
     "title": "Trò chơi ngắm bắn",
-    "instruction": "Chạm nhanh vào mục tiêu màu đỏ để loại bỏ. Không được loại bỏ mục tiêu màu xanh dương."
+    "instruction": "Bắn tiêu diệt hồng tâm ngay!"
   },
   "mostColor": {
     "title": "Tìm màu xuất hiện nhiều nhất",
-    "instruction": "Chọn màu xuất hiện nhiều nhất trên màn hình."
+    "instruction": "Chọn màu hiển thị nhiều nhất!"
   },
   "sorting": {
     "title": "Trò chơi phân loại",
-    "instruction": "Hãy đẩy lá đầu tiên theo bất kỳ hướng nào bạn muốn. Sau đó, thẻ có cùng ký hiệu thì vuốt cùng hướng như trước, còn thẻ khác ký hiệu thì vuốt ngược hướng. Bạn có thể chuẩn bị trước bằng cách xem lá tiếp theo ở phía trên.",
+    "instruction": "Cùng ký hiệu = Cùng hướng! Khác ký hiệu = Ngược hướng!",
     "firstMoveHint": "Lá bài đầu tiên: đi hướng nào cũng được!"
   },
   "spy": {
     "title": "Tìm gián điệp",
-    "instruction": "Hãy ghi nhớ các ký hiệu rồi nhấn nút Đã ghi nhớ. Sau đó tìm ký hiệu đã thay đổi. Số lượng gián điệp có thể tăng dần theo thời gian.",
+    "instruction": "Ghi nhớ kí hiệu, tìm kẻ xuất hiện mới!",
     "memorize": "Ghi nhớ những cái này!",
     "find": "Ai là người mới?",
     "ready": "Sẵn sàng!"
   },
   "timingBar": {
     "title": "Thanh canh nhịp",
-    "instruction": "Chạm khi thanh rơi chồng lên thanh mục tiêu."
+    "instruction": "Chạm khi thanh vừa rớt trúng hồng tâm!"
   },
   "colorTiming": {
     "title": "Canh màu",
-    "instruction": "Chạm khi bóng xanh vào vòng tròn bên trái và bóng đỏ vào vòng tròn bên phải. Chạm màu ngược sẽ bị trừ điểm."
+    "instruction": "Chạm khi xanh bên trái, đỏ bên phải!"
   },
   "stairway": {
     "title": "Nấc thang thiên đường",
-    "instruction": "Nhấn vào hướng có cầu thang để leo lên.",
+    "instruction": "Chạm hướng hiện cầu thang!",
     "scoreLabel": "Bậc"
   },
   "tutorial": {
@@ -600,7 +600,7 @@
   },
   "zero": {
     "title": "Tạo Số Không",
-    "instruction": "Điền số theo thứ tự để hoàn thành phương trình bằng 0. Chạm phương trình để hoàn tác.",
+    "instruction": "Điền để ra 0!",
     "undoHint": "Chạm phương trình để hoàn tác"
   },
   "practice": {
