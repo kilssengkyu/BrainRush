@@ -42,6 +42,15 @@
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-4893861547827379~5514242908"
         />
+        <!-- Facebook SDK for Meta Ads Install Tracking -->
+        <meta-data
+            android:name="com.facebook.sdk.ApplicationId"
+            android:value="3464019873773659"
+        />
+        <meta-data
+            android:name="com.facebook.sdk.ClientToken"
+            android:value="22f48cb1a3eb30afe859b3720a9a67bc"
+        />
     </application>
 
     <!-- Permissions -->
