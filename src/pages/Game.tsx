@@ -47,22 +47,23 @@ import ReportReasonModal from '../components/ui/ReportReasonModal';
 import { resolveRoundWinner } from '../effects/roundWinner';
 import { getLevelFromXp, getXpSnapshotStorageKey } from '../utils/levelUtils';
 import TierMMRBadge from '../components/ui/TierMMRBadge';
-import { getTierFromMMR, getTierIcon } from '../utils/rankUtils';
+import { getTierFromMMR, getTierColor, getTierIcon } from '../utils/rankUtils';
 import ReviewPromptModal from '../components/ui/ReviewPromptModal';
 // useTheme removed — Game board uses Tailwind dark: variants directly
 
 const IS_DEV = import.meta.env.DEV;
-const REVIEW_PROMPT_THRESHOLD = 1; // TODO: change to 5 for production release
+const REVIEW_PROMPT_THRESHOLD = 5;
 const REVIEW_LS_PLAYED_KEY = 'brainrush_games_played';
 const REVIEW_LS_PROMPTED_KEY = 'brainrush_review_prompted';
-const BOT_EMOJI_POOL = ['🙂', '😭', '😂', '☹️', '❤️', '💔', '👍', '👎'];
-const BOT_EMOJI_BURST = ['😂', '😭', '👍', '👎'];
+const BOT_EMOJI_POOL = ['🙂', '😂', '👍', '❤️'];
+const BOT_EMOJI_BURST = ['🙂', '😂', '👍'];
+const BOT_EMOJI_MIRROR = ['🙂', '😂', '👍', '❤️'];
 const BOT_EMOJI_REACTIVE = {
-    winning: ['😂', '🙂', '👍'],
-    losing: ['😭', '☹️', '💔'],
-    close: ['🙂', '👍', '👎']
+    winning: ['😂', '👍', '🙂'],
+    losing: ['🙂', '👍', '😂'],
+    close: ['🙂', '👍', '😂']
 };
-type BotEmojiPattern = 'burst' | 'silent' | 'reactive';
+type BotEmojiPattern = 'burst' | 'reactive' | 'mirror_count';
 
 const FINAL_ROUND_FINISHED_MS = 2000;
 const REMATCH_WINDOW_MS = 30000;
@@ -76,7 +77,7 @@ const Game: React.FC = () => {
     const { user, profile } = useAuth();
 
     // Route state check
-    const { roomId: stateRoomId, myId, opponentId, skipWaiting } = location.state || {};
+    const { roomId: stateRoomId, myId, opponentId } = location.state || {};
     const roomId = routeRoomId || stateRoomId;
 
     // Profiles
@@ -671,13 +672,16 @@ const Game: React.FC = () => {
 
     const handleEmojiSend = useCallback((emoji: string) => {
         if (!myId || !emojiChannelRef.current) return;
+        if (isBotId(opponentId)) {
+            myEmojiSendCountRef.current += 1;
+        }
         spawnEmoji(emoji, 'left');
         emojiChannelRef.current.send({
             type: 'broadcast',
             event: 'emoji',
             payload: { emoji, senderId: myId }
         });
-    }, [myId, spawnEmoji]);
+    }, [myId, opponentId, spawnEmoji]);
 
     const emojiRowTop = ['🙂', '😭', '😂', '☹️'];
     const emojiRowBottom = ['❤️', '💔', '👍', '👎'];
@@ -690,22 +694,25 @@ const Game: React.FC = () => {
 
     const botEmojiPatternRef = useRef<BotEmojiPattern | null>(null);
     const botBurstEmojiRef = useRef<string>('🙂');
+    const myEmojiSendCountRef = useRef<number>(0);
+    const botMirroredCountRef = useRef<number>(0);
 
     useEffect(() => {
         if (!isBotId(opponentId)) {
             botEmojiPatternRef.current = null;
             return;
         }
+        myEmojiSendCountRef.current = 0;
+        botMirroredCountRef.current = 0;
         const roll = Math.random();
-        if (roll < 0.25) botEmojiPatternRef.current = 'silent';
-        else if (roll < 0.6) botEmojiPatternRef.current = 'burst';
+        if (roll < 0.5) botEmojiPatternRef.current = 'mirror_count';
+        else if (roll < 0.75) botEmojiPatternRef.current = 'burst';
         else botEmojiPatternRef.current = 'reactive';
         botBurstEmojiRef.current = BOT_EMOJI_BURST[Math.floor(Math.random() * BOT_EMOJI_BURST.length)];
     }, [opponentId]);
 
     useEffect(() => {
         if (!isBotId(opponentId) || !showEmojiOverlay) return;
-        if (botEmojiPatternRef.current === 'silent') return;
         let timeoutId: number | null = null;
         let cancelled = false;
 
@@ -725,6 +732,18 @@ const Game: React.FC = () => {
                     spawnEmoji(emoji, 'right');
                     window.setTimeout(() => spawnEmoji(emoji, 'right'), 200);
                     window.setTimeout(() => spawnEmoji(emoji, 'right'), 420);
+                } else if (pattern === 'mirror_count') {
+                    const pendingCount = myEmojiSendCountRef.current - botMirroredCountRef.current;
+                    if (pendingCount > 0) {
+                        botMirroredCountRef.current += pendingCount;
+                        for (let i = 0; i < pendingCount; i += 1) {
+                            const emoji = BOT_EMOJI_MIRROR[Math.floor(Math.random() * BOT_EMOJI_MIRROR.length)];
+                            window.setTimeout(() => {
+                                if (!showEmojiOverlayRef.current) return;
+                                spawnEmoji(emoji, 'right');
+                            }, i * 180);
+                        }
+                    }
                 } else if (pattern === 'reactive') {
                     const diff = gameState.opScore - gameState.myScore;
                     const bucket = diff >= 150 ? 'winning' : diff <= -150 ? 'losing' : 'close';
@@ -1156,6 +1175,12 @@ const Game: React.FC = () => {
     const opFinalTier = getTierFromMMR(opFinalMMR);
     const MyFinalTierIcon = getTierIcon(myFinalTier);
     const OpFinalTierIcon = getTierIcon(opFinalTier);
+    const waitingMyMMR = Number(myProfile?.mmr ?? 1000);
+    const waitingOpMMR = Number(opponentProfile?.mmr ?? 1000);
+    const waitingMyTierColor = getTierColor(getTierFromMMR(waitingMyMMR));
+    const waitingOpTierColor = getTierColor(getTierFromMMR(waitingOpMMR));
+    const isWaitingMyShinyTier = ['Diamond', 'Master'].includes(getTierFromMMR(waitingMyMMR));
+    const isWaitingOpShinyTier = ['Diamond', 'Master'].includes(getTierFromMMR(waitingOpMMR));
 
     // Review prompt: track games played and trigger on win
     useEffect(() => {
@@ -1458,28 +1483,51 @@ const Game: React.FC = () => {
                 )}
 
                 {/* Waiting Screen */}
-                {isWaiting && !skipWaiting && (
+                {isWaiting && (
                     <div className="absolute inset-0 flex flex-col items-center pb-44">
                         {/* Background gradients */}
                         <div className="absolute inset-0 bg-gradient-to-b from-blue-500/10 via-transparent to-red-500/10 dark:from-blue-900/30 dark:via-transparent dark:to-red-900/30 pointer-events-none" />
 
                         {/* My Profile - Top */}
                         <div className="mt-4 flex flex-col items-center">
-                            <div className="flex items-center gap-3 bg-slate-50 dark:bg-gray-900/70 border border-blue-400/30 rounded-2xl px-5 py-3 shadow-xl backdrop-blur-sm">
-                                <Flag code={myProfile?.country} className="w-6 h-4" />
-                                <span className="text-base font-bold text-slate-900 dark:text-white">{myProfile?.nickname || t('game.unknownPlayer')}</span>
-                                <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-blue-500 bg-white dark:bg-gray-800 flex items-center justify-center">
-                                    {myProfile?.avatar_url ? (
-                                        <img src={myProfile.avatar_url} className="w-full h-full object-cover" />
-                                    ) : (
-                                        <User size={20} className="text-blue-500" />
-                                    )}
+                            <motion.div
+                                initial={{ y: -30, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                transition={{ delay: 0.1 }}
+                                className={`relative overflow-hidden bg-gradient-to-br ${waitingMyTierColor} border border-white/35 rounded-2xl px-5 py-4 shadow-xl backdrop-blur-sm min-w-[260px]`}
+                            >
+                                <div className="absolute inset-0 pointer-events-none bg-black/10 dark:bg-black/20" />
+                                <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(120deg,rgba(255,255,255,0.42)_0%,rgba(255,255,255,0.1)_36%,rgba(0,0,0,0.14)_100%)]" />
+                                {isWaitingMyShinyTier && (
+                                    <motion.div
+                                        className="absolute inset-y-0 -left-1/2 w-1/2 pointer-events-none"
+                                        initial={{ x: '-130%' }}
+                                        animate={{ x: '300%' }}
+                                        transition={{ duration: 2.0, repeat: Infinity, ease: 'linear' }}
+                                        style={{ background: 'linear-gradient(105deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.0) 20%, rgba(255,255,255,0.45) 50%, rgba(255,255,255,0) 85%)' }}
+                                    />
+                                )}
+                                <div className="absolute inset-[1px] rounded-[15px] border border-white/25 dark:border-white/20 pointer-events-none" />
+                                <div className="relative z-10">
+                                    <div className="flex items-center justify-between gap-3">
+                                        <div className="flex items-center gap-2 min-w-0">
+                                            <Flag code={myProfile?.country} className="w-6 h-4 shrink-0" />
+                                            <span className="text-base font-bold text-white truncate drop-shadow-[0_1px_1px_rgba(0,0,0,0.25)]">{myProfile?.nickname || t('game.unknownPlayer')}</span>
+                                        </div>
+                                        <div className="w-11 h-11 rounded-full overflow-hidden border-2 border-blue-500 bg-white dark:bg-gray-800 flex items-center justify-center shrink-0">
+                                            {myProfile?.avatar_url ? (
+                                                <img src={myProfile.avatar_url} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <User size={20} className="text-blue-500" />
+                                            )}
+                                        </div>
+                                    </div>
+                                    <TierMMRBadge
+                                        mmr={myProfile?.mmr}
+                                        className="mt-2"
+                                    />
                                 </div>
-                            </div>
-                            <TierMMRBadge
-                                mmr={myProfile?.mmr}
-                                className="mt-1"
-                            />
+                            </motion.div>
                         </div>
 
                         {/* Hex Radar - Center with Labels */}
@@ -1499,23 +1547,44 @@ const Game: React.FC = () => {
 
                         {/* Opponent Profile - Above Emoji Bar (mirrored layout) */}
                         <div className="mb-4 flex flex-col items-center">
-                            <TierMMRBadge
-                                mmr={opponentProfile?.mmr}
-                                className="mb-1"
-                            />
-                            <div className="flex items-center gap-3 bg-slate-50 dark:bg-gray-900/70 border border-red-400/30 rounded-2xl px-5 py-3 shadow-xl backdrop-blur-sm">
-                                <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-red-500 bg-white dark:bg-gray-800 flex items-center justify-center">
-                                    {opponentProfile?.avatar_url ? (
-                                        <img src={opponentProfile.avatar_url} className="w-full h-full object-cover" />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center bg-white dark:bg-gray-800 text-red-500">
-                                            <User size={20} />
+                            <motion.div
+                                initial={{ y: 30, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                transition={{ delay: 0.15 }}
+                                className={`relative overflow-hidden bg-gradient-to-br ${waitingOpTierColor} border border-white/35 rounded-2xl px-5 py-4 shadow-xl backdrop-blur-sm min-w-[260px]`}
+                            >
+                                <div className="absolute inset-0 pointer-events-none bg-black/10 dark:bg-black/20" />
+                                <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(120deg,rgba(255,255,255,0.42)_0%,rgba(255,255,255,0.1)_36%,rgba(0,0,0,0.14)_100%)]" />
+                                {isWaitingOpShinyTier && (
+                                    <motion.div
+                                        className="absolute inset-y-0 -left-1/2 w-1/2 pointer-events-none"
+                                        initial={{ x: '-130%' }}
+                                        animate={{ x: '300%' }}
+                                        transition={{ duration: 2.0, repeat: Infinity, ease: 'linear' }}
+                                        style={{ background: 'linear-gradient(105deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.0) 20%, rgba(255,255,255,0.45) 50%, rgba(255,255,255,0) 85%)' }}
+                                    />
+                                )}
+                                <div className="absolute inset-[1px] rounded-[15px] border border-white/25 dark:border-white/20 pointer-events-none" />
+                                <div className="relative z-10">
+                                    <div className="flex items-center justify-between gap-3">
+                                        <div className="w-11 h-11 rounded-full overflow-hidden border-2 border-red-500 bg-white dark:bg-gray-800 flex items-center justify-center shrink-0">
+                                            {opponentProfile?.avatar_url ? (
+                                                <img src={opponentProfile.avatar_url} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <User size={20} className="text-red-500" />
+                                            )}
                                         </div>
-                                    )}
+                                        <div className="flex items-center gap-2 min-w-0">
+                                            <span className="text-base font-bold text-white truncate drop-shadow-[0_1px_1px_rgba(0,0,0,0.25)]">{opponentProfile?.nickname || t('game.opponentWaiting')}</span>
+                                            <Flag code={opponentProfile?.country} className="w-6 h-4 shrink-0" />
+                                        </div>
+                                    </div>
+                                    <TierMMRBadge
+                                        mmr={opponentProfile?.mmr}
+                                        className="mt-2"
+                                    />
                                 </div>
-                                <span className="text-base font-bold text-slate-900 dark:text-white">{opponentProfile?.nickname || t('game.opponentWaiting')}</span>
-                                <Flag code={opponentProfile?.country} className="w-6 h-4" />
-                            </div>
+                            </motion.div>
                         </div>
                     </div>
                 )}
