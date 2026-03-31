@@ -42,6 +42,9 @@ type XpAnimationPayload = {
 
 const MAX_PENCILS = 5;
 const PENCIL_RECHARGE_MS = 15 * 60 * 1000;
+const GUEST_LINK_PROMPT_LEVEL = 5;
+const GUEST_LINK_PROMPT_INITIAL_DELAY_MS = 3 * 24 * 60 * 60 * 1000;
+const GUEST_LINK_PROMPT_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
 
 const getLivePencilState = (
     pencils: number | null | undefined,
@@ -103,7 +106,7 @@ const Home = () => {
     const navigate = useNavigate();
     const { t, i18n } = useTranslation();
     const { playSound } = useSound();
-    const { user, profile, refreshProfile, loading: authLoading, signInWithGoogle, signInWithApple, signInAnonymously } = useAuth();
+    const { user, profile, refreshProfile, loading: authLoading, signInWithGoogle, signInWithApple, signInAnonymously, linkWithGoogle, linkWithApple } = useAuth();
     const { showToast } = useUI();
     const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
     const [unreadChatCount, setUnreadChatCount] = useState(0);
@@ -586,8 +589,11 @@ const Home = () => {
 
     const [showAdModal, setShowAdModal] = useState(false);
     const [showNoPencilChoiceModal, setShowNoPencilChoiceModal] = useState(false);
+    const [guestEntryState, setGuestEntryState] = useState<'idle' | 'signing-in' | 'fallback'>('idle');
     const [isLoginModalLoading, setIsLoginModalLoading] = useState(false);
     const [showPostTutorialNormalSpotlight, setShowPostTutorialNormalSpotlight] = useState(false);
+    const [showGuestLinkPromptModal, setShowGuestLinkPromptModal] = useState(false);
+    const [isGuestLinkPromptLoading, setIsGuestLinkPromptLoading] = useState(false);
     const [showMailboxModal, setShowMailboxModal] = useState(false);
     const [mailboxUnreadCount, setMailboxUnreadCount] = useState(0);
     const [showLeaderboard, setShowLeaderboard] = useState(false);
@@ -617,7 +623,12 @@ const Home = () => {
     });
     const dismissedActiveRoomRef = useRef<string | null>(null);
     const isIOS = Capacitor.getPlatform() === 'ios';
-    const shouldForceLoginModal = !authLoading && !user;
+    const isGuestUser = Boolean(user?.is_anonymous || user?.app_metadata?.provider === 'anonymous');
+
+    const getGuestLinkPromptStorageKey = useCallback((suffix: string) => {
+        if (!user?.id) return null;
+        return `brainrush_guest_link_prompt_${suffix}:${user.id}`;
+    }, [user?.id]);
 
     useEffect(() => {
         const onResize = () => setIsMobileLayout(window.innerWidth < 768);
@@ -631,65 +642,187 @@ const Home = () => {
         homeTutorialStep,
         homeTutorialSteps,
         nextHomeTutorialStep,
+        completeHomeTutorial,
         skipHomeTutorial,
     } = useTutorial();
 
-    const handleForcedGoogleLogin = async () => {
+    const markHomeTutorialSeen = useCallback(async () => {
+        if (!user) return;
+        try {
+            const { error } = await (supabase as any).rpc('mark_home_tutorial_seen');
+            if (error) throw error;
+        } catch (error) {
+            console.error('Failed to mark home tutorial seen:', error);
+        }
+    }, [user]);
+
+    useEffect(() => {
+        if (!user) return;
+        const hasSeenOnServer = Boolean((profile as any)?.home_tutorial_seen_at);
+        if (!hasSeenOnServer || isHomeTutorialReplay) return;
+        completeHomeTutorial();
+    }, [user, profile, isHomeTutorialReplay, completeHomeTutorial]);
+
+    useEffect(() => {
+        if (!user || !profile || !isGuestUser) {
+            setShowGuestLinkPromptModal(false);
+            return;
+        }
+
+        if (
+            isHomeTutorialActive ||
+            showPostTutorialNormalSpotlight ||
+            showNicknameModal ||
+            showMailboxModal ||
+            showNoPencilChoiceModal ||
+            activeSessionPrompt ||
+            status !== 'idle'
+        ) {
+            return;
+        }
+
+        const now = Date.now();
+        const createdAtMs = new Date(profile.created_at ?? user.created_at ?? now).getTime();
+        const safeCreatedAtMs = Number.isFinite(createdAtMs) ? createdAtMs : now;
+        const daysEligible = now - safeCreatedAtMs >= GUEST_LINK_PROMPT_INITIAL_DELAY_MS;
+        const levelEligible = Number(profile.level ?? 1) >= GUEST_LINK_PROMPT_LEVEL;
+
+        if (!daysEligible && !levelEligible) return;
+
+        const nextPromptKey = getGuestLinkPromptStorageKey('next_at');
+        if (nextPromptKey) {
+            const rawNextPromptAt = window.localStorage.getItem(nextPromptKey);
+            const nextPromptAt = rawNextPromptAt ? Number(rawNextPromptAt) : 0;
+            if (Number.isFinite(nextPromptAt) && nextPromptAt > now) return;
+        }
+
+        setShowGuestLinkPromptModal(true);
+    }, [
+        user,
+        profile,
+        isGuestUser,
+        isHomeTutorialActive,
+        showPostTutorialNormalSpotlight,
+        showNicknameModal,
+        showMailboxModal,
+        showNoPencilChoiceModal,
+        activeSessionPrompt,
+        status,
+        getGuestLinkPromptStorageKey
+    ]);
+
+    const handleFallbackGoogleLogin = async () => {
         playSound('click');
         setIsLoginModalLoading(true);
         try {
             await signInWithGoogle();
         } catch (error) {
             console.error(error);
-            const message = (error as any)?.message || t('common.error');
-            showToast(message, 'error');
+            showToast((error as any)?.message || t('common.error'), 'error');
         } finally {
             setIsLoginModalLoading(false);
         }
     };
 
-    const handleForcedAppleLogin = async () => {
+    const handleFallbackAppleLogin = async () => {
         playSound('click');
         setIsLoginModalLoading(true);
         try {
             await signInWithApple();
         } catch (error) {
             console.error(error);
-            const message = (error as any)?.message || t('common.error');
-            showToast(message, 'error');
+            showToast((error as any)?.message || t('common.error'), 'error');
         } finally {
             setIsLoginModalLoading(false);
         }
     };
 
-    const handleForcedGuestLogin = async () => {
+    const guestSignInAttemptedRef = useRef(false);
+
+    useEffect(() => {
+        if (authLoading || user || guestSignInAttemptedRef.current) return;
+        guestSignInAttemptedRef.current = true;
+
+        let cancelled = false;
+        const autoSignIn = async () => {
+            setGuestEntryState('signing-in');
+            try {
+                await signInAnonymously();
+            } catch (error) {
+                console.error('Auto guest sign-in failed:', error);
+                if (!cancelled) {
+                    setGuestEntryState('fallback');
+                    showToast((error as any)?.message || t('common.error'), 'error');
+                }
+            } finally {
+                if (!cancelled) {
+                    setGuestEntryState((prev) => (prev === 'signing-in' ? 'idle' : prev));
+                }
+            }
+        };
+
+        void autoSignIn();
+        return () => {
+            cancelled = true;
+        };
+    }, [authLoading, user, signInAnonymously, showToast, t]);
+
+    const dismissGuestLinkPrompt = useCallback(() => {
+        const nextPromptKey = getGuestLinkPromptStorageKey('next_at');
+        if (nextPromptKey) {
+            window.localStorage.setItem(nextPromptKey, String(Date.now() + GUEST_LINK_PROMPT_COOLDOWN_MS));
+        }
+        setShowGuestLinkPromptModal(false);
+    }, [getGuestLinkPromptStorageKey]);
+
+    const handleGuestLinkWithGoogle = async () => {
         playSound('click');
-        setIsLoginModalLoading(true);
+        setIsGuestLinkPromptLoading(true);
         try {
-            await signInAnonymously();
+            dismissGuestLinkPrompt();
+            await linkWithGoogle();
         } catch (error) {
-            console.error(error);
-            const message = (error as any)?.message || t('common.error');
-            showToast(message, 'error');
+            console.error('Failed to link google:', error);
+            showToast((error as any)?.message || t('common.error'), 'error');
+            setShowGuestLinkPromptModal(true);
         } finally {
-            setIsLoginModalLoading(false);
+            setIsGuestLinkPromptLoading(false);
+        }
+    };
+
+    const handleGuestLinkWithApple = async () => {
+        playSound('click');
+        setIsGuestLinkPromptLoading(true);
+        try {
+            dismissGuestLinkPrompt();
+            await linkWithApple();
+        } catch (error) {
+            console.error('Failed to link apple:', error);
+            showToast((error as any)?.message || t('common.error'), 'error');
+            setShowGuestLinkPromptModal(true);
+        } finally {
+            setIsGuestLinkPromptLoading(false);
         }
     };
 
     const handleHomeTutorialNext = useCallback(() => {
         const isLastStep = homeTutorialStep === homeTutorialSteps.length - 1;
+        if (isLastStep && !isHomeTutorialReplay) {
+            void markHomeTutorialSeen();
+        }
         nextHomeTutorialStep();
         if (isLastStep && !isHomeTutorialReplay) {
             setShowPostTutorialNormalSpotlight(true);
         }
-    }, [homeTutorialStep, homeTutorialSteps.length, isHomeTutorialReplay, nextHomeTutorialStep]);
+    }, [homeTutorialStep, homeTutorialSteps.length, isHomeTutorialReplay, markHomeTutorialSeen, nextHomeTutorialStep]);
 
     const handleHomeTutorialSkip = useCallback(() => {
         skipHomeTutorial();
         if (!isHomeTutorialReplay) {
+            void markHomeTutorialSeen();
             setShowPostTutorialNormalSpotlight(true);
         }
-    }, [isHomeTutorialReplay, skipHomeTutorial]);
+    }, [isHomeTutorialReplay, markHomeTutorialSeen, skipHomeTutorial]);
 
     const checkActiveSessionAndPrompt = useCallback(async () => {
         if (!user || authLoading || status !== 'idle') return;
@@ -804,8 +937,9 @@ const Home = () => {
         }
     };
 
-    const handleModeSelect = async (mode: string) => {
-        if (isNicknameGateActive) {
+    const handleModeSelect = async (mode: string, options?: { forceBotImmediate?: boolean }) => {
+        const canBypassNicknameGate = mode === 'normal' && showPostTutorialNormalSpotlight;
+        if (isNicknameGateActive && !canBypassNicknameGate) {
             if (!showNicknameModal) {
                 setShowNicknameModal(true);
                 showToast(t('profile.nicknameSetupRequired', '닉네임을 먼저 설정해 주세요.'), 'info');
@@ -821,7 +955,7 @@ const Home = () => {
         // Normal/Rank require an authenticated session (anonymous guest login allowed).
         if (mode === 'rank' || mode === 'normal') {
             if (!user) {
-                showToast(t('home.loginModalSubtitle', '일반/랭크 매치를 시작하려면 로그인해 주세요.'), 'info');
+                showToast(t('common.loading'), 'info');
                 return;
             }
 
@@ -836,7 +970,7 @@ const Home = () => {
         if (mode === 'rank') {
             startSearch('rank');
         } else if (mode === 'normal') {
-            startSearch('normal');
+            startSearch('normal', options);
         } else if (mode === 'practice') {
             navigate('/practice');
         } else {
@@ -847,7 +981,7 @@ const Home = () => {
 
     const handlePostTutorialNormalStart = async () => {
         setShowPostTutorialNormalSpotlight(false);
-        await handleModeSelect('normal');
+        await handleModeSelect('normal', { forceBotImmediate: true });
     };
 
     const formatRemainingTime = (remainingMs: number) => {
@@ -899,24 +1033,31 @@ const Home = () => {
 
     useEffect(() => {
         if (!user || !profile?.needs_nickname_setup) return;
+        if (authLoading || guestEntryState === 'fallback' || isHomeTutorialActive || showPostTutorialNormalSpotlight || status !== 'idle') return;
         const shownKey = `nickname_prompt_shown:${user.id}`;
         if (window.sessionStorage.getItem(shownKey) === '1') return;
 
         setShowNicknameModal(true);
         window.sessionStorage.setItem(shownKey, '1');
-    }, [user, profile?.needs_nickname_setup]);
+    }, [user, profile?.needs_nickname_setup, authLoading, guestEntryState, isHomeTutorialActive, showPostTutorialNormalSpotlight, status]);
 
     useEffect(() => {
         const handleModalCloseRequest = (event: Event) => {
             const customEvent = event as CustomEvent<{ handled?: boolean }>;
             if (customEvent.detail?.handled) return;
 
-            if (shouldForceLoginModal) {
+            if (showPostTutorialNormalSpotlight) {
                 if (customEvent.detail) customEvent.detail.handled = true;
                 return;
             }
 
-            if (showPostTutorialNormalSpotlight) {
+            if (guestEntryState === 'fallback') {
+                if (customEvent.detail) customEvent.detail.handled = true;
+                return;
+            }
+
+            if (showGuestLinkPromptModal && !isGuestLinkPromptLoading) {
+                dismissGuestLinkPrompt();
                 if (customEvent.detail) customEvent.detail.handled = true;
                 return;
             }
@@ -949,7 +1090,7 @@ const Home = () => {
         return () => {
             window.removeEventListener('brainrush:request-modal-close', handleModalCloseRequest as EventListener);
         };
-    }, [showNicknameModal, isSavingNickname, showMailboxModal, showNoPencilChoiceModal, activeSessionPrompt, status, shouldForceLoginModal, showPostTutorialNormalSpotlight]);
+    }, [showNicknameModal, isSavingNickname, showMailboxModal, showNoPencilChoiceModal, activeSessionPrompt, status, showPostTutorialNormalSpotlight, guestEntryState, showGuestLinkPromptModal, isGuestLinkPromptLoading, dismissGuestLinkPrompt]);
 
     return (
         <div className={`min-h-[100dvh] bg-slate-50 dark:bg-gray-900 text-slate-900 dark:text-white flex flex-col items-center p-4 relative overflow-hidden`}>
@@ -1133,7 +1274,7 @@ const Home = () => {
             )}
 
             {/* Auth Loading Overlay */}
-            {authLoading && (
+            {(authLoading || guestEntryState === 'signing-in') && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm">
                     <div className="flex items-center gap-3 bg-slate-50 dark:bg-gray-900/80 border border-white/10 rounded-2xl px-5 py-4 shadow-xl">
                         <Loader2 className="w-5 h-5 text-blue-400 animate-spin" />
@@ -1142,7 +1283,7 @@ const Home = () => {
                 </div>
             )}
 
-            {shouldForceLoginModal && (
+            {guestEntryState === 'fallback' && !user && (
                 <div className="fixed inset-0 z-[140] bg-black/80 backdrop-blur-sm flex items-center justify-center px-4">
                     <div className="w-full max-w-md bg-white dark:bg-gray-800/95 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl">
                         <div className="text-center mb-8 mt-1">
@@ -1155,7 +1296,7 @@ const Home = () => {
 
                         <div className="space-y-3">
                             <button
-                                onClick={handleForcedGoogleLogin}
+                                onClick={handleFallbackGoogleLogin}
                                 disabled={isLoginModalLoading}
                                 className="w-full p-4 bg-white text-gray-900 rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed group"
                             >
@@ -1176,7 +1317,7 @@ const Home = () => {
 
                             {isIOS && (
                                 <button
-                                    onClick={handleForcedAppleLogin}
+                                    onClick={handleFallbackAppleLogin}
                                     disabled={isLoginModalLoading}
                                     className="w-full p-4 rounded-xl font-bold flex items-center justify-center gap-3 transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-white text-black border border-black/15 hover:bg-gray-100 dark:bg-black dark:text-white dark:border-white/20 dark:hover:bg-gray-900"
                                 >
@@ -1192,27 +1333,6 @@ const Home = () => {
                                     )}
                                 </button>
                             )}
-
-                            <div className="relative my-6">
-                                <div className="absolute inset-0 flex items-center">
-                                    <div className="w-full border-t border-gray-700"></div>
-                                </div>
-                                <div className="relative flex justify-center text-sm">
-                                    <span className="px-2 bg-white dark:bg-gray-800 text-gray-500">{t('common.or')}</span>
-                                </div>
-                            </div>
-
-                            <button
-                                onClick={handleForcedGuestLogin}
-                                disabled={isLoginModalLoading}
-                                className="w-full p-4 bg-slate-100 dark:bg-gray-700/50 border-2 border-dashed border-gray-600 rounded-xl font-medium text-slate-600 dark:text-gray-300 flex items-center justify-center gap-3 hover:bg-slate-100 dark:bg-gray-700/80 hover:border-gray-500 transition-all disabled:opacity-50"
-                            >
-                                <User className="w-5 h-5" />
-                                {t('auth.guestMode')}
-                            </button>
-                            <p className="text-xs text-gray-500 text-center">
-                                {t('auth.guestWarning')}
-                            </p>
                         </div>
                     </div>
                 </div>
@@ -1259,6 +1379,45 @@ const Home = () => {
                         >
                             {t('common.close')}
                         </button>
+                    </div>
+                </div>
+            )}
+
+            {showGuestLinkPromptModal && (
+                <div className="fixed inset-0 z-[121] bg-black/80 backdrop-blur-sm flex items-center justify-center px-4">
+                    <div className="w-full max-w-md rounded-3xl border border-amber-400/30 bg-slate-50 dark:bg-gray-900/95 p-6 shadow-2xl">
+                        <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-2">
+                            {t('profile.guestTitle')}
+                        </h2>
+                        <p className="text-sm text-slate-600 dark:text-gray-300 mb-5">
+                            {t(isIOS ? 'profile.guestDescIOS' : 'profile.guestDesc')}
+                        </p>
+
+                        <div className="space-y-3">
+                            {isIOS && (
+                                <button
+                                    onClick={handleGuestLinkWithApple}
+                                    disabled={isGuestLinkPromptLoading}
+                                    className="w-full rounded-xl border border-black/15 bg-white py-3 font-bold text-black transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/20 dark:bg-black dark:text-white dark:hover:bg-gray-900"
+                                >
+                                    {isGuestLinkPromptLoading ? t('common.loading') : t('profile.linkApple')}
+                                </button>
+                            )}
+                            <button
+                                onClick={handleGuestLinkWithGoogle}
+                                disabled={isGuestLinkPromptLoading}
+                                className="w-full rounded-xl bg-white py-3 font-bold text-gray-900 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                                {isGuestLinkPromptLoading ? t('common.loading') : t('profile.linkGoogle')}
+                            </button>
+                            <button
+                                onClick={dismissGuestLinkPrompt}
+                                disabled={isGuestLinkPromptLoading}
+                                className="w-full rounded-xl border border-gray-600 bg-transparent py-3 font-semibold text-slate-600 transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-60 dark:text-gray-300 dark:hover:bg-gray-800"
+                            >
+                                {t('common.close')}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
@@ -1638,14 +1797,18 @@ const Home = () => {
                             onMouseEnter={() => playSound('hover')}
                             onClick={() => handleModeSelect('rank')}
                             disabled={isNicknameGateActive}
-                            className={`group relative w-full p-6 bg-white dark:bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-200 ${isNicknameGateActive ? 'opacity-60 cursor-not-allowed' : canPlayRank ? 'hover:border-purple-500 hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] active:scale-[0.98] active:border-purple-300 active:bg-purple-400/20 active:shadow-[0_0_28px_rgba(168,85,247,0.5)] active:brightness-125 active:saturate-150 cursor-pointer' : 'opacity-50 grayscale cursor-not-allowed'} ${shouldHighlightRankButton ? 'rank-cta-highlight border-purple-400/80' : ''} flex items-center gap-4 text-left`}
+                            className={`group relative w-full p-6 bg-white dark:bg-gray-800/50 backdrop-blur-md border rounded-2xl overflow-hidden transition-all duration-200 ${isNicknameGateActive ? 'opacity-60 cursor-not-allowed border-gray-700' : canPlayRank ? 'border-purple-400/55 hover:border-purple-300 hover:shadow-[0_0_18px_rgba(168,85,247,0.22)] active:scale-[0.98] active:border-purple-200 active:bg-purple-400/20 active:shadow-[0_0_24px_rgba(168,85,247,0.28)] active:brightness-125 active:saturate-150 cursor-pointer' : 'border-purple-400/30 opacity-50 grayscale cursor-not-allowed'} ${shouldHighlightRankButton ? 'rank-cta-highlight border-purple-300/90' : ''} flex items-center gap-4 text-left`}
                         >
                             {shouldHighlightRankButton && (
                                 <div className="rank-cta-sheen absolute inset-0 z-0 pointer-events-none" />
                             )}
                             <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-300" />
                             <div className="relative z-10 p-3 rounded-full bg-purple-500/20 group-hover:bg-purple-500/30 group-active:bg-purple-500/40 transition-colors">
-                                <Trophy className="w-8 h-8 text-purple-400 group-active:text-purple-200 transition-colors" />
+                                {showRankSummary ? (
+                                    <TierIcon className="w-8 h-8 object-contain text-purple-400 group-active:text-purple-200 transition-colors" />
+                                ) : (
+                                    <Trophy className="w-8 h-8 text-purple-400 group-active:text-purple-200 transition-colors" />
+                                )}
                             </div>
                             <div className="relative z-10">
                                 <h3 className="text-2xl font-bold group-hover:text-purple-400 group-active:text-purple-200 transition-colors">{t('menu.rank.title')}</h3>
@@ -1799,7 +1962,7 @@ const Home = () => {
             </div>
 
             {/* Tutorial Spotlight Overlay */}
-            {user && isHomeTutorialActive && homeTutorialSteps[homeTutorialStep] && (
+            {user && isHomeTutorialActive && homeTutorialSteps[homeTutorialStep] && (!((profile as any)?.home_tutorial_seen_at) || isHomeTutorialReplay) && (
                 <SpotlightOverlay
                     targetRef={tutorialRefs[homeTutorialSteps[homeTutorialStep].id]}
                     message={t(homeTutorialSteps[homeTutorialStep].messageKey)}
@@ -1820,6 +1983,7 @@ const Home = () => {
                     nextLabel={t('tutorial.startNormalNow', '일반모드 시작')}
                 />
             )}
+
         </div >
     );
 };
