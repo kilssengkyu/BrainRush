@@ -936,8 +936,10 @@ const Home = () => {
     };
 
     const handleModeSelect = async (mode: string, options?: { forceBotImmediate?: boolean }) => {
-        const canBypassNicknameGate = mode === 'normal' && showPostTutorialNormalSpotlight;
-        if (isNicknameGateActive && !canBypassNicknameGate) {
+        const hasPlayedNormalGame = (profile?.casual_wins || 0) + (profile?.casual_losses || 0) > 0 || (profile?.xp ?? 0) > 0;
+        const requiresNicknameNow = mode === 'rank' || (mode === 'normal' && hasPlayedNormalGame);
+
+        if (isNicknameGateActive && requiresNicknameNow) {
             if (!showNicknameModal) {
                 setShowNicknameModal(true);
                 showToast(t('profile.nicknameSetupRequired', '닉네임을 먼저 설정해 주세요.'), 'info');
@@ -1032,12 +1034,16 @@ const Home = () => {
     useEffect(() => {
         if (!user || !profile?.needs_nickname_setup) return;
         if (authLoading || guestEntryState === 'fallback' || isHomeTutorialActive || showPostTutorialNormalSpotlight || status !== 'idle') return;
+        
+        const hasPlayedNormalGame = (profile?.casual_wins || 0) + (profile?.casual_losses || 0) > 0 || (profile?.xp ?? 0) > 0;
+        if (!hasPlayedNormalGame) return;
+
         const shownKey = `nickname_prompt_shown:${user.id}`;
         if (window.sessionStorage.getItem(shownKey) === '1') return;
 
         setShowNicknameModal(true);
         window.sessionStorage.setItem(shownKey, '1');
-    }, [user, profile?.needs_nickname_setup, authLoading, guestEntryState, isHomeTutorialActive, showPostTutorialNormalSpotlight, status]);
+    }, [user, profile?.needs_nickname_setup, profile?.xp, profile?.casual_wins, profile?.casual_losses, authLoading, guestEntryState, isHomeTutorialActive, showPostTutorialNormalSpotlight, status]);
 
     useEffect(() => {
         const handleModalCloseRequest = (event: Event) => {
