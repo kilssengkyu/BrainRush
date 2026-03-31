@@ -107,7 +107,7 @@ const Home = () => {
     const { t, i18n } = useTranslation();
     const { playSound } = useSound();
     const { user, profile, refreshProfile, loading: authLoading, signInWithGoogle, signInWithApple, signInAnonymously, linkWithGoogle, linkWithApple } = useAuth();
-    const { showToast } = useUI();
+    const { showToast, confirm } = useUI();
     const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
     const [unreadChatCount, setUnreadChatCount] = useState(0);
     const [xpAnimation, setXpAnimation] = useState<XpAnimationPayload | null>(null);
@@ -779,10 +779,22 @@ const Home = () => {
         try {
             dismissGuestLinkPrompt();
             await linkWithGoogle();
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to link google:', error);
-            showToast((error as any)?.message || t('common.error'), 'error');
-            setShowGuestLinkPromptModal(true);
+            if (error?.message?.includes('이미 가입된')) {
+                const confirmed = await confirm(
+                    t('profile.accountConflictTitle', '기존 계정 발견!'),
+                    t('profile.accountConflictDesc', '이 계정에는 이미 다른 게임 데이터가 존재합니다.\\n현재 게스트 기록을 버리고 기존 계정을 불러오시겠습니까?')
+                );
+                if (confirmed) {
+                    await signInWithGoogle();
+                } else {
+                    setShowGuestLinkPromptModal(true);
+                }
+            } else {
+                showToast(error?.message || t('common.error'), 'error');
+                setShowGuestLinkPromptModal(true);
+            }
         } finally {
             setIsGuestLinkPromptLoading(false);
         }
@@ -794,10 +806,22 @@ const Home = () => {
         try {
             dismissGuestLinkPrompt();
             await linkWithApple();
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to link apple:', error);
-            showToast((error as any)?.message || t('common.error'), 'error');
-            setShowGuestLinkPromptModal(true);
+            if (error?.message?.includes('이미 가입된')) {
+                const confirmed = await confirm(
+                    t('profile.accountConflictTitle', '기존 계정 발견!'),
+                    t('profile.accountConflictDesc', '이 계정에는 이미 다른 게임 데이터가 존재합니다.\\n현재 게스트 기록을 버리고 기존 계정을 불러오시겠습니까?')
+                );
+                if (confirmed) {
+                    await signInWithApple();
+                } else {
+                    setShowGuestLinkPromptModal(true);
+                }
+            } else {
+                showToast(error?.message || t('common.error'), 'error');
+                setShowGuestLinkPromptModal(true);
+            }
         } finally {
             setIsGuestLinkPromptLoading(false);
         }

@@ -55,7 +55,7 @@ const HIGHSCORE_GAME_TYPES = [
 ] as const;
 
 const Profile = () => {
-    const { user, profile, signOut, refreshProfile, linkWithGoogle, linkWithApple } = useAuth();
+    const { user, profile, signOut, refreshProfile, linkWithGoogle, linkWithApple, signInWithGoogle, signInWithApple } = useAuth();
     const { playSound } = useSound();
     const { showToast, confirm } = useUI();
     const navigate = useNavigate();
@@ -478,6 +478,8 @@ const Profile = () => {
     };
 
     const handleLogout = async () => {
+        if (isGuest) return;
+
         const confirmed = await confirm(
             t('menu.logout'),
             t('settings.logoutConfirm')
@@ -776,9 +778,11 @@ const Profile = () => {
                     </button>
                 </div>
                 <div className="flex gap-2">
-                    <button onClick={handleLogout} className="p-2 rounded-full hover:bg-red-50 dark:hover:bg-red-500/20 text-red-500 dark:text-red-400 transition-colors">
-                        <LogOut className="w-6 h-6" />
-                    </button>
+                    {!isGuest && (
+                        <button onClick={handleLogout} className="p-2 rounded-full hover:bg-red-50 dark:hover:bg-red-500/20 text-red-500 dark:text-red-400 transition-colors">
+                            <LogOut className="w-6 h-6" />
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -807,9 +811,19 @@ const Profile = () => {
                                                 onClick={async () => {
                                                     try {
                                                         await linkWithApple();
-                                                    } catch (err) {
+                                                    } catch (err: any) {
                                                         console.error('Failed to link apple:', err);
-                                                        showToast((err as any)?.message || t('common.error'), 'error');
+                                                        if (err?.message?.includes('이미 가입된')) {
+                                                            const confirmed = await confirm(
+                                                                t('profile.accountConflictTitle', '기존 계정 발견!'),
+                                                                t('profile.accountConflictDesc', '이 계정에는 이미 다른 게임 데이터가 존재합니다.\\n현재 게스트 기록을 버리고 기존 계정을 불러오시겠습니까?')
+                                                            );
+                                                            if (confirmed) {
+                                                                await signInWithApple();
+                                                            }
+                                                        } else {
+                                                            showToast(err?.message || t('common.error'), 'error');
+                                                        }
                                                     }
                                                 }}
                                                 className="inline-flex items-center justify-center rounded-full border border-amber-300 bg-amber-100 px-4 py-2 text-xs font-bold text-amber-900 hover:bg-amber-200 transition-colors dark:border-white/10 dark:bg-white/10 dark:text-amber-100 dark:hover:bg-white/20"
@@ -821,9 +835,19 @@ const Profile = () => {
                                             onClick={async () => {
                                                 try {
                                                     await linkWithGoogle();
-                                                } catch (err) {
+                                                } catch (err: any) {
                                                     console.error('Failed to link google:', err);
-                                                    showToast((err as any)?.message || t('common.error'), 'error');
+                                                    if (err?.message?.includes('이미 가입된')) {
+                                                        const confirmed = await confirm(
+                                                            t('profile.accountConflictTitle', '기존 계정 발견!'),
+                                                            t('profile.accountConflictDesc', '이 계정에는 이미 다른 게임 데이터가 존재합니다.\\n현재 게스트 기록을 버리고 기존 계정을 불러오시겠습니까?')
+                                                        );
+                                                        if (confirmed) {
+                                                            await signInWithGoogle();
+                                                        }
+                                                    } else {
+                                                        showToast(err?.message || t('common.error'), 'error');
+                                                    }
                                                 }
                                             }}
                                             className="inline-flex items-center justify-center rounded-full border border-amber-300 bg-amber-100 px-4 py-2 text-xs font-bold text-amber-900 hover:bg-amber-200 transition-colors dark:border-white/10 dark:bg-white/10 dark:text-amber-100 dark:hover:bg-white/20"
