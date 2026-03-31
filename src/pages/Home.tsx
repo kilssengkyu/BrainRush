@@ -755,9 +755,7 @@ const Home = () => {
                     showToast((error as any)?.message || t('common.error'), 'error');
                 }
             } finally {
-                if (!cancelled) {
-                    setGuestEntryState((prev) => (prev === 'signing-in' ? 'idle' : prev));
-                }
+                setGuestEntryState((prev) => (prev === 'signing-in' ? 'idle' : prev));
             }
         };
 
@@ -1274,7 +1272,7 @@ const Home = () => {
             )}
 
             {/* Auth Loading Overlay */}
-            {(authLoading || guestEntryState === 'signing-in') && (
+            {(authLoading || (!user && guestEntryState === 'signing-in')) && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm">
                     <div className="flex items-center gap-3 bg-slate-50 dark:bg-gray-900/80 border border-white/10 rounded-2xl px-5 py-4 shadow-xl">
                         <Loader2 className="w-5 h-5 text-blue-400 animate-spin" />
