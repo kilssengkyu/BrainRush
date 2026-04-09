@@ -677,6 +677,7 @@
     "rewardPracticeNotes": "Practice Notes +{{count}}",
     "claim": "Claim",
     "claimed": "Claimed",
-    "claimSuccess": "Reward claimed. (+{{pencils}} pencils, +{{notes}} practice notes)"
+    "claimSuccess": "Reward claimed. (+{{pencils}} pencils, +{{notes}} practice notes)",
+    "claimBlockedPencilsFull": "Du kannst dies nicht einlösen, solange du 5 oder mehr Stifte hast. Bitte verbrauche zuerst Stifte."
   }
 }

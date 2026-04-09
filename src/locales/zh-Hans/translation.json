@@ -677,6 +677,7 @@
     "rewardPracticeNotes": "练习笔记 +{{count}}",
     "claim": "领取",
     "claimed": "已领取",
-    "claimSuccess": "奖励已领取。(+{{pencils}} 铅笔, +{{notes}} 练习笔记)"
+    "claimSuccess": "奖励已领取。(+{{pencils}} 铅笔, +{{notes}} 练习笔记)",
+    "claimBlockedPencilsFull": "当铅笔达到5支或以上时无法领取。请先使用铅笔。"
   }
 }

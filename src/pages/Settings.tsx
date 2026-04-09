@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Globe, Volume2, VolumeX, RefreshCcw, BookOpen, Shield, X, Bell, MessageCircleQuestion, Moon, Sun, MonitorSmartphone, Sparkles } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Globe, Volume2, VolumeX, RefreshCcw, BookOpen, Shield, X, Bell, MessageCircleQuestion, Moon, Sun, MonitorSmartphone, Sparkles, LogOut, UserX } from 'lucide-react';
 import { useSound } from '../contexts/SoundContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useUI } from '../contexts/UIContext';
@@ -22,11 +22,12 @@ const Settings = () => {
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
     const { isMuted, toggleMute, isVibrationEnabled, toggleVibration, playSound } = useSound();
-    const { user, profile, refreshProfile } = useAuth();
-    const { showToast } = useUI();
+    const { user, profile, signOut, refreshProfile } = useAuth();
+    const { showToast, confirm } = useUI();
     const { resetHomeTutorial } = useTutorial();
     const { themeMode, themePreference, setThemePreference } = useTheme();
     const [isRestoring, setIsRestoring] = useState(false);
+    const [isDeletingAccount, setIsDeletingAccount] = useState(false);
     const [isLanguageModalOpen, setIsLanguageModalOpen] = useState(false);
     const [isMakersModalOpen, setIsMakersModalOpen] = useState(false);
     const [languageSearch, setLanguageSearch] = useState('');
@@ -37,6 +38,7 @@ const Settings = () => {
     const profileRole = (profile as any)?.role;
     const isAdmin = appRole === 'admin' || profileRole === 'admin';
     const [appVersion, setAppVersion] = useState<string>('');
+    const isGuest = Boolean(user?.is_anonymous || user?.app_metadata?.provider === 'anonymous');
     const makers = [
         {
             name: 'SK.GIL',
@@ -257,6 +259,45 @@ const Settings = () => {
         showToast(t('settings.announcementWillShowOnHome'), 'success');
         playSound('click');
         navigate('/');
+    };
+
+    const handleLogout = async () => {
+        const confirmed = await confirm(
+            t('menu.logout'),
+            isGuest
+                ? t('profile.guestLogoutConfirm', '게스트는 로그아웃하면 데이터가 사라질 수 있습니다. 로그아웃하시겠습니까?')
+                : t('settings.logoutConfirm')
+        );
+        if (!confirmed) return;
+
+        playSound('click');
+        await signOut();
+        navigate('/');
+    };
+
+    const handleDeleteAccount = async () => {
+        if (!user || isGuest) return;
+        const confirmed = await confirm(
+            t('settings.deleteAccount'),
+            t('settings.deleteAccountConfirm')
+        );
+        if (!confirmed) return;
+
+        playSound('click');
+        setIsDeletingAccount(true);
+        try {
+            const { error } = await supabase.rpc('delete_account');
+            if (error) throw error;
+
+            await signOut();
+            navigate('/');
+            showToast(t('profile.deleteSuccess'), 'success');
+        } catch (error) {
+            console.error('Error deleting account:', error);
+            showToast(t('profile.deleteFail'), 'error');
+        } finally {
+            setIsDeletingAccount(false);
+        }
     };
 
 
@@ -586,6 +627,38 @@ const Settings = () => {
                                 >
                                     {t('settings.goToAdmin')}
                                 </button>
+                            </div>
+                        </section>
+                    )}
+
+                    {/* Account Section */}
+                    {user && (
+                        <section className="space-y-4">
+                            <div className="flex items-center gap-3 text-rose-400 mb-2">
+                                <LogOut size={24} />
+                                <h2 className="text-xl font-semibold">{t('settings.accountSectionTitle', '계정')}</h2>
+                            </div>
+                            <div className="bg-white dark:bg-white/5 p-6 rounded-xl border border-slate-200 dark:border-white/10 space-y-3 backdrop-blur-md shadow-sm dark:shadow-none">
+                                <p className="text-sm text-slate-500 dark:text-gray-400">
+                                    {t('settings.accountSectionDesc', '로그아웃 또는 계정 삭제를 관리합니다.')}
+                                </p>
+                                <button
+                                    onClick={() => { void handleLogout(); }}
+                                    disabled={isDeletingAccount}
+                                    className="w-full px-5 py-3 rounded-xl bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 text-slate-700 dark:text-white font-bold transition-colors disabled:opacity-60"
+                                >
+                                    {t('menu.logout')}
+                                </button>
+                                {!isGuest && (
+                                    <button
+                                        onClick={() => { void handleDeleteAccount(); }}
+                                        disabled={isDeletingAccount}
+                                        className="w-full px-5 py-3 rounded-xl bg-red-100 dark:bg-red-600/80 hover:bg-red-200 dark:hover:bg-red-600 text-red-700 dark:text-white font-bold transition-colors disabled:opacity-60 inline-flex items-center justify-center gap-2"
+                                    >
+                                        <UserX size={18} />
+                                        {isDeletingAccount ? t('common.loading') : t('settings.deleteAccount')}
+                                    </button>
+                                )}
                             </div>
                         </section>
                     )}

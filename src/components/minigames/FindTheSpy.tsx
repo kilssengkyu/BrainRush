@@ -42,6 +42,7 @@ const getRoundConfig = (tileCount: number) => {
 };
 
 const FindTheSpy: React.FC<FindTheSpyProps> = ({ seed, onScore, isPlaying }) => {
+    const WRONG_COOLDOWN_MS = 400;
     const { t } = useTranslation();
     const { playSound } = useSound();
 
@@ -56,6 +57,8 @@ const FindTheSpy: React.FC<FindTheSpyProps> = ({ seed, onScore, isPlaying }) => 
     // The "Spy" symbols (new symbols introduced)
     const [targetSymbolIds, setTargetSymbolIds] = useState<string[]>([]);
     const [foundSpyIds, setFoundSpyIds] = useState<string[]>([]);
+    const [isInputLocked, setIsInputLocked] = useState(false);
+    const [isWrongFlash, setIsWrongFlash] = useState(false);
 
     const rng = useRef<SeededRandom | null>(null);
 
@@ -88,6 +91,8 @@ const FindTheSpy: React.FC<FindTheSpyProps> = ({ seed, onScore, isPlaying }) => 
         setPhase('memorize');
         setTargetSymbolIds([]);
         setFoundSpyIds([]);
+        setIsInputLocked(false);
+        setIsWrongFlash(false);
     };
 
     const handleReady = () => {
@@ -142,7 +147,7 @@ const FindTheSpy: React.FC<FindTheSpyProps> = ({ seed, onScore, isPlaying }) => 
     };
 
     const handleTileClick = (symbolId: string) => {
-        if (phase !== 'guessing' || !isPlaying) return;
+        if (phase !== 'guessing' || !isPlaying || isInputLocked) return;
 
         if (foundSpyIds.includes(symbolId)) return;
 
@@ -160,11 +165,15 @@ const FindTheSpy: React.FC<FindTheSpyProps> = ({ seed, onScore, isPlaying }) => 
             }
         } else {
             // Wrong
+            setIsInputLocked(true);
+            setIsWrongFlash(true);
             playSound('error');
             const { missPenalty } = getRoundConfig(tiles.length);
             onScore(-missPenalty);
-            // Visual feedback could be added here (shake etc), 
-            // but for fast pace we might just deduct score.
+            window.setTimeout(() => {
+                setIsInputLocked(false);
+                setIsWrongFlash(false);
+            }, WRONG_COOLDOWN_MS);
         }
     };
 
@@ -222,7 +231,7 @@ const FindTheSpy: React.FC<FindTheSpyProps> = ({ seed, onScore, isPlaying }) => 
                                             }
                                             handleTileClick(tile.id);
                                         }}
-                                        className={`${tileWidth} ${hideFound ? 'opacity-0 pointer-events-none scale-0' : 'bg-white/10'} rounded-xl border-2 border-white/20 flex items-center justify-center cursor-pointer hover:bg-white/20 active:scale-95 transition-colors shadow-lg`}
+                                        className={`${tileWidth} ${hideFound ? 'opacity-0 pointer-events-none scale-0' : (isWrongFlash ? 'bg-red-500/80 border-red-400' : 'bg-white/10')} ${isInputLocked ? 'pointer-events-none' : ''} rounded-xl border-2 border-white/20 flex items-center justify-center cursor-pointer hover:bg-white/20 active:scale-95 transition-colors shadow-lg`}
                                     >
                                         <Icon size={32} className={tile.color} />
                                     </motion.div>

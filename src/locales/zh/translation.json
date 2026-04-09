@@ -677,6 +677,7 @@
     "rewardPracticeNotes": "練習筆記 +{{count}}",
     "claim": "領取",
     "claimed": "已領取",
-    "claimSuccess": "獎勵已領取。(+{{pencils}} 鉛筆, +{{notes}} 練習筆記)"
+    "claimSuccess": "獎勵已領取。(+{{pencils}} 鉛筆, +{{notes}} 練習筆記)",
+    "claimBlockedPencilsFull": "當鉛筆達到5支或以上時無法領取。請先使用鉛筆。"
   }
 }

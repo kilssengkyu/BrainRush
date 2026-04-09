@@ -70,11 +70,13 @@ const createWrongResult = (rng: SeededRandom, answer: number, _difficulty: numbe
 };
 
 const MathOXGame: React.FC<MathOXGameProps> = ({ seed, onScore, isPlaying }) => {
+    const WRONG_COOLDOWN_MS = 400;
     const { t } = useTranslation();
     const { playSound } = useSound();
     const [panelIndex, setPanelIndex] = usePanelProgress(seed, 'math_ox');
     const [animKey, setAnimKey] = useState(0);
     const [shake, setShake] = useState<'o' | 'x' | null>(null);
+    const [isInputLocked, setIsInputLocked] = useState(false);
 
     const problem = useMemo<Problem | null>(() => {
         if (!seed) return null;
@@ -93,25 +95,31 @@ const MathOXGame: React.FC<MathOXGameProps> = ({ seed, onScore, isPlaying }) => 
     }, [seed, panelIndex]);
 
     const submitAnswer = (answer: 'o' | 'x') => {
-        if (!problem || !isPlaying) return;
+        if (!problem || !isPlaying || isInputLocked) return;
 
         const isCorrect = (answer === 'o' && problem.isTrue) || (answer === 'x' && !problem.isTrue);
         const scoreBase = (30 + (panelIndex * 5)) * 2;
 
         if (isCorrect) {
+            setIsInputLocked(true);
             onScore(scoreBase);
             playSound('correct');
             setTimeout(() => {
                 setPanelIndex((prev) => prev + 1);
                 setAnimKey((prev) => prev + 1);
+                setIsInputLocked(false);
             }, 120);
             return;
         }
 
+        setIsInputLocked(true);
         onScore(-scoreBase);
         playSound('error');
         setShake(answer);
-        setTimeout(() => setShake(null), 240);
+        setTimeout(() => {
+            setShake(null);
+            setIsInputLocked(false);
+        }, WRONG_COOLDOWN_MS);
     };
 
     if (!problem) {
@@ -139,6 +147,7 @@ const MathOXGame: React.FC<MathOXGameProps> = ({ seed, onScore, isPlaying }) => 
 
             <div className="w-full max-w-md grid grid-cols-2 gap-4">
                 <motion.button
+                    disabled={isInputLocked || !isPlaying}
                     onPointerDown={(e) => {
                         e.preventDefault();
                         submitAnswer('o');
@@ -150,6 +159,7 @@ const MathOXGame: React.FC<MathOXGameProps> = ({ seed, onScore, isPlaying }) => 
                     O
                 </motion.button>
                 <motion.button
+                    disabled={isInputLocked || !isPlaying}
                     onPointerDown={(e) => {
                         e.preventDefault();
                         submitAnswer('x');

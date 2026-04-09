@@ -7,6 +7,12 @@ const DEFAULT_BOT_DELAY_MIN_MS = 3000;
 const DEFAULT_BOT_DELAY_MAX_MS = 8000;
 const DEFAULT_BOT_FORCE_AFTER_MS = 8000;
 
+type MatchMode = 'rank' | 'normal';
+
+type StartSearchOptions = {
+    forceBotImmediate?: boolean;
+};
+
 export const useMatchmaking = (
     onMatchFound: (roomId: string, opponentId: string) => void
 ) => {
@@ -82,7 +88,33 @@ export const useMatchmaking = (
         }
     };
 
-    const startSearch = async (mode: 'rank' | 'normal' = 'rank') => {
+    const createBotMatch = async (playerId: string, forceBot: boolean) => {
+        const { data, error } = await supabase
+            .rpc('create_bot_session', { p_player_id: playerId, p_force: forceBot })
+            .maybeSingle() as { data: { room_id: string, opponent_id: string } | null, error: any };
+
+        if (error) throw error;
+        if (!data?.room_id || !data?.opponent_id) return null;
+
+        try {
+            if (user && !pencilConsumed.current) {
+                pencilConsumed.current = true;
+                const { data: consumed } = await supabase.rpc('consume_pencil', { user_id: user.id });
+                if (!consumed) {
+                    console.error('Failed to consume pencil (Bot Match)!');
+                }
+            }
+        } catch (e) {
+            console.error('Pencil consumption error (Bot Match):', e);
+        }
+
+        setMatchedOpponentId(data.opponent_id);
+        setStatus('matched');
+        onMatchFound(data.room_id, data.opponent_id);
+        return data;
+    };
+
+    const startSearch = async (mode: MatchMode = 'rank', options: StartSearchOptions = {}) => {
         const playerId = getPlayerId();
         console.log(`startSearch called. Mode: ${mode}, PlayerID: ${playerId}, IsGuest: ${!user}`);
 
@@ -111,6 +143,22 @@ export const useMatchmaking = (
         setElapsedTime(0);
         botMatchTriggered.current = false;
         pencilConsumed.current = false;
+
+        if (options.forceBotImmediate) {
+            botMatchTriggered.current = true;
+            try {
+                const forceBot = true;
+                const botMatch = await createBotMatch(playerId, forceBot);
+                if (botMatch) {
+                    console.log('Immediate tutorial bot match found. Room:', botMatch.room_id);
+                    return;
+                }
+                botMatchTriggered.current = false;
+            } catch (err) {
+                console.error('Immediate tutorial bot matchmaking error:', err);
+                botMatchTriggered.current = false;
+            }
+        }
 
         // Decide bot fallback delay once per search.
         // If app_config keys are missing, fallback stays at 3~8s.
@@ -168,28 +216,10 @@ export const useMatchmaking = (
             if (isBotEligible && !botMatchTriggered.current && elapsedMs >= botDelayMs) {
                 botMatchTriggered.current = true;
                 try {
-                    const { data, error } = await supabase
-                        .rpc('create_bot_session', { p_player_id: playerId, p_force: forceBot })
-                        .maybeSingle() as { data: { room_id: string, opponent_id: string } | null, error: any };
-
-                    if (error) throw error;
-                    if (data?.room_id && data?.opponent_id) {
-                        console.log('Bot Match Found! Room:', data.room_id);
+                    const botMatch = await createBotMatch(playerId, forceBot);
+                    if (botMatch) {
+                        console.log('Bot Match Found! Room:', botMatch.room_id);
                         if (searchInterval.current) clearInterval(searchInterval.current);
-                        try {
-                            if (user && !pencilConsumed.current) {
-                                pencilConsumed.current = true;
-                                const { data: consumed } = await supabase.rpc('consume_pencil', { user_id: user.id });
-                                if (!consumed) {
-                                    console.error('Failed to consume pencil (Bot Match)!');
-                                }
-                            }
-                        } catch (e) {
-                            console.error('Pencil consumption error (Bot Match):', e);
-                        }
-                        setMatchedOpponentId(data.opponent_id);
-                        setStatus('matched');
-                        onMatchFound(data.room_id, data.opponent_id);
                         return;
                     }
                     botMatchTriggered.current = false;

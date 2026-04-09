@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePanelProgress } from '../../hooks/usePanelProgress';
 import { motion } from 'framer-motion';
@@ -16,6 +16,16 @@ interface LadderGameProps {
 // Bridge connects lineIndex and lineIndex + 1 at stepIndex
 type Bridge = [number, number];
 
+const getTimingAdjustment = (reactionSeconds: number): number => {
+    if (reactionSeconds <= 1) {
+        return 0.2 * ((1 - reactionSeconds) / 1); // +20% -> 0%
+    }
+    if (reactionSeconds <= 3) {
+        return -0.2 * ((reactionSeconds - 1) / 2); // 0% -> -20%
+    }
+    return -0.2;
+};
+
 const LadderGame: React.FC<LadderGameProps> = ({ seed, onScore, isPlaying }) => {
     const { t } = useTranslation();
     const { playSound } = useSound();
@@ -27,6 +37,7 @@ const LadderGame: React.FC<LadderGameProps> = ({ seed, onScore, isPlaying }) => 
     const [isAnimating, setIsAnimating] = useState(false);
     const [shakeId, setShakeId] = useState<number | null>(null); // For wrong answers
     const [tracePath, setTracePath] = useState<{ x: number, y: number }[]>([]);
+    const [panelShownAtMs, setPanelShownAtMs] = useState<number>(Date.now());
     const CONTAINER_WIDTH = 300;
     const CONTAINER_HEIGHT = 320;
 
@@ -91,6 +102,10 @@ const LadderGame: React.FC<LadderGameProps> = ({ seed, onScore, isPlaying }) => 
         };
     }, [seed, panelIndex]);
 
+    useEffect(() => {
+        setPanelShownAtMs(Date.now());
+    }, [gameState, panelIndex]);
+
     const handleEndClick = (endIndex: number) => {
         if (isAnimating || !gameState || !isPlaying) return;
 
@@ -101,7 +116,10 @@ const LadderGame: React.FC<LadderGameProps> = ({ seed, onScore, isPlaying }) => 
             setSelectedEnd(endIndex);
             setIsAnimating(true);
             generateTracePath();
-            onScore(scoreBase);
+            const reactionSeconds = Math.max(0, (Date.now() - panelShownAtMs) / 1000);
+            const timingAdjustment = getTimingAdjustment(reactionSeconds);
+            const adjustedScore = Math.round(scoreBase * (1 + timingAdjustment));
+            onScore(adjustedScore);
             playSound('correct');
             setTimeout(() => {
                 setIsAnimating(false);

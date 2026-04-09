@@ -677,6 +677,7 @@
     "rewardPracticeNotes": "Practice Notes +{{count}}",
     "claim": "Claim",
     "claimed": "Claimed",
-    "claimSuccess": "Reward claimed. (+{{pencils}} pencils, +{{notes}} practice notes)"
+    "claimSuccess": "Reward claimed. (+{{pencils}} pencils, +{{notes}} practice notes)",
+    "claimBlockedPencilsFull": "Voce nao pode resgatar isso enquanto tiver 5 ou mais lapis. Use lapis primeiro."
   }
 }

@@ -26,10 +26,10 @@ const SPEED_MIN = 35;
 const SPEED_MAX = 75;
 const SPEED_SCALE_STEP = 0.12;
 const SPEED_SCALE_MAX = 2.2;
-const SCORE_WRONG = -50;
 const COLOR_PALETTE = ['#7DD3FC', '#FCA5A5', '#FCD34D', '#A7F3D0', '#C4B5FD', '#F9A8D4'];
 
 const BallCounter: React.FC<BallCounterProps> = ({ seed, onScore, isPlaying }) => {
+    const WRONG_COOLDOWN_MS = 400;
     const { playSound } = useSound();
 
     const containerRef = useRef<HTMLDivElement>(null);
@@ -44,6 +44,8 @@ const BallCounter: React.FC<BallCounterProps> = ({ seed, onScore, isPlaying }) =
     const [correctCount, setCorrectCount] = usePanelProgress(seed, 'correctCount');
     const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
     const [currentColor, setCurrentColor] = useState(COLOR_PALETTE[0]);
+    const [isInputLocked, setIsInputLocked] = useState(false);
+    const [isWrongFlash, setIsWrongFlash] = useState(false);
 
     const updateBounds = useCallback(() => {
         if (!containerRef.current) return;
@@ -161,21 +163,30 @@ const BallCounter: React.FC<BallCounterProps> = ({ seed, onScore, isPlaying }) =
     };
 
     const handleAnswer = (value: number) => {
-        if (!isPlaying) return;
+        if (!isPlaying || isInputLocked) return;
+        const correctScore = currentCount * 18;
         if (value === currentCount) {
+            setIsInputLocked(true);
             playSound('correct');
-            onScore(currentCount * 18);
+            onScore(correctScore);
             const next = correctCount + 1;
             setCorrectCount(next);
             speedScaleRef.current = Math.min(speedScaleRef.current + SPEED_SCALE_STEP, SPEED_SCALE_MAX);
             triggerFeedback('correct');
             setCurrentColor(prev => pickNextColor(prev));
             startRound(next);
+            window.setTimeout(() => setIsInputLocked(false), 120);
         } else {
+            setIsInputLocked(true);
+            setIsWrongFlash(true);
             playSound('error');
-            onScore(SCORE_WRONG);
+            onScore(-(correctScore - 20));
             triggerFeedback('wrong');
             startRound(correctCount);
+            window.setTimeout(() => {
+                setIsInputLocked(false);
+                setIsWrongFlash(false);
+            }, WRONG_COOLDOWN_MS);
         }
     };
 
@@ -263,8 +274,9 @@ const BallCounter: React.FC<BallCounterProps> = ({ seed, onScore, isPlaying }) =
                 {options.map((value) => (
                     <button
                         key={value}
+                        disabled={isInputLocked || !isPlaying}
                         onClick={() => handleAnswer(value)}
-                        className="px-6 py-3 rounded-xl bg-white dark:bg-gray-800/70 border border-white/10 text-slate-900 dark:text-white font-bold text-lg hover:bg-slate-100 dark:bg-gray-700/80 active:scale-95 transition-transform"
+                        className={`px-6 py-3 rounded-xl border border-white/10 text-slate-900 dark:text-white font-bold text-lg active:scale-95 transition-transform ${isWrongFlash ? 'bg-red-500 hover:bg-red-500' : 'bg-white dark:bg-gray-800/70 hover:bg-slate-100 dark:bg-gray-700/80'}`}
                     >
                         {value}
                     </button>

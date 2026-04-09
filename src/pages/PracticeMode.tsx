@@ -8,6 +8,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useUI } from '../contexts/UIContext';
 import { supabase } from '../lib/supabaseClient';
 import AdModal from '../components/ui/AdModal';
+import GamePreviewMedia from '../components/ui/GamePreviewMedia';
 import { PRACTICE_GUIDES } from '../content/practiceGuides';
 import { PRACTICE_GAMES } from '../content/practiceGames';
 
@@ -635,6 +636,15 @@ const PracticeMode = () => {
                         </div>
 
                         <div className="overflow-y-auto max-h-[calc(78vh-5rem)] p-5 space-y-5">
+                            {selectedGuideGame && (
+                                <div className="flex justify-center">
+                                    <GamePreviewMedia
+                                        gameId={selectedGuideGame.id}
+                                        className="h-72 w-full max-w-md rounded-2xl border border-white/10 bg-black/20 object-contain shadow-xl sm:h-80"
+                                    />
+                                </div>
+                            )}
+
                             <section className="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-4">
                                 <div className="text-sm font-semibold text-emerald-600 dark:text-emerald-300 mb-2">{t('practice.guideAtAGlance', '한눈에 보기')}</div>
                                 <p className="text-sm leading-relaxed text-slate-700 dark:text-gray-100">{selectedGuide.summary}</p>

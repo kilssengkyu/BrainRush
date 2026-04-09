@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { X, Mail, Gift } from 'lucide-react';
+import { X, Mail, MailOpen, Gift, Trash2 } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 import { useUI } from '../../contexts/UIContext';
 
@@ -28,9 +28,8 @@ type MailItem = {
   readAt: string | null;
   isClaimed: boolean;
   claimedAt: string | null;
+  deletedAt: string | null;
 };
-
-type FilterMode = 'unread' | 'read';
 
 const normalizeNoticeLocale = (language: string): string => {
   const normalized = String(language || '').toLowerCase();
@@ -93,6 +92,11 @@ const toKstDateString = (iso: string | null | undefined): string => {
   return `${pick('year')}-${pick('month')}-${pick('day')}`;
 };
 
+const isPencilsFullClaimError = (message: string | undefined) => {
+  const normalized = String(message || '').toLowerCase();
+  return normalized.includes('pencils are full');
+};
+
 const MailboxModal = ({
   isOpen,
   onClose,
@@ -106,9 +110,10 @@ const MailboxModal = ({
   const { showToast } = useUI();
   const [loading, setLoading] = useState(false);
   const [claiming, setClaiming] = useState(false);
+  const [deletingUnreadId, setDeletingUnreadId] = useState<number | null>(null);
+  const [deletingReadAll, setDeletingReadAll] = useState(false);
   const [items, setItems] = useState<MailItem[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
-  const [filterMode, setFilterMode] = useState<FilterMode>('unread');
 
   const localeCandidates = useMemo(() => buildNoticeLocaleCandidates(language), [language]);
 
@@ -158,7 +163,7 @@ const MailboxModal = ({
         );
       });
       const occurrenceDates = Array.from(new Set(Array.from(occurrenceById.values())));
-      const stateMap = new Map<string, { read_at: string | null; claimed_at: string | null }>();
+      const stateMap = new Map<string, { read_at: string | null; claimed_at: string | null; deleted_at: string | null }>();
 
       if (ids.length > 0) {
         const { data: translations, error: translationError } = await (supabase as any)
@@ -184,7 +189,7 @@ const MailboxModal = ({
       if (userId && ids.length > 0) {
         const { data: states, error: stateError } = await (supabase as any)
           .from('announcement_user_states')
-          .select('announcement_id, occurrence_date, read_at, claimed_at')
+          .select('announcement_id, occurrence_date, read_at, claimed_at, deleted_at')
           .eq('user_id', userId)
           .in('announcement_id', ids)
           .in('occurrence_date', occurrenceDates);
@@ -195,6 +200,7 @@ const MailboxModal = ({
           stateMap.set(key, {
             read_at: row.read_at ? String(row.read_at) : null,
             claimed_at: row.claimed_at ? String(row.claimed_at) : null,
+            deleted_at: row.deleted_at ? String(row.deleted_at) : null,
           });
         });
       }
@@ -232,21 +238,20 @@ const MailboxModal = ({
           readAt: state?.read_at ?? null,
           isClaimed: Boolean(state?.claimed_at),
           claimedAt: state?.claimed_at ?? null,
+          deletedAt: state?.deleted_at ?? null,
         };
       });
 
-      setItems(mapped);
-      const unreadCount = mapped.filter((item) => !item.isRead).length;
+      const visibleMapped = mapped.filter((item) => !item.deletedAt);
+      setItems(visibleMapped);
+      const unreadCount = visibleMapped.filter((item) => !item.isRead).length;
       onUnreadCountChange?.(unreadCount);
 
       const nextSelected =
-        keepSelectedId && mapped.some((item) => item.id === keepSelectedId)
+        keepSelectedId && visibleMapped.some((item) => item.id === keepSelectedId)
           ? keepSelectedId
-          : mapped[0]?.id ?? null;
+          : visibleMapped[0]?.id ?? null;
       setSelectedId(nextSelected);
-      if (unreadCount === 0) {
-        setFilterMode('read');
-      }
     } catch (error) {
       console.error('Failed to load mailbox:', error);
       showToast(t('common.error'), 'error');
@@ -263,8 +268,11 @@ const MailboxModal = ({
 
   const unreadItems = items.filter((item) => !item.isRead);
   const readItems = items.filter((item) => item.isRead);
-  const visibleItems = filterMode === 'unread' ? unreadItems : readItems;
-  const selected = visibleItems.find((item) => item.id === selectedId) ?? null;
+  const selected = items.find((item) => item.id === selectedId) ?? null;
+  const isReadItemClaimable = (item: MailItem) =>
+    (item.rewardPencils > 0 || item.rewardPracticeNotes > 0) && !item.isClaimed;
+  const readDeletableItems = readItems.filter((item) => !isReadItemClaimable(item));
+  const readProtectedCount = readItems.length - readDeletableItems.length;
 
   const markAsRead = async (item: MailItem) => {
     if (!userId || item.isRead) return;
@@ -335,9 +343,97 @@ const MailboxModal = ({
       await loadMailbox(selected.id);
     } catch (error: any) {
       console.error('Failed to claim mailbox reward:', error);
-      showToast(error?.message || t('common.error'), 'error');
+      const rawMessage = String(error?.message || '');
+      if (isPencilsFullClaimError(rawMessage)) {
+        showToast(
+          t('mailbox.claimBlockedPencilsFull', '연필이 5개 이상이면 수령할 수 없습니다. 먼저 연필을 사용해 주세요.'),
+          'info'
+        );
+      } else {
+        showToast(rawMessage || t('common.error'), 'error');
+      }
     } finally {
       setClaiming(false);
+    }
+  };
+
+  const handleDeleteUnread = async (item: MailItem) => {
+    if (!userId || item.isRead) return;
+    if (isReadItemClaimable(item)) {
+      showToast(
+        t('mailbox.deleteBlockedByClaimable', '수령 가능한 보상이 있는 우편은 삭제할 수 없습니다.'),
+        'info'
+      );
+      return;
+    }
+    setDeletingUnreadId(item.id);
+    try {
+      const nowIso = new Date().toISOString();
+      const { error } = await (supabase as any)
+        .from('announcement_user_states')
+        .upsert(
+          [{
+            announcement_id: item.id,
+            user_id: userId,
+            occurrence_date: item.occurrenceDate,
+            deleted_at: nowIso,
+          }],
+          { onConflict: 'announcement_id,user_id,occurrence_date' }
+        );
+      if (error) throw error;
+      showToast(t('mailbox.deleteUnreadSuccess', '안읽은 우편을 삭제했습니다.'), 'success');
+      await loadMailbox(selectedId);
+    } catch (error: any) {
+      console.error('Failed to delete unread mailbox item:', error);
+      showToast(error?.message || t('common.error'), 'error');
+    } finally {
+      setDeletingUnreadId(null);
+    }
+  };
+
+  const handleDeleteAllRead = async () => {
+    if (!userId) return;
+    if (readItems.length === 0) return;
+    if (readDeletableItems.length === 0) {
+      showToast(
+        readProtectedCount > 0
+          ? t('mailbox.deleteReadAllBlockedByClaimable', '수령 가능한 보상이 있는 읽은 우편은 삭제할 수 없습니다.')
+          : t('mailbox.empty', '우편이 없습니다.'),
+        'info'
+      );
+      return;
+    }
+
+    setDeletingReadAll(true);
+    try {
+      const nowIso = new Date().toISOString();
+      const rows = readDeletableItems.map((item) => ({
+        announcement_id: item.id,
+        user_id: userId,
+        occurrence_date: item.occurrenceDate,
+        deleted_at: nowIso,
+      }));
+      const { error } = await (supabase as any)
+        .from('announcement_user_states')
+        .upsert(rows, { onConflict: 'announcement_id,user_id,occurrence_date' });
+      if (error) throw error;
+
+      showToast(
+        t('mailbox.deleteReadAllSuccess', '읽은 우편 {{count}}개를 삭제했습니다.', { count: readDeletableItems.length }),
+        'success'
+      );
+      if (readProtectedCount > 0) {
+        showToast(
+          t('mailbox.deleteReadAllSkippedClaimable', '수령 가능한 보상이 있는 {{count}}개 우편은 유지됩니다.', { count: readProtectedCount }),
+          'info'
+        );
+      }
+      await loadMailbox(selectedId);
+    } catch (error: any) {
+      console.error('Failed to delete all read mailbox items:', error);
+      showToast(error?.message || t('common.error'), 'error');
+    } finally {
+      setDeletingReadAll(false);
     }
   };
 
@@ -361,52 +457,92 @@ const MailboxModal = ({
 
         <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-[280px_1fr]">
           <div className="border-r border-white/10 flex flex-col min-h-0">
-            <div className="p-3 flex gap-2 border-b border-white/10">
-              <button
-                onClick={() => setFilterMode('unread')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold border ${filterMode === 'unread'
-                  ? 'border-cyan-300 bg-cyan-500/25 text-cyan-100'
-                  : 'border-white/20 bg-slate-900/50 text-white/70'
-                  }`}
-              >
-                {t('mailbox.unread', '안읽은 우편')} ({unreadItems.length})
-              </button>
-              <button
-                onClick={() => setFilterMode('read')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold border ${filterMode === 'read'
-                  ? 'border-cyan-300 bg-cyan-500/25 text-cyan-100'
-                  : 'border-white/20 bg-slate-900/50 text-white/70'
-                  }`}
-              >
-                {t('mailbox.read', '읽은 우편')} ({readItems.length})
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-2 space-y-2">
+            <div className="flex-1 overflow-y-auto p-2 space-y-4">
               {loading && (
                 <div className="text-xs text-slate-500 dark:text-gray-400 p-2">{t('common.loading')}</div>
               )}
-              {!loading && visibleItems.length === 0 && (
-                <div className="text-xs text-slate-500 dark:text-gray-400 p-2">{t('mailbox.empty', '우편이 없습니다.')}</div>
-              )}
-              {!loading && visibleItems.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => { void handleSelect(item); }}
-                  className={`w-full rounded-xl border p-3 text-left transition-colors ${selectedId === item.id
-                    ? 'border-cyan-300 bg-cyan-500/15'
-                    : 'border-white/10 bg-slate-900/40 hover:bg-slate-900/60'
-                    }`}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <div className="text-sm font-bold text-slate-900 dark:text-white truncate">{item.title || t('mailbox.untitled', '제목 없음')}</div>
-                      <div className="text-[11px] text-slate-500 dark:text-gray-400 mt-1">{formatDate(item.startsAt || item.createdAt)}</div>
+
+              {!loading && (
+                <>
+                  <div>
+                    <div className="px-2 pb-2 text-[11px] font-bold uppercase tracking-wider text-cyan-300">
+                      {t('mailbox.unread', '안읽은 우편')} ({unreadItems.length})
                     </div>
-                    {!item.isRead && <span className="mt-1 w-2 h-2 rounded-full bg-red-500" />}
+                    {unreadItems.length === 0 ? (
+                      <div className="text-xs text-slate-500 dark:text-gray-400 p-2">{t('mailbox.emptyUnread', '안읽은 우편이 없습니다.')}</div>
+                    ) : unreadItems.map((item) => (
+                      <div
+                        key={`unread-${item.id}-${item.occurrenceDate}`}
+                        className={`w-full rounded-xl border p-2.5 mb-2 transition-colors ${selectedId === item.id
+                          ? 'border-cyan-300 bg-cyan-500/15'
+                          : 'border-white/10 bg-slate-900/40 hover:bg-slate-900/60'
+                          }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => { void handleSelect(item); }}
+                            className="min-w-0 flex-1 text-left"
+                          >
+                            <div className="flex items-start gap-2">
+                              <Mail className="w-4 h-4 mt-0.5 text-cyan-300 shrink-0" />
+                              <div className="min-w-0">
+                                <div className="text-sm font-bold text-slate-900 dark:text-white truncate">{item.title || t('mailbox.untitled', '제목 없음')}</div>
+                                <div className="text-[11px] text-slate-500 dark:text-gray-400 mt-1">{formatDate(item.startsAt || item.createdAt)}</div>
+                              </div>
+                            </div>
+                          </button>
+                          <button
+                            onClick={() => { void handleDeleteUnread(item); }}
+                            disabled={deletingUnreadId === item.id || isReadItemClaimable(item)}
+                            className="rounded-lg border border-red-300/30 bg-red-500/15 p-2 text-red-300 hover:bg-red-500/25 disabled:opacity-40 disabled:cursor-not-allowed"
+                            title={t('mailbox.deleteUnread', '삭제')}
+                            aria-label={t('mailbox.deleteUnread', '삭제')}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                </button>
-              ))}
+
+                  <div>
+                    <div className="px-2 pb-2 flex items-center justify-between gap-2">
+                      <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-gray-400">
+                        {t('mailbox.read', '읽은 우편')} ({readItems.length})
+                      </div>
+                      <button
+                        onClick={() => { void handleDeleteAllRead(); }}
+                        disabled={deletingReadAll || readItems.length === 0}
+                        className="rounded-lg border border-white/20 bg-slate-900/50 px-2 py-1 text-[11px] font-bold text-slate-700 dark:text-gray-200 hover:bg-slate-800/70 disabled:opacity-40"
+                      >
+                        {deletingReadAll
+                          ? t('common.loading')
+                          : t('mailbox.deleteReadAll', '읽은 우편 전체 삭제')}
+                      </button>
+                    </div>
+                    {readItems.length === 0 ? (
+                      <div className="text-xs text-slate-500 dark:text-gray-400 p-2">{t('mailbox.emptyRead', '읽은 우편이 없습니다.')}</div>
+                    ) : readItems.map((item) => (
+                      <button
+                        key={`read-${item.id}-${item.occurrenceDate}`}
+                        onClick={() => { void handleSelect(item); }}
+                        className={`w-full rounded-xl border p-3 mb-2 text-left transition-colors ${selectedId === item.id
+                          ? 'border-cyan-300 bg-cyan-500/15'
+                          : 'border-white/10 bg-slate-900/40 hover:bg-slate-900/60'
+                          }`}
+                      >
+                        <div className="flex items-start gap-2">
+                          <MailOpen className="w-4 h-4 mt-0.5 text-slate-500 dark:text-gray-400 shrink-0" />
+                          <div className="min-w-0">
+                            <div className="text-sm font-bold text-slate-900 dark:text-white truncate">{item.title || t('mailbox.untitled', '제목 없음')}</div>
+                            <div className="text-[11px] text-slate-500 dark:text-gray-400 mt-1">{formatDate(item.startsAt || item.createdAt)}</div>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           </div>
 

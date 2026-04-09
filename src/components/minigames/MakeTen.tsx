@@ -24,6 +24,16 @@ const TARGET_COMBINATIONS: Record<number, number[][]> = {
     3: [[1, 2, 7], [1, 3, 6], [1, 4, 5], [2, 3, 5]]
 };
 
+const getTimingAdjustment = (reactionSeconds: number): number => {
+    if (reactionSeconds <= 1) {
+        return 0.2 * ((1 - reactionSeconds) / 1); // +20% -> 0%
+    }
+    if (reactionSeconds <= 3) {
+        return -0.2 * ((reactionSeconds - 1) / 2); // 0% -> -20%
+    }
+    return -0.2;
+};
+
 const MakeTen: React.FC<MakeTenProps> = ({ seed, onScore, isPlaying }) => {
     const { t } = useTranslation();
     const { playSound } = useSound();
@@ -33,6 +43,7 @@ const MakeTen: React.FC<MakeTenProps> = ({ seed, onScore, isPlaying }) => {
     const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
     const [animationKey, setAnimationKey] = useState(0);
     const [isSolved, setIsSolved] = useState(false); // Prevent double scoring
+    const [panelShownAtMs, setPanelShownAtMs] = useState<number>(Date.now());
 
     const getPanelConfig = (index: number): PanelConfig => {
         if (index < 5) {
@@ -84,6 +95,10 @@ const MakeTen: React.FC<MakeTenProps> = ({ seed, onScore, isPlaying }) => {
 
     }, [seed, panelIndex]);
 
+    useEffect(() => {
+        setPanelShownAtMs(Date.now());
+    }, [currentPanel, panelIndex]);
+
     // Handle Selection
     const toggleSelection = (index: number) => {
         if (isSolved || !isPlaying) return; // Disable interaction when solved or not playing
@@ -109,7 +124,10 @@ const MakeTen: React.FC<MakeTenProps> = ({ seed, onScore, isPlaying }) => {
         if (sum === 10) {
             // Correct!
             setIsSolved(true);
-            onScore(100); // Fixed 100 points
+            const reactionSeconds = Math.max(0, (Date.now() - panelShownAtMs) / 1000);
+            const timingAdjustment = getTimingAdjustment(reactionSeconds);
+            const adjustedScore = Math.round(100 * (1 + timingAdjustment));
+            onScore(adjustedScore);
             playSound('correct');
 
             // Transition

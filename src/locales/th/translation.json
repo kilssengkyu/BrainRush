@@ -677,6 +677,7 @@
     "rewardPracticeNotes": "Practice Notes +{{count}}",
     "claim": "Claim",
     "claimed": "Claimed",
-    "claimSuccess": "Reward claimed. (+{{pencils}} pencils, +{{notes}} practice notes)"
+    "claimSuccess": "Reward claimed. (+{{pencils}} pencils, +{{notes}} practice notes)",
+    "claimBlockedPencilsFull": "คุณไม่สามารถรับได้เมื่อมีดินสอ 5 แท่งขึ้นไป โปรดใช้ดินสอก่อน"
   }
 }

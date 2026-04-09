@@ -26,6 +26,7 @@ const COLORS = [
 ];
 
 const TapTheColor: React.FC<TapTheColorProps> = ({ seed, onScore, isPlaying }) => {
+    const WRONG_COOLDOWN_MS = 400;
     const { t } = useTranslation();
     const { playSound } = useSound();
     const [panelIndex, setPanelIndex] = usePanelProgress(seed);
@@ -33,6 +34,8 @@ const TapTheColor: React.FC<TapTheColorProps> = ({ seed, onScore, isPlaying }) =
     const [currentStep, setCurrentStep] = useState(0);
     const [shakeId, setShakeId] = useState<number | null>(null);
     const [revealedIndices, setRevealedIndices] = useState<number[]>([]);
+    const [isInputLocked, setIsInputLocked] = useState(false);
+    const [isWrongFlash, setIsWrongFlash] = useState(false);
 
     // Difficulty Settings
     const difficulty = useMemo(() => {
@@ -83,14 +86,20 @@ const TapTheColor: React.FC<TapTheColorProps> = ({ seed, onScore, isPlaying }) =
     };
 
     const handleTileClick = (index: number) => {
-        if (phase !== 'input' || !gameState || !isPlaying) return;
+        if (phase !== 'input' || !gameState || !isPlaying || isInputLocked) return;
 
         // Bug fix: prevent clicking the same button twice (even if color matches)
         if (revealedIndices.includes(index)) {
             // Already used this tile - show error feedback
+            setIsInputLocked(true);
+            setIsWrongFlash(true);
             playSound('error');
             setShakeId(index);
-            setTimeout(() => setShakeId(null), 500);
+            setTimeout(() => {
+                setShakeId(null);
+                setIsInputLocked(false);
+                setIsWrongFlash(false);
+            }, WRONG_COOLDOWN_MS);
             return;
         }
 
@@ -115,10 +124,16 @@ const TapTheColor: React.FC<TapTheColorProps> = ({ seed, onScore, isPlaying }) =
             }
         } else {
             // Wrong
+            setIsInputLocked(true);
+            setIsWrongFlash(true);
             onScore(-50);
             playSound('error');
             setShakeId(index);
-            setTimeout(() => setShakeId(null), 500);
+            setTimeout(() => {
+                setShakeId(null);
+                setIsInputLocked(false);
+                setIsWrongFlash(false);
+            }, WRONG_COOLDOWN_MS);
         }
     };
 
@@ -185,7 +200,7 @@ const TapTheColor: React.FC<TapTheColorProps> = ({ seed, onScore, isPlaying }) =
                                 ${isUsed ? 'opacity-50 cursor-not-allowed ring-2 ring-white/30' : ''}
                             `}
                             style={{
-                                backgroundColor: isVisible ? color : undefined,
+                                backgroundColor: isWrongFlash ? '#ef4444' : (isVisible ? color : undefined),
                                 filter: isUsed ? 'grayscale(0.4)' : 'none'
                             }}
                             onPointerDown={(e) => {
@@ -199,7 +214,7 @@ const TapTheColor: React.FC<TapTheColorProps> = ({ seed, onScore, isPlaying }) =
                                 }
                                 handleTileClick(index);
                             }}
-                            disabled={phase !== 'input' || isRevealed}
+                            disabled={phase !== 'input' || isRevealed || isInputLocked || !isPlaying}
                         >
                             {isUsed && (
                                 <div className="absolute inset-0 flex items-center justify-center">

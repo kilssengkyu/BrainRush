@@ -112,7 +112,7 @@ const MemoryMatch: React.FC<MemoryMatchProps> = ({ seed, onScore, isPlaying }) =
             }, 0);
         } else {
             // No Match
-            onScore(-40);
+            onScore(-20);
             playSound('error');
 
             // Auto close fast

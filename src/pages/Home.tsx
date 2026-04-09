@@ -106,7 +106,7 @@ const Home = () => {
     const navigate = useNavigate();
     const { t, i18n } = useTranslation();
     const { playSound } = useSound();
-    const { user, profile, refreshProfile, loading: authLoading, signInWithGoogle, signInWithApple, signInAnonymously, linkWithGoogle, linkWithApple } = useAuth();
+    const { user, profile, refreshProfile, loading: authLoading, signInWithGoogle, signInWithApple, linkWithGoogle, linkWithApple, signInAnonymously, signOut } = useAuth();
     const { showToast, confirm } = useUI();
     const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
     const [unreadChatCount, setUnreadChatCount] = useState(0);
@@ -589,7 +589,6 @@ const Home = () => {
 
     const [showAdModal, setShowAdModal] = useState(false);
     const [showNoPencilChoiceModal, setShowNoPencilChoiceModal] = useState(false);
-    const [guestEntryState, setGuestEntryState] = useState<'idle' | 'signing-in' | 'fallback'>('idle');
     const [isLoginModalLoading, setIsLoginModalLoading] = useState(false);
     const [showPostTutorialNormalSpotlight, setShowPostTutorialNormalSpotlight] = useState(false);
     const [showGuestLinkPromptModal, setShowGuestLinkPromptModal] = useState(false);
@@ -602,7 +601,6 @@ const Home = () => {
     const [nicknameInput, setNicknameInput] = useState('');
     const [isSavingNickname, setIsSavingNickname] = useState(false);
     const shouldSuggestNicknameSetup = Boolean(user && profile?.needs_nickname_setup);
-    const isNicknameGateActive = Boolean(user && profile?.needs_nickname_setup);
     const mobileMainInsetClass = 'pt-[calc(env(safe-area-inset-top)+15vh)] pb-[calc(env(safe-area-inset-bottom)+7rem)]';
 
     // Tutorial refs
@@ -737,33 +735,19 @@ const Home = () => {
         }
     };
 
-    const guestSignInAttemptedRef = useRef(false);
+    const handleFallbackGuestLogin = async () => {
+        playSound('click');
+        setIsLoginModalLoading(true);
+        try {
+            await signInAnonymously();
+        } catch (error) {
+            console.error(error);
+            showToast((error as any)?.message || t('common.error'), 'error');
+        } finally {
+            setIsLoginModalLoading(false);
+        }
+    };
 
-    useEffect(() => {
-        if (authLoading || user || guestSignInAttemptedRef.current) return;
-        guestSignInAttemptedRef.current = true;
-
-        let cancelled = false;
-        const autoSignIn = async () => {
-            setGuestEntryState('signing-in');
-            try {
-                await signInAnonymously();
-            } catch (error) {
-                console.error('Auto guest sign-in failed:', error);
-                if (!cancelled) {
-                    setGuestEntryState('fallback');
-                    showToast((error as any)?.message || t('common.error'), 'error');
-                }
-            } finally {
-                setGuestEntryState((prev) => (prev === 'signing-in' ? 'idle' : prev));
-            }
-        };
-
-        void autoSignIn();
-        return () => {
-            cancelled = true;
-        };
-    }, [authLoading, user, signInAnonymously, showToast, t]);
 
     const dismissGuestLinkPrompt = useCallback(() => {
         const nextPromptKey = getGuestLinkPromptStorageKey('next_at');
@@ -782,12 +766,12 @@ const Home = () => {
         } catch (error: any) {
             console.error('Failed to link google:', error);
             if (error?.message?.includes('이미 가입된')) {
-                const confirmed = await confirm(
+                const isConfirmed = await confirm(
                     t('profile.accountConflictTitle', '기존 계정 발견!'),
-                    t('profile.accountConflictDesc', '이 계정에는 이미 다른 게임 데이터가 존재합니다.\\n현재 게스트 기록을 버리고 기존 계정을 불러오시겠습니까?')
+                    t('profile.accountExistsLoginHint', '이미 존재하는 계정입니다. 로그아웃 후 해당 계정으로 로그인해 주세요.')
                 );
-                if (confirmed) {
-                    await signInWithGoogle();
+                if (isConfirmed) {
+                    await signOut();
                 } else {
                     setShowGuestLinkPromptModal(true);
                 }
@@ -809,12 +793,12 @@ const Home = () => {
         } catch (error: any) {
             console.error('Failed to link apple:', error);
             if (error?.message?.includes('이미 가입된')) {
-                const confirmed = await confirm(
+                const isConfirmed = await confirm(
                     t('profile.accountConflictTitle', '기존 계정 발견!'),
-                    t('profile.accountConflictDesc', '이 계정에는 이미 다른 게임 데이터가 존재합니다.\\n현재 게스트 기록을 버리고 기존 계정을 불러오시겠습니까?')
+                    t('profile.accountExistsLoginHint', '이미 존재하는 계정입니다. 로그아웃 후 해당 계정으로 로그인해 주세요.')
                 );
-                if (confirmed) {
-                    await signInWithApple();
+                if (isConfirmed) {
+                    await signOut();
                 } else {
                     setShowGuestLinkPromptModal(true);
                 }
@@ -960,18 +944,6 @@ const Home = () => {
     };
 
     const handleModeSelect = async (mode: string, options?: { forceBotImmediate?: boolean }) => {
-        const hasPlayedNormalGame = (profile?.casual_wins || 0) + (profile?.casual_losses || 0) > 0 || (profile?.xp ?? 0) > 0;
-        const requiresNicknameNow = mode === 'rank' || (mode === 'normal' && hasPlayedNormalGame);
-
-        if (isNicknameGateActive && requiresNicknameNow) {
-            if (!showNicknameModal) {
-                setShowNicknameModal(true);
-                showToast(t('profile.nicknameSetupRequired', '닉네임을 먼저 설정해 주세요.'), 'info');
-            }
-            playSound('error');
-            return;
-        }
-
         playSound('click');
         currentMode.current = mode;
         setActiveSessionPrompt(null);
@@ -1057,7 +1029,7 @@ const Home = () => {
 
     useEffect(() => {
         if (!user || !profile?.needs_nickname_setup) return;
-        if (authLoading || guestEntryState === 'fallback' || isHomeTutorialActive || showPostTutorialNormalSpotlight || status !== 'idle') return;
+        if (authLoading || isHomeTutorialActive || showPostTutorialNormalSpotlight || status !== 'idle') return;
         
         const hasPlayedNormalGame = (profile?.casual_wins || 0) + (profile?.casual_losses || 0) > 0 || (profile?.xp ?? 0) > 0;
         if (!hasPlayedNormalGame) return;
@@ -1067,7 +1039,7 @@ const Home = () => {
 
         setShowNicknameModal(true);
         window.sessionStorage.setItem(shownKey, '1');
-    }, [user, profile?.needs_nickname_setup, profile?.xp, profile?.casual_wins, profile?.casual_losses, authLoading, guestEntryState, isHomeTutorialActive, showPostTutorialNormalSpotlight, status]);
+    }, [user, profile?.needs_nickname_setup, profile?.xp, profile?.casual_wins, profile?.casual_losses, authLoading, isHomeTutorialActive, showPostTutorialNormalSpotlight, status]);
 
     useEffect(() => {
         const handleModalCloseRequest = (event: Event) => {
@@ -1079,7 +1051,7 @@ const Home = () => {
                 return;
             }
 
-            if (guestEntryState === 'fallback') {
+            if (!authLoading && !user) {
                 if (customEvent.detail) customEvent.detail.handled = true;
                 return;
             }
@@ -1118,7 +1090,7 @@ const Home = () => {
         return () => {
             window.removeEventListener('brainrush:request-modal-close', handleModalCloseRequest as EventListener);
         };
-    }, [showNicknameModal, isSavingNickname, showMailboxModal, showNoPencilChoiceModal, activeSessionPrompt, status, showPostTutorialNormalSpotlight, guestEntryState, showGuestLinkPromptModal, isGuestLinkPromptLoading, dismissGuestLinkPrompt]);
+    }, [showNicknameModal, isSavingNickname, showMailboxModal, showNoPencilChoiceModal, activeSessionPrompt, status, showPostTutorialNormalSpotlight, authLoading, user, showGuestLinkPromptModal, isGuestLinkPromptLoading, dismissGuestLinkPrompt]);
 
     return (
         <div className={`min-h-[100dvh] bg-slate-50 dark:bg-gray-900 text-slate-900 dark:text-white flex flex-col items-center p-4 relative overflow-hidden`}>
@@ -1302,7 +1274,7 @@ const Home = () => {
             )}
 
             {/* Auth Loading Overlay */}
-            {(authLoading || (!user && guestEntryState === 'signing-in')) && (
+            {authLoading && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm">
                     <div className="flex items-center gap-3 bg-slate-50 dark:bg-gray-900/80 border border-white/10 rounded-2xl px-5 py-4 shadow-xl">
                         <Loader2 className="w-5 h-5 text-blue-400 animate-spin" />
@@ -1311,7 +1283,8 @@ const Home = () => {
                 </div>
             )}
 
-            {guestEntryState === 'fallback' && !user && (
+            {/* Login Modal — shown when there is no user session */}
+            {!authLoading && !user && (
                 <div className="fixed inset-0 z-[140] bg-black/80 backdrop-blur-sm flex items-center justify-center px-4">
                     <div className="w-full max-w-md bg-white dark:bg-gray-800/95 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl">
                         <div className="text-center mb-8 mt-1">
@@ -1361,6 +1334,25 @@ const Home = () => {
                                     )}
                                 </button>
                             )}
+
+                            <button
+                                onClick={handleFallbackGuestLogin}
+                                disabled={isLoginModalLoading}
+                                className="w-full p-4 bg-slate-100 dark:bg-gray-700/50 border-2 border-dashed border-gray-600 rounded-xl font-medium text-slate-600 dark:text-gray-300 flex items-center justify-center gap-3 hover:bg-slate-100 dark:hover:bg-gray-700/80 hover:border-gray-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isLoginModalLoading ? (
+                                    <Loader2 className="animate-spin" />
+                                ) : (
+                                    <>
+                                        <User className="w-5 h-5" />
+                                        {t('auth.guestMode')}
+                                    </>
+                                )}
+                            </button>
+
+                            <p className="text-xs text-gray-500 text-center">
+                                {t('auth.guestWarning')}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -1804,8 +1796,7 @@ const Home = () => {
                             ref={normalModeRef}
                             onMouseEnter={() => playSound('hover')}
                             onClick={() => handleModeSelect('normal')}
-                            disabled={isNicknameGateActive}
-                            className={`group relative w-full p-6 bg-white dark:bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-200 ${isNicknameGateActive ? 'opacity-60 cursor-not-allowed' : 'hover:border-blue-500 hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] active:scale-[0.98] active:border-blue-300 active:bg-blue-400/20 active:shadow-[0_0_28px_rgba(59,130,246,0.5)] active:brightness-125 active:saturate-150 cursor-pointer'} flex items-center gap-4 text-left`}
+                            className="group relative w-full p-6 bg-white dark:bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-200 hover:border-blue-500 hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] active:scale-[0.98] active:border-blue-300 active:bg-blue-400/20 active:shadow-[0_0_28px_rgba(59,130,246,0.5)] active:brightness-125 active:saturate-150 cursor-pointer flex items-center gap-4 text-left"
                         >
                             <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-300" />
                             <div className="p-3 rounded-full bg-blue-500/20 group-hover:bg-blue-500/30 group-active:bg-blue-500/40 transition-colors">
@@ -1824,8 +1815,7 @@ const Home = () => {
                             ref={rankModeRef}
                             onMouseEnter={() => playSound('hover')}
                             onClick={() => handleModeSelect('rank')}
-                            disabled={isNicknameGateActive}
-                            className={`group relative w-full p-6 bg-white dark:bg-gray-800/50 backdrop-blur-md border rounded-2xl overflow-hidden transition-all duration-200 ${isNicknameGateActive ? 'opacity-60 cursor-not-allowed border-gray-700' : canPlayRank ? 'border-purple-400/55 hover:border-purple-300 hover:shadow-[0_0_18px_rgba(168,85,247,0.22)] active:scale-[0.98] active:border-purple-200 active:bg-purple-400/20 active:shadow-[0_0_24px_rgba(168,85,247,0.28)] active:brightness-125 active:saturate-150 cursor-pointer' : 'border-purple-400/30 opacity-50 grayscale cursor-not-allowed'} ${shouldHighlightRankButton ? 'rank-cta-highlight border-purple-300/90' : ''} flex items-center gap-4 text-left`}
+                            className={`group relative w-full p-6 bg-white dark:bg-gray-800/50 backdrop-blur-md border rounded-2xl overflow-hidden transition-all duration-200 ${canPlayRank ? 'border-purple-400/55 hover:border-purple-300 hover:shadow-[0_0_18px_rgba(168,85,247,0.22)] active:scale-[0.98] active:border-purple-200 active:bg-purple-400/20 active:shadow-[0_0_24px_rgba(168,85,247,0.28)] active:brightness-125 active:saturate-150 cursor-pointer' : 'border-purple-400/30 opacity-50 grayscale cursor-not-allowed'} ${shouldHighlightRankButton ? 'rank-cta-highlight border-purple-300/90' : ''} flex items-center gap-4 text-left`}
                         >
                             {shouldHighlightRankButton && (
                                 <div className="rank-cta-sheen absolute inset-0 z-0 pointer-events-none" />
@@ -1873,8 +1863,7 @@ const Home = () => {
                             ref={practiceModeRef}
                             onMouseEnter={() => playSound('hover')}
                             onClick={() => handleModeSelect('practice')}
-                            disabled={isNicknameGateActive}
-                            className={`group relative w-full p-6 bg-white dark:bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-200 ${isNicknameGateActive ? 'opacity-60 cursor-not-allowed' : 'hover:border-green-500 hover:shadow-[0_0_20px_rgba(34,197,94,0.5)] active:scale-[0.98] active:border-green-300 active:bg-green-400/20 active:shadow-[0_0_28px_rgba(34,197,94,0.5)] active:brightness-125 active:saturate-150 cursor-pointer'} flex items-center gap-4 text-left`}
+                            className="group relative w-full p-6 bg-white dark:bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-200 hover:border-green-500 hover:shadow-[0_0_20px_rgba(34,197,94,0.5)] active:scale-[0.98] active:border-green-300 active:bg-green-400/20 active:shadow-[0_0_28px_rgba(34,197,94,0.5)] active:brightness-125 active:saturate-150 cursor-pointer flex items-center gap-4 text-left"
                         >
                             <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-transparent opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-300" />
                             <div className="p-3 rounded-full bg-green-500/20 group-hover:bg-green-500/30 group-active:bg-green-500/40 transition-colors">

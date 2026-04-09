@@ -51,11 +51,13 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
     const [isWaitingTimeout, setIsWaitingTimeout] = useState(false);
     const [isTimeUp, setIsTimeUp] = useState(false); // Grace period flag
     const isFinishing = useRef(false);
+    const isTriggeringGameStart = useRef(false);
     const hasFinalSynced = useRef(false);
     const scoreTimelineRef = useRef<[number, number][]>([]); // [[elapsed_secs, delta], ...]
     const ghostTimelineRef = useRef<[number, number][] | null>(null); // Ghost events for bot opponent
     const ghostScoreRef = useRef<number>(0); // Current ghost-computed bot score
     const ghostReplayKeyRef = useRef<string>(''); // Round-scoped key to avoid replay resets on every row update
+    const lastServerUpdateAtRef = useRef<number>(0); // Ignore out-of-order session rows
 
     // --- Time Sync ---
     useEffect(() => {
@@ -103,6 +105,17 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
     // --- Game Loop Update ---
     const handleUpdate = useCallback((record: any) => {
         if (!record) return;
+        const incomingUpdatedAt = record.updated_at ? new Date(record.updated_at).getTime() : 0;
+        if (
+            incomingUpdatedAt > 0 &&
+            lastServerUpdateAtRef.current > 0 &&
+            incomingUpdatedAt < lastServerUpdateAtRef.current
+        ) {
+            return;
+        }
+        if (incomingUpdatedAt > lastServerUpdateAtRef.current) {
+            lastServerUpdateAtRef.current = incomingUpdatedAt;
+        }
 
         const isP1 = myId === record.player1_id;
         // WINS (Previously playerX_score)
@@ -299,8 +312,15 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
             // Any Player Logic: Countdown -> Playing
             if (gameState.status === 'countdown' && diff <= 0) {
                 // Trigger Game Start
-                console.log('Ticker: Countdown finished. Triggering Game Start...');
-                await supabase.rpc('trigger_game_start', { p_room_id: roomId });
+                if (!isTriggeringGameStart.current) {
+                    isTriggeringGameStart.current = true;
+                    console.log('Ticker: Countdown finished. Triggering Game Start...');
+                    const { error: startError } = await supabase.rpc('trigger_game_start', { p_room_id: roomId });
+                    if (startError) {
+                        console.error('TRIGGER_GAME_START ERROR:', startError);
+                        isTriggeringGameStart.current = false; // Allow retry
+                    }
+                }
                 return; // Wait for update
             }
 
@@ -467,7 +487,11 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
     // 라운드가 변경(또는 게임 타입 변경)되면 isFinishing 플래그를 초기화하여 다음 라운드 종료 시 트리거가 동작하도록 함
     const prevRoundKeyRef = useRef<string>('');
     useEffect(() => {
+        const roundKey = `${gameState.currentRound}:${gameState.gameType}`;
+        if (prevRoundKeyRef.current === roundKey) return;
+
         isFinishing.current = false;
+        isTriggeringGameStart.current = false;
         hasFinalSynced.current = false;
         setIsTimeUp(false); // Reset TimeUp flag
         scoreRef.current = 0; // Reset local score for new round
@@ -477,13 +501,12 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
         ghostScoreRef.current = 0;
         ghostReplayKeyRef.current = '';
         // Only clear game progress when round/gameType actually changes (not on initial mount)
-        const roundKey = `${gameState.currentRound}:${gameState.gameType}`;
         if (prevRoundKeyRef.current && prevRoundKeyRef.current !== roundKey) {
             clearGameProgress();
         }
         prevRoundKeyRef.current = roundKey;
         console.log('Resetting isFinishing flag and scoreRef for new round/game type');
-    }, [gameState.currentRound, gameState.gameType, gameState.status]);
+    }, [gameState.currentRound, gameState.gameType]);
 
     return { gameState, incrementScore, serverOffset, isWaitingTimeout, isTimeUp, onlineUsers, connectionStatus };
 };

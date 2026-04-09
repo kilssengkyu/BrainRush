@@ -16,12 +16,16 @@ interface RPSProps {
 }
 
 const RockPaperScissors: React.FC<RPSProps> = ({ seed, onScore, isPlaying }) => {
+    const WRONG_COOLDOWN_MS = 400;
     const { t } = useTranslation();
     const { playSound } = useSound();
     const [index, setIndex] = usePanelProgress(seed, 'index');
     const [shake, setShake] = useState<Move | null>(null);
+    const [successMove, setSuccessMove] = useState<Move | null>(null);
     const [animationKey, setAnimationKey] = useState(0);
     const [combo, setCombo] = useState(0);
+    const [isInputLocked, setIsInputLocked] = useState(false);
+    const [isWrongFlash, setIsWrongFlash] = useState(false);
 
     // Initialize RNG
     // We strictly depend on `seed` and `index` to be deterministic.
@@ -37,7 +41,7 @@ const RockPaperScissors: React.FC<RPSProps> = ({ seed, onScore, isPlaying }) => 
 
     // Handle Input
     const handlePress = (move: Move) => {
-        if (!currentProblem || !isPlaying) return;
+        if (!currentProblem || !isPlaying || isInputLocked) return;
         const { target, isReverse } = currentProblem;
 
         let correctMove: Move;
@@ -53,21 +57,31 @@ const RockPaperScissors: React.FC<RPSProps> = ({ seed, onScore, isPlaying }) => 
 
         if (move === correctMove) {
             // Correct!
+            setIsInputLocked(true);
             const nextCombo = combo + 1;
             const comboBonus = Math.min(nextCombo * 5, 40);
             onScore(60 + comboBonus);
             playSound('correct');
+            setSuccessMove(move);
+            setTimeout(() => setSuccessMove(null), 180);
             setCombo(nextCombo);
             setIndex(prev => prev + 1);
             setAnimationKey(prev => prev + 1);
+            setTimeout(() => setIsInputLocked(false), 120);
         } else {
             // Wrong!
+            setIsInputLocked(true);
+            setIsWrongFlash(true);
             onScore(-60); // Penalty
             playSound('error');
             setCombo(0);
             // Shake effect
             setShake(move);
-            setTimeout(() => setShake(null), 400);
+            setTimeout(() => {
+                setShake(null);
+                setIsInputLocked(false);
+                setIsWrongFlash(false);
+            }, WRONG_COOLDOWN_MS);
         }
     };
 
@@ -105,6 +119,7 @@ const RockPaperScissors: React.FC<RPSProps> = ({ seed, onScore, isPlaying }) => 
                 {MOVES.map((move) => (
                     <motion.button
                         key={move}
+                        disabled={isInputLocked || !isPlaying}
                         onPointerDown={(e) => {
                             e.preventDefault();
                             if (e.currentTarget.setPointerCapture) {
@@ -116,8 +131,16 @@ const RockPaperScissors: React.FC<RPSProps> = ({ seed, onScore, isPlaying }) => 
                             }
                             handlePress(move);
                         }}
-                        animate={shake === move ? { x: [-10, 10, -10, 10, 0], backgroundColor: "#ef4444" } : {}}
-                        transition={{ duration: 0.4 }}
+                        animate={
+                            isWrongFlash
+                                ? { backgroundColor: "#ef4444" }
+                                : shake === move
+                                ? { x: [-10, 10, -10, 10, 0], backgroundColor: "#ef4444" }
+                                : successMove === move
+                                    ? { scale: [1, 1.06, 1], backgroundColor: "#22c55e" }
+                                    : {}
+                        }
+                        transition={{ duration: shake === move ? 0.4 : 0.2 }}
                         whileTap={{ scale: 0.9 }}
                         className="w-24 h-24 rounded-2xl border-4 border-gray-600 bg-white dark:bg-gray-800 hover:border-white hover:bg-slate-100 dark:bg-gray-700 flex items-center justify-center text-4xl shadow-xl"
                     >

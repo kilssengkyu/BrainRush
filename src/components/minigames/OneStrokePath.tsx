@@ -203,6 +203,7 @@ const OneStrokePath: React.FC<OneStrokePathProps> = ({ seed, onScore, isPlaying 
     };
 
     const failTry = () => {
+        onScore(-20);
         playSound('error');
         setFlashState('fail');
         setTimeout(() => setFlashState(null), 180);

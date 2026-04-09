@@ -5,6 +5,7 @@ import { App } from '@capacitor/app';
 import { SignInWithApple } from '@capacitor-community/apple-sign-in';
 import { Browser } from '@capacitor/browser';
 import { COUNTRIES } from '../constants/countries';
+import { logAnalyticsEvent, setAnalyticsUserId } from '../lib/analytics';
 
 interface AuthContextType {
     user: User | null;
@@ -44,6 +45,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [profile, setProfile] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
     const AUTH_ERROR_STORAGE_KEY = 'brainrush_auth_error';
+    const lastLoggedAuthSessionRef = React.useRef<string | null>(null);
+    const SIGNUP_COMPLETE_LOGGED_PREFIX = 'brainrush_signup_complete_logged';
 
     const persistAuthError = (error: any) => {
         try {
@@ -64,21 +67,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
     };
 
-    const getGuestDeviceId = () => {
-        const key = 'brainrush_guest_device_id';
-        try {
-            const existing = localStorage.getItem(key);
-            if (existing) return existing;
-            const generated = (typeof crypto !== 'undefined' && 'randomUUID' in crypto)
-                ? crypto.randomUUID()
-                : `gd_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
-            localStorage.setItem(key, generated);
-            return generated;
-        } catch {
-            return `gd_fallback_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
-        }
-    };
-
     const isAlreadyRegisteredIdentityError = (error: any) => {
         const code = String(error?.code || '').toLowerCase();
         const msg = String(error?.message || '').toLowerCase();
@@ -90,6 +78,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             msg.includes('identity is already linked') ||
             msg.includes('account exists')
         );
+    };
+
+    const getSessionDeviceId = () => {
+        const key = 'brainrush_session_device_id';
+        try {
+            const existing = localStorage.getItem(key);
+            if (existing) return existing;
+            const generated = (typeof crypto !== 'undefined' && 'randomUUID' in crypto)
+                ? `dev_${crypto.randomUUID()}`
+                : `dev_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+            localStorage.setItem(key, generated);
+            return generated;
+        } catch {
+            return `dev_fallback_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+        }
     };
 
     useEffect(() => {
@@ -105,8 +108,35 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             setSession(session);
             setUser(session?.user ?? null);
-            if (session?.user) fetchProfile(session.user.id);
-            else {
+            if (session?.user) {
+                const currentUser = session.user;
+                const provider = currentUser.is_anonymous
+                    ? 'anonymous'
+                    : String(currentUser.app_metadata?.provider || 'unknown');
+
+                if (lastLoggedAuthSessionRef.current !== currentUser.id) {
+                    lastLoggedAuthSessionRef.current = currentUser.id;
+                    void logAnalyticsEvent('br_auth_success', {
+                        provider,
+                        is_anonymous: currentUser.is_anonymous,
+                    });
+                }
+
+                void setAnalyticsUserId(currentUser.is_anonymous ? null : currentUser.id);
+
+                if (!currentUser.is_anonymous) {
+                    const signupKey = `${SIGNUP_COMPLETE_LOGGED_PREFIX}:${currentUser.id}`;
+                    const alreadyLogged = window.localStorage.getItem(signupKey) === '1';
+                    if (!alreadyLogged) {
+                        window.localStorage.setItem(signupKey, '1');
+                        void logAnalyticsEvent('signup_complete', { provider });
+                    }
+                }
+
+                fetchProfile(currentUser.id);
+            } else {
+                lastLoggedAuthSessionRef.current = null;
+                void setAnalyticsUserId(null);
                 setProfile(null);
                 setLoading(false);
             }
@@ -236,9 +266,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Global Presence, Session Guard & Deep Link Handling
     const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
-    const sessionDeviceIdRef = React.useRef<string>(
-        `dev_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
-    );
+    const sessionDeviceIdRef = React.useRef<string>(getSessionDeviceId());
 
     useEffect(() => {
         // Deep Link Listener
@@ -249,12 +277,35 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             console.log('Processing Deep Link:', urlString.substring(0, 50) + '...');
             try {
                 const url = new URL(urlString);
+                const normalizedPath = (() => {
+                    const hostPath = url.host && url.host !== 'login-callback' ? `/${url.host}` : '';
+                    const joined = `${hostPath}${url.pathname || ''}`.replace(/\/{2,}/g, '/');
+                    return joined.startsWith('/') ? joined : `/${joined}`;
+                })();
                 const hashParams = new URLSearchParams(url.hash.substring(1));
                 const searchParams = new URLSearchParams(url.search);
 
                 const accessToken = hashParams.get('access_token') || searchParams.get('access_token');
                 const refreshToken = hashParams.get('refresh_token') || searchParams.get('refresh_token');
                 const code = hashParams.get('code') || searchParams.get('code');
+                const errName = hashParams.get('error') || searchParams.get('error');
+                const errDesc = hashParams.get('error_description') || searchParams.get('error_description');
+                const isAuthCallback =
+                    url.host === 'login-callback' ||
+                    Boolean(accessToken || refreshToken || code || errName || errDesc);
+
+                if (!isAuthCallback && normalizedPath.startsWith('/open/')) {
+                    const appPath = normalizedPath.replace(/^\/open/, '') || '/';
+                    window.dispatchEvent(new CustomEvent('brainrush:app-link', { detail: { path: appPath } }));
+                    return;
+                }
+
+                if (errName || errDesc) {
+                    const decoded = decodeURIComponent(errDesc || errName || '');
+                    console.error('Deep link error:', decoded);
+                    window.dispatchEvent(new CustomEvent('authDeepLinkError', { detail: { message: decoded } }));
+                    return;
+                }
 
                 if (accessToken && refreshToken) {
                     const { error } = await supabase.auth.setSession({
@@ -316,6 +367,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         let sessionChannel: any;
 
         if (user) {
+            const isAnonymousUser = Boolean(user.is_anonymous || user.app_metadata?.provider === 'anonymous');
             channel = supabase.channel('online_users', {
                 config: { presence: { key: user.id } },
             });
@@ -339,30 +391,32 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     }
                 });
 
-            // Session Guard Channel
-            const myDeviceId = sessionDeviceIdRef.current;
-            sessionChannel = supabase.channel(`session:${user.id}`);
+            if (!isAnonymousUser) {
+                // Session guard only applies to linked accounts.
+                const myDeviceId = sessionDeviceIdRef.current;
+                sessionChannel = supabase.channel(`session:${user.id}`);
 
-            sessionChannel
-                .on('broadcast', { event: 'force_logout' }, (payload: any) => {
-                    const senderDeviceId = payload?.payload?.deviceId;
-                    // 내가 보낸 게 아닌 경우에만 로그아웃 처리
-                    if (senderDeviceId && senderDeviceId !== myDeviceId) {
-                        console.warn('Another device logged in. Forcing logout.');
-                        window.dispatchEvent(new CustomEvent('forceLogout'));
-                        supabase.auth.signOut({ scope: 'local' });
-                    }
-                })
-                .subscribe(async (status: string) => {
-                    if (status === 'SUBSCRIBED') {
-                        // 나 로그인 했다고 다른 기기에 알림
-                        await sessionChannel.send({
-                            type: 'broadcast',
-                            event: 'force_logout',
-                            payload: { deviceId: myDeviceId },
-                        });
-                    }
-                });
+                sessionChannel
+                    .on('broadcast', { event: 'force_logout' }, (payload: any) => {
+                        const senderDeviceId = payload?.payload?.deviceId;
+                        // 내가 보낸 게 아닌 경우에만 로그아웃 처리
+                        if (senderDeviceId && senderDeviceId !== myDeviceId) {
+                            console.warn('Another device logged in. Forcing logout.');
+                            window.dispatchEvent(new CustomEvent('forceLogout'));
+                            supabase.auth.signOut({ scope: 'local' });
+                        }
+                    })
+                    .subscribe(async (status: string) => {
+                        if (status === 'SUBSCRIBED') {
+                            // 나 로그인 했다고 다른 기기에 알림
+                            await sessionChannel.send({
+                                type: 'broadcast',
+                                event: 'force_logout',
+                                payload: { deviceId: myDeviceId },
+                            });
+                        }
+                    });
+            }
         } else {
             setOnlineUsers(new Set());
         }
@@ -377,6 +431,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const signInWithGoogle = async () => {
         try {
+            void logAnalyticsEvent('br_auth_attempt', { provider: 'google' });
             // Determine Redirect URL
             // Web: window.location.origin
             // Native: com.kilssengkyu.brainrush://login-callback
@@ -409,6 +464,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const linkWithGoogle = async () => {
         try {
+            void logAnalyticsEvent('br_link_attempt', { provider: 'google' });
             let redirectUrl = window.location.origin;
             if ((window as any).Capacitor?.isNativePlatform()) {
                 redirectUrl = 'com.kilssengkyu.brainrush://login-callback';
@@ -439,6 +495,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const linkWithApple = async () => {
         try {
+            void logAnalyticsEvent('br_link_attempt', { provider: 'apple' });
             const isNative = Boolean((window as any).Capacitor?.isNativePlatform?.());
             let error: any = null;
 
@@ -488,29 +545,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const signInAnonymously = async () => {
         try {
-            const deviceId = getGuestDeviceId();
-            const { error: limitError } = await supabase.rpc('register_guest_signup', {
-                p_device_id: deviceId
-            });
-            if (limitError) {
-                throw limitError;
-            }
+            void logAnalyticsEvent('br_auth_attempt', { provider: 'anonymous' });
             const { error } = await supabase.auth.signInAnonymously();
             if (error) throw error;
         } catch (error) {
             console.error('Anonymous Sign-in Error:', error);
             persistAuthError(error);
-            const msg = String((error as any)?.message || '').toLowerCase();
-            if (msg.includes('guest signup limit exceeded')) {
-                throw new Error('이 기기에서는 잠시 후 다시 게스트 로그인이 가능합니다.');
-            } else {
-                throw new Error('게스트 로그인 중 오류가 발생했습니다. (Supabase 설정에서 Anonymous Sign-ins가 켜져있는지 확인해주세요)');
-            }
+            throw new Error('게스트 로그인 중 오류가 발생했습니다. (Supabase 설정에서 Anonymous Sign-ins가 켜져있는지 확인해주세요)');
         }
     };
 
     const signInWithApple = async () => {
         try {
+            void logAnalyticsEvent('br_auth_attempt', { provider: 'apple' });
             const result = await SignInWithApple.authorize({
                 clientId: 'com.kilssengkyu.brainrush',
                 redirectURI: '',
@@ -522,6 +569,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             } as any);
 
             const identityToken = result.response?.identityToken;
+
             if (!identityToken) {
                 throw new Error('Apple Sign In: No identity token received');
             }

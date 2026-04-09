@@ -681,6 +681,7 @@
     "rewardPracticeNotes": "Practice Notes +{{count}}",
     "claim": "Claim",
     "claimed": "Claimed",
-    "claimSuccess": "Reward claimed. (+{{pencils}} pencils, +{{notes}} practice notes)"
+    "claimSuccess": "Reward claimed. (+{{pencils}} pencils, +{{notes}} practice notes)",
+    "claimBlockedPencilsFull": "You can't claim this while you have 5 or more pencils. Please use pencils first."
   }
 }

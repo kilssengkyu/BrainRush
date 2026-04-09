@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, LogOut, User as UserIcon, ChevronRight, X } from 'lucide-react';
+import { ArrowLeft, Save, User as UserIcon, ChevronRight, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useSound } from '../contexts/SoundContext';
 import { useUI } from '../contexts/UIContext';
@@ -55,7 +55,7 @@ const HIGHSCORE_GAME_TYPES = [
 ] as const;
 
 const Profile = () => {
-    const { user, profile, signOut, refreshProfile, linkWithGoogle, linkWithApple, signInWithGoogle, signInWithApple } = useAuth();
+    const { user, profile, signOut, refreshProfile, linkWithGoogle, linkWithApple } = useAuth();
     const { playSound } = useSound();
     const { showToast, confirm } = useUI();
     const navigate = useNavigate();
@@ -477,21 +477,6 @@ const Profile = () => {
         edgeSwipeTriggeredRef.current = false;
     };
 
-    const handleLogout = async () => {
-        if (isGuest) return;
-
-        const confirmed = await confirm(
-            t('menu.logout'),
-            t('settings.logoutConfirm')
-        );
-
-        if (!confirmed) return;
-
-        playSound('click');
-        await signOut();
-        navigate('/');
-    };
-
     const handleSave = async () => {
         if (!user || !nickname.trim()) return;
 
@@ -625,31 +610,6 @@ const Profile = () => {
         }
     };
 
-    const handleDeleteAccount = async () => {
-        const confirmed = await confirm(
-            t('settings.deleteAccount'),
-            t('settings.deleteAccountConfirm')
-        );
-
-        if (!confirmed) return;
-
-        playSound('click');
-        setIsLoading(true);
-        try {
-            const { error } = await supabase.rpc('delete_account');
-            if (error) throw error;
-
-            await signOut();
-            navigate('/');
-            showToast(t('profile.deleteSuccess'), 'success');
-        } catch (error) {
-            console.error('Error deleting account:', error);
-            showToast(t('profile.deleteFail'), 'error');
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
     const handleChatClick = (friendId: string, nickname: string) => {
         setChatFriend({ id: friendId, nickname });
     };
@@ -777,13 +737,7 @@ const Profile = () => {
                         )}
                     </button>
                 </div>
-                <div className="flex gap-2">
-                    {!isGuest && (
-                        <button onClick={handleLogout} className="p-2 rounded-full hover:bg-red-50 dark:hover:bg-red-500/20 text-red-500 dark:text-red-400 transition-colors">
-                            <LogOut className="w-6 h-6" />
-                        </button>
-                    )}
-                </div>
+                <div className="w-10" />
             </div>
 
             {/* Content */}
@@ -814,12 +768,12 @@ const Profile = () => {
                                                     } catch (err: any) {
                                                         console.error('Failed to link apple:', err);
                                                         if (err?.message?.includes('이미 가입된')) {
-                                                            const confirmed = await confirm(
+                                                            const isConfirmed = await confirm(
                                                                 t('profile.accountConflictTitle', '기존 계정 발견!'),
-                                                                t('profile.accountConflictDesc', '이 계정에는 이미 다른 게임 데이터가 존재합니다.\\n현재 게스트 기록을 버리고 기존 계정을 불러오시겠습니까?')
+                                                                t('profile.accountExistsLoginHint', '이미 존재하는 계정입니다. 로그아웃 후 해당 계정으로 로그인해 주세요.')
                                                             );
-                                                            if (confirmed) {
-                                                                await signInWithApple();
+                                                            if (isConfirmed) {
+                                                                await signOut();
                                                             }
                                                         } else {
                                                             showToast(err?.message || t('common.error'), 'error');
@@ -838,12 +792,12 @@ const Profile = () => {
                                                 } catch (err: any) {
                                                     console.error('Failed to link google:', err);
                                                     if (err?.message?.includes('이미 가입된')) {
-                                                        const confirmed = await confirm(
+                                                        const isConfirmed = await confirm(
                                                             t('profile.accountConflictTitle', '기존 계정 발견!'),
-                                                            t('profile.accountConflictDesc', '이 계정에는 이미 다른 게임 데이터가 존재합니다.\\n현재 게스트 기록을 버리고 기존 계정을 불러오시겠습니까?')
+                                                            t('profile.accountExistsLoginHint', '이미 존재하는 계정입니다. 로그아웃 후 해당 계정으로 로그인해 주세요.')
                                                         );
-                                                        if (confirmed) {
-                                                            await signInWithGoogle();
+                                                        if (isConfirmed) {
+                                                            await signOut();
                                                         }
                                                     } else {
                                                         showToast(err?.message || t('common.error'), 'error');
@@ -1007,10 +961,6 @@ const Profile = () => {
                                     )}
                                 </div>
 
-
-                                <button onClick={handleDeleteAccount} className="mt-4 text-xs text-red-500/70 hover:text-red-500 underline">
-                                    {t('settings.deleteAccount')}
-                                </button>
                             </div>
 
                             {/* Stats Grid */}

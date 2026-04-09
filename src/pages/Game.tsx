@@ -58,15 +58,11 @@ const REVIEW_LS_PROMPTED_KEY = 'brainrush_review_prompted';
 const BOT_EMOJI_POOL = ['🙂', '😂', '👍', '❤️'];
 const BOT_EMOJI_BURST = ['🙂', '😂', '👍'];
 const BOT_EMOJI_MIRROR = ['🙂', '😂', '👍', '❤️'];
-const BOT_EMOJI_REACTIVE = {
-    winning: ['😂', '👍', '🙂'],
-    losing: ['🙂', '👍', '😂'],
-    close: ['🙂', '👍', '😂']
-};
-type BotEmojiPattern = 'burst' | 'reactive' | 'mirror_count';
+type BotEmojiPattern = 'burst' | 'mirror_count';
 
 const FINAL_ROUND_FINISHED_MS = 2000;
 const REMATCH_WINDOW_MS = 30000;
+const BOT_EMOJI_FINAL_RESULT_AUTO_STOP_MS = 10000;
 
 const Game: React.FC = () => {
     const { t } = useTranslation();
@@ -201,6 +197,8 @@ const Game: React.FC = () => {
     const isFinished = gameState.status === 'finished';
     const [resultRevealReady, setResultRevealReady] = useState(false);
     const [terminalRoundFinishedActive, setTerminalRoundFinishedActive] = useState(false);
+    // Prevent terminalRoundFinishedActive from firing multiple times for the same finished game
+    const terminalRoundFinishedFiredRef = useRef(false);
     const isWaiting = gameState.status === 'waiting';
     const isCountdown = gameState.status === 'countdown';
     const isCountdownActive = Boolean(
@@ -231,14 +229,23 @@ const Game: React.FC = () => {
 
     useEffect(() => {
         if (!isFinished || gameState.mode === 'practice' || !hasCompletedRound) {
+            // Reset fired flag when game is no longer finished (new game started)
+            if (!isFinished) terminalRoundFinishedFiredRef.current = false;
             setTerminalRoundFinishedActive(false);
             return;
         }
 
+        // Only fire the animation once per finished game
+        if (terminalRoundFinishedFiredRef.current) return;
+        terminalRoundFinishedFiredRef.current = true;
+
         setTerminalRoundFinishedActive(true);
         const timer = window.setTimeout(() => setTerminalRoundFinishedActive(false), FINAL_ROUND_FINISHED_MS);
         return () => window.clearTimeout(timer);
-    }, [isFinished, gameState.mode, hasCompletedRound, gameState.roundScores.length]);
+        // NOTE: intentionally excluding roundScores.length — adding it causes the timer
+        // to reset every time a new round score arrives, breaking the final animation.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isFinished, gameState.mode, hasCompletedRound]);
 
 
 
@@ -583,10 +590,11 @@ const Game: React.FC = () => {
             return;
         }
 
-        if (terminalRoundFinishedActive) {
-            setResultRevealReady(false);
-            return;
-        }
+        // Wait until the terminal "round finished" animation completes before revealing.
+        // Do NOT set resultRevealReady(false) here — just defer the timer until the
+        // animation is done. Setting false here causes an extra flicker on every render
+        // while terminalRoundFinishedActive is true.
+        if (terminalRoundFinishedActive) return;
 
         // Delay final popup until loser-side heart flicker/power-down is completed.
         const timer = window.setTimeout(() => setResultRevealReady(true), finishRevealDelayMs);
@@ -696,6 +704,7 @@ const Game: React.FC = () => {
     const botBurstEmojiRef = useRef<string>('🙂');
     const myEmojiSendCountRef = useRef<number>(0);
     const botMirroredCountRef = useRef<number>(0);
+    const botEmojiAutoStopAtRef = useRef<number>(Number.POSITIVE_INFINITY);
 
     useEffect(() => {
         if (!isBotId(opponentId)) {
@@ -704,52 +713,60 @@ const Game: React.FC = () => {
         }
         myEmojiSendCountRef.current = 0;
         botMirroredCountRef.current = 0;
-        const roll = Math.random();
-        if (roll < 0.5) botEmojiPatternRef.current = 'mirror_count';
-        else if (roll < 0.75) botEmojiPatternRef.current = 'burst';
-        else botEmojiPatternRef.current = 'reactive';
+        botEmojiPatternRef.current = Math.random() < 0.5 ? 'mirror_count' : 'burst';
         botBurstEmojiRef.current = BOT_EMOJI_BURST[Math.floor(Math.random() * BOT_EMOJI_BURST.length)];
     }, [opponentId]);
 
     useEffect(() => {
         if (!isBotId(opponentId) || !showEmojiOverlay) return;
         let timeoutId: number | null = null;
+        const burstTimeoutIds: number[] = [];
         let cancelled = false;
+        botEmojiAutoStopAtRef.current = showFinalResult
+            ? Date.now() + BOT_EMOJI_FINAL_RESULT_AUTO_STOP_MS
+            : Number.POSITIVE_INFINITY;
 
         const schedule = () => {
             if (cancelled) return;
             const pattern = botEmojiPatternRef.current;
-            const delay = pattern === 'burst' ? 2000 + Math.random() * 2200 : 1400 + Math.random() * 2600;
+            const delay = pattern === 'burst' ? 650 + Math.random() * 950 : 700 + Math.random() * 1000;
             timeoutId = window.setTimeout(() => {
                 if (!showEmojiOverlayRef.current) {
                     schedule();
+                    return;
+                }
+                if (showFinalResult && Date.now() >= botEmojiAutoStopAtRef.current) {
                     return;
                 }
 
                 const pattern = botEmojiPatternRef.current;
                 if (pattern === 'burst') {
                     const emoji = botBurstEmojiRef.current || BOT_EMOJI_POOL[Math.floor(Math.random() * BOT_EMOJI_POOL.length)];
-                    spawnEmoji(emoji, 'right');
-                    window.setTimeout(() => spawnEmoji(emoji, 'right'), 200);
-                    window.setTimeout(() => spawnEmoji(emoji, 'right'), 420);
+                    const burstCount = 3 + Math.floor(Math.random() * 3);
+                    let offset = 0;
+                    for (let i = 0; i < burstCount; i += 1) {
+                        const timeout = window.setTimeout(() => {
+                            if (!showEmojiOverlayRef.current) return;
+                            if (showFinalResult && Date.now() >= botEmojiAutoStopAtRef.current) return;
+                            spawnEmoji(emoji, 'right');
+                        }, offset);
+                        burstTimeoutIds.push(timeout);
+                        offset += 90 + Math.floor(Math.random() * 91);
+                    }
                 } else if (pattern === 'mirror_count') {
                     const pendingCount = myEmojiSendCountRef.current - botMirroredCountRef.current;
                     if (pendingCount > 0) {
                         botMirroredCountRef.current += pendingCount;
                         for (let i = 0; i < pendingCount; i += 1) {
                             const emoji = BOT_EMOJI_MIRROR[Math.floor(Math.random() * BOT_EMOJI_MIRROR.length)];
-                            window.setTimeout(() => {
+                            const timeout = window.setTimeout(() => {
                                 if (!showEmojiOverlayRef.current) return;
+                                if (showFinalResult && Date.now() >= botEmojiAutoStopAtRef.current) return;
                                 spawnEmoji(emoji, 'right');
-                            }, i * 180);
+                            }, i * (90 + Math.floor(Math.random() * 91)));
+                            burstTimeoutIds.push(timeout);
                         }
                     }
-                } else if (pattern === 'reactive') {
-                    const diff = gameState.opScore - gameState.myScore;
-                    const bucket = diff >= 150 ? 'winning' : diff <= -150 ? 'losing' : 'close';
-                    const pool = BOT_EMOJI_REACTIVE[bucket];
-                    const emoji = pool[Math.floor(Math.random() * pool.length)];
-                    spawnEmoji(emoji, 'right');
                 } else {
                     const emoji = BOT_EMOJI_POOL[Math.floor(Math.random() * BOT_EMOJI_POOL.length)];
                     spawnEmoji(emoji, 'right');
@@ -762,8 +779,9 @@ const Game: React.FC = () => {
         return () => {
             cancelled = true;
             if (timeoutId) window.clearTimeout(timeoutId);
+            burstTimeoutIds.forEach((id) => window.clearTimeout(id));
         };
-    }, [opponentId, showEmojiOverlay, spawnEmoji, gameState.myScore, gameState.opScore]);
+    }, [opponentId, showEmojiOverlay, showFinalResult, spawnEmoji]);
 
     useEffect(() => {
         if (!roomId) {

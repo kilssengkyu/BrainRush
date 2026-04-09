@@ -3134,41 +3134,8 @@ CREATE FUNCTION public.register_guest_signup(p_device_id text, p_limit integer D
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
-DECLARE
-    v_row public.guest_device_signups%ROWTYPE;
 BEGIN
-    IF p_device_id IS NULL OR btrim(p_device_id) = '' THEN
-        RAISE EXCEPTION 'device id required';
-    END IF;
-
-    SELECT * INTO v_row
-    FROM public.guest_device_signups
-    WHERE device_id = btrim(p_device_id)
-    FOR UPDATE;
-
-    IF NOT FOUND THEN
-        INSERT INTO public.guest_device_signups (device_id, window_start, signup_count, last_guest_signup_at)
-        VALUES (btrim(p_device_id), now(), 1, now());
-        RETURN;
-    END IF;
-
-    IF now() - v_row.window_start >= p_window THEN
-        UPDATE public.guest_device_signups
-        SET window_start = now(),
-            signup_count = 1,
-            last_guest_signup_at = now()
-        WHERE device_id = btrim(p_device_id);
-        RETURN;
-    END IF;
-
-    IF v_row.signup_count >= p_limit THEN
-        RAISE EXCEPTION 'guest signup limit exceeded';
-    END IF;
-
-    UPDATE public.guest_device_signups
-    SET signup_count = signup_count + 1,
-        last_guest_signup_at = now()
-    WHERE device_id = btrim(p_device_id);
+    RETURN;
 END;
 $$;
 

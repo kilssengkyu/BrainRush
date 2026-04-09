@@ -123,6 +123,7 @@ function generatePuzzle(rng: SeededRandom, config: LevelConfig) {
 }
 
 const MakeZero: React.FC<MakeZeroProps> = ({ seed, onScore, isPlaying }) => {
+    const WRONG_COOLDOWN_MS = 400;
     const { t } = useTranslation();
     const { playSound } = useSound();
     const { themeMode } = useTheme();
@@ -224,7 +225,7 @@ const MakeZero: React.FC<MakeZeroProps> = ({ seed, onScore, isPlaying }) => {
                 setFilledSlots(new Array(totalSlots).fill(null));
                 setUsedButtonIndices(new Set());
                 setShowWrong(false);
-            }, 400);
+            }, WRONG_COOLDOWN_MS);
         }
     }, [filledSlots, puzzle, isSolved, showWrong, onScore, playSound, totalSlots]);
 
@@ -315,7 +316,9 @@ const MakeZero: React.FC<MakeZeroProps> = ({ seed, onScore, isPlaying }) => {
                                 initial={{ scale: 0.8, opacity: 0 }}
                                 animate={{
                                     opacity: isUsed ? 0.3 : 1,
-                                    backgroundColor: isUsed ? (isDark ? '#111827' : '#cbd5e1') : (isDark ? '#1f2937' : '#f1f5f9'),
+                                    backgroundColor: showWrong
+                                        ? '#ef4444'
+                                        : (isUsed ? (isDark ? '#111827' : '#cbd5e1') : (isDark ? '#1f2937' : '#f1f5f9')),
                                 }}
                                 exit={{ scale: 0, opacity: 0 }}
                                 whileTap={{ scale: 0.9 }}
@@ -326,7 +329,7 @@ const MakeZero: React.FC<MakeZeroProps> = ({ seed, onScore, isPlaying }) => {
                                     }
                                     handleButtonPress(idx);
                                 }}
-                                disabled={isUsed}
+                                disabled={isUsed || showWrong || !isPlaying}
                                 className="w-20 h-20 rounded-2xl flex items-center justify-center text-3xl font-bold text-slate-900 dark:text-white border-2 border-slate-300 dark:border-gray-700 shadow-lg transition-colors"
                             >
                                 {num}

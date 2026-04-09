@@ -677,6 +677,7 @@
     "rewardPracticeNotes": "練習ノート +{{count}}",
     "claim": "受け取る",
     "claimed": "受け取り済み",
-    "claimSuccess": "報酬を受け取りました。(+{{pencils}} 鉛筆, +{{notes}} 練習ノート)"
+    "claimSuccess": "報酬を受け取りました。(+{{pencils}} 鉛筆, +{{notes}} 練習ノート)",
+    "claimBlockedPencilsFull": "鉛筆が5本以上ある間は受け取れません。先に鉛筆を使ってください。"
   }
 }

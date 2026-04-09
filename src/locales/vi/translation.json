@@ -677,6 +677,7 @@
     "rewardPracticeNotes": "Practice Notes +{{count}}",
     "claim": "Claim",
     "claimed": "Claimed",
-    "claimSuccess": "Reward claimed. (+{{pencils}} pencils, +{{notes}} practice notes)"
+    "claimSuccess": "Reward claimed. (+{{pencils}} pencils, +{{notes}} practice notes)",
+    "claimBlockedPencilsFull": "Ban khong the nhan khi co tu 5 but chi tro len. Hay dung but chi truoc."
   }
 }

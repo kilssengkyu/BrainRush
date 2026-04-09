@@ -40,12 +40,15 @@ const SAFE_TRIADS = [
 ];
 
 const FindMostColor: React.FC<FindMostColorProps> = ({ seed, onScore, isPlaying }) => {
+    const WRONG_COOLDOWN_MS = 400;
     const { playSound } = useSound();
 
     const [grid, setGrid] = useState<string[]>([]);
     const [cols, setCols] = useState(3);
     const [successCount, setSuccessCount] = usePanelProgress(seed, 'successCount');
     const [roundKey, setRoundKey] = useState(0); // To trigger animations
+    const [isInputLocked, setIsInputLocked] = useState(false);
+    const [isWrongFlash, setIsWrongFlash] = useState(false);
 
     const rng = useRef<SeededRandom | null>(null);
 
@@ -178,7 +181,7 @@ const FindMostColor: React.FC<FindMostColorProps> = ({ seed, onScore, isPlaying 
     }, [successCount]);
 
     const handleTileClick = (color: string) => {
-        if (!isPlaying) return;
+        if (!isPlaying || isInputLocked) return;
         // Count frequencies in current grid
         const counts: { [key: string]: number } = {};
         grid.forEach(c => counts[c] = (counts[c] || 0) + 1);
@@ -197,9 +200,14 @@ const FindMostColor: React.FC<FindMostColorProps> = ({ seed, onScore, isPlaying 
             generateRound();
         } else {
             // Wrong
+            setIsInputLocked(true);
+            setIsWrongFlash(true);
             playSound('error');
             onScore(-30);
-            // Shake effect or feedback?
+            window.setTimeout(() => {
+                setIsInputLocked(false);
+                setIsWrongFlash(false);
+            }, WRONG_COOLDOWN_MS);
         }
     };
 
@@ -216,6 +224,7 @@ const FindMostColor: React.FC<FindMostColorProps> = ({ seed, onScore, isPlaying 
                 {grid.map((color, idx) => (
                     <motion.button
                         key={idx}
+                        disabled={isInputLocked || !isPlaying}
                         whileHover={{ scale: 0.95 }}
                         whileTap={{ scale: 0.9 }}
                         onPointerDown={(e) => {
@@ -230,7 +239,7 @@ const FindMostColor: React.FC<FindMostColorProps> = ({ seed, onScore, isPlaying 
                             handleTileClick(color);
                         }}
                         className="w-full h-full rounded-lg shadow-inner border-2 border-white/10 transition-colors"
-                        style={{ backgroundColor: color }}
+                        style={{ backgroundColor: isWrongFlash ? '#ef4444' : color }}
                     />
                 ))}
             </motion.div>

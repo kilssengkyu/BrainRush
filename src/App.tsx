@@ -72,6 +72,11 @@ const AuthErrorRelay = () => {
 
     const errorCode = search.get('error_code') || hash.get('error_code');
     const errorDescription = search.get('error_description') || hash.get('error_description') || '';
+    
+    if (errorDescription) {
+        window.dispatchEvent(new CustomEvent('authDeepLinkError', { detail: { message: decodeURIComponent(errorDescription) } }));
+    }
+
     const isUserBanned = errorCode === 'user_banned' || String(errorDescription).toLowerCase().includes('banned');
 
     if (!isUserBanned) return;
@@ -140,13 +145,83 @@ const ForceLogoutListener = () => {
   return null;
 };
 
+// Deep Link / OAuth Error Listener
+const AuthDeepLinkErrorListener = () => {
+  const { showToast } = useUI();
+  const { t } = useTranslation();
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const rawMessage = String(customEvent.detail?.message || '');
+      const msg = rawMessage.toLowerCase();
+
+      const isIdentityConflict =
+        msg.includes('already linked') ||
+        msg.includes('identity_already_linked') ||
+        msg.includes('identity_already_exists') ||
+        msg.includes('already exists') ||
+        msg.includes('already registered') ||
+        msg.includes('account exists') ||
+        msg.includes('이미 가입된');
+
+      if (isIdentityConflict) {
+        void logAnalyticsEvent('br_auth_conflict', { location: 'deep_link' });
+        showToast(
+          t('profile.accountExistsLoginHint', '이미 존재하는 계정입니다. 로그아웃 후 해당 계정으로 로그인해 주세요.'),
+          'info'
+        );
+      } else if (msg && !msg.includes('cancel')) {
+        void logAnalyticsEvent('br_auth_error', { location: 'deep_link' });
+        showToast(rawMessage || msg, 'error');
+      }
+    };
+    window.addEventListener('authDeepLinkError', handler);
+    return () => window.removeEventListener('authDeepLinkError', handler);
+  }, [showToast, t]);
+
+  return null;
+};
+
+const AppDeepLinkRouter = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const handler = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const rawPath = String(customEvent.detail?.path || '').trim();
+      if (!rawPath) return;
+
+      if (rawPath === '/profile') {
+        navigate('/profile');
+        return;
+      }
+
+      navigate('/');
+    };
+
+    window.addEventListener('brainrush:app-link', handler as EventListener);
+    return () => window.removeEventListener('brainrush:app-link', handler as EventListener);
+  }, [navigate]);
+
+  return null;
+};
+
 
 import BGMManager from './components/audio/BGMManager';
 import ForceUpdateCheck from './components/ForceUpdateCheck';
 import { primeRewardedAd } from './utils/rewardedAd';
+import { logAnalyticsEvent } from './lib/analytics';
 
 function App() {
+  const appOpenLoggedRef = useRef(false);
+
   useEffect(() => {
+    if (!appOpenLoggedRef.current) {
+      appOpenLoggedRef.current = true;
+      void logAnalyticsEvent('br_app_open');
+    }
+
     const isAndroid = Capacitor.getPlatform() === 'android';
     const offset = isAndroid ? '12px' : '0px';
     document.documentElement.style.setProperty('--home-top-offset', offset);
@@ -191,6 +266,8 @@ function App() {
                   <ChatNotificationListener />
                   <LocalNotificationScheduler />
                   <ForceLogoutListener />
+                  <AuthDeepLinkErrorListener />
+                  <AppDeepLinkRouter />
                   <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/game/:roomId" element={<Game />} />

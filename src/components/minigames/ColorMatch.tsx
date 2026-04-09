@@ -20,12 +20,15 @@ const COLORS: Record<ColorType, { tailwind: string; hex: string }> = {
 };
 
 const ColorMatch: React.FC<ColorMatchProps> = ({ seed, onScore, isPlaying }) => {
+    const WRONG_COOLDOWN_MS = 400;
     const { t } = useTranslation();
     const { playSound } = useSound();
     const [panelIndex, setPanelIndex] = usePanelProgress(seed);
     const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
     const [shakeId, setShakeId] = useState<number | null>(null);
     const [isSolved, setIsSolved] = useState(false);
+    const [isInputLocked, setIsInputLocked] = useState(false);
+    const [isWrongFlash, setIsWrongFlash] = useState(false);
 
     // Difficulty
     // Level 1: 2 Options
@@ -74,7 +77,7 @@ const ColorMatch: React.FC<ColorMatchProps> = ({ seed, onScore, isPlaying }) => 
     }, [seed, panelIndex]);
 
     const handleItemClick = (index: number) => {
-        if (!currentPanel || isSolved || !isPlaying) return;
+        if (!currentPanel || isSolved || !isPlaying || isInputLocked) return;
         if (selectedIndices.has(index)) return;
 
         // Toggle selection
@@ -111,6 +114,7 @@ const ColorMatch: React.FC<ColorMatchProps> = ({ seed, onScore, isPlaying }) => 
 
             if (allCorrectSelected && noWrongSelected) {
                 // Level Complete bonus
+                setIsInputLocked(true);
                 setIsSolved(true);
                 onScore(30);
                 playSound('correct');
@@ -119,15 +123,22 @@ const ColorMatch: React.FC<ColorMatchProps> = ({ seed, onScore, isPlaying }) => 
                     setPanelIndex(prev => prev + 1);
                     setSelectedIndices(new Set());
                     setIsSolved(false);
+                    setIsInputLocked(false);
                 }, 250);
             }
         } else {
             // Wrong item selected!
             // Penalty
+            setIsInputLocked(true);
+            setIsWrongFlash(true);
             onScore(-60);
             playSound('error');
             setShakeId(index);
-            setTimeout(() => setShakeId(null), 400);
+            setTimeout(() => {
+                setShakeId(null);
+                setIsInputLocked(false);
+                setIsWrongFlash(false);
+            }, WRONG_COOLDOWN_MS);
 
             // Should we allow it to stay selected? Probably not if it's "Wrong".
             // Deselect it
@@ -144,6 +155,7 @@ const ColorMatch: React.FC<ColorMatchProps> = ({ seed, onScore, isPlaying }) => 
                 {currentPanel.items.map((item, idx) => (
                     <button
                         key={`${panelIndex}-${idx}`}
+                        disabled={isInputLocked || !isPlaying || isSolved}
                         onPointerDown={(e) => {
                             e.preventDefault();
                             if (e.currentTarget.setPointerCapture) {
@@ -157,8 +169,8 @@ const ColorMatch: React.FC<ColorMatchProps> = ({ seed, onScore, isPlaying }) => 
                         }}
                         className={`w-36 h-36 rounded-2xl flex items-center justify-center text-4xl font-bold bg-slate-50 dark:bg-gray-900 border-8 shadow-lg transition-colors active:scale-95 ${shakeId === idx ? 'animate-shake' : ''} ${selectedIndices.has(idx) ? 'ring-4 ring-white/30' : ''} ${COLORS[item.visual].tailwind}`}
                         style={{
-                            borderColor: COLORS[item.visual].hex,
-                            backgroundColor: selectedIndices.has(idx) ? '#ffffff33' : '#111827'
+                            borderColor: isWrongFlash ? '#b91c1c' : COLORS[item.visual].hex,
+                            backgroundColor: isWrongFlash ? '#ef4444' : (selectedIndices.has(idx) ? '#ffffff33' : '#111827')
                         }}
                     >
                         {t(`color.${item.text}`)}
