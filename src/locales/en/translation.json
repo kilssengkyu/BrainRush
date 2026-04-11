@@ -473,6 +473,14 @@
     "title": "MATH OX",
     "instruction": "Tap O if right, X if wrong!"
   },
+  "infiniteAdd": {
+    "title": "INFINITE ADD",
+    "instruction": "Tap panel numbers until your total matches the target!",
+    "progress": "Chain",
+    "total": "Total",
+    "target": "Target",
+    "add": "Add"
+  },
   "oneStroke": {
     "title": "ONE STROKE",
     "instruction": "Connect all white tiles in a single stroke!",

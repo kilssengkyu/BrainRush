@@ -457,6 +457,14 @@
     "title": "MATH OX",
     "instruction": "Touche O si juste, X si faux !"
   },
+  "infiniteAdd": {
+    "title": "ADDITION INFINIE",
+    "instruction": "Touchez les nombres jusqu'à atteindre la cible !",
+    "progress": "Série",
+    "total": "Total",
+    "target": "Cible",
+    "add": "Ajouter"
+  },
   "oneStroke": {
     "title": "UN SEUL TRAIT",
     "instruction": "Relie toutes les cases blanches en un seul trait !",

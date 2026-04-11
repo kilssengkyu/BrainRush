@@ -457,6 +457,14 @@
     "title": "MATH OX",
     "instruction": "Chạm O nếu đúng, X nếu sai!"
   },
+  "infiniteAdd": {
+    "title": "CỘNG VÔ TẬN",
+    "instruction": "Chạm các số cho đến khi tổng bằng mục tiêu!",
+    "progress": "Chuỗi",
+    "total": "Tổng",
+    "target": "Mục tiêu",
+    "add": "Cộng"
+  },
   "oneStroke": {
     "title": "MỘT NÉT",
     "instruction": "Nối tất cả các ô trắng bằng một đường duy nhất!",

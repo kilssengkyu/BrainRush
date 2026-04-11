@@ -21,6 +21,7 @@ const GUIDE_INSTRUCTION_KEY_BY_GAME: Record<string, string> = {
     NUMBER_DESC: 'number.instructionDesc',
     MATH: 'math.instruction',
     MATH_OX: 'mathOx.instruction',
+    INFINITE_ADD: 'infiniteAdd.instruction',
     ONE_STROKE: 'oneStroke.instruction',
     TEN: 'ten.instruction',
     COLOR: 'color.instruction',

@@ -27,6 +27,7 @@ const HIGHSCORE_GAME_TYPES = [
     { type: 'NUMBER', labelKey: 'number.title' },
     { type: 'NUMBER_DESC', labelKey: 'number.titleDesc' },
     { type: 'MATH', labelKey: 'math.title' },
+    { type: 'INFINITE_ADD', labelKey: 'infiniteAdd.title' },
     { type: 'TEN', labelKey: 'ten.title' },
     { type: 'COLOR', labelKey: 'color.title' },
     { type: 'MEMORY', labelKey: 'memory.title' },
