@@ -224,6 +224,9 @@ const Game: React.FC = () => {
     const showEmojiBar = (showRoundFinished || isWaiting) && !showFinalResult;
     const showEmojiOverlay = showEmojiBar || showFinalResult;
     const isGameplayInteractable = isGameplayActive;
+    const displayRoundNumber = showRoundFinished
+        ? Math.max(1, gameState.currentRound - 1)
+        : gameState.currentRound;
 
 
 
@@ -255,12 +258,16 @@ const Game: React.FC = () => {
         : null;
     const displayMyScore = lastRoundSnapshot
         ? (gameState.isPlayer1 ? lastRoundSnapshot.p1_score : lastRoundSnapshot.p2_score)
+        : showWarmupOverlay
+            ? 0
         : gameState.myScore;
-    const displayOpScore = realtimeOpScore !== null
-        ? realtimeOpScore
-        : (lastRoundSnapshot
-            ? (gameState.isPlayer1 ? lastRoundSnapshot.p2_score : lastRoundSnapshot.p1_score)
-            : gameState.opScore);
+    const displayOpScore = lastRoundSnapshot
+        ? (gameState.isPlayer1 ? lastRoundSnapshot.p2_score : lastRoundSnapshot.p1_score)
+        : showWarmupOverlay
+            ? 0
+            : realtimeOpScore !== null
+                ? realtimeOpScore
+                : gameState.opScore;
     const [isMyBackdropScoreFlashing, setIsMyBackdropScoreFlashing] = useState(false);
     const [isOpBackdropScoreFlashing, setIsOpBackdropScoreFlashing] = useState(false);
     const prevDisplayMyScoreRef = useRef(displayMyScore);
@@ -1340,7 +1347,7 @@ const Game: React.FC = () => {
                         {gameState.mode !== 'practice' && (
                             <div className="flex flex-col items-center mb-0.5">
                                 <div className="text-xs font-bold text-blue-500 dark:text-blue-300 tracking-wider uppercase whitespace-nowrap">
-                                    {t('game.table.round')} {gameState.currentRound}/{gameState.totalRounds}
+                                    {t('game.table.round')} {displayRoundNumber}/{gameState.totalRounds}
                                 </div>
                             </div>
                         )}
