@@ -1,8 +1,10 @@
-import React, { useState, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { usePanelProgress } from '../../hooks/usePanelProgress';
+import { motion } from 'framer-motion';
 import { SeededRandom } from '../../utils/seededRandom';
 import { useSound } from '../../contexts/SoundContext';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface LadderGameProps {
     seed: string | null;
@@ -14,14 +16,28 @@ interface LadderGameProps {
 // Bridge connects lineIndex and lineIndex + 1 at stepIndex
 type Bridge = [number, number];
 
+const getTimingAdjustment = (reactionSeconds: number): number => {
+    if (reactionSeconds <= 1) {
+        return 0.2 * ((1 - reactionSeconds) / 1); // +20% -> 0%
+    }
+    if (reactionSeconds <= 3) {
+        return -0.2 * ((reactionSeconds - 1) / 2); // 0% -> -20%
+    }
+    return -0.2;
+};
+
 const LadderGame: React.FC<LadderGameProps> = ({ seed, onScore, isPlaying }) => {
     const { t } = useTranslation();
     const { playSound } = useSound();
-    const [panelIndex, setPanelIndex] = useState(0);
+    const { themeMode } = useTheme();
+    const isDark = themeMode === 'dark';
+    const ladderStroke = isDark ? 'rgba(255, 255, 255, 0.3)' : 'rgba(100, 116, 139, 0.5)';
+    const [panelIndex, setPanelIndex] = usePanelProgress(seed);
     const [selectedEnd, setSelectedEnd] = useState<number | null>(null);
     const [isAnimating, setIsAnimating] = useState(false);
     const [shakeId, setShakeId] = useState<number | null>(null); // For wrong answers
     const [tracePath, setTracePath] = useState<{ x: number, y: number }[]>([]);
+    const [panelShownAtMs, setPanelShownAtMs] = useState<number>(Date.now());
     const CONTAINER_WIDTH = 300;
     const CONTAINER_HEIGHT = 320;
 
@@ -86,6 +102,10 @@ const LadderGame: React.FC<LadderGameProps> = ({ seed, onScore, isPlaying }) => 
         };
     }, [seed, panelIndex]);
 
+    useEffect(() => {
+        setPanelShownAtMs(Date.now());
+    }, [gameState, panelIndex]);
+
     const handleEndClick = (endIndex: number) => {
         if (isAnimating || !gameState || !isPlaying) return;
 
@@ -96,7 +116,10 @@ const LadderGame: React.FC<LadderGameProps> = ({ seed, onScore, isPlaying }) => 
             setSelectedEnd(endIndex);
             setIsAnimating(true);
             generateTracePath();
-            onScore(scoreBase);
+            const reactionSeconds = Math.max(0, (Date.now() - panelShownAtMs) / 1000);
+            const timingAdjustment = getTimingAdjustment(reactionSeconds);
+            const adjustedScore = Math.round(scoreBase * (1 + timingAdjustment));
+            onScore(adjustedScore);
             playSound('correct');
             setTimeout(() => {
                 setIsAnimating(false);
@@ -160,7 +183,7 @@ const LadderGame: React.FC<LadderGameProps> = ({ seed, onScore, isPlaying }) => 
         setTracePath(points);
     };
 
-    if (!gameState) return <div className="text-white">Loading...</div>;
+    if (!gameState) return <div className="text-slate-900 dark:text-white">{t('common.loading')}</div>;
 
     // Rendering Constants
     const LINE_GAP = CONTAINER_WIDTH / (gameState.lines - 1);
@@ -168,13 +191,6 @@ const LadderGame: React.FC<LadderGameProps> = ({ seed, onScore, isPlaying }) => 
 
     return (
         <div className="flex flex-col items-center justify-center w-full h-full relative">
-            <h2 className="text-3xl font-black text-white mb-2 drop-shadow-md">
-                {t('ladder.title', 'LADDER')}
-            </h2>
-            <div className="text-yellow-400 font-bold text-lg mb-6">
-                {t('ladder.instruction', 'Follow the path!')}
-            </div>
-
             {/* Game Board */}
             <div className="relative" style={{ width: CONTAINER_WIDTH, height: CONTAINER_HEIGHT }}>
 
@@ -186,7 +202,7 @@ const LadderGame: React.FC<LadderGameProps> = ({ seed, onScore, isPlaying }) => 
                             key={`line-${i}`}
                             x1={i * LINE_GAP} y1={0}
                             x2={i * LINE_GAP} y2={CONTAINER_HEIGHT}
-                            stroke="rgba(255, 255, 255, 0.3)"
+                            stroke={ladderStroke}
                             strokeWidth="4"
                             strokeLinecap="round"
                         />
@@ -202,7 +218,7 @@ const LadderGame: React.FC<LadderGameProps> = ({ seed, onScore, isPlaying }) => 
                                 key={`bridge-${i}`}
                                 x1={x1} y1={y}
                                 x2={x2} y2={y}
-                                stroke="rgba(255, 255, 255, 0.3)"
+                                stroke={ladderStroke}
                                 strokeWidth="4"
                                 strokeLinecap="round"
                             />
@@ -242,7 +258,7 @@ const LadderGame: React.FC<LadderGameProps> = ({ seed, onScore, isPlaying }) => 
                             className={`absolute w-12 h-12 rounded-full border-4 font-bold text-xl transition-all shadow-lg
                                 ${selectedEnd === i
                                     ? 'bg-green-500 border-green-300'
-                                    : 'bg-gray-800 border-gray-600 hover:border-white hover:scale-110 active:scale-95'
+                                    : 'bg-white dark:bg-gray-800 border-slate-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-white hover:scale-110 active:scale-95'
                                 }
                             `}
                             style={{ left: i * LINE_GAP - 24 }} // Center 48px button

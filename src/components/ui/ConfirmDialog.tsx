@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 interface ConfirmDialogProps {
@@ -23,6 +24,19 @@ const modalVariants = {
 export const ConfirmDialog = ({ title, message, onConfirm, onCancel }: ConfirmDialogProps) => {
     const { t } = useTranslation();
 
+    useEffect(() => {
+        const handleModalCloseRequest = (event: Event) => {
+            const customEvent = event as CustomEvent<{ handled?: boolean }>;
+            if (customEvent.detail?.handled) return;
+            if (customEvent.detail) customEvent.detail.handled = true;
+            onCancel();
+        };
+        window.addEventListener('brainrush:request-modal-close', handleModalCloseRequest as EventListener);
+        return () => {
+            window.removeEventListener('brainrush:request-modal-close', handleModalCloseRequest as EventListener);
+        };
+    }, [onCancel]);
+
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <motion.div
@@ -38,20 +52,20 @@ export const ConfirmDialog = ({ title, message, onConfirm, onCancel }: ConfirmDi
                 initial="initial"
                 animate="animate"
                 exit="exit"
-                className="relative bg-gray-800 rounded-2xl p-6 w-full max-w-sm border border-gray-700 shadow-2xl"
+                className="relative bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-sm border border-gray-700 shadow-2xl"
             >
-                <h3 className="text-xl font-bold text-white mb-2">{title}</h3>
-                <p className="text-gray-300 mb-6">{message}</p>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{title}</h3>
+                <p className="text-slate-600 dark:text-gray-300 mb-6">{message}</p>
                 <div className="flex gap-3 justify-end">
                     <button
                         onClick={onCancel}
-                        className="px-4 py-2 rounded-lg text-gray-300 hover:bg-gray-700 transition-colors"
+                        className="px-4 py-2 rounded-lg text-slate-600 dark:text-gray-300 hover:bg-slate-100 dark:bg-gray-700 transition-colors"
                     >
                         {t('common.cancel')}
                     </button>
                     <button
                         onClick={onConfirm}
-                        className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-medium transition-colors"
+                        className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-slate-900 dark:text-white font-medium transition-colors"
                     >
                         {t('common.confirm')}
                     </button>
@@ -60,5 +74,4 @@ export const ConfirmDialog = ({ title, message, onConfirm, onCancel }: ConfirmDi
         </div>
     );
 };
-
 

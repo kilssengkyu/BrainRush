@@ -893,6 +893,9 @@ DECLARE
     v_bot record;
     v_room_id uuid;
     v_level int;
+    v_existing_room uuid;
+    v_existing_opponent text;
+    v_mode text := 'normal';
 BEGIN
     -- Ownership check if UUID
     IF p_player_id ~ '^[0-9a-fA-F-]{36}$' THEN
@@ -907,7 +910,40 @@ BEGIN
         END IF;
     END IF;
 
+    -- Reconnect to existing active session instead of creating a new one
+    SELECT
+      gs.id,
+      CASE WHEN gs.player1_id = p_player_id THEN gs.player2_id ELSE gs.player1_id END
+    INTO v_existing_room, v_existing_opponent
+    FROM game_sessions gs
+    WHERE (gs.player1_id = p_player_id OR gs.player2_id = p_player_id)
+      AND gs.mode IS DISTINCT FROM 'practice'
+      AND (
+          (gs.status = 'waiting' AND gs.created_at > (now() - interval '60 seconds'))
+          OR
+          (gs.status IN ('countdown', 'playing') AND COALESCE(gs.end_at, gs.created_at + interval '5 minutes') > (now() - interval '10 seconds'))
+      )
+    ORDER BY gs.created_at DESC
+    LIMIT 1;
+
+    IF v_existing_room IS NOT NULL THEN
+      room_id := v_existing_room;
+      opponent_id := v_existing_opponent;
+      RETURN NEXT;
+      RETURN;
+    END IF;
+
     -- Remove from queue to avoid race
+    SELECT mode INTO v_mode
+    FROM matchmaking_queue
+    WHERE player_id = p_player_id
+    ORDER BY updated_at DESC
+    LIMIT 1;
+
+    IF v_mode IS NULL OR v_mode NOT IN ('normal', 'rank') THEN
+        v_mode := 'normal';
+    END IF;
+
     DELETE FROM matchmaking_queue WHERE player_id = p_player_id;
 
     -- Pick a random bot profile
@@ -917,7 +953,7 @@ BEGIN
     END IF;
 
     INSERT INTO game_sessions (player1_id, player2_id, status, current_round, mode)
-    VALUES (p_player_id, v_bot.id, 'waiting', 0, 'normal')
+    VALUES (p_player_id, v_bot.id, 'waiting', 0, v_mode)
     RETURNING id INTO v_room_id;
 
     room_id := v_room_id;
@@ -967,10 +1003,29 @@ CREATE FUNCTION public.create_session(p_player1_id text, p_player2_id text) RETU
     AS $$
 DECLARE
   v_id uuid;
+  v_existing_room uuid;
 BEGIN
   -- Security Check
   IF p_player1_id != auth.uid()::text THEN
     RAISE EXCEPTION 'Not authorized to create session for another user';
+  END IF;
+
+  -- Reconnect to existing active session instead of creating a new one
+  SELECT gs.id
+  INTO v_existing_room
+  FROM game_sessions gs
+  WHERE (gs.player1_id = p_player1_id OR gs.player2_id = p_player1_id)
+    AND gs.mode IS DISTINCT FROM 'practice'
+    AND (
+      (gs.status = 'waiting' AND gs.created_at > (now() - interval '60 seconds'))
+      OR
+      (gs.status IN ('countdown', 'playing') AND COALESCE(gs.end_at, gs.created_at + interval '5 minutes') > (now() - interval '10 seconds'))
+    )
+  ORDER BY gs.created_at DESC
+  LIMIT 1;
+
+  IF v_existing_room IS NOT NULL THEN
+    RETURN v_existing_room;
   END IF;
 
   INSERT INTO game_sessions (player1_id, player2_id, status, current_round, mode)
@@ -1135,27 +1190,41 @@ CREATE FUNCTION public.find_match(p_min_mmr integer, p_max_mmr integer, p_player
 DECLARE
     v_opponent_id text;
     v_room_id uuid;
-    v_level int;
+    v_existing_room uuid;
 BEGIN
     -- [SECURE] Verify ownership if UUID
     IF p_player_id ~ '^[0-9a-fA-F-]{36}$' THEN
          IF p_player_id != auth.uid()::text THEN RAISE EXCEPTION 'Not authorized'; END IF;
     END IF;
 
-    -- Rank gate: require authenticated user with level >= 5
+    -- Rank gate: require authenticated user
     IF p_mode = 'rank' THEN
         IF p_player_id !~ '^[0-9a-fA-F-]{36}$' THEN
             RAISE EXCEPTION 'Rank requires login';
         END IF;
+    END IF;
 
-        SELECT level INTO v_level FROM profiles WHERE id = p_player_id::uuid;
-        IF v_level IS NULL OR v_level < 5 THEN
-            RAISE EXCEPTION 'Rank requires level 5';
-        END IF;
+    -- Active session guard: return existing session instead of creating a new one
+    SELECT gs.id
+    INTO v_existing_room
+    FROM game_sessions gs
+    WHERE (gs.player1_id = p_player_id OR gs.player2_id = p_player_id)
+      AND gs.mode IS DISTINCT FROM 'practice'
+      AND (
+          (gs.status = 'waiting' AND gs.created_at > (now() - interval '60 seconds'))
+          OR
+          (gs.status IN ('countdown', 'playing') AND COALESCE(gs.end_at, gs.created_at + interval '5 minutes') > (now() - interval '10 seconds'))
+      )
+    ORDER BY gs.created_at DESC
+    LIMIT 1;
+
+    IF v_existing_room IS NOT NULL THEN
+        DELETE FROM matchmaking_queue WHERE player_id = p_player_id;
+        RETURN v_existing_room;
     END IF;
 
     -- A. Cleanup Stale Entries
-    DELETE FROM matchmaking_queue 
+    DELETE FROM matchmaking_queue
     WHERE updated_at < (now() - interval '60 seconds');
 
     -- B. Find Opponent
@@ -1165,6 +1234,17 @@ BEGIN
       AND mmr BETWEEN p_min_mmr AND p_max_mmr
       AND mode = p_mode
       AND updated_at > (now() - interval '30 seconds')
+      AND NOT EXISTS (
+          SELECT 1
+          FROM game_sessions gs
+          WHERE (gs.player1_id = matchmaking_queue.player_id OR gs.player2_id = matchmaking_queue.player_id)
+            AND gs.mode IS DISTINCT FROM 'practice'
+            AND (
+                (gs.status = 'waiting' AND gs.created_at > (now() - interval '60 seconds'))
+                OR
+                (gs.status IN ('countdown', 'playing') AND COALESCE(gs.end_at, gs.created_at + interval '5 minutes') > (now() - interval '10 seconds'))
+            )
+      )
     ORDER BY created_at ASC
     LIMIT 1
     FOR UPDATE SKIP LOCKED;
@@ -1182,8 +1262,8 @@ BEGIN
     -- D. No match -> Upsert Self
     INSERT INTO matchmaking_queue (player_id, mmr, mode, updated_at)
     VALUES (p_player_id, (p_min_mmr + p_max_mmr) / 2, p_mode, now())
-    ON CONFLICT (player_id) 
-    DO UPDATE SET 
+    ON CONFLICT (player_id)
+    DO UPDATE SET
         mmr = EXCLUDED.mmr,
         mode = EXCLUDED.mode,
         updated_at = now();
@@ -1213,10 +1293,23 @@ DECLARE
     v_p2_exp float;
     v_new_p1_mmr int;
     v_new_p2_mmr int;
+    v_p1_delta int := 0;
+    v_p2_delta int := 0;
+    v_p1_is_real boolean := false;
+    v_p2_is_real boolean := false;
 
     v_p1_total int := 0;
     v_p2_total int := 0;
+    v_p1_wins int := 0;
+    v_p2_wins int := 0;
     v_round jsonb;
+
+    -- Streak variables
+    v_winner_streak int;
+    v_winner_streak_at timestamptz;
+    v_loser_lose_streak int;
+    v_loser_lose_bonus_date date;
+    v_streak_bonus int := 0;
 
     v_round_winner text;
     v_round_type text;
@@ -1259,6 +1352,7 @@ BEGIN
         v_round_type := v_round->>'game_type';
 
         IF v_round_winner = 'p1' THEN
+            v_p1_wins := v_p1_wins + 1;
             SELECT * INTO v_inc FROM stat_increments(v_round_type);
             v_p1_speed := v_p1_speed + v_inc.speed;
             v_p1_memory := v_p1_memory + v_inc.memory;
@@ -1267,6 +1361,7 @@ BEGIN
             v_p1_accuracy := v_p1_accuracy + v_inc.accuracy;
             v_p1_observation := v_p1_observation + v_inc.observation;
         ELSIF v_round_winner = 'p2' THEN
+            v_p2_wins := v_p2_wins + 1;
             SELECT * INTO v_inc FROM stat_increments(v_round_type);
             v_p2_speed := v_p2_speed + v_inc.speed;
             v_p2_memory := v_p2_memory + v_inc.memory;
@@ -1278,10 +1373,10 @@ BEGIN
     END LOOP;
 
     -- Determine Winner
-    IF v_p1_total > v_p2_total THEN
+    IF v_p1_wins > v_p2_wins THEN
         v_winner := v_session.player1_id;
         v_loser := v_session.player2_id;
-    ELSIF v_p2_total > v_p1_total THEN
+    ELSIF v_p2_wins > v_p1_wins THEN
         v_winner := v_session.player2_id;
         v_loser := v_session.player1_id;
     ELSE
@@ -1293,33 +1388,161 @@ BEGIN
     SET status = 'finished',
         winner_id = v_winner,
         end_at = now(),
-        player1_score = v_p1_total,
-        player2_score = v_p2_total
+        player1_score = v_p1_wins,
+        player2_score = v_p2_wins
     WHERE id = p_room_id;
 
     -- STATS UPDATE LOGIC
     IF v_winner IS NOT NULL AND NOT v_is_draw THEN
         IF v_session.mode = 'rank' THEN
-             -- RANK MODE: Update MMR + Standard Wins/Losses (only for real users)
-             IF v_session.player1_id ~ '^[0-9a-fA-F-]{36}$' AND v_session.player2_id ~ '^[0-9a-fA-F-]{36}$' THEN
-                 SELECT mmr INTO v_p1_mmr FROM profiles WHERE id = v_session.player1_id::uuid;
-                 SELECT mmr INTO v_p2_mmr FROM profiles WHERE id = v_session.player2_id::uuid;
+             -- RANK MODE: allow bot matches by treating bot MMR as fixed 1000
+             v_p1_is_real := v_session.player1_id ~ '^[0-9a-fA-F-]{36}$';
+             v_p2_is_real := v_session.player2_id ~ '^[0-9a-fA-F-]{36}$';
+             v_streak_bonus := 0;
+
+             IF v_p1_is_real OR v_p2_is_real THEN
+                 IF v_p1_is_real THEN
+                     SELECT mmr INTO v_p1_mmr FROM profiles WHERE id = v_session.player1_id::uuid;
+                 ELSE
+                     v_p1_mmr := 1000;
+                 END IF;
+
+                 IF v_p2_is_real THEN
+                     SELECT mmr INTO v_p2_mmr FROM profiles WHERE id = v_session.player2_id::uuid;
+                 ELSE
+                     v_p2_mmr := 1000;
+                 END IF;
+
+                 v_p1_mmr := COALESCE(v_p1_mmr, 1000);
+                 v_p2_mmr := COALESCE(v_p2_mmr, 1000);
 
                  v_p1_exp := 1.0 / (1.0 + power(10.0, (v_p2_mmr - v_p1_mmr)::numeric / 400.0));
                  v_p2_exp := 1.0 / (1.0 + power(10.0, (v_p1_mmr - v_p2_mmr)::numeric / 400.0));
 
+                 -- Winner streak bonus is only for real users
+                 IF v_winner = v_session.player1_id::text AND v_p1_is_real THEN
+                     SELECT rank_win_streak, rank_streak_updated_at
+                     INTO v_winner_streak, v_winner_streak_at
+                     FROM profiles WHERE id = v_session.player1_id::uuid;
+
+                     IF v_winner_streak_at IS NOT NULL AND (now() - v_winner_streak_at) <= interval '10 minutes' THEN
+                         v_winner_streak := COALESCE(v_winner_streak, 0) + 1;
+                     ELSE
+                         v_winner_streak := 1;
+                     END IF;
+
+                     IF v_winner_streak >= 3 AND (v_winner_streak % 3) = 0 THEN
+                         v_streak_bonus := LEAST((v_winner_streak / 3) * 5, 15);
+                     END IF;
+
+                     IF v_winner_streak >= 9 THEN
+                         v_winner_streak := 0;
+                     END IF;
+                 ELSIF v_winner = v_session.player2_id::text AND v_p2_is_real THEN
+                     SELECT rank_win_streak, rank_streak_updated_at
+                     INTO v_winner_streak, v_winner_streak_at
+                     FROM profiles WHERE id = v_session.player2_id::uuid;
+
+                     IF v_winner_streak_at IS NOT NULL AND (now() - v_winner_streak_at) <= interval '10 minutes' THEN
+                         v_winner_streak := COALESCE(v_winner_streak, 0) + 1;
+                     ELSE
+                         v_winner_streak := 1;
+                     END IF;
+
+                     IF v_winner_streak >= 3 AND (v_winner_streak % 3) = 0 THEN
+                         v_streak_bonus := LEAST((v_winner_streak / 3) * 5, 15);
+                     END IF;
+
+                     IF v_winner_streak >= 9 THEN
+                         v_winner_streak := 0;
+                     END IF;
+                 END IF;
+
                  IF v_winner = v_session.player1_id::text THEN
-                    v_new_p1_mmr := round(v_p1_mmr + v_k_factor * (1 - v_p1_exp));
-                    v_new_p2_mmr := round(v_p2_mmr + v_k_factor * (0 - v_p2_exp));
-
-                    UPDATE profiles SET mmr = v_new_p1_mmr, wins = wins + 1 WHERE id = v_session.player1_id::uuid;
-                    UPDATE profiles SET mmr = v_new_p2_mmr, losses = losses + 1 WHERE id = v_session.player2_id::uuid;
+                     v_new_p1_mmr := round(v_p1_mmr + v_k_factor * (1 - v_p1_exp)) + v_streak_bonus;
+                     v_new_p2_mmr := round(v_p2_mmr + v_k_factor * (0 - v_p2_exp));
                  ELSE
-                    v_new_p1_mmr := round(v_p1_mmr + v_k_factor * (0 - v_p1_exp));
-                    v_new_p2_mmr := round(v_p2_mmr + v_k_factor * (1 - v_p2_exp));
+                     v_new_p1_mmr := round(v_p1_mmr + v_k_factor * (0 - v_p1_exp));
+                     v_new_p2_mmr := round(v_p2_mmr + v_k_factor * (1 - v_p2_exp)) + v_streak_bonus;
+                 END IF;
 
-                    UPDATE profiles SET mmr = v_new_p1_mmr, losses = losses + 1 WHERE id = v_session.player1_id::uuid;
-                    UPDATE profiles SET mmr = v_new_p2_mmr, wins = wins + 1 WHERE id = v_session.player2_id::uuid;
+                 v_new_p1_mmr := GREATEST(0, v_new_p1_mmr);
+                 v_new_p2_mmr := GREATEST(0, v_new_p2_mmr);
+
+                 v_p1_delta := v_new_p1_mmr - v_p1_mmr;
+                 v_p2_delta := v_new_p2_mmr - v_p2_mmr;
+
+                 -- Apply MMR/stat updates only to real profiles
+                 IF v_p1_is_real THEN
+                     IF v_winner = v_session.player1_id::text THEN
+                         UPDATE profiles
+                         SET mmr = v_new_p1_mmr, wins = wins + 1,
+                             rank_win_streak = COALESCE(v_winner_streak, 0),
+                             rank_streak_updated_at = now(),
+                             rank_lose_streak = 0
+                         WHERE id = v_session.player1_id::uuid;
+                     ELSE
+                         UPDATE profiles
+                         SET mmr = v_new_p1_mmr, losses = losses + 1,
+                             rank_win_streak = 0,
+                             rank_streak_updated_at = NULL,
+                             rank_lose_streak = COALESCE(rank_lose_streak, 0) + 1
+                         WHERE id = v_session.player1_id::uuid;
+                     END IF;
+                 END IF;
+
+                 IF v_p2_is_real THEN
+                     IF v_winner = v_session.player2_id::text THEN
+                         UPDATE profiles
+                         SET mmr = v_new_p2_mmr, wins = wins + 1,
+                             rank_win_streak = COALESCE(v_winner_streak, 0),
+                             rank_streak_updated_at = now(),
+                             rank_lose_streak = 0
+                         WHERE id = v_session.player2_id::uuid;
+                     ELSE
+                         UPDATE profiles
+                         SET mmr = v_new_p2_mmr, losses = losses + 1,
+                             rank_win_streak = 0,
+                             rank_streak_updated_at = NULL,
+                             rank_lose_streak = COALESCE(rank_lose_streak, 0) + 1
+                         WHERE id = v_session.player2_id::uuid;
+                     END IF;
+                 END IF;
+
+                 UPDATE game_sessions SET
+                     player1_mmr_change = v_p1_delta,
+                     player2_mmr_change = v_p2_delta,
+                     player1_streak_bonus = CASE WHEN v_winner = v_session.player1_id::text AND v_p1_is_real THEN v_streak_bonus ELSE 0 END,
+                     player2_streak_bonus = CASE WHEN v_winner = v_session.player2_id::text AND v_p2_is_real THEN v_streak_bonus ELSE 0 END
+                 WHERE id = p_room_id;
+
+                 -- Lose streak reward only for real loser
+                 IF v_loser = v_session.player1_id::text AND v_p1_is_real THEN
+                     SELECT rank_lose_streak, rank_lose_bonus_date
+                     INTO v_loser_lose_streak, v_loser_lose_bonus_date
+                     FROM profiles WHERE id = v_session.player1_id::uuid;
+
+                     IF v_loser_lose_streak >= 3 AND (v_loser_lose_bonus_date IS NULL OR v_loser_lose_bonus_date < CURRENT_DATE) THEN
+                         UPDATE profiles
+                         SET pencils = pencils + 1,
+                             rank_lose_bonus_date = CURRENT_DATE,
+                             rank_lose_streak = 0
+                         WHERE id = v_session.player1_id::uuid;
+                         UPDATE game_sessions SET player1_lose_pencil = true WHERE id = p_room_id;
+                     END IF;
+                 ELSIF v_loser = v_session.player2_id::text AND v_p2_is_real THEN
+                     SELECT rank_lose_streak, rank_lose_bonus_date
+                     INTO v_loser_lose_streak, v_loser_lose_bonus_date
+                     FROM profiles WHERE id = v_session.player2_id::uuid;
+
+                     IF v_loser_lose_streak >= 3 AND (v_loser_lose_bonus_date IS NULL OR v_loser_lose_bonus_date < CURRENT_DATE) THEN
+                         UPDATE profiles
+                         SET pencils = pencils + 1,
+                             rank_lose_bonus_date = CURRENT_DATE,
+                             rank_lose_streak = 0
+                         WHERE id = v_session.player2_id::uuid;
+                         UPDATE game_sessions SET player2_lose_pencil = true WHERE id = p_room_id;
+                     END IF;
                  END IF;
              END IF;
         ELSIF v_session.mode = 'normal' THEN
@@ -1411,6 +1634,7 @@ BEGIN
         WHEN 'SEQUENCE' THEN 30
         WHEN 'SEQUENCE_NORMAL' THEN 30
         WHEN 'PAIR' THEN 30
+        WHEN 'MAKE_ZERO' THEN 40
         
         -- 40초 게임
         WHEN 'AIM' THEN 40
@@ -1427,6 +1651,59 @@ BEGIN
         
         ELSE 30
     END;
+END;
+$$;
+
+
+--
+-- Name: pick_ghost_timeline(text, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.pick_ghost_timeline(p_player_id text, p_game_type text) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+    v_target_score int;
+    v_timeline jsonb;
+BEGIN
+    IF p_game_type IS NULL THEN
+        RETURN NULL;
+    END IF;
+
+    IF p_player_id ~ '^[0-9a-fA-F-]{36}$' THEN
+        SELECT ph.best_score
+        INTO v_target_score
+        FROM player_highscores ph
+        WHERE ph.user_id = p_player_id::uuid
+          AND ph.game_type = p_game_type;
+    END IF;
+
+    IF COALESCE(v_target_score, 0) > 0 THEN
+        WITH nearest_ghosts AS (
+            SELECT gs.score_timeline
+            FROM ghost_scores gs
+            WHERE gs.game_type = p_game_type
+            ORDER BY abs((gs.final_score - v_target_score)), random()
+            LIMIT 3
+        )
+        SELECT ng.score_timeline
+        INTO v_timeline
+        FROM nearest_ghosts ng
+        ORDER BY random()
+        LIMIT 1;
+    END IF;
+
+    IF v_timeline IS NULL THEN
+        SELECT gs.score_timeline
+        INTO v_timeline
+        FROM ghost_scores gs
+        WHERE gs.game_type = p_game_type
+        ORDER BY random()
+        LIMIT 1;
+    END IF;
+
+    RETURN v_timeline;
 END;
 $$;
 
@@ -1469,45 +1746,69 @@ CREATE FUNCTION public.get_leaderboard(p_user_id uuid, p_country text DEFAULT NU
 DECLARE
     v_top_players JSON;
     v_user_rank JSON;
+    v_user_profile RECORD;
+    v_rank integer;
 BEGIN
-    -- Get Top 100 Players
+    -- Top 100 rows only, then calculate rank with indexed COUNT(mmr > current_mmr).
     SELECT json_agg(t) INTO v_top_players
     FROM (
-        SELECT 
-            ROW_NUMBER() OVER (ORDER BY mmr DESC) as rank,
-            id,
-            nickname,
-            avatar_url,
-            country,
-            mmr,
-            get_tier_name(mmr) as tier
-        FROM profiles
-        WHERE p_country IS NULL OR country = p_country
+        SELECT
+            (
+                SELECT COUNT(*)::int + 1
+                FROM public.profiles p2
+                WHERE (p_country IS NULL OR p2.country = p_country)
+                  AND COALESCE(p2.rank_games_played, 0) >= 5
+                  AND p2.mmr > p.mmr
+            ) AS rank,
+            p.id,
+            p.nickname,
+            p.avatar_url,
+            p.country,
+            p.mmr,
+            p.level,
+            get_tier_name(p.mmr) AS tier
+        FROM public.profiles p
+        WHERE (p_country IS NULL OR p.country = p_country)
+          AND COALESCE(p.rank_games_played, 0) >= 5
+        ORDER BY p.mmr DESC, p.id ASC
         LIMIT 100
     ) t;
 
-    -- Get Requesting User's Specific Rank (if logged in)
     IF p_user_id IS NOT NULL THEN
-        SELECT json_build_object(
-            'rank', rank,
-            'id', id,
-            'nickname', nickname,
-            'avatar_url', avatar_url,
-            'country', country,
-            'mmr', mmr,
-            'tier', get_tier_name(mmr)
-        ) INTO v_user_rank
-        FROM (
-            SELECT 
-                id, nickname, avatar_url, country, mmr,
-                RANK() OVER (ORDER BY mmr DESC) as rank
-            FROM profiles
-            WHERE p_country IS NULL OR country = p_country
-        ) sub
-        WHERE id = p_user_id;
+        SELECT
+            p.id,
+            p.nickname,
+            p.avatar_url,
+            p.country,
+            p.mmr,
+            p.level
+        INTO v_user_profile
+        FROM public.profiles p
+        WHERE p.id = p_user_id
+          AND (p_country IS NULL OR p.country = p_country)
+          AND COALESCE(p.rank_games_played, 0) >= 5;
+
+        IF FOUND THEN
+            SELECT COUNT(*)::int + 1
+            INTO v_rank
+            FROM public.profiles p2
+            WHERE (p_country IS NULL OR p2.country = p_country)
+              AND COALESCE(p2.rank_games_played, 0) >= 5
+              AND p2.mmr > v_user_profile.mmr;
+
+            v_user_rank := json_build_object(
+                'rank', v_rank,
+                'id', v_user_profile.id,
+                'nickname', v_user_profile.nickname,
+                'avatar_url', v_user_profile.avatar_url,
+                'country', v_user_profile.country,
+                'mmr', v_user_profile.mmr,
+                'level', v_user_profile.level,
+                'tier', get_tier_name(v_user_profile.mmr)
+            );
+        END IF;
     END IF;
 
-    -- Return combined result
     RETURN json_build_object(
         'top_players', COALESCE(v_top_players, '[]'::json),
         'user_rank', v_user_rank
@@ -1682,10 +1983,11 @@ CREATE FUNCTION public.get_tier_name(p_mmr integer) RETURNS text
     LANGUAGE plpgsql IMMUTABLE
     AS $$
 BEGIN
-    IF p_mmr >= 2500 THEN RETURN 'Diamond';
-    ELSIF p_mmr >= 2000 THEN RETURN 'Platinum';
-    ELSIF p_mmr >= 1500 THEN RETURN 'Gold';
-    ELSIF p_mmr >= 1200 THEN RETURN 'Silver';
+    IF p_mmr >= 2400 THEN RETURN 'Master';
+    ELSIF p_mmr >= 2000 THEN RETURN 'Diamond';
+    ELSIF p_mmr >= 1600 THEN RETURN 'Platinum';
+    ELSIF p_mmr >= 1200 THEN RETURN 'Gold';
+    ELSIF p_mmr >= 800 THEN RETURN 'Silver';
     ELSE RETURN 'Bronze';
     END IF;
 END;
@@ -1734,6 +2036,36 @@ BEGIN
     WHERE id = user_id;
 
     RETURN TRUE;
+END;
+$$;
+
+
+--
+-- Name: grant_nickname_change_tickets(uuid, integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.grant_nickname_change_tickets(user_id uuid, amount integer) RETURNS boolean
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  IF user_id != auth.uid() THEN
+    RAISE EXCEPTION 'Cannot grant nickname change tickets for another user';
+  END IF;
+
+  IF amount IS NULL OR amount <= 0 OR amount > 1000 THEN
+    RAISE EXCEPTION 'Invalid nickname change ticket amount';
+  END IF;
+
+  UPDATE public.profiles
+  SET nickname_change_tickets = COALESCE(nickname_change_tickets, 0) + amount
+  WHERE id = user_id;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Profile not found';
+  END IF;
+
+  RETURN TRUE;
 END;
 $$;
 
@@ -1812,13 +2144,13 @@ BEGIN
       
       -- Update Leaver Profile (Disconnect +1, MMR down, NO Loss increase)
       update public.profiles 
-      set mmr = mmr + v_leaver_chg, 
+      set mmr = GREATEST(0, mmr + v_leaver_chg), 
           disconnects = disconnects + 1 
       where id = p_leaver_id::uuid;
 
       -- Update Winner Profile (Win +1, MMR up)
       update public.profiles 
-      set mmr = mmr + v_winner_chg, 
+      set mmr = GREATEST(0, mmr + v_winner_chg), 
           wins = wins + 1 
       where id = v_winner_id::uuid;
 
@@ -1852,10 +2184,9 @@ CREATE FUNCTION public.handle_new_user() RETURNS trigger
     SET search_path TO 'public'
     AS $$
 begin
-  insert into public.profiles (id, email, full_name, avatar_url, nickname, needs_nickname_setup)
+  insert into public.profiles (id, full_name, avatar_url, nickname, needs_nickname_setup)
   values (
     new.id, 
-    new.email, 
     new.raw_user_meta_data->>'full_name', 
     new.raw_user_meta_data->>'avatar_url',
     'Player_' || floor(random() * 9000 + 1000)::text,
@@ -2131,6 +2462,95 @@ $$;
 
 
 --
+-- Name: update_my_profile(text, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.update_my_profile(p_nickname text, p_country text DEFAULT NULL::text) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_user_id uuid := auth.uid();
+  v_nickname text;
+  v_current_nickname text;
+  v_last_nickname_set_at timestamptz;
+  v_needs_nickname_setup boolean;
+  v_nickname_change_tickets integer;
+BEGIN
+  IF v_user_id IS NULL THEN
+    RAISE EXCEPTION 'Not authenticated';
+  END IF;
+
+  v_nickname := btrim(coalesce(p_nickname, ''));
+
+  IF char_length(v_nickname) < 2 OR char_length(v_nickname) > 20 THEN
+    RAISE EXCEPTION 'Nickname must be between 2 and 20 characters';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM public.profiles p
+    WHERE p.id <> v_user_id
+      AND p.nickname IS NOT NULL
+      AND lower(p.nickname) = lower(v_nickname)
+  ) THEN
+    RAISE EXCEPTION 'Nickname already in use';
+  END IF;
+
+  SELECT
+    p.nickname,
+    p.nickname_set_at,
+    p.needs_nickname_setup,
+    COALESCE(p.nickname_change_tickets, 0)
+  INTO
+    v_current_nickname,
+    v_last_nickname_set_at,
+    v_needs_nickname_setup,
+    v_nickname_change_tickets
+  FROM public.profiles p
+  WHERE p.id = v_user_id
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Profile not found';
+  END IF;
+
+  IF lower(COALESCE(v_current_nickname, '')) <> lower(v_nickname) THEN
+    IF NOT v_needs_nickname_setup
+      AND v_last_nickname_set_at IS NOT NULL
+      AND v_last_nickname_set_at > (now() - interval '30 days')
+    THEN
+      IF v_nickname_change_tickets <= 0 THEN
+        RAISE EXCEPTION 'Nickname can be changed once every 30 days or with a ticket';
+      END IF;
+
+      UPDATE public.profiles
+      SET nickname = v_nickname,
+          country = p_country,
+          needs_nickname_setup = false,
+          nickname_set_at = now(),
+          nickname_change_tickets = GREATEST(COALESCE(nickname_change_tickets, 0) - 1, 0)
+      WHERE id = v_user_id;
+      RETURN;
+    END IF;
+
+    UPDATE public.profiles
+    SET nickname = v_nickname,
+        country = p_country,
+        needs_nickname_setup = false,
+        nickname_set_at = now()
+    WHERE id = v_user_id;
+    RETURN;
+  END IF;
+
+  UPDATE public.profiles
+  SET country = p_country
+  WHERE id = v_user_id;
+END;
+$$;
+
+
+--
 -- Name: set_player_ready(uuid, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -2167,30 +2587,44 @@ DECLARE
     v_mode text;
     v_current_type text;
     v_duration int;
+    v_round_count int := 3;
     v_all_types text[] := ARRAY[
         'RPS', 'NUMBER', 'MATH', 'TEN', 'COLOR',
         'MEMORY', 'SEQUENCE', 'LARGEST', 'PAIR',
         'UPDOWN', 'SEQUENCE_NORMAL', 'NUMBER_DESC',
         'SLIDER', 'ARROW', 'BLANK', 'OPERATOR', 'LADDER', 'TAP_COLOR',
-        'AIM', 'MOST_COLOR', 'SORTING', 'SPY', 'PATH', 'BLIND_PATH', 'BALLS', 'CATCH_COLOR', 'COLOR_TIMING', 'STAIRWAY'
+        'AIM', 'MOST_COLOR', 'SORTING', 'SPY', 'PATH', 'BLIND_PATH', 'BALLS', 'CATCH_COLOR', 'COLOR_TIMING', 'STAIRWAY', 'MAKE_ZERO'
     ];
     v_selected_types text[];
     v_first_type text;
+    v_p1 text;
+    v_p2 text;
+    v_human_player_id text;
+    v_ghost_tl jsonb;
+    v_game_data jsonb := '{}'::jsonb;
 BEGIN
-    SELECT mode, game_type INTO v_mode, v_current_type FROM game_sessions WHERE id = p_room_id;
+    SELECT mode, game_type, player1_id, player2_id INTO v_mode, v_current_type, v_p1, v_p2 FROM game_sessions WHERE id = p_room_id;
     v_seed := md5(random()::text);
 
     IF v_mode = 'practice' THEN
-        -- Get duration for practice game type
         v_duration := get_game_duration(v_current_type);
-        
-        -- PRACTICE: Start immediately
+        v_first_type := v_current_type;
+
+        IF v_p2 LIKE 'bot_%' OR v_p1 LIKE 'bot_%' THEN
+            v_human_player_id := CASE WHEN v_p1 LIKE 'bot_%' THEN v_p2 ELSE v_p1 END;
+            v_ghost_tl := pick_ghost_timeline(v_human_player_id, v_first_type);
+            IF v_ghost_tl IS NOT NULL THEN
+                v_game_data := jsonb_build_object('ghost_timeline', v_ghost_tl);
+            END IF;
+        END IF;
+
         UPDATE game_sessions
         SET status = 'playing',
             game_types = ARRAY[v_current_type],
             current_round_index = 0,
             current_round = 1,
             seed = v_seed,
+            game_data = v_game_data,
             phase_start_at = now(),
             phase_end_at = now() + interval '4 seconds',
             start_at = now() + interval '4 seconds',
@@ -2198,16 +2632,29 @@ BEGIN
             round_scores = '[]'::jsonb
         WHERE id = p_room_id;
     ELSE
-        -- NORMAL/RANK: Random 3 games
+        IF v_mode = 'rank' THEN
+            v_round_count := 5;
+        ELSE
+            v_round_count := 3;
+        END IF;
+
         SELECT ARRAY(
             SELECT x
             FROM unnest(v_all_types) AS x
             ORDER BY random()
-            LIMIT 3
+            LIMIT v_round_count
         ) INTO v_selected_types;
 
         v_first_type := v_selected_types[1];
         v_duration := get_game_duration(v_first_type);
+
+        IF v_p2 LIKE 'bot_%' OR v_p1 LIKE 'bot_%' THEN
+            v_human_player_id := CASE WHEN v_p1 LIKE 'bot_%' THEN v_p2 ELSE v_p1 END;
+            v_ghost_tl := pick_ghost_timeline(v_human_player_id, v_first_type);
+            IF v_ghost_tl IS NOT NULL THEN
+                v_game_data := jsonb_build_object('ghost_timeline', v_ghost_tl);
+            END IF;
+        END IF;
 
         UPDATE game_sessions
         SET status = 'playing',
@@ -2216,6 +2663,7 @@ BEGIN
             current_round = 1,
             game_type = v_first_type,
             seed = v_seed,
+            game_data = v_game_data,
             phase_start_at = now(),
             phase_end_at = now() + interval '4 seconds',
             start_at = now() + interval '4 seconds',
@@ -2254,7 +2702,7 @@ DECLARE
   
   v_game_data jsonb;
   v_target text;
-  v_types text[] := ARRAY['RPS', 'NUMBER', 'MATH', 'TEN', 'COLOR', 'MEMORY', 'SEQUENCE', 'SEQUENCE_NORMAL', 'LARGEST', 'PAIR', 'UPDOWN', 'SLIDER', 'ARROW', 'NUMBER_DESC', 'BLANK', 'OPERATOR', 'LADDER', 'TAP_COLOR', 'AIM', 'MOST_COLOR', 'SORTING', 'SPY', 'PATH', 'BLIND_PATH', 'BALLS', 'CATCH_COLOR', 'COLOR_TIMING', 'STAIRWAY'];
+  v_types text[] := ARRAY['RPS', 'NUMBER', 'MATH', 'TEN', 'COLOR', 'MEMORY', 'SEQUENCE', 'SEQUENCE_NORMAL', 'LARGEST', 'PAIR', 'UPDOWN', 'SLIDER', 'ARROW', 'NUMBER_DESC', 'BLANK', 'OPERATOR', 'LADDER', 'TAP_COLOR', 'AIM', 'MOST_COLOR', 'SORTING', 'SPY', 'PATH', 'BLIND_PATH', 'BALLS', 'CATCH_COLOR', 'COLOR_TIMING', 'STAIRWAY', 'MAKE_ZERO'];
   v_opts text[] := ARRAY['rock','paper','scissors'];
   
   v_round_snapshot jsonb;
@@ -2264,6 +2712,10 @@ DECLARE
   v_game_types text[];
   v_round_scores jsonb;
   v_fallback_type text;
+  v_required_wins int := 2;
+  v_max_rounds int := 3;
+  v_human_player_id text;
+  v_ghost_tl jsonb;
 BEGIN
   -- Get current state
   SELECT game_type, status, COALESCE(current_round, 0), player1_score, player2_score, COALESCE(p1_current_score, 0), COALESCE(p2_current_score, 0), mode, player1_id, player2_id, game_types, COALESCE(round_scores, '[]'::jsonb)
@@ -2397,8 +2849,16 @@ BEGIN
       RETURN;
   END IF;
 
-  -- 2. Check Victory Condition (3 rounds fixed)
-  IF v_current_round >= 3 THEN
+  IF v_mode = 'rank' THEN
+      v_required_wins := 3;
+      v_max_rounds := 5;
+  ELSE
+      v_required_wins := 2;
+      v_max_rounds := 3;
+  END IF;
+
+  -- 2. Check Victory Condition (BO3/BO5 + early finish)
+  IF v_p1_wins >= v_required_wins OR v_p2_wins >= v_required_wins OR v_current_round >= v_max_rounds THEN
       PERFORM finish_game(p_room_id);
       RETURN;
   END IF;
@@ -2437,7 +2897,6 @@ BEGIN
   -- Get duration for next game type
   v_duration := get_game_duration(v_next_type);
   
-  -- 5. Setup Game Data
   IF v_next_type = 'RPS' THEN
       v_target := v_opts[floor(random()*3 + 1)];
       v_game_data := '{}';
@@ -2446,7 +2905,14 @@ BEGIN
       v_game_data := jsonb_build_object('seed', floor(random()*10000));
   END IF;
 
-  -- 6. Update Session -> PLAYING with 8s warmup (4s round_finished + 4s game_desc) + game duration
+  IF v_p1_id LIKE 'bot_%' OR v_p2_id LIKE 'bot_%' THEN
+      v_human_player_id := CASE WHEN v_p1_id LIKE 'bot_%' THEN v_p2_id ELSE v_p1_id END;
+      v_ghost_tl := pick_ghost_timeline(v_human_player_id, v_next_type);
+      IF v_ghost_tl IS NOT NULL THEN
+          v_game_data := v_game_data || jsonb_build_object('ghost_timeline', v_ghost_tl);
+      END IF;
+  END IF;
+
   UPDATE game_sessions
   SET status = 'playing',
       current_round = v_next_round,
@@ -2511,6 +2977,7 @@ BEGIN
         WHEN 'TIMING_BAR' THEN v_accuracy := 3; v_speed := 2;
         WHEN 'COLOR_TIMING' THEN v_accuracy := 3; v_speed := 2;
         WHEN 'STAIRWAY' THEN v_speed := 4; v_judgment := 1;
+        WHEN 'MAKE_ZERO' THEN v_calculation := 4; v_judgment := 1;
         ELSE
             -- no-op
     END CASE;
@@ -2667,41 +3134,8 @@ CREATE FUNCTION public.register_guest_signup(p_device_id text, p_limit integer D
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
-DECLARE
-    v_row public.guest_device_signups%ROWTYPE;
 BEGIN
-    IF p_device_id IS NULL OR btrim(p_device_id) = '' THEN
-        RAISE EXCEPTION 'device id required';
-    END IF;
-
-    SELECT * INTO v_row
-    FROM public.guest_device_signups
-    WHERE device_id = btrim(p_device_id)
-    FOR UPDATE;
-
-    IF NOT FOUND THEN
-        INSERT INTO public.guest_device_signups (device_id, window_start, signup_count, last_guest_signup_at)
-        VALUES (btrim(p_device_id), now(), 1, now());
-        RETURN;
-    END IF;
-
-    IF now() - v_row.window_start >= p_window THEN
-        UPDATE public.guest_device_signups
-        SET window_start = now(),
-            signup_count = 1,
-            last_guest_signup_at = now()
-        WHERE device_id = btrim(p_device_id);
-        RETURN;
-    END IF;
-
-    IF v_row.signup_count >= p_limit THEN
-        RAISE EXCEPTION 'guest signup limit exceeded';
-    END IF;
-
-    UPDATE public.guest_device_signups
-    SET signup_count = signup_count + 1,
-        last_guest_signup_at = now()
-    WHERE device_id = btrim(p_device_id);
+    RETURN;
 END;
 $$;
 
@@ -2716,12 +3150,15 @@ CREATE FUNCTION public.cleanup_stale_guest_accounts(p_inactive_days integer DEFA
     AS $$
 DECLARE
     v_deleted_count integer := 0;
+    v_stale_ids uuid[];
 BEGIN
     IF p_inactive_days < 1 THEN
         RAISE EXCEPTION 'p_inactive_days must be at least 1';
     END IF;
 
-    WITH stale_guests AS (
+    SELECT COALESCE(array_agg(sg.id), ARRAY[]::uuid[])
+    INTO v_stale_ids
+    FROM (
         SELECT u.id
         FROM auth.users u
         JOIN public.profiles p ON p.id = u.id
@@ -2733,10 +3170,26 @@ BEGIN
               WHERE i.user_id = u.id
                 AND i.provider IN ('google', 'apple')
           )
-    )
+    ) sg;
+
+    IF array_length(v_stale_ids, 1) IS NULL THEN
+        RETURN 0;
+    END IF;
+
+    -- Clean dependent rows first for FK-safe deletion
+    DELETE FROM public.friendships f
+    WHERE f.user_id = ANY(v_stale_ids)
+       OR f.friend_id = ANY(v_stale_ids);
+
+    DELETE FROM public.chat_messages c
+    WHERE c.sender_id = ANY(v_stale_ids)
+       OR c.receiver_id = ANY(v_stale_ids);
+
+    DELETE FROM public.profiles p
+    WHERE p.id = ANY(v_stale_ids);
+
     DELETE FROM auth.users u
-    USING stale_guests sg
-    WHERE u.id = sg.id;
+    WHERE u.id = ANY(v_stale_ids);
 
     GET DIAGNOSTICS v_deleted_count = ROW_COUNT;
     RETURN v_deleted_count;
@@ -2833,13 +3286,13 @@ BEGIN
 
   -- Update DB (Rank Stats)
   update public.profiles 
-  set mmr = mmr + v_p1_chg, 
+  set mmr = GREATEST(0, mmr + v_p1_chg), 
       wins = wins + (case when v_actual_p1 = 1.0 then 1 else 0 end), 
       losses = losses + (case when v_actual_p1 = 0.0 then 1 else 0 end) 
   where id = v_p1;
 
   update public.profiles 
-  set mmr = mmr + v_p2_chg, 
+  set mmr = GREATEST(0, mmr + v_p2_chg), 
       wins = wins + (case when v_actual_p1 = 0.0 then 1 else 0 end), 
       losses = losses + (case when v_actual_p1 = 1.0 then 1 else 0 end) 
   where id = v_p2;
@@ -5301,7 +5754,11 @@ CREATE TABLE public.game_sessions (
     phase_start_at timestamp with time zone,
     player1_ready boolean DEFAULT false,
     player2_ready boolean DEFAULT false,
-    CONSTRAINT game_sessions_game_type_check CHECK ((game_type = ANY (ARRAY['RPS'::text, 'NUMBER'::text, 'MATH'::text, 'TEN'::text, 'COLOR'::text, 'MEMORY'::text, 'SEQUENCE'::text, 'SEQUENCE_NORMAL'::text, 'LARGEST'::text, 'PAIR'::text, 'UPDOWN'::text, 'SLIDER'::text, 'ARROW'::text, 'NUMBER_DESC'::text, 'BLANK'::text, 'OPERATOR'::text, 'LADDER'::text, 'TAP_COLOR'::text, 'AIM'::text, 'MOST_COLOR'::text, 'SORTING'::text, 'SPY'::text, 'PATH'::text, 'BLIND_PATH'::text, 'BALLS'::text, 'CATCH_COLOR'::text, 'TIMING_BAR'::text, 'COLOR_TIMING'::text, 'STAIRWAY'::text])))
+    player1_streak_bonus integer DEFAULT 0,
+    player2_streak_bonus integer DEFAULT 0,
+    player1_lose_pencil boolean DEFAULT false,
+    player2_lose_pencil boolean DEFAULT false,
+    CONSTRAINT game_sessions_game_type_check CHECK ((game_type = ANY (ARRAY['RPS'::text, 'NUMBER'::text, 'MATH'::text, 'TEN'::text, 'COLOR'::text, 'MEMORY'::text, 'SEQUENCE'::text, 'SEQUENCE_NORMAL'::text, 'LARGEST'::text, 'PAIR'::text, 'UPDOWN'::text, 'SLIDER'::text, 'ARROW'::text, 'NUMBER_DESC'::text, 'BLANK'::text, 'OPERATOR'::text, 'LADDER'::text, 'TAP_COLOR'::text, 'AIM'::text, 'MOST_COLOR'::text, 'SORTING'::text, 'SPY'::text, 'PATH'::text, 'BLIND_PATH'::text, 'BALLS'::text, 'CATCH_COLOR'::text, 'TIMING_BAR'::text, 'COLOR_TIMING'::text, 'STAIRWAY'::text, 'MAKE_ZERO'::text])))
 );
 
 
@@ -5399,7 +5856,12 @@ CREATE TABLE public.profiles (
     practice_ad_reward_count integer DEFAULT 0,
     practice_ad_reward_day date DEFAULT CURRENT_DATE,
     needs_nickname_setup boolean DEFAULT false NOT NULL,
-    nickname_set_at timestamp with time zone
+    nickname_set_at timestamp with time zone,
+    nickname_change_tickets integer DEFAULT 0 NOT NULL,
+    rank_win_streak integer DEFAULT 0,
+    rank_streak_updated_at timestamp with time zone,
+    rank_lose_streak integer DEFAULT 0,
+    rank_lose_bonus_date date
 );
 
 
@@ -7802,7 +8264,6 @@ BEGIN
     SELECT
       p.id,
       p.nickname,
-      p.email,
       p.country,
       p.mmr,
       p.level,
@@ -7819,14 +8280,13 @@ BEGIN
     WHERE (
       v_search IS NULL
       OR lower(COALESCE(p.nickname, '')) LIKE '%' || lower(v_search) || '%'
-      OR lower(COALESCE(p.email, '')) LIKE '%' || lower(v_search) || '%'
       OR p.id::text LIKE '%' || v_search || '%'
     )
   )
   SELECT
     b.id,
     b.nickname,
-    b.email,
+    NULL::text AS email,
     b.country,
     b.mmr,
     b.level,
@@ -7991,7 +8451,7 @@ BEGIN
     pr.created_at,
     pr.reporter_id,
     rp.nickname AS reporter_nickname,
-    rp.email AS reporter_email
+    NULL::text AS reporter_email
   FROM public.player_reports pr
   LEFT JOIN public.profiles rp ON rp.id = pr.reporter_id
   WHERE pr.reported_user_id = p_reported_user_id

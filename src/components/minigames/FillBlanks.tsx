@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { usePanelProgress } from '../../hooks/usePanelProgress';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { SeededRandom } from '../../utils/seededRandom';
@@ -12,11 +13,14 @@ interface FillBlanksProps {
 }
 
 const FillBlanks: React.FC<FillBlanksProps> = ({ seed, onScore, isPlaying }) => {
+    const WRONG_COOLDOWN_MS = 400;
     const { t } = useTranslation();
     const { playSound } = useSound();
-    const [panelIndex, setPanelIndex] = useState(0);
+    const [panelIndex, setPanelIndex] = usePanelProgress(seed);
     const [shakeId, setShakeId] = useState<number | null>(null);
     const [animationKey, setAnimationKey] = useState(0);
+    const [isInputLocked, setIsInputLocked] = useState(false);
+    const [isWrongFlash, setIsWrongFlash] = useState(false);
 
     // Difficulty Configuration
     // Level 1 (0-2): Addition (2 options)
@@ -130,39 +134,39 @@ const FillBlanks: React.FC<FillBlanksProps> = ({ seed, onScore, isPlaying }) => 
 
 
     const handleOptionClick = (selected: number) => {
-        if (!currentProblem || !isPlaying) return;
+        if (!currentProblem || !isPlaying || isInputLocked) return;
 
-        const scoreBase = 60 + (panelIndex * 5);
+        const scoreBase = 75 + (panelIndex * 6);
 
         if (selected === currentProblem.answer) {
             // Correct
+            setIsInputLocked(true);
             onScore(scoreBase);
             playSound('correct');
             setTimeout(() => {
                 setPanelIndex(prev => prev + 1);
                 setAnimationKey(prev => prev + 1);
+                setIsInputLocked(false);
             }, 150);
         } else {
             // Wrong
+            setIsInputLocked(true);
+            setIsWrongFlash(true);
             onScore(-scoreBase); // Penalty
             playSound('error');
             setShakeId(selected);
-            setTimeout(() => setShakeId(null), 400);
+            setTimeout(() => {
+                setShakeId(null);
+                setIsInputLocked(false);
+                setIsWrongFlash(false);
+            }, WRONG_COOLDOWN_MS);
         }
     };
 
-    if (!currentProblem) return <div className="text-white">{t('common.loading')}</div>;
+    if (!currentProblem) return <div className="text-slate-900 dark:text-white">{t('common.loading')}</div>;
 
     return (
         <div className="flex flex-col items-center justify-center w-full h-full gap-8 relative">
-
-            <h2 className="text-3xl font-black text-white mb-2 drop-shadow-md">
-                {t('fillBlanks.title')}
-            </h2>
-            <div className="text-yellow-400 font-bold text-lg mb-8">
-                {t('fillBlanks.instruction')}
-            </div>
-
             {/* Equation Display */}
             <AnimatePresence mode="popLayout">
                 <motion.div
@@ -173,7 +177,7 @@ const FillBlanks: React.FC<FillBlanksProps> = ({ seed, onScore, isPlaying }) => 
                     transition={{ duration: 0.2 }}
                     className="flex items-center justify-center w-full h-40"
                 >
-                    <div className="text-5xl font-black text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] tracking-wider">
+                    <div className="text-5xl font-black text-slate-900 dark:text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] tracking-wider">
                         {/* Highlight the question mark */}
                         {currentProblem.expression.split('?').map((part, i, arr) => (
                             <React.Fragment key={i}>
@@ -192,6 +196,7 @@ const FillBlanks: React.FC<FillBlanksProps> = ({ seed, onScore, isPlaying }) => 
                 {currentProblem.options.map((opt) => (
                     <motion.button
                         key={`${panelIndex}-${opt}`}
+                        disabled={isInputLocked || !isPlaying}
                         onPointerDown={(e) => {
                             e.preventDefault();
                             if (e.currentTarget.setPointerCapture) {
@@ -203,9 +208,15 @@ const FillBlanks: React.FC<FillBlanksProps> = ({ seed, onScore, isPlaying }) => 
                             }
                             handleOptionClick(opt);
                         }}
-                        animate={shakeId === opt ? { x: [-5, 5, -5, 5, 0], backgroundColor: '#ef4444' } : {}}
+                        animate={
+                            isWrongFlash
+                                ? { backgroundColor: '#ef4444' }
+                                : shakeId === opt
+                                    ? { x: [-5, 5, -5, 5, 0], backgroundColor: '#ef4444' }
+                                    : {}
+                        }
                         whileTap={{ scale: 0.95 }}
-                        className={`h-24 rounded-2xl flex items-center justify-center font-bold bg-gray-800 border-b-4 border-gray-950 active:border-b-0 active:translate-y-1 hover:bg-gray-700 transition-all ${currentProblem.options.length === 4 ? 'text-3xl' : 'text-4xl'}`}
+                        className={`h-24 rounded-2xl flex items-center justify-center font-bold text-slate-900 dark:text-white bg-white dark:bg-gray-800 border-b-4 border-slate-300 dark:border-gray-950 active:border-b-0 active:translate-y-1 hover:bg-slate-100 dark:hover:bg-gray-700 transition-all ${currentProblem.options.length === 4 ? 'text-3xl' : 'text-4xl'}`}
                     >
                         {opt}
                     </motion.button>

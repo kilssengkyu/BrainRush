@@ -15,6 +15,7 @@ export type BGMType = 'bgm_main' | 'bgm_game';
 
 interface SoundContextType {
     playSound: (type: SoundType) => void;
+    triggerVibration: (pattern?: 'impact_light' | 'impact_medium' | 'impact_heavy' | 'success' | 'error' | 'vibrate') => void;
     playBGM: (type: BGMType) => void;
     stopBGM: () => void;
     isMuted: boolean;
@@ -76,8 +77,11 @@ const NATIVE_SFX_FILES: Record<SoundType, string> = {
 };
 
 const IS_NATIVE_PLATFORM = Capacitor.isNativePlatform();
+const IS_ANDROID = IS_NATIVE_PLATFORM && Capacitor.getPlatform() === 'android';
 const USE_NATIVE_BGM = IS_NATIVE_PLATFORM;
-const USE_NATIVE_SFX = IS_NATIVE_PLATFORM;
+// Android SFX can become inconsistent on some devices/ringer states with native-audio.
+// Keep BGM native, but route SFX through Howler for stable behavior.
+const USE_NATIVE_SFX = IS_NATIVE_PLATFORM && !IS_ANDROID;
 
 export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const resumeAudioContext = useCallback(async (): Promise<boolean> => {
@@ -373,6 +377,36 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
     };
 
+    const triggerVibration = useCallback((pattern: 'impact_light' | 'impact_medium' | 'impact_heavy' | 'success' | 'error' | 'vibrate' = 'impact_medium') => {
+        if (!isVibrationEnabled) return;
+        void (async () => {
+            try {
+                switch (pattern) {
+                    case 'impact_light':
+                        await Haptics.impact({ style: ImpactStyle.Light });
+                        break;
+                    case 'impact_medium':
+                        await Haptics.impact({ style: ImpactStyle.Medium });
+                        break;
+                    case 'impact_heavy':
+                        await Haptics.impact({ style: ImpactStyle.Heavy });
+                        break;
+                    case 'success':
+                        await Haptics.notification({ type: NotificationType.Success });
+                        break;
+                    case 'error':
+                        await Haptics.notification({ type: NotificationType.Error });
+                        break;
+                    case 'vibrate':
+                        await Haptics.vibrate({ duration: 200 });
+                        break;
+                }
+            } catch {
+                // Ignore haptic errors
+            }
+        })();
+    }, [isVibrationEnabled]);
+
     const playSound = useCallback((type: SoundType) => {
         triggerHaptic(type);
         if (isMuted) return;
@@ -541,7 +575,7 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     return (
         <SoundContext.Provider value={{
-            playSound, playBGM, stopBGM,
+            playSound, triggerVibration, playBGM, stopBGM,
             isMuted, toggleMute,
             volume, setVolume,
             bgmVolume, setBGMVolume,

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { usePanelProgress } from '../../hooks/usePanelProgress';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import {
@@ -34,12 +35,19 @@ const SYMBOLS = [
     { id: 'skull', icon: Skull, color: 'text-gray-400' },
 ];
 
+const getRoundConfig = (tileCount: number) => {
+    if (tileCount >= 9) return { spyCount: 2, hitScore: 160, missPenalty: 140 };
+    if (tileCount >= 6) return { spyCount: 2, hitScore: 150, missPenalty: 130 };
+    return { spyCount: 1, hitScore: 140, missPenalty: 120 };
+};
+
 const FindTheSpy: React.FC<FindTheSpyProps> = ({ seed, onScore, isPlaying }) => {
+    const WRONG_COOLDOWN_MS = 400;
     const { t } = useTranslation();
     const { playSound } = useSound();
 
     // Game State
-    const [streak, setStreak] = useState(0);
+    const [streak, setStreak] = usePanelProgress(seed, 'streak');
     const [phase, setPhase] = useState<'memorize' | 'shuffling' | 'guessing'>('memorize');
     const [gridSize, setGridSize] = useState<{ rows: number, cols: number }>({ rows: 2, cols: 2 });
 
@@ -49,6 +57,8 @@ const FindTheSpy: React.FC<FindTheSpyProps> = ({ seed, onScore, isPlaying }) => 
     // The "Spy" symbols (new symbols introduced)
     const [targetSymbolIds, setTargetSymbolIds] = useState<string[]>([]);
     const [foundSpyIds, setFoundSpyIds] = useState<string[]>([]);
+    const [isInputLocked, setIsInputLocked] = useState(false);
+    const [isWrongFlash, setIsWrongFlash] = useState(false);
 
     const rng = useRef<SeededRandom | null>(null);
 
@@ -56,9 +66,9 @@ const FindTheSpy: React.FC<FindTheSpyProps> = ({ seed, onScore, isPlaying }) => 
     useEffect(() => {
         if (seed) {
             rng.current = new SeededRandom(seed);
-            setStreak(0);
-            startRound(0);
+            startRound(streak);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [seed]);
 
     const startRound = (currentStreak: number) => {
@@ -81,6 +91,8 @@ const FindTheSpy: React.FC<FindTheSpyProps> = ({ seed, onScore, isPlaying }) => 
         setPhase('memorize');
         setTargetSymbolIds([]);
         setFoundSpyIds([]);
+        setIsInputLocked(false);
+        setIsWrongFlash(false);
     };
 
     const handleReady = () => {
@@ -96,7 +108,7 @@ const FindTheSpy: React.FC<FindTheSpyProps> = ({ seed, onScore, isPlaying }) => 
     const prepareShuffleLogic = () => {
         if (!rng.current) return;
 
-        const changeCount = tiles.length >= 9 ? 3 : tiles.length >= 6 ? 2 : 1;
+        const { spyCount: changeCount } = getRoundConfig(tiles.length);
 
         // 1. Pick indices to change (keep order, only replace symbols)
         const indices = Array.from({ length: tiles.length }, (_, i) => i);
@@ -135,15 +147,15 @@ const FindTheSpy: React.FC<FindTheSpyProps> = ({ seed, onScore, isPlaying }) => 
     };
 
     const handleTileClick = (symbolId: string) => {
-        if (phase !== 'guessing' || !isPlaying) return;
+        if (phase !== 'guessing' || !isPlaying || isInputLocked) return;
 
         if (foundSpyIds.includes(symbolId)) return;
 
         if (targetSymbolIds.includes(symbolId)) {
             // Correct
             playSound('correct');
-            const difficultyBonus = Math.max(0, targetSymbolIds.length - 1) * 60;
-            onScore(160 + difficultyBonus);
+            const { hitScore: scorePerHit } = getRoundConfig(tiles.length);
+            onScore(scorePerHit);
             const nextFound = [...foundSpyIds, symbolId];
             setFoundSpyIds(nextFound);
 
@@ -153,10 +165,15 @@ const FindTheSpy: React.FC<FindTheSpyProps> = ({ seed, onScore, isPlaying }) => 
             }
         } else {
             // Wrong
+            setIsInputLocked(true);
+            setIsWrongFlash(true);
             playSound('error');
-            onScore(-10);
-            // Visual feedback could be added here (shake etc), 
-            // but for fast pace we might just deduct score.
+            const { missPenalty } = getRoundConfig(tiles.length);
+            onScore(-missPenalty);
+            window.setTimeout(() => {
+                setIsInputLocked(false);
+                setIsWrongFlash(false);
+            }, WRONG_COOLDOWN_MS);
         }
     };
 
@@ -168,7 +185,7 @@ const FindTheSpy: React.FC<FindTheSpyProps> = ({ seed, onScore, isPlaying }) => 
 
     return (
         <div className="w-full h-full flex flex-col items-center justify-center relative">
-            <h2 className="text-2xl font-bold text-white mb-8 drop-shadow-md">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-8 drop-shadow-md">
                 {phase === 'memorize' ? t('spy.memorize') : phase === 'guessing' ? t('spy.find') : '...'}
             </h2>
 
@@ -214,7 +231,7 @@ const FindTheSpy: React.FC<FindTheSpyProps> = ({ seed, onScore, isPlaying }) => 
                                             }
                                             handleTileClick(tile.id);
                                         }}
-                                        className={`${tileWidth} ${hideFound ? 'opacity-0 pointer-events-none scale-0' : 'bg-white/10'} rounded-xl border-2 border-white/20 flex items-center justify-center cursor-pointer hover:bg-white/20 active:scale-95 transition-colors shadow-lg`}
+                                        className={`${tileWidth} ${hideFound ? 'opacity-0 pointer-events-none scale-0' : (isWrongFlash ? 'bg-red-500/80 border-red-400' : 'bg-white/10')} ${isInputLocked ? 'pointer-events-none' : ''} rounded-xl border-2 border-white/20 flex items-center justify-center cursor-pointer hover:bg-white/20 active:scale-95 transition-colors shadow-lg`}
                                     >
                                         <Icon size={32} className={tile.color} />
                                     </motion.div>
@@ -245,7 +262,7 @@ const FindTheSpy: React.FC<FindTheSpyProps> = ({ seed, onScore, isPlaying }) => 
                             }
                             handleReady();
                         }}
-                        className="absolute bottom-10 px-8 py-3 bg-red-500 hover:bg-red-600 text-white font-black rounded-full shadow-lg text-xl z-20"
+                        className="absolute bottom-10 px-8 py-3 bg-red-500 hover:bg-red-600 text-slate-900 dark:text-white font-black rounded-full shadow-lg text-xl z-20"
                     >
                         {t('spy.ready')}
                     </motion.button>

@@ -148,7 +148,7 @@ const NumberSlider: React.FC<NumberSliderProps> = ({ seed, onScore, isPlaying })
         setFeedback(type);
 
         if (type === 'correct') {
-            onScore(75 * cells.length); // Score scales with tiles used (5x)
+            onScore(100 + (cells.length * 30)); // Base + moderate length bonus
             playSound('correct');
 
             setTimeout(() => {
@@ -169,7 +169,7 @@ const NumberSlider: React.FC<NumberSliderProps> = ({ seed, onScore, isPlaying })
                 resetSelection();
             }, 100);
         } else {
-            onScore(-100); // Light penalty for wrong sum
+            onScore(-140); // Strong wrong-sum penalty
             playSound('error');
             setTimeout(() => {
                 resetSelection();
@@ -192,21 +192,21 @@ const NumberSlider: React.FC<NumberSliderProps> = ({ seed, onScore, isPlaying })
             onPointerLeave={handlePointerUp}
         >
             <div className="mb-4 text-center">
-                <div className="text-gray-400 text-sm font-bold uppercase tracking-widest">{t('slider.target')}</div>
-                <div className="text-6xl font-black text-white drop-shadow-lg">{target}</div>
+                <div className="text-slate-500 dark:text-gray-400 text-sm font-bold uppercase tracking-widest">{t('slider.target')}</div>
+                <div className="text-6xl font-black text-slate-900 dark:text-white drop-shadow-lg">{target}</div>
                 <div className={`mt-2 h-2 rounded-full transition-all duration-200 ${currentSum > target ? 'bg-red-500' : currentSum === target ? 'bg-green-500' : 'bg-gray-600'
                     }`} style={{ width: `${Math.min((currentSum / target) * 100, 100)}%`, maxWidth: '200px' }}></div>
-                <div className="text-xl font-mono font-bold text-gray-300 mt-1">{currentSum} / {target}</div>
+                <div className="text-xl font-mono font-bold text-slate-600 dark:text-gray-300 mt-1">{currentSum} / {target}</div>
             </div>
 
-            <div className="grid grid-cols-5 gap-2 p-4 bg-gray-800/50 rounded-2xl backdrop-blur-sm shadow-xl" ref={containerRef}>
+            <div className="grid grid-cols-5 gap-2 p-4 bg-slate-100 dark:bg-gray-800/50 rounded-2xl backdrop-blur-sm shadow-xl border border-slate-200 dark:border-transparent" ref={containerRef}>
                 {grid.map((cell) => {
                     const isSelected = selectedCells.find(c => c.id === cell.id);
-                    let bgClass = "bg-white text-gray-900";
+                    let bgClass = "bg-white dark:bg-gray-700 text-slate-900 dark:text-white border border-slate-200 dark:border-gray-600 shadow-sm";
                     if (isSelected) {
-                        if (feedback === 'correct') bgClass = "bg-green-500 text-white scale-110 shadow-lg z-10";
-                        else if (feedback === 'wrong') bgClass = "bg-red-500 text-white shake";
-                        else bgClass = "bg-blue-500 text-white scale-105 shadow-md z-10";
+                        if (feedback === 'correct') bgClass = "bg-green-500 text-white scale-110 shadow-lg z-10 border-green-400";
+                        else if (feedback === 'wrong') bgClass = "bg-red-500 text-white shake border-red-400";
+                        else bgClass = "bg-blue-500 text-white scale-105 shadow-md z-10 border-blue-400";
                     }
 
                     return (
@@ -223,7 +223,6 @@ const NumberSlider: React.FC<NumberSliderProps> = ({ seed, onScore, isPlaying })
                     );
                 })}
             </div>
-            <p className="mt-6 text-gray-400 animate-pulse text-sm">{t('slider.instruction')}</p>
         </div>
     );
 };

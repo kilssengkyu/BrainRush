@@ -71,3 +71,7 @@ export default defineConfig([
   },
 ])
 ```
+
+## Credits
+
+- See [CREDITS.md](./CREDITS.md) for third-party asset attributions.

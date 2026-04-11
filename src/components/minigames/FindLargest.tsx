@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { usePanelProgress } from '../../hooks/usePanelProgress';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { SeededRandom } from '../../utils/seededRandom';
@@ -46,11 +47,14 @@ const getLevel = (index: number) => {
 const formatExpression = (raw: string) => raw;
 
 const FindLargest: React.FC<FindLargestProps> = ({ seed, onScore, isPlaying }) => {
+    const WRONG_COOLDOWN_MS = 400;
     const { t } = useTranslation();
     const { playSound } = useSound();
-    const [panelIndex, setPanelIndex] = useState(0);
+    const [panelIndex, setPanelIndex] = usePanelProgress(seed);
     const [shakeId, setShakeId] = useState<string | null>(null);
     const [animationKey, setAnimationKey] = useState(0);
+    const [isInputLocked, setIsInputLocked] = useState(false);
+    const [isWrongFlash, setIsWrongFlash] = useState(false);
 
     const currentProblem = useMemo(() => {
         if (!seed) return null;
@@ -175,26 +179,34 @@ const FindLargest: React.FC<FindLargestProps> = ({ seed, onScore, isPlaying }) =
     }, [seed, panelIndex]);
 
     const handleOptionClick = (option: ExpressionOption) => {
-        if (!currentProblem || !isPlaying) return;
+        if (!currentProblem || !isPlaying || isInputLocked) return;
 
-        const difficultyBonus = (currentProblem.level - 1) * 15;
-        const scoreBase = (20 * 3) + difficultyBonus;
+        const difficultyBonus = (currentProblem.level - 1) * 27;
+        const scoreBase = 108 + difficultyBonus;
 
         if (option.value === currentProblem.maxValue) {
             // Correct
+            setIsInputLocked(true);
             onScore(scoreBase);
             playSound('correct');
             setPanelIndex(prev => prev + 1);
             setAnimationKey(prev => prev + 1);
+            setTimeout(() => setIsInputLocked(false), 120);
         } else {
+            setIsInputLocked(true);
+            setIsWrongFlash(true);
             onScore(-scoreBase);
             playSound('error');
             setShakeId(option.id);
-            setTimeout(() => setShakeId(null), 400);
+            setTimeout(() => {
+                setShakeId(null);
+                setIsInputLocked(false);
+                setIsWrongFlash(false);
+            }, WRONG_COOLDOWN_MS);
         }
     };
 
-    if (!currentProblem) return <div className="text-white">{t('common.loading')}</div>;
+    if (!currentProblem) return <div className="text-slate-900 dark:text-white">{t('common.loading')}</div>;
 
     const optionCount = currentProblem.options.length;
     const gridClass = optionCount === 2
@@ -209,11 +221,6 @@ const FindLargest: React.FC<FindLargestProps> = ({ seed, onScore, isPlaying }) =
 
     return (
         <div className="flex flex-col items-center justify-center w-full h-full gap-6 relative">
-            <h2 className="text-4xl font-black text-white drop-shadow-md mb-2">
-                {t('largest.title')}
-            </h2>
-            <div className="text-gray-400 text-sm mb-4">{t('largest.instruction')}</div>
-
             <AnimatePresence mode="popLayout">
                 <motion.div
                     key={animationKey}
@@ -226,6 +233,7 @@ const FindLargest: React.FC<FindLargestProps> = ({ seed, onScore, isPlaying }) =
                     {currentProblem.options.map(option => (
                         <motion.button
                             key={option.id}
+                            disabled={isInputLocked || !isPlaying}
                             onPointerDown={(e) => {
                                 e.preventDefault();
                                 if (e.currentTarget.setPointerCapture) {
@@ -237,9 +245,15 @@ const FindLargest: React.FC<FindLargestProps> = ({ seed, onScore, isPlaying }) =
                                 }
                                 handleOptionClick(option);
                             }}
-                            animate={shakeId === option.id ? { x: [-6, 6, -6, 6, 0], backgroundColor: '#ef4444' } : {}}
+                            animate={
+                                isWrongFlash
+                                    ? { backgroundColor: '#ef4444' }
+                                    : shakeId === option.id
+                                        ? { x: [-6, 6, -6, 6, 0], backgroundColor: '#ef4444' }
+                                        : {}
+                            }
                             whileTap={{ scale: 0.95 }}
-                            className={`h-24 rounded-2xl flex items-center justify-center ${textClass} font-bold text-white bg-gray-800 border-b-4 border-gray-950 hover:bg-gray-700 active:border-b-0 active:translate-y-1 transition-all`}
+                            className={`h-24 rounded-2xl flex items-center justify-center ${textClass} font-bold text-slate-900 dark:text-white bg-white dark:bg-gray-800 border-b-4 border-slate-300 dark:border-gray-950 hover:bg-slate-100 dark:hover:bg-gray-700 active:border-b-0 active:translate-y-1 transition-all`}
                         >
                             {formatExpression(option.expression)}
                         </motion.button>

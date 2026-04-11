@@ -1,0 +1,685 @@
+{
+  "common": {
+    "cancel": "取消",
+    "confirm": "确认",
+    "close": "关闭",
+    "retry": "重试",
+    "loading": "加载中...",
+    "noResults": "搜索结果为空",
+    "add": "添加",
+    "error": "发生错误。",
+    "google": "Google",
+    "or": "或",
+    "timeAgo": {
+      "justNow": "刚刚",
+      "minute": "{{count}}分钟前",
+      "hour": "{{count}}小时前",
+      "day": "{{count}}天前",
+      "longAgo": "很久以前"
+    },
+    "exitAppTitle": "退出应用",
+    "exitAppConfirm": "要退出应用吗？",
+    "open": "打开"
+  },
+  "auth": {
+    "loginRequired": "需要登录。",
+    "guestMode": "游客模式",
+    "guestWarning": "游客模式可能会丢失保存的记录。",
+    "terms": "继续即表示您同意我们的服务条款。",
+    "loggedOutByOtherDevice": "由于该账号在其他设备上被使用，您已被登出。"
+  },
+  "streak": {
+    "bonusActive": "奖励生效中",
+    "bonusIncluded": "连胜奖励 +{{bonus}}",
+    "nextBonus": "连胜时 +{{bonus}}",
+    "loseBonusTitle": "连败礼物",
+    "loseBonusMessage": "连输3局了，送你一支鼓励铅笔！",
+    "loseBonusSubtext": "不会一直送的，下一局一定要赢哦！💪"
+  },
+  "menu": {
+    "normal": {
+      "title": "普通模式",
+      "subtitle": "基础脑力训练",
+      "matchRule": "三局两胜"
+    },
+    "rank": {
+      "title": "排位模式",
+      "subtitle": "全球玩家竞技",
+      "matchRule": "五局三胜",
+      "burningTime": "燃烧时间",
+      "burningTimeBenefit": "不消耗铅笔"
+    },
+    "friendly": {
+      "title": "好友对战",
+      "subtitle": "与好友1v1"
+    },
+    "practice": {
+      "title": "练习模式",
+      "subtitle": "自由练习迷你游戏"
+    },
+    "shop": "商店",
+    "settings": "设置",
+    "login": "登录",
+    "logout": "登出",
+    "profile": "个人资料",
+    "all": "All"
+  },
+  "shop": {
+    "title": "商店",
+    "subtitle": "玩得更久一点",
+    "removeAds": {
+      "title": "去广告包",
+      "desc": "无需看广告，立刻获得铅笔。"
+    },
+    "pencils5": {
+      "title": "铅笔 x5",
+      "desc": "短时间游玩的小份补充。"
+    },
+    "pencils20": {
+      "title": "铅笔 x20",
+      "desc": "日常游玩刚刚好。"
+    },
+    "pencils100": {
+      "title": "铅笔 x100",
+      "desc": "适合长期游玩的超值包。"
+    },
+    "practiceNotes5": {
+      "title": "10个练习笔记",
+      "desc": "适合快速练习。"
+    },
+    "practiceNotes20": {
+      "title": "练习笔记 x20",
+      "desc": "适合稳定练习的补充。"
+    },
+    "practiceNotes100": {
+      "title": "练习笔记 x100",
+      "desc": "适合长时间练习的超值包。"
+    },
+    "nicknameChangeTicket": {
+      "title": "昵称更改券",
+      "desc": "无需等待30天，立即更改昵称。",
+      "unit": "昵称更改券"
+    },
+    "buy": "购买",
+    "premium": "高级",
+    "popular": "热门",
+    "bestValue": "超值",
+    "notice": "付款将通过 App Store 处理。",
+    "comingSoon": "购买流程准备中...",
+    "priceTbd": "价格待定",
+    "loading": "加载中...",
+    "purchased": "已购买",
+    "purchaseSuccess": "购买成功。",
+    "purchaseRewardDesc": "已发放您购买的道具。",
+    "removeAdsApplied": "已应用去广告。",
+    "purchaseFail": "购买失败。",
+    "billingUnavailable": "此设备不支持购买。",
+    "sessionRefreshFailed": "Failed to refresh session: {{message}}",
+    "sessionExpired": "Your login session has expired. Please sign in again.",
+    "purchaseFailWithReason": "Purchase failed: {{message}}"
+  },
+  "social": {
+    "friends": "好友",
+    "friendList": "好友列表",
+    "friendRequests": "好友请求",
+    "addFriend": "添加好友",
+    "searchNickname": "搜索昵称",
+    "searchError": "搜索时发生错误。",
+    "userNotFound": "未找到用户。",
+    "cannotAddSelf": "不能添加自己。",
+    "alreadyFriends": "你们已经是好友了。",
+    "requestPending": "请求已发送或正在等待处理。",
+    "blocked": "对方已屏蔽你或你已屏蔽对方。",
+    "requestSent": "好友请求已发送！",
+    "requestFail": "好友请求发送失败。",
+    "loadingFriends": "正在加载好友列表...",
+    "noFriends": "暂无好友。",
+    "deleteFriend": "删除好友",
+    "deleteFriendConfirm": "确定要移除 '{{nickname}}' 吗？",
+    "deleteFriendFail": "删除好友失败",
+    "online": "在线",
+    "ingame": "游戏中",
+    "offline": "离线",
+    "challengeTitle": "挑战好友",
+    "challengeConfirm": "要向该好友发起挑战吗？",
+    "challengeFail": "挑战失败：",
+    "challengeInGame": "对方正在游戏中，无法邀请。",
+    "challengeOffline": "只能邀请在线的好友。",
+    "challengeWaiting": "邀请已发送，等待接受...",
+    "challengeWaitingTitle": "好友对战等待中",
+    "challengeWaitingDesc": "正在等待对方接受。",
+    "challengeWaitingTime": "剩余时间 {{seconds}}秒",
+    "challengeAccepted": "好友对战已接受！",
+    "challengeRejected": "好友对战被拒绝。",
+    "challengeTimeout": "邀请已超时。",
+    "challengeCancelled": "邀请已取消。",
+    "challengeAlreadyPending": "已有待处理的邀请。",
+    "inviteSenderFallback": "好友",
+    "inviteTitle": "好友对战邀请",
+    "inviteBody": "'{{nickname}}' 向你发起好友对战邀请，是否接受？",
+    "inviteInvalidSession": "游戏会话无效或已开始。",
+    "inviteJoinFail": "进入游戏失败。",
+    "typeMessage": "输入消息...",
+    "sendFail": "发送消息失败",
+    "chat": "聊天",
+    "challenge": "挑战",
+    "accept": "接受",
+    "reject": "拒绝",
+    "newMessage": "{{nickname}} 给你发来消息",
+    "chatRateLimited": "发送受限：{{seconds}}秒后可再次发送。"
+  },
+  "leaderboard": {
+    "button": "排行榜",
+    "title": "排行榜 - 季前赛",
+    "global": "全体",
+    "country": "国家",
+    "myRank": "MY RANK",
+    "placementNotice": "完成{{count}}场定位赛后将显示在排行榜。",
+    "mmrLabel": "MMR",
+    "avatarPreview": "{{nickname}} avatar"
+  },
+  "ad": {
+    "remaining": "今日剩余：{{count}}/{{limit}}",
+    "limitReached": "今日广告次数已用完。",
+    "limitReachedDesc": "请明天再来观看。",
+    "adFreeDesc": "无需广告，立刻获得 1 支铅笔。",
+    "adFreeDescPracticeNotes": "无需广告，立刻获得练习笔记。",
+    "claimBtn": "领取铅笔",
+    "claimBtnPracticeNotes": "领取练习笔记",
+    "granting": "正在发放奖励...",
+    "rewardFailed": "奖励发放失败。",
+    "rewardFailedDesc": "请稍后再试。",
+    "title": "领取铅笔",
+    "titlePracticeNotes": "领取练习笔记",
+    "loading": "正在加载广告...",
+    "watchDesc": "观看短广告即可获得 1 支铅笔！",
+    "watchDescPracticeNotes": "观看短广告即可获得 2 本练习笔记！",
+    "watchBtn": "观看广告",
+    "watching": "正在观看广告...",
+    "playing": "广告播放中...",
+    "pencils": "铅笔",
+    "practiceNotes": "练习笔记",
+    "success": "奖励领取成功。",
+    "noFillTitle": "暂时没有广告",
+    "noFillDesc": "请稍后再试。",
+    "noFillRewarded": "哎呀，现在没有可播放的广告！奖励将立即发放给您。"
+  },
+  "notifications": {
+    "fullTitle": "铅笔已满",
+    "fullBody": "铅笔满啦，快来动动脑！",
+    "reminderTitle": "动动脑的时间",
+    "reminderBody": "已经 24 小时了，回来玩一局吧！"
+  },
+  "settings": {
+    "title": "设置",
+    "language": "语言",
+    "sound": "音效",
+    "masterVolume": "主音量",
+    "vibration": "振动",
+    "deleteAccount": "删除账户",
+    "deleteAccountConfirm": "确定要删除账户吗？账户将被永久删除且无法撤销。",
+    "logoutConfirm": "您确定要登出吗？",
+    "restorePurchases": "恢复购买",
+    "restorePurchasesDesc": "恢复去广告等非消耗型购买。",
+    "restorePurchasesSuccess": "购买已恢复。",
+    "restorePurchasesFail": "恢复购买失败。",
+    "restorePurchasesUnavailable": "此设备不支持购买。",
+    "restorePurchasesEmpty": "没有可恢复的购买。",
+    "privacyPolicy": "隐私政策",
+    "privacyPolicyDesc": "查看我们如何处理服务所需的个人数据。",
+    "viewPrivacyPolicy": "查看隐私政策",
+    "tutorial": "教程",
+    "tutorialDesc": "如果你想再次确认应用使用方法，请重新查看教程。",
+    "viewTutorial": "重新查看教程",
+    "notificationNativeOnly": "通知设置仅可在移动应用中使用。",
+    "notificationOff": "通知已关闭。",
+    "notificationDeniedIos": "请在 iPhone「设置 > 通知」中允许通知。",
+    "notificationDeniedAndroid": "请在 Android「设置 > 通知」中允许通知。",
+    "notificationOn": "通知已开启。",
+    "support": "联系我们",
+    "supportDesc": "查看问题反馈、错误报告和其他咨询。",
+    "goToSupport": "打开支持页面",
+    "notifications": "通知",
+    "pushNotifications": "推送/本地通知",
+    "notificationNativeHint": "网页端通知开关不可用。",
+    "recommended": "推荐",
+    "theme": "主题",
+    "themeMode": "显示模式",
+    "systemThemeDesc": "跟随设备设置。",
+    "darkMode": "深色模式",
+    "lightMode": "浅色模式",
+    "light": "浅色",
+    "dark": "深色",
+    "system": "系统",
+    "assetCredits": "素材鸣谢",
+    "assetCreditsDesc": "部分视觉素材来自第三方创作者，并按其许可证（例如 CC BY 4.0）进行署名。",
+    "viewMakers": "查看作者与鸣谢",
+    "makers": "作者与鸣谢",
+    "localCredit": "本地署名",
+    "announcements": "公告",
+    "announcementsDesc": "可再次查看最新公告。",
+    "viewAnnouncementAgain": "重新查看公告",
+    "announcementWillShowOnHome": "将在首页再次显示最新公告。",
+    "announcementResetFail": "重置公告隐藏状态失败。",
+    "versionLabel": "版本",
+    "makersRoleCreator": "创建者",
+    "makersRoleRankingBadges": "排名徽章 (CC BY 4.0)",
+    "makersRoleCcBy": "CC BY 4.0 许可",
+    "admin": "管理员",
+    "adminDesc": "前往管理员专用页面。",
+    "goToAdmin": "进入管理页面",
+    "guestModeWarningTitle": "游客账号提示",
+    "guestModeWarningDesc": "游客账号在登出、卸载或更换设备时可能丢失数据。请绑定账号以保留进度。"
+  },
+  "report": {
+    "button": "举报",
+    "title": "举报玩家",
+    "description": "请输入举报原因。",
+    "descriptionWithTarget": "请输入举报 {{target}} 的原因。",
+    "placeholder": "填写举报原因。",
+    "submit": "提交举报",
+    "success": "举报已提交。",
+    "fail": "举报提交失败。"
+  },
+  "game": {
+    "waiting": "等待游戏...",
+    "victory": "胜利",
+    "defeat": "失败",
+    "returnMenu": "返回菜单",
+    "setScore": "盘分",
+    "practiceComplete": "练习完成！",
+    "greatJob": "辛苦了！",
+    "rematchIncomingTitle": "再战请求",
+    "rematchIncomingBody": "'{{nickname}}' 请求再战。要接受吗？",
+    "rematchCreateFail": "无法开始再战。",
+    "rematchAccepted": "即将开始再战。",
+    "rematchRejected": "对手拒绝了再战。",
+    "rematchExpired": "再战申请时间已结束。",
+    "rematchConfirmTitle": "申请再战",
+    "rematchConfirmBody": "要请求再战吗？",
+    "rematchRequesterCostNotice": "只有发起申请的人会消耗1支铅笔。",
+    "rematchReceiverFreeNotice": "接受再战不会消耗铅笔。",
+    "rematchWaiting": "已发送再战请求。",
+    "rematchRequestFail": "请求再战时发生错误。",
+    "rematchPending": "等待中",
+    "rematchClosed": "结束",
+    "rematchRequest": "申请再战",
+    "rematchExpiredShort": "结束",
+    "rematchNoPencilsShort": "不足",
+    "rematchCostCountdownShort": "申请1个 · {{seconds}}秒",
+    "rematchNoPencils": "铅笔不足",
+    "reconnecting": "等待对手...",
+    "reconnectingDesc": "对手断开连接。自动获胜倒计时:",
+    "myTime": "我的记录",
+    "rank": "排位",
+    "normal": "普通",
+    "unknownPlayer": "未知玩家",
+    "guest": "游客",
+    "you": "你",
+    "opponent": "对手",
+    "opponentWaiting": "对手正在等待...",
+    "draw": "平局",
+    "roundResult": "第 {{round}} 回合结果",
+    "matchResult": "比赛结果",
+    "startingIn": "开始倒计时",
+    "roundFinished": "回合结束",
+    "total": "总分",
+    "great": "太棒了!",
+    "tier": "段位",
+    "table": {
+      "round": "回合",
+      "myScore": "我的分数",
+      "opScore": "对手分数",
+      "result": "结果",
+      "win": "胜",
+      "lose": "负",
+      "draw": "平"
+    },
+    "timeLeft": "Time Left",
+    "connectionLost": "Connection lost. Reconnecting...",
+    "connectionUnstable": "Connection is unstable...",
+    "connecting": "Connecting...",
+    "aiBot": "AI Bot",
+    "me": "Me",
+    "disconnected": "DISCONNECT",
+    "devGhostPreview": "Dev Ghost Preview",
+    "devGhostPreviewGame": "Game",
+    "devGhostPreviewRoundHighscore": "Round Highscore",
+    "devGhostPreviewBotGhost": "Bot Ghost",
+    "devGhostPreviewGap": "Gap"
+  },
+  "user": {
+    "level": "等级",
+    "rank": "排名"
+  },
+  "profile": {
+    "nicknameSetupTitle": "设置昵称",
+    "nicknameSetupDesc": "请输入你在游戏中要使用的昵称。",
+    "nicknamePlaceholder": "输入昵称",
+    "nicknameTicketsLabel": "昵称更改券",
+    "nicknameChangeAvailableNow": "现在可更改昵称",
+    "nicknameChangeUnavailableNow": "现在不可更改昵称",
+    "nicknameFreeChangeNow": "免费更改可用：现在",
+    "nicknameFreeChangeAt": "免费更改可用：{{date}}",
+    "edit": "编辑",
+    "highscoresTitle": "最高分",
+    "highscoresColumns": {
+      "game": "游戏",
+      "highscore": "最高分",
+      "rankWinRate": "排位胜率"
+    },
+    "highscoreLeaderboardTitle": "前10名",
+    "highscoreLeaderboardEmpty": "暂无记录。",
+    "highscoreLeaderboardColumns": {
+      "rank": "#",
+      "player": "玩家",
+      "score": "分数"
+    },
+    "guestTitle": "游客账号",
+    "guestDesc": "游客账号在登出、卸载或更换设备时可能丢失数据。请关联 Google 账号以保留进度。",
+    "linkGoogle": "关联 Google 账号",
+    "statsTitle": "能力值",
+    "stats": {
+      "speed": "速度",
+      "memory": "记忆力",
+      "judgment": "判断力",
+      "calculation": "计算力",
+      "accuracy": "准确性",
+      "observation": "观察力"
+    },
+    "changeAvatar": "更换头像",
+    "removeAvatar": "删除头像",
+    "removeAvatarConfirm": "要删除当前头像吗？",
+    "avatarUploading": "上传中...",
+    "avatarInvalidType": "不支持的图片格式。",
+    "avatarTooLarge": "文件太大。",
+    "avatarUploadSuccess": "头像已更新。",
+    "avatarUploadFail": "头像上传失败",
+    "avatarRemoveSuccess": "头像已删除。",
+    "avatarRemoveFail": "头像删除失败",
+    "record": "战绩",
+    "disconnects": "掉线",
+    "updateSuccess": "更新成功",
+    "nicknameCooldownOrTicket": "昵称每30天可免费更改一次。若要立即更改，需要更改券。",
+    "updateFail": "更新失败",
+    "deleteSuccess": "账户已删除",
+    "deleteFail": "删除失败",
+    "selectCountry": "Select Country",
+    "guestDescIOS": "游客账号在登出、删除应用或更换设备时可能丢失数据。请绑定 Apple 或 Google 账号以保留进度。此外，游客账号若 7 天未登录，可能会被删除。",
+    "linkApple": "关联 Apple 账号",
+    "noRecord": "No match history.",
+    "nicknameChangedSuccess": "昵称已更改。",
+    "rankPlacement": "定位中",
+    "rankPlacementRemaining": "还剩{{count}}场"
+  },
+  "matchmaking": {
+    "searching": "搜索中...",
+    "description": "正在寻找合适的对手",
+    "cancel": "取消",
+    "found": "匹配成功!",
+    "entering": "正在进入游戏...",
+    "timeout": "匹配超时",
+    "timeoutDesc": "未找到对手",
+    "range": "范围",
+    "rankLevelRequired": "达到{{level}}级后解锁排位。",
+    "searchingOpponent": "正在寻找对手..."
+  },
+  "rps": {
+    "ready": "准备...",
+    "beatIt": "赢他!",
+    "lose": "输给他!",
+    "reverse": "反向",
+    "round": "回合",
+    "titleWin": "胜者猜拳",
+    "titleLose": "败者猜拳",
+    "title": "剪刀石头布",
+    "instruction": "选出必胜或必败的选项！"
+  },
+  "number": {
+    "title": "数字排序",
+    "instruction": "从低到高点击！",
+    "asc": "从小到大按数字!",
+    "desc": "从大到小按数字!",
+    "ready": "准备",
+    "panel": "面板",
+    "titleDesc": "数字逆序",
+    "instructionDesc": "从高到低点击！"
+  },
+  "math": {
+    "title": "心算挑战",
+    "instruction": "计算并选出答案！"
+  },
+  "mathOx": {
+    "title": "心算 OX",
+    "instruction": "正确选 O，错误选 X！"
+  },
+  "oneStroke": {
+    "title": "一笔连线",
+    "instruction": "一笔连起所有白色方块！",
+    "progress": "路径"
+  },
+  "ten": {
+    "title": "凑十",
+    "instruction": "选出的数字总和为 10！"
+  },
+  "color": {
+    "title": "颜色匹配",
+    "instruction": "文字「含义」与边框「颜色」一致即选！",
+    "red": "红色",
+    "blue": "蓝色",
+    "green": "绿色",
+    "yellow": "黄色"
+  },
+  "memory": {
+    "title": "记忆匹配",
+    "instruction": "记住位置，点击准备，找出相同卡片！",
+    "btn_memorized": "记住了!",
+    "memorize_hint": "记住卡片!",
+    "find_pairs": "找出配对!"
+  },
+  "sequence": {
+    "title": "逆序",
+    "instruction": "通过相反顺序点击！",
+    "titleNormal": "顺序记忆",
+    "instructionNormal": "通过原本顺序点击！"
+  },
+  "largest": {
+    "title": "寻找最大值",
+    "instruction": "点击结果最大的公式！"
+  },
+  "pair": {
+    "title": "寻找配对",
+    "instruction": "找出两张相同的图案！"
+  },
+  "updown": {
+    "title": "上下",
+    "instruction": "比前一个数字大？向上滑。小？向下滑。",
+    "prev": "上一个数字",
+    "start": "开始"
+  },
+  "slider": {
+    "title": "数字滑块",
+    "instruction": "串联相邻数字使得总和相等！",
+    "target": "目标总和"
+  },
+  "arrow": {
+    "title": "箭头滑块",
+    "blue": "蓝 = 同向",
+    "red": "红 = 反向",
+    "instruction": "蓝色：同一方向。红色：反方向！"
+  },
+  "fillBlanks": {
+    "title": "填空",
+    "instruction": "找出空缺的数字！"
+  },
+  "findOperator": {
+    "title": "寻找符号",
+    "instruction": "找出空缺的符号！"
+  },
+  "ladder": {
+    "title": "爬梯子",
+    "instruction": "沿着爬梯走！"
+  },
+  "path": {
+    "title": "路径冲刺",
+    "instruction": "把绿方块移到蓝色终点！",
+    "shuffle": "打乱"
+  },
+  "blindPath": {
+    "title": "盲行路径",
+    "instruction": "记下路径后移动，一动后路径就会隐藏！",
+    "memorizeHint": "记住路线！",
+    "runHint": "沿路前进！",
+    "memorized": "记住了！"
+  },
+  "balls": {
+    "title": "数球",
+    "instruction": "迅速数清移动的球！"
+  },
+  "catchColor": {
+    "title": "颜色接球",
+    "instruction": "接住相同颜色的球！",
+    "switchSoon": "颜色即将切换"
+  },
+  "tapTheColor": {
+    "title": "点击颜色",
+    "instruction": "记住颜色位置并按顺序点击！",
+    "memorize": "记住颜色的位置!",
+    "remembered": "记住了!"
+  },
+  "aim": {
+    "title": "瞄准游戏",
+    "instruction": "只射击红色的靶子！"
+  },
+  "mostColor": {
+    "title": "寻找最多颜色",
+    "instruction": "选出屏幕上出现最多的颜色！"
+  },
+  "sorting": {
+    "title": "分类游戏",
+    "instruction": "同图案向同方向甩，不同就反着甩！",
+    "firstMoveHint": "第一张随意滑！"
+  },
+  "spy": {
+    "title": "寻找间谍",
+    "instruction": "记住刚才出现了什么符号，找出内鬼！",
+    "memorize": "记住这些！",
+    "find": "哪个变了？",
+    "ready": "记住了！"
+  },
+  "timingBar": {
+    "title": "节奏条",
+    "instruction": "落下的长条撞向标靶时，点击屏幕！"
+  },
+  "colorTiming": {
+    "title": "颜色时机",
+    "instruction": "蓝球入左圈且红球入右圈时点击！"
+  },
+  "stairway": {
+    "title": "天国阶梯",
+    "instruction": "点击正确的楼梯方向往上爬！",
+    "scoreLabel": "阶梯"
+  },
+  "tutorial": {
+    "normal": "🌍 和全球玩家一起玩迷你游戏对战！",
+    "rank": "🏆 与实力相近的玩家进行排位赛！",
+    "practice": "💪 随时练习你喜欢的游戏！",
+    "ranking": "👑 查看世界上最聪明的玩家！",
+    "shop": "🛒 购买铅笔或移除广告！",
+    "settings": "⚙️ 修改声音、语言等设置！",
+    "login": "👤 绑定账号，安全游玩！",
+    "profile": "📊 查看实力、能力值和高分记录！",
+    "tryNormalHighlight": "请先点击普通模式，开始你的第一场对战！",
+    "startNormalNow": "开始普通模式",
+    "next": "下一步",
+    "done": "完成",
+    "skip": "跳过",
+    "loginNow": "立即登录"
+  },
+  "zero": {
+    "title": "凑成零",
+    "instruction": "填上数字使公式等于 0！",
+    "undoHint": "点击算式可撤销"
+  },
+  "practice": {
+    "random": "随机",
+    "descriptionPending": "说明准备中",
+    "myHighscoreLabel": "我的最高分",
+    "statGainLabel": "能力值提升",
+    "none": "无",
+    "guideTitle": "练习指南",
+    "guideAtAGlance": "一览",
+    "guideObjective": "目标",
+    "guideHowTo": "玩法",
+    "guideTip": "提示",
+    "autoGuide": {
+      "summary": "这是快速掌握{{title}}核心规则的练习。",
+      "tip": "先看清规则，再专注于速度和准确度。",
+      "objectiveFallback": "开始游戏并按照屏幕规则进行。"
+    },
+    "viewGrid": "网格视图",
+    "viewList": "列表视图",
+    "noNotesTitle": "练习笔记不足",
+    "noNotesDesc": "游玩练习模式需要练习笔记。",
+    "watchAdForNotes": "观看广告获取练习笔记",
+    "goToShopForNotes": "前往商店购买",
+    "waitForRecharge": "等待"
+  },
+  "update": {
+    "title": "需要更新",
+    "message": "新版本已发布，请更新以获得最佳体验。",
+    "button": "更新",
+    "storeNotReady": "商店准备中。",
+    "versionInfo": "Current: {{current}} / Minimum: {{min}}"
+  },
+  "home": {
+    "resumeMatchTitle": "You have a game in progress",
+    "resumeMatchDesc": "You came back home. Do you want to return to your ongoing match?",
+    "resumeLater": "Later",
+    "resumeNow": "Resume",
+    "levelProgressLevel": "Lv. {{level}}",
+    "levelUp": "LEVEL UP!",
+    "hideAnnouncementToday": "今日不再显示",
+    "noPencilTitle": "铅笔不足",
+    "noPencilDesc": "游玩普通/排位模式需要铅笔。",
+    "nextPencilIn": "下一支铅笔充能还需 {{time}}",
+    "watchAdForPencil": "观看广告",
+    "goToShopForPencil": "前往商店购买",
+    "waitForRecharge": "等待"
+  },
+  "login": {
+    "bannedTitle": "Account Suspended",
+    "bannedMessage": "Your account has been suspended.",
+    "bannedUntil": "Suspension ends: {{date}}",
+    "bannedDurationUnknown": "The suspension period is determined by the administrator.",
+    "bannedAppeal": "If you want to appeal the suspension, please contact support.",
+    "contactSupport": "Contact Support",
+    "tryLaterKeyword": "later"
+  },
+  "app": {
+    "title": "BrainRush",
+    "subtitle": "Speed & Intelligence"
+  },
+  "review": {
+    "enjoyTitle": "游戏好玩吗？",
+    "enjoySubtitle": "一条评价就是对我们最大的支持！",
+    "enjoyYes": "好玩！😊",
+    "enjoyNo": "一般 😐"
+  },
+  "mailbox": {
+    "title": "邮箱",
+    "unread": "未读",
+    "read": "已读",
+    "empty": "暂无邮件。",
+    "selectHint": "请选择一封邮件。",
+    "untitled": "无标题",
+    "noContent": "暂无内容。",
+    "rewardTitle": "可领取奖励",
+    "rewardPencils": "铅笔 +{{count}}",
+    "rewardPracticeNotes": "练习笔记 +{{count}}",
+    "claim": "领取",
+    "claimed": "已领取",
+    "claimSuccess": "奖励已领取。(+{{pencils}} 铅笔, +{{notes}} 练习笔记)",
+    "claimBlockedPencilsFull": "当铅笔达到5支或以上时无法领取。请先使用铅笔。"
+  }
+}

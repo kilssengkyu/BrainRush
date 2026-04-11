@@ -1,467 +1,685 @@
 {
+  "common": {
+    "cancel": "キャンセル",
+    "confirm": "確認",
+    "close": "閉じる",
+    "retry": "再試行",
+    "loading": "読み込み中...",
+    "noResults": "検索結果がありません",
+    "add": "追加",
+    "error": "エラーが発生しました。",
+    "google": "Google",
+    "or": "または",
+    "timeAgo": {
+      "justNow": "たった今",
+      "minute": "{{count}}分前",
+      "hour": "{{count}}時間前",
+      "day": "{{count}}日前",
+      "longAgo": "ずっと前"
+    },
+    "exitAppTitle": "アプリ終了",
+    "exitAppConfirm": "アプリを終了しますか？",
+    "open": "開く"
+  },
+  "auth": {
+    "loginRequired": "ログインが必要です。",
+    "guestMode": "ゲストモード",
+    "guestWarning": "ゲストは保存された記録を失う可能性があります。",
+    "terms": "継続することで、利用規約に同意したものとみなされます。",
+    "loggedOutByOtherDevice": "このアカウントが他の端末で使用されたため、ログアウトされました。"
+  },
+  "streak": {
+    "bonusActive": "ボーナス適用中",
+    "bonusIncluded": "連勝ボーナス +{{bonus}}",
+    "nextBonus": "連勝で +{{bonus}}",
+    "loseBonusTitle": "連敗プレゼント",
+    "loseBonusMessage": "3連敗しました。応援の気持ちを込めて鉛筆を1本差し上げます。",
+    "loseBonusSubtext": "ずっとはもらえないので、次は勝ちましょう！💪"
+  },
+  "menu": {
+    "normal": {
+      "title": "ノーマルモード",
+      "subtitle": "基礎頭脳トレーニング",
+      "matchRule": "3本勝負（2本先取）"
+    },
+    "rank": {
+      "title": "ランク戦",
+      "subtitle": "世界中のプレイヤーと競争",
+      "matchRule": "5本勝負（3本先取）",
+      "burningTime": "バーニングタイム",
+      "burningTimeBenefit": "鉛筆消費なし"
+    },
+    "friendly": {
+      "title": "フレンド対戦",
+      "subtitle": "友達と1対1"
+    },
+    "practice": {
+      "title": "練習モード",
+      "subtitle": "ミニゲームを自由に練習"
+    },
+    "shop": "ショップ",
+    "settings": "設定",
+    "login": "ログイン",
+    "logout": "ログアウト",
+    "profile": "プロフィール",
+    "all": "All"
+  },
+  "shop": {
+    "title": "ショップ",
+    "subtitle": "もっと長くプレイしよう",
+    "removeAds": {
+      "title": "広告削除パック",
+      "desc": "広告なしで鉛筆をすぐに獲得。"
+    },
+    "pencils5": {
+      "title": "鉛筆 x5",
+      "desc": "短時間プレイ向けの少量パック。"
+    },
+    "pencils20": {
+      "title": "鉛筆 x20",
+      "desc": "日常プレイにちょうど良い。"
+    },
+    "pencils100": {
+      "title": "鉛筆 x100",
+      "desc": "長く遊ぶ人向けの大容量。"
+    },
+    "practiceNotes5": {
+      "title": "練習ノート 10個",
+      "desc": "短い練習セッションに最適です。"
+    },
+    "practiceNotes20": {
+      "title": "練習ノート x20",
+      "desc": "しっかり練習したい人向け。"
+    },
+    "practiceNotes100": {
+      "title": "練習ノート x100",
+      "desc": "長時間練習する人におすすめ。"
+    },
+    "nicknameChangeTicket": {
+      "title": "ニックネーム変更チケット",
+      "desc": "30日待たずにニックネームをすぐ変更できます。",
+      "unit": "ニックネーム変更チケット"
+    },
+    "buy": "購入",
+    "premium": "プレミアム",
+    "popular": "人気",
+    "bestValue": "お得",
+    "notice": "決済はApp Storeで処理されます。",
+    "comingSoon": "購入フロー準備中...",
+    "priceTbd": "価格未定",
+    "loading": "読み込み中...",
+    "purchased": "購入済み",
+    "purchaseSuccess": "購入が完了しました。",
+    "purchaseRewardDesc": "購入したアイテムが支給されました。",
+    "removeAdsApplied": "広告削除が適用されました。",
+    "purchaseFail": "購入に失敗しました。",
+    "billingUnavailable": "この端末では購入に対応していません。",
+    "sessionRefreshFailed": "Failed to refresh session: {{message}}",
+    "sessionExpired": "Your login session has expired. Please sign in again.",
+    "purchaseFailWithReason": "Purchase failed: {{message}}"
+  },
+  "social": {
+    "friends": "フレンド",
+    "friendList": "フレンド一覧",
+    "friendRequests": "フレンドリクエスト",
+    "addFriend": "フレンド追加",
+    "searchNickname": "ニックネームを検索",
+    "searchError": "検索中にエラーが発生しました。",
+    "userNotFound": "ユーザーが見つかりません。",
+    "cannotAddSelf": "自分自身は追加できません。",
+    "alreadyFriends": "すでにフレンドです。",
+    "requestPending": "リクエストは送信済み、または保留中です。",
+    "blocked": "ブロックされているか、ブロックしています。",
+    "requestSent": "フレンドリクエストを送信しました！",
+    "requestFail": "フレンドリクエストの送信に失敗しました。",
+    "loadingFriends": "フレンド一覧を読み込み中...",
+    "noFriends": "フレンドがいません。",
+    "deleteFriend": "フレンド削除",
+    "deleteFriendConfirm": "'{{nickname}}'をフレンド一覧から削除しますか？",
+    "deleteFriendFail": "フレンドの削除に失敗しました。",
+    "online": "オンライン",
+    "ingame": "対戦中",
+    "offline": "オフライン",
+    "challengeTitle": "フレンドに挑戦",
+    "challengeConfirm": "このフレンドに挑戦しますか？",
+    "challengeFail": "対戦の開始に失敗しました: ",
+    "challengeInGame": "対戦中のフレンドには招待できません。",
+    "challengeOffline": "オンラインのフレンドのみ招待できます。",
+    "challengeWaiting": "招待を送信しました。承諾を待っています...",
+    "challengeWaitingTitle": "親善戦の待機中",
+    "challengeWaitingDesc": "相手の承諾を待っています。",
+    "challengeWaitingTime": "残り時間 {{seconds}}秒",
+    "challengeAccepted": "親善戦が承諾されました！",
+    "challengeRejected": "親善戦が拒否されました。",
+    "challengeTimeout": "応答時間が切れました。",
+    "challengeCancelled": "親善戦の招待をキャンセルしました。",
+    "challengeAlreadyPending": "すでに待機中の親善戦があります。",
+    "inviteSenderFallback": "フレンド",
+    "inviteTitle": "親善戦の招待",
+    "inviteBody": "'{{nickname}}'さんが親善戦を申し込みました。受け入れますか？",
+    "inviteInvalidSession": "ゲームセッションが無効、または既に開始されています。",
+    "inviteJoinFail": "ゲームへの参加に失敗しました。",
+    "typeMessage": "メッセージを入力...",
+    "sendFail": "メッセージの送信に失敗しました",
+    "chat": "チャット",
+    "challenge": "挑戦",
+    "accept": "承諾",
+    "reject": "拒否",
+    "newMessage": "{{nickname}}からメッセージが届きました",
+    "chatRateLimited": "送信制限中: {{seconds}}秒後に再送信できます。"
+  },
+  "leaderboard": {
+    "button": "ランキング",
+    "title": "ランキング - プレシーズン",
+    "global": "全体",
+    "country": "国別",
+    "myRank": "MY RANK",
+    "placementNotice": "配置戦を{{count}}試合終えるとランキングに表示されます。",
+    "mmrLabel": "MMR",
+    "avatarPreview": "{{nickname}} avatar"
+  },
+  "ad": {
+    "remaining": "本日の残り: {{count}}/{{limit}}",
+    "limitReached": "本日の広告上限に達しました。",
+    "limitReachedDesc": "明日また視聴できます。",
+    "adFreeDesc": "広告なしで今すぐ鉛筆を1本獲得。",
+    "adFreeDescPracticeNotes": "広告なしで今すぐ練習ノートを獲得。",
+    "claimBtn": "鉛筆を受け取る",
+    "claimBtnPracticeNotes": "練習ノートを受け取る",
+    "granting": "報酬を付与中...",
+    "rewardFailed": "報酬の付与に失敗しました。",
+    "rewardFailedDesc": "しばらくしてから再試行してください。",
+    "title": "鉛筆を受け取る",
+    "titlePracticeNotes": "練習ノートを受け取る",
+    "loading": "広告を読み込み中...",
+    "watchDesc": "短い広告を見て鉛筆を1本獲得！",
+    "watchDescPracticeNotes": "短い広告を見て練習ノートを2冊獲得！",
+    "watchBtn": "広告を見る",
+    "watching": "広告を視聴中...",
+    "playing": "広告を再生中...",
+    "pencils": "鉛筆",
+    "practiceNotes": "練習ノート",
+    "success": "報酬を獲得しました。",
+    "noFillTitle": "現在広告がありません",
+    "noFillDesc": "しばらくしてからもう一度お試しください。",
+    "noFillRewarded": "あっ、今は再生できる広告がありません！報酬はすぐにお渡しします。"
+  },
+  "notifications": {
+    "fullTitle": "鉛筆が満タン！",
+    "fullBody": "鉛筆が満タンです。脳を使う時間！",
+    "reminderTitle": "脳トレの時間",
+    "reminderBody": "24時間経ちました。戻って遊びましょう！"
+  },
+  "settings": {
+    "title": "設定",
+    "language": "言語",
+    "sound": "効果音",
+    "masterVolume": "マスターボリューム",
+    "vibration": "バイブ",
+    "deleteAccount": "アカウント削除",
+    "deleteAccountConfirm": "本当にアカウントを削除しますか？永久に削除され、取り消せません。",
+    "logoutConfirm": "本当にログアウトしますか？",
+    "restorePurchases": "購入を復元",
+    "restorePurchasesDesc": "広告削除などの非消耗型購入を復元します。",
+    "restorePurchasesSuccess": "購入の復元が完了しました。",
+    "restorePurchasesFail": "購入の復元に失敗しました。",
+    "restorePurchasesUnavailable": "この端末では購入をサポートしていません。",
+    "restorePurchasesEmpty": "復元できる購入がありません。",
+    "privacyPolicy": "プライバシーポリシー",
+    "privacyPolicyDesc": "サービスにおける個人情報の取り扱いを確認できます。",
+    "viewPrivacyPolicy": "プライバシーポリシーを見る",
+    "tutorial": "チュートリアル",
+    "tutorialDesc": "アプリの使い方をもう一度確認したい場合は、チュートリアルを再表示してください。",
+    "viewTutorial": "チュートリアルをもう一度見る",
+    "notificationNativeOnly": "通知設定はモバイルアプリでのみ利用できます。",
+    "notificationOff": "通知をオフにしました。",
+    "notificationDeniedIos": "iPhoneの「設定 > 通知」で通知を許可してください。",
+    "notificationDeniedAndroid": "Androidの「設定 > 通知」で通知を許可してください。",
+    "notificationOn": "通知をオンにしました。",
+    "support": "お問い合わせ",
+    "supportDesc": "不具合報告、エラー報告、その他のお問い合わせを確認できます。",
+    "goToSupport": "サポートを開く",
+    "notifications": "通知",
+    "pushNotifications": "プッシュ/ローカル通知",
+    "notificationNativeHint": "Web版では通知トグルは無効です。",
+    "recommended": "おすすめ",
+    "theme": "テーマ",
+    "themeMode": "表示モード",
+    "systemThemeDesc": "端末の設定に従います。",
+    "darkMode": "ダークモード",
+    "lightMode": "ライトモード",
+    "light": "ライト",
+    "dark": "ダーク",
+    "system": "システム",
+    "assetCredits": "アセットクレジット",
+    "assetCreditsDesc": "一部のビジュアル素材はサードパーティ製で、各ライセンス（例: CC BY 4.0）に基づいてクレジット表記しています。",
+    "viewMakers": "制作者とクレジットを見る",
+    "makers": "制作者とクレジット",
+    "localCredit": "ローカルクレジット",
+    "announcements": "お知らせ",
+    "announcementsDesc": "最新のお知らせをもう一度確認できます。",
+    "viewAnnouncementAgain": "お知らせを再表示",
+    "announcementWillShowOnHome": "ホームで最新のお知らせを再表示します。",
+    "announcementResetFail": "お知らせの非表示設定を初期化できませんでした。",
+    "versionLabel": "バージョン",
+    "makersRoleCreator": "作成者",
+    "makersRoleRankingBadges": "ランキングバッジ (CC BY 4.0)",
+    "makersRoleCcBy": "CC BY 4.0 ライセンス",
+    "admin": "管理者",
+    "adminDesc": "管理者専用ページへ移動します。",
+    "goToAdmin": "管理者ページへ",
+    "guestModeWarningTitle": "ゲストアカウントのご案内",
+    "guestModeWarningDesc": "ゲストアカウントは、ログアウト・アプリ削除・端末変更時にデータが失われる可能性があります。アカウント連携で進行状況を保護してください。"
+  },
+  "report": {
+    "button": "通報",
+    "title": "プレイヤーを通報",
+    "description": "通報理由を入力してください。",
+    "descriptionWithTarget": "{{target}} を通報する理由を入力してください。",
+    "placeholder": "通報理由を入力してください。",
+    "submit": "通報する",
+    "success": "通報を受け付けました。",
+    "fail": "通報の送信に失敗しました。"
+  },
+  "game": {
+    "waiting": "ゲーム待機中...",
+    "victory": "勝利",
+    "defeat": "敗北",
+    "returnMenu": "メニューに戻る",
+    "setScore": "セットスコア",
+    "practiceComplete": "練習完了！",
+    "greatJob": "お疲れさまでした！",
+    "rematchIncomingTitle": "再戦リクエスト",
+    "rematchIncomingBody": "'{{nickname}}'が再戦をリクエストしました。受けますか？",
+    "rematchCreateFail": "再戦を開始できません。",
+    "rematchAccepted": "再戦を開始します。",
+    "rematchRejected": "相手が再戦を断りました。",
+    "rematchExpired": "再戦リクエストの受付時間が終了しました。",
+    "rematchConfirmTitle": "再戦申請",
+    "rematchConfirmBody": "再戦を申請しますか？",
+    "rematchRequesterCostNotice": "申請時のみえんぴつ1本が消費されます。",
+    "rematchReceiverFreeNotice": "再戦を受けてもえんぴつは減りません。",
+    "rematchWaiting": "再戦リクエストを送りました。",
+    "rematchRequestFail": "再戦リクエスト中にエラーが発生しました。",
+    "rematchPending": "待機中",
+    "rematchClosed": "終了",
+    "rematchRequest": "再戦申請",
+    "rematchExpiredShort": "終了",
+    "rematchNoPencilsShort": "不足",
+    "rematchCostCountdownShort": "申請1個・{{seconds}}秒",
+    "rematchNoPencils": "えんぴつが足りません",
+    "reconnecting": "相手の接続待ち...",
+    "reconnectingDesc": "相手の接続が切れました。不戦勝まで:",
+    "myTime": "タイム",
+    "rank": "ランク",
+    "normal": "ノーマル",
+    "unknownPlayer": "不明なプレイヤー",
+    "guest": "ゲスト",
+    "you": "あなた",
+    "opponent": "相手",
+    "opponentWaiting": "相手を待っています...",
+    "draw": "引き分け",
+    "roundResult": "ラウンド {{round}} 結果",
+    "matchResult": "試合結果",
+    "startingIn": "開始まで",
+    "roundFinished": "ラウンド終了",
+    "total": "合計",
+    "great": "いいね！",
+    "tier": "ティア",
+    "table": {
+      "round": "ラウンド",
+      "myScore": "自分",
+      "opScore": "相手",
+      "result": "結果",
+      "win": "勝",
+      "lose": "負",
+      "draw": "分"
+    },
+    "timeLeft": "Time Left",
+    "connectionLost": "Connection lost. Reconnecting...",
+    "connectionUnstable": "Connection is unstable...",
+    "connecting": "Connecting...",
+    "aiBot": "AI Bot",
+    "me": "Me",
+    "disconnected": "DISCONNECT",
+    "devGhostPreview": "Dev Ghost Preview",
+    "devGhostPreviewGame": "Game",
+    "devGhostPreviewRoundHighscore": "Round Highscore",
+    "devGhostPreviewBotGhost": "Bot Ghost",
+    "devGhostPreviewGap": "Gap"
+  },
+  "user": {
+    "level": "レベル",
+    "rank": "ランク"
+  },
+  "profile": {
+    "nicknameSetupTitle": "ニックネーム設定",
+    "nicknameSetupDesc": "ゲームで使うニックネームを入力してください。",
+    "nicknamePlaceholder": "ニックネーム入力",
+    "nicknameTicketsLabel": "ニックネーム変更チケット",
+    "nicknameChangeAvailableNow": "今すぐニックネームを変更できます",
+    "nicknameChangeUnavailableNow": "現在はニックネームを変更できません",
+    "nicknameFreeChangeNow": "無料変更可能: 今すぐ",
+    "nicknameFreeChangeAt": "無料変更可能: {{date}}",
+    "selectCountry": "国を選択",
+    "edit": "編集",
+    "highscoresTitle": "ハイスコア",
+    "highscoresColumns": {
+      "game": "ゲーム",
+      "highscore": "ハイスコア",
+      "rankWinRate": "ランク勝率"
+    },
+    "highscoreLeaderboardTitle": "トップ10",
+    "highscoreLeaderboardEmpty": "記録がありません。",
+    "highscoreLeaderboardColumns": {
+      "rank": "#",
+      "player": "プレイヤー",
+      "score": "スコア"
+    },
+    "guestTitle": "ゲストアカウント",
+    "guestDesc": "ゲストはログアウト・アプリ削除・端末変更でデータが消える可能性があります。Googleアカウントを連携してください。",
+    "linkGoogle": "Googleアカウント連携",
+    "statsTitle": "能力値",
+    "stats": {
+      "speed": "スピード",
+      "memory": "記憶力",
+      "judgment": "判断力",
+      "calculation": "計算力",
+      "accuracy": "正確さ",
+      "observation": "観察力"
+    },
+    "changeAvatar": "写真変更",
+    "removeAvatar": "写真削除",
+    "removeAvatarConfirm": "現在のプロフィール写真を削除しますか？",
+    "avatarUploading": "アップロード中...",
+    "avatarInvalidType": "対応していない画像形式です。",
+    "avatarTooLarge": "ファイルサイズが大きすぎます。",
+    "avatarUploadSuccess": "プロフィール写真を更新しました。",
+    "avatarUploadFail": "プロフィール写真のアップロードに失敗しました",
+    "avatarRemoveSuccess": "プロフィール写真を削除しました。",
+    "avatarRemoveFail": "プロフィール写真の削除に失敗しました",
+    "record": "戦績",
+    "disconnects": "切断",
+    "updateSuccess": "更新成功",
+    "nicknameCooldownOrTicket": "ニックネームは30日ごとに無料で変更できます。すぐ変更するにはチケットが必要です。",
+    "updateFail": "更新失敗",
+    "deleteSuccess": "削除成功",
+    "deleteFail": "削除失敗",
+    "guestDescIOS": "ゲストアカウントは、ログアウト・アプリ削除・端末変更時にデータが失われる可能性があります。進行状況を保持するには Apple または Google アカウントを連携してください。また、7日間未接続の場合、ゲストアカウントは削除されることがあります。",
+    "linkApple": "Appleアカウント連携",
+    "noRecord": "No match history.",
+    "nicknameChangedSuccess": "ニックネームが変更されました。",
+    "rankPlacement": "配置戦中",
+    "rankPlacementRemaining": "残り{{count}}試合"
+  },
+  "matchmaking": {
+    "searching": "検索中...",
+    "description": "対戦相手を探しています",
+    "cancel": "キャンセル",
+    "found": "マッチ成立!",
+    "entering": "アリーナへ移動中...",
+    "timeout": "マッチ不成立",
+    "timeoutDesc": "対戦相手が見つかりませんでした",
+    "range": "範囲",
+    "rankLevelRequired": "ランクはレベル{{level}}から解放されます。",
+    "searchingOpponent": "対戦相手を探しています..."
+  },
+  "rps": {
+    "ready": "準備...",
+    "beatIt": "勝て！",
+    "lose": "負けて！",
+    "reverse": "逆",
+    "round": "ラウンド",
+    "titleWin": "勝つじゃんけん",
+    "titleLose": "負けるじゃんけん",
+    "title": "じゃんけん",
+    "instruction": "指示に従って勝ち負けを選択！"
+  },
+  "number": {
+    "title": "数字の順序",
+    "instruction": "小さい順にタップ！",
+    "asc": "小さい数から押してください！",
+    "desc": "大きい数から押してください！",
+    "ready": "準備",
+    "panel": "パネル",
+    "titleDesc": "数字逆順序",
+    "instructionDesc": "大きい順にタップ！"
+  },
+  "math": {
+    "title": "暗算チャレンジ",
+    "instruction": "計算して答えを選択！"
+  },
+  "mathOx": {
+    "title": "暗算 OX",
+    "instruction": "正解ならO、間違いならX！"
+  },
+  "oneStroke": {
+    "title": "一筆書き",
+    "instruction": "一筆書きで全ての白いマスをつなげ！",
+    "progress": "経路"
+  },
+  "ten": {
+    "title": "10作り",
+    "instruction": "足して10になる数字を選択！"
+  },
+  "color": {
+    "title": "色合わせ",
+    "instruction": "文字の「意味」と「枠の色」が同じものを選択！",
+    "red": "赤",
+    "blue": "青",
+    "green": "緑",
+    "yellow": "黄"
+  },
+  "memory": {
+    "title": "記憶力マッチ",
+    "instruction": "カードを覚えて「準備完了」を押し、ペアを探せ！",
+    "btn_memorized": "覚えた！",
+    "memorize_hint": "カードを覚えてください！",
+    "find_pairs": "ペアを見つけてください！"
+  },
+  "sequence": {
+    "title": "逆順序",
+    "instruction": "逆の順番でタップ！",
+    "titleNormal": "順序記憶",
+    "instructionNormal": "順番通りにタップ！"
+  },
+  "largest": {
+    "title": "最大値を探せ",
+    "instruction": "結果が一番大きい式を選択！"
+  },
+  "pair": {
+    "title": "ペア探し",
+    "instruction": "同じ絵のペアを見つけろ！"
+  },
+  "updown": {
+    "title": "アップダウン",
+    "instruction": "前より大きければ上、小さければ下にスワイプ！",
+    "prev": "前の数字",
+    "start": "開始"
+  },
+  "slider": {
+    "title": "数字スライダー",
+    "instruction": "数字をドラッグして目標の合計にしろ！",
+    "target": "目標合計"
+  },
+  "arrow": {
+    "title": "矢印スライダー",
+    "blue": "青 = そのまま",
+    "red": "赤 = 反対へ",
+    "instruction": "青：同じ方向。赤：逆方向！"
+  },
+  "fillBlanks": {
+    "title": "空欄埋め",
+    "instruction": "空欄に入る数字を見つけろ！"
+  },
+  "findOperator": {
+    "title": "記号埋め",
+    "instruction": "正しい記号を見つけろ！"
+  },
+  "ladder": {
+    "title": "あみだくじ",
+    "instruction": "道順をたどれ！"
+  },
+  "path": {
+    "title": "パスランナー",
+    "instruction": "緑のブロックを青いゴールに移動しろ！",
+    "shuffle": "シャッフル"
+  },
+  "blindPath": {
+    "title": "ブラインドパス",
+    "instruction": "道を覚えてゴールへ！動くと道が隠れるぞ！",
+    "memorizeHint": "道を覚えて！",
+    "runHint": "道を進め！",
+    "memorized": "覚えた！"
+  },
+  "balls": {
+    "title": "ボールカウント",
+    "instruction": "動いているボールの数を正確に数えろ！"
+  },
+  "catchColor": {
+    "title": "カラーキャッチ",
+    "instruction": "バーと同じ色のボールだけをキャッチ！",
+    "switchSoon": "まもなく色が切り替わります"
+  },
+  "tapTheColor": {
+    "title": "カラータップ",
+    "instruction": "色を覚えて、表示された順番にタップ！",
+    "memorize": "色の位置を覚えてください！",
+    "remembered": "覚えた！"
+  },
+  "aim": {
+    "title": "エイムゲーム",
+    "instruction": "赤いターゲットだけを急いで撃て！"
+  },
+  "mostColor": {
+    "title": "最多色探し",
+    "instruction": "一番多い色を選択！"
+  },
+  "sorting": {
+    "title": "仕分けゲーム",
+    "instruction": "同じ記号＝同じ方向！違う記号＝逆方向！",
+    "firstMoveHint": "最初はどちらでもOK！"
+  },
+  "spy": {
+    "title": "スパイ探し",
+    "instruction": "記号を覚えて、新しく現れたスパイを探せ！",
+    "memorize": "覚えて！",
+    "find": "変わったのは？",
+    "ready": "覚えた！"
+  },
+  "timingBar": {
+    "title": "タイミングバー",
+    "instruction": "バーが重なる瞬間にタップ！"
+  },
+  "colorTiming": {
+    "title": "カラータイミング",
+    "instruction": "左に青、右に赤が入るタイミングでタップ！"
+  },
+  "stairway": {
+    "title": "天国の階段",
+    "instruction": "階段のある方向をタップして登れ！",
+    "scoreLabel": "階段"
+  },
+  "tutorial": {
+    "normal": "🌍 世界中のプレイヤーとミニゲーム対戦を楽しもう！",
+    "rank": "🏆 同じ実力のプレイヤーとランク戦！",
+    "practice": "💪 好きなゲームを自由に練習できます！",
+    "ranking": "👑 世界で一番賢いプレイヤーをチェック！",
+    "shop": "🛒 鉛筆購入や広告削除ができます！",
+    "settings": "⚙️ 音量や言語などの設定を変更できます！",
+    "login": "👤 アカウント連携で安全にプレイ！",
+    "profile": "📊 実力・能力値・スコアを確認！",
+    "tryNormalHighlight": "まずはノーマルモードを押して、最初の対戦を始めましょう！",
+    "startNormalNow": "ノーマルモード開始",
+    "next": "次へ",
+    "done": "完了",
+    "skip": "スキップ",
+    "loginNow": "今すぐログイン"
+  },
+  "zero": {
+    "title": "ゼロを作れ",
+    "instruction": "数字を入れて答えを0にしろ！",
+    "undoHint": "数式をタッチで元に戻す"
+  },
+  "practice": {
+    "random": "ランダム",
+    "descriptionPending": "説明準備中",
+    "myHighscoreLabel": "マイスコア",
+    "statGainLabel": "上昇能力値",
+    "none": "なし",
+    "guideTitle": "練習ガイド",
+    "guideAtAGlance": "概要",
+    "guideObjective": "目標",
+    "guideHowTo": "遊び方",
+    "guideTip": "コツ",
+    "autoGuide": {
+      "summary": "{{title}}のコアルールを素早く身につける練習です。",
+      "tip": "まずルールを確認し、その後はスピードと正確さに集中してください。",
+      "objectiveFallback": "ゲームを開始し、画面のルールに従ってプレイしてください。"
+    },
+    "viewGrid": "グリッド表示",
+    "viewList": "リスト表示",
+    "noNotesTitle": "練習ノートが足りません",
+    "noNotesDesc": "練習モードをプレイするには練習ノートが必要です。",
+    "watchAdForNotes": "練習ノートの広告を見る",
+    "goToShopForNotes": "ショップで購入",
+    "waitForRecharge": "待つ"
+  },
+  "update": {
+    "title": "アップデートが必要です",
+    "message": "新しいバージョンがリリースされました。快適なプレイのためアップデートしてください。",
+    "button": "アップデート",
+    "storeNotReady": "ストア準備中です。",
+    "versionInfo": "Current: {{current}} / Minimum: {{min}}"
+  },
+  "home": {
+    "resumeMatchTitle": "You have a game in progress",
+    "resumeMatchDesc": "You came back home. Do you want to return to your ongoing match?",
+    "resumeLater": "Later",
+    "resumeNow": "Resume",
+    "levelProgressLevel": "Lv. {{level}}",
+    "levelUp": "LEVEL UP!",
+    "hideAnnouncementToday": "今日は表示しない",
+    "noPencilTitle": "鉛筆が足りません",
+    "noPencilDesc": "ノーマル/ランクモードをプレイするには鉛筆が必要です。",
+    "nextPencilIn": "次の鉛筆まで {{time}}",
+    "watchAdForPencil": "広告を見る",
+    "goToShopForPencil": "ショップで購入",
+    "waitForRecharge": "待つ"
+  },
+  "login": {
+    "bannedTitle": "Account Suspended",
+    "bannedMessage": "Your account has been suspended.",
+    "bannedUntil": "Suspension ends: {{date}}",
+    "bannedDurationUnknown": "The suspension period is determined by the administrator.",
+    "bannedAppeal": "If you want to appeal the suspension, please contact support.",
+    "contactSupport": "Contact Support",
+    "tryLaterKeyword": "later"
+  },
+  "app": {
     "title": "BrainRush",
-    "common": {
-        "cancel": "キャンセル",
-        "confirm": "確認",
-        "close": "閉じる",
-        "retry": "再試行",
-        "loading": "読み込み中...",
-        "noResults": "検索結果がありません",
-        "add": "追加",
-        "error": "エラーが発生しました。",
-        "google": "Google",
-        "or": "または",
-        "timeAgo": {
-            "justNow": "たった今",
-            "minute": "{{count}}分前",
-            "hour": "{{count}}時間前",
-            "day": "{{count}}日前",
-            "longAgo": "ずっと前"
-        }
-    },
-    "auth": {
-        "loginRequired": "ログインが必要です。",
-        "guestMode": "ゲストモード",
-        "guestWarning": "ゲストは保存された記録を失う可能性があります。",
-        "terms": "継続することで、利用規約に同意したものとみなされます。"
-    },
-    "menu": {
-        "normal": {
-            "title": "ノーマルモード",
-            "subtitle": "基礎頭脳トレーニング"
-        },
-        "rank": {
-            "title": "ランク戦",
-            "subtitle": "世界中のプレイヤーと競争"
-        },
-        "friendly": {
-            "title": "フレンド対戦",
-            "subtitle": "友達と1対1"
-        },
-        "practice": {
-            "title": "練習モード",
-            "subtitle": "ミニゲームを自由に練習"
-        },
-        "shop": "ショップ",
-        "settings": "設定",
-        "login": "ログイン",
-        "logout": "ログアウト",
-        "profile": "プロフィール"
-    },
-    "shop": {
-        "title": "ショップ",
-        "subtitle": "もっと長くプレイしよう",
-        "removeAds": {
-            "title": "広告削除パック",
-            "desc": "広告なしで鉛筆をすぐに獲得。"
-        },
-        "pencils5": {
-            "title": "鉛筆 x5",
-            "desc": "短時間プレイ向けの少量パック。"
-        },
-        "pencils20": {
-            "title": "鉛筆 x20",
-            "desc": "日常プレイにちょうど良い。"
-        },
-        "pencils100": {
-            "title": "鉛筆 x100",
-            "desc": "長く遊ぶ人向けの大容量。"
-        },
-        "practiceNotes5": {
-            "title": "練習ノート 10個",
-            "desc": "短い練習セッションに最適です。"
-        },
-        "practiceNotes20": {
-            "title": "練習ノート x20",
-            "desc": "しっかり練習したい人向け。"
-        },
-        "practiceNotes100": {
-            "title": "練習ノート x100",
-            "desc": "長時間練習する人におすすめ。"
-        },
-        "buy": "購入",
-        "premium": "プレミアム",
-        "popular": "人気",
-        "bestValue": "お得",
-        "notice": "決済はApp Store / Google Playで処理されます。",
-        "comingSoon": "購入フロー準備中...",
-        "priceTbd": "価格未定",
-        "loading": "読み込み中...",
-        "purchased": "購入済み",
-        "purchaseSuccess": "購入が完了しました。",
-        "purchaseFail": "購入に失敗しました。",
-        "billingUnavailable": "この端末では購入に対応していません。"
-    },
-    "social": {
-        "friends": "フレンド",
-        "friendList": "フレンド一覧",
-        "friendRequests": "フレンドリクエスト",
-        "addFriend": "フレンド追加",
-        "searchNickname": "ニックネームを検索",
-        "searchError": "検索中にエラーが発生しました。",
-        "userNotFound": "ユーザーが見つかりません。",
-        "cannotAddSelf": "自分自身は追加できません。",
-        "alreadyFriends": "すでにフレンドです。",
-        "requestPending": "リクエストは送信済み、または保留中です。",
-        "blocked": "ブロックされているか、ブロックしています。",
-        "requestSent": "フレンドリクエストを送信しました！",
-        "requestFail": "フレンドリクエストの送信に失敗しました。",
-        "loadingFriends": "フレンド一覧を読み込み中...",
-        "noFriends": "フレンドがいません。",
-        "deleteFriend": "フレンド削除",
-        "deleteFriendConfirm": "'{{nickname}}'をフレンド一覧から削除しますか？",
-        "deleteFriendFail": "フレンドの削除に失敗しました。",
-        "online": "オンライン",
-        "ingame": "対戦中",
-        "offline": "オフライン",
-        "challengeTitle": "フレンドに挑戦",
-        "challengeConfirm": "このフレンドに挑戦しますか？",
-        "challengeFail": "対戦の開始に失敗しました: ",
-        "challengeInGame": "対戦中のフレンドには招待できません。",
-        "challengeOffline": "オンラインのフレンドのみ招待できます。",
-        "challengeWaiting": "招待を送信しました。承諾を待っています...",
-        "challengeWaitingTitle": "親善戦の待機中",
-        "challengeWaitingDesc": "相手の承諾を待っています。",
-        "challengeWaitingTime": "残り時間 {{seconds}}秒",
-        "challengeAccepted": "親善戦が承諾されました！",
-        "challengeRejected": "親善戦が拒否されました。",
-        "challengeTimeout": "応答時間が切れました。",
-        "challengeCancelled": "親善戦の招待をキャンセルしました。",
-        "challengeAlreadyPending": "すでに待機中の親善戦があります。",
-        "inviteSenderFallback": "フレンド",
-        "inviteTitle": "親善戦の招待",
-        "inviteBody": "'{{nickname}}'さんが親善戦を申し込みました。受け入れますか？",
-        "inviteInvalidSession": "ゲームセッションが無効、または既に開始されています。",
-        "inviteJoinFail": "ゲームへの参加に失敗しました。",
-        "typeMessage": "メッセージを入力...",
-        "sendFail": "メッセージの送信に失敗しました",
-        "chat": "チャット",
-        "challenge": "挑戦",
-        "accept": "承諾",
-        "reject": "拒否",
-        "newMessage": "{{nickname}}からメッセージが届きました"
-    },
-    "leaderboard": {
-        "button": "ランキング",
-        "title": "ランキング",
-        "global": "全体",
-        "country": "国別"
-    },
-    "ad": {
-        "remaining": "本日の残り: {{count}}/{{limit}}",
-        "limitReached": "本日の広告上限に達しました。",
-        "limitReachedDesc": "明日また視聴できます。",
-        "adFreeDesc": "広告なしで今すぐ鉛筆を1本獲得。",
-        "adFreeDescPracticeNotes": "広告なしで今すぐ練習ノートを獲得。",
-        "claimBtn": "鉛筆を受け取る",
-        "claimBtnPracticeNotes": "練習ノートを受け取る",
-        "granting": "報酬を付与中...",
-        "rewardFailed": "報酬の付与に失敗しました。",
-        "rewardFailedDesc": "しばらくしてから再試行してください。",
-        "title": "鉛筆を受け取る",
-        "titlePracticeNotes": "練習ノートを受け取る",
-        "loading": "広告を読み込み中...",
-        "watchDesc": "短い広告を見て鉛筆を1本獲得！",
-        "watchDescPracticeNotes": "短い広告を見て練習ノートを2冊獲得！",
-        "watchBtn": "広告を見る",
-        "watching": "広告を視聴中...",
-        "playing": "広告を再生中...",
-        "pencils": "鉛筆",
-        "practiceNotes": "練習ノート",
-        "success": "報酬を獲得しました。"
-    },
-    "notifications": {
-        "fullTitle": "鉛筆が満タン！",
-        "fullBody": "鉛筆が満タンです。脳を使う時間！",
-        "reminderTitle": "脳トレの時間",
-        "reminderBody": "24時間経ちました。戻って遊びましょう！"
-    },
-    "settings": {
-        "title": "設定",
-        "language": "言語",
-        "sound": "効果音",
-        "masterVolume": "マスターボリューム",
-        "vibration": "バイブ",
-        "volume": "音量",
-        "back": "戻る",
-        "deleteAccount": "アカウント削除",
-        "deleteAccountConfirm": "本当にアカウントを削除しますか？永久に削除され、取り消せません。",
-        "logoutConfirm": "本当にログアウトしますか？",
-        "restorePurchases": "購入を復元",
-        "restorePurchasesDesc": "広告削除などの非消耗型購入を復元します。",
-        "restorePurchasesSuccess": "購入の復元が完了しました。",
-        "restorePurchasesFail": "購入の復元に失敗しました。",
-        "restorePurchasesUnavailable": "この端末では購入をサポートしていません。",
-        "restorePurchasesEmpty": "復元できる購入がありません。",
-        "privacyPolicy": "プライバシーポリシー",
-        "privacyPolicyDesc": "サービスにおける個人情報の取り扱いを確認できます。",
-        "viewPrivacyPolicy": "プライバシーポリシーを見る",
-        "tutorial": "チュートリアル",
-        "tutorialDesc": "アプリの使い方をもう一度確認したい場合は、チュートリアルを再表示してください。",
-        "viewTutorial": "チュートリアルをもう一度見る"
-    },
-    "report": {
-        "button": "通報",
-        "title": "プレイヤーを通報",
-        "description": "通報理由を入力してください。",
-        "descriptionWithTarget": "{{target}} を通報する理由を入力してください。",
-        "placeholder": "通報理由を入力してください。",
-        "submit": "通報する",
-        "success": "通報を受け付けました。",
-        "fail": "通報の送信に失敗しました。"
-    },
-    "game": {
-        "waiting": "ゲーム待機中...",
-        "victory": "勝利",
-        "defeat": "敗北",
-        "returnMenu": "メニューに戻る",
-        "reconnecting": "相手の接続待ち...",
-        "reconnectingDesc": "相手の接続が切れました。不戦勝まで:",
-        "myTime": "タイム",
-        "rank": "ランク",
-        "normal": "ノーマル",
-        "rankScore": "ランクスコア",
-        "unknownPlayer": "不明なプレイヤー",
-        "guest": "ゲスト",
-        "you": "あなた",
-        "opponent": "相手",
-        "opponentWaiting": "相手を待っています...",
-        "draw": "引き分け",
-        "roundResult": "ラウンド {{round}} 結果",
-        "matchResult": "試合結果",
-        "startingIn": "開始まで",
-        "roundFinished": "ラウンド終了",
-        "total": "合計",
-        "great": "いいね！",
-        "tier": "ティア",
-        "table": {
-            "round": "ラウンド",
-            "myScore": "自分",
-            "opScore": "相手",
-            "result": "結果",
-            "win": "勝",
-            "lose": "負",
-            "draw": "分"
-        }
-    },
-    "user": {
-        "level": "レベル",
-        "rank": "ランク"
-    },
-    "profile": {
-        "nicknameSetupTitle": "ニックネーム設定",
-        "nicknameSetupDesc": "ゲームで使うニックネームを入力してください。",
-        "nicknamePlaceholder": "ニックネーム入力",
-        "selectCountry": "国を選択",
-        "edit": "編集",
-        "highscoresTitle": "ハイスコア",
-        "highscoresColumns": {
-            "game": "ゲーム",
-            "highscore": "ハイスコア",
-            "rankWinRate": "ランク勝率"
-        },
-        "highscoreLeaderboardTitle": "トップ10",
-        "highscoreLeaderboardEmpty": "記録がありません。",
-        "highscoreLeaderboardColumns": {
-            "rank": "#",
-            "player": "プレイヤー",
-            "score": "スコア"
-        },
-        "guestTitle": "ゲストアカウント",
-        "guestDesc": "ゲストはログアウト・アプリ削除・端末変更でデータが消える可能性があります。Googleアカウントを連携してください。",
-        "linkGoogle": "Googleアカウント連携",
-        "statsTitle": "能力値",
-        "stats": {
-            "speed": "スピード",
-            "memory": "記憶力",
-            "judgment": "判断力",
-            "calculation": "計算力",
-            "accuracy": "正確さ",
-            "observation": "観察力"
-        },
-        "changeAvatar": "写真変更",
-        "avatarUploading": "アップロード中...",
-        "avatarInvalidType": "対応していない画像形式です。",
-        "avatarTooLarge": "ファイルサイズが大きすぎます。",
-        "avatarUploadSuccess": "プロフィール写真を更新しました。",
-        "avatarUploadFail": "プロフィール写真のアップロードに失敗しました",
-        "record": "戦績",
-        "disconnects": "切断",
-        "updateSuccess": "更新成功",
-        "updateFail": "更新失敗",
-        "deleteSuccess": "削除成功",
-        "deleteFail": "削除失敗"
-    },
-    "matchmaking": {
-        "searching": "検索中...",
-        "description": "対戦相手を探しています",
-        "cancel": "キャンセル",
-        "found": "マッチ成立!",
-        "entering": "アリーナへ移動中...",
-        "timeout": "マッチ不成立",
-        "timeoutDesc": "対戦相手が見つかりませんでした",
-        "range": "範囲",
-        "rankLevelRequired": "ランクはレベル{{level}}から解放されます。"
-    },
-    "rps": {
-        "ready": "準備...",
-        "beatIt": "勝て！",
-        "lose": "負けて！",
-        "reverse": "逆",
-        "round": "ラウンド",
-        "titleWin": "勝つじゃんけん",
-        "titleLose": "負けるじゃんけん",
-        "title": "じゃんけん",
-        "instruction": "指示に従って、勝つか負ける手を選んで！"
-    },
-    "number": {
-        "title": "数字の順序",
-        "instruction": "小さい順に数字をタップ！",
-        "asc": "小さい数から押してください！",
-        "desc": "大きい数から押してください！",
-        "ready": "準備",
-        "panel": "パネル",
-        "titleDesc": "数字逆順序",
-        "instructionDesc": "大きい順に数字をタップ！"
-    },
-    "math": {
-        "title": "暗算チャレンジ",
-        "instruction": "式を計算して正解を選んでください"
-    },
-    "ten": {
-        "title": "10作り",
-        "instruction": "選んだ数字の合計が10になるようにしてください。"
-    },
-    "color": {
-        "title": "色合わせ",
-        "instruction": "文字と枠の色が一致するボタンを押してください",
-        "red": "赤",
-        "blue": "青",
-        "green": "緑",
-        "yellow": "黄"
-    },
-    "memory": {
-        "title": "記憶力マッチ",
-        "instruction": "カードの位置を覚えて「記憶完了」ボタンを押してください。その後、ペアを選んでください。",
-        "btn_memorized": "覚えた！",
-        "memorize_hint": "カードを覚えてください！",
-        "find_pairs": "ペアを見つけてください！"
-    },
-    "sequence": {
-        "title": "逆順序",
-        "instruction": "表示された順序の逆順で押してください",
-        "titleNormal": "順序記憶",
-        "instructionNormal": "表示された順序通りに押してください"
-    },
-    "largest": {
-        "title": "最大値を探せ",
-        "instruction": "結果が一番大きい式をタップ"
-    },
-    "pair": {
-        "title": "ペア探し",
-        "instruction": "一つだけあるペアを見つけてください！"
-    },
-    "updown": {
-        "title": "アップダウン",
-        "instruction": "前の数字より大きければ上に、小さければ下にスライドしてください。",
-        "prev": "前の数字",
-        "start": "開始"
-    },
-    "slider": {
-        "title": "数字スライダー",
-        "instruction": "隣り合う数字を足して目標値にしてください！",
-        "target": "目標合計"
-    },
-    "arrow": {
-        "title": "矢印スライダー",
-        "blue": "青 = そのまま",
-        "red": "赤 = 反対へ",
-        "instruction": "青は矢印方向へ、赤は反対方向へスワイプ！"
-    },
-    "fillBlanks": {
-        "title": "空欄埋め",
-        "instruction": "正解になるように、空欄に入る数字を選んでください。"
-    },
-    "findOperator": {
-        "title": "記号埋め",
-        "instruction": "正解になるように、適切な演算記号を選んでください。"
-    },
-    "ladder": {
-        "title": "あみだくじ",
-        "instruction": "道をたどって正しい到着点を見つけてください！"
-    },
-    "path": {
-        "title": "パスランナー",
-        "instruction": "ボタンを使って緑のマスを青いマスまで移動してください。ボタンの位置が変わるので注意してください。",
-        "shuffle": "シャッフル"
-    },
-    "blindPath": {
-        "title": "ブラインドパス",
-        "instruction": "白い道を覚えてから、ボタンで緑のマスを動かして青いマスに到達してください。動き始めると道は消えます。壁にぶつかると減点されますが、道は再び表示されます。",
-        "memorizeHint": "道を覚えて！",
-        "runHint": "道を進め！",
-        "memorized": "覚えた！"
-    },
-    "balls": {
-        "title": "ボールカウント",
-        "instruction": "動くボールの数を数えて正解をタップ。"
-    },
-    "catchColor": {
-        "title": "カラーキャッチ",
-        "instruction": "バーをスライドして、バーと同じ色のボールを受け取りましょう。違う色を取ると減点され、バーの色は変化し続けます。",
-        "switchSoon": "まもなく色が切り替わります"
-    },
-    "tapTheColor": {
-        "title": "カラータップ",
-        "instruction": "色の位置を覚えたら「記憶完了」ボタンを押してください。上部に表示される色の順番どおりに、覚えたボタンを選んでください。",
-        "memorize": "色の位置を覚えてください！",
-        "remembered": "覚えた！"
-    },
-    "aim": {
-        "title": "エイムゲーム",
-        "instruction": "赤いターゲットを素早くタップして消してください。青いターゲットは消してはいけません。"
-    },
-    "mostColor": {
-        "title": "最多色探し",
-        "instruction": "画面で最も多く表示された色を選んでください。"
-    },
-    "sorting": {
-        "title": "仕分けゲーム",
-        "instruction": "最初のカードは好きな方向へ送ってください。その後は、同じ記号のカードは前と同じ方向に、違う記号のカードは反対方向にスライドしてください。上部の次のカードを先に見て準備できます。",
-        "firstMoveHint": "最初はどちらでもOK！"
-    },
-    "spy": {
-        "title": "スパイ探し",
-        "instruction": "記号を覚えたら「記憶完了」ボタンを押してください。その後、変わった記号を見つけてください。スパイの数は徐々に増えることがあります。",
-        "memorize": "覚えて！",
-        "find": "変わったのは？",
-        "ready": "覚えた！"
-    },
-    "timingBar": {
-        "title": "タイミングバー",
-        "instruction": "落ちてくるバーがターゲットに重なったらタップ！"
-    },
-    "colorTiming": {
-        "title": "カラータイミング",
-        "instruction": "青いボールが左の円に、赤いボールが右の円に入ったタイミングでタップしてください。逆の色は減点です。"
-    },
-    "stairway": {
-        "title": "天国の階段",
-        "instruction": "階段がある方向を押して、階段を登ってください。",
-        "scoreLabel": "階段"
-    },
-    "tutorial": {
-        "normal": "🌍 世界中のプレイヤーとミニゲーム対戦を楽しもう！",
-        "rank": "🏆 同じ実力のプレイヤーとランク戦！",
-        "practice": "💪 好きなゲームを自由に練習できます！",
-        "ranking": "👑 世界で一番賢いプレイヤーをチェック！",
-        "shop": "🛒 鉛筆購入や広告削除ができます！",
-        "settings": "⚙️ 音量や言語などの設定を変更できます！",
-        "login": "👤 アカウント連携で安全にプレイ！",
-        "profile": "📊 実力・能力値・スコアを確認！",
-        "next": "次へ",
-        "done": "完了",
-        "skip": "スキップ",
-        "loginNow": "今すぐログイン"
-    }
+    "subtitle": "Speed & Intelligence"
+  },
+  "review": {
+    "enjoyTitle": "ゲーム楽しかったですか？",
+    "enjoySubtitle": "レビューが大きな力になります！",
+    "enjoyYes": "はい！😊",
+    "enjoyNo": "いまいち 😐"
+  },
+  "mailbox": {
+    "title": "メールボックス",
+    "unread": "未読",
+    "read": "既読",
+    "empty": "メールはありません。",
+    "selectHint": "メールを選択してください。",
+    "untitled": "無題",
+    "noContent": "内容がありません。",
+    "rewardTitle": "受け取れる報酬",
+    "rewardPencils": "鉛筆 +{{count}}",
+    "rewardPracticeNotes": "練習ノート +{{count}}",
+    "claim": "受け取る",
+    "claimed": "受け取り済み",
+    "claimSuccess": "報酬を受け取りました。(+{{pencils}} 鉛筆, +{{notes}} 練習ノート)",
+    "claimBlockedPencilsFull": "鉛筆が5本以上ある間は受け取れません。先に鉛筆を使ってください。"
+  }
 }

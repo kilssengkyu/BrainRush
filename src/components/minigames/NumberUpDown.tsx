@@ -99,7 +99,7 @@ const NumberUpDown: React.FC<NumberUpDownProps> = ({ seed, onScore, isPlaying })
         if (isUpCorrect || isDownCorrect) {
             // Correct
             setFeedback('correct');
-            onScore(100); // Score points
+            onScore(70); // Score points (rebalanced)
             playSound('correct');
 
             // Animate card flying away
@@ -142,12 +142,6 @@ const NumberUpDown: React.FC<NumberUpDownProps> = ({ seed, onScore, isPlaying })
 
     return (
         <div className="flex flex-col items-center justify-center w-full h-full relative overflow-hidden" ref={containerRef}>
-            {/* Instruction */}
-            <div className="absolute top-10 text-center z-10 pointer-events-none">
-                <h2 className="text-3xl font-black text-white drop-shadow-md mb-2">{t('updown.title')}</h2>
-                <p className="text-white/80 animate-pulse">{t('updown.instruction')}</p>
-            </div>
-
             {/* Previous Number Indicator REMOVED as per user request to enforce memory */
                 /* <div className="absolute bottom-20 ..."> ... </div> */
             }
@@ -156,10 +150,10 @@ const NumberUpDown: React.FC<NumberUpDownProps> = ({ seed, onScore, isPlaying })
             {isGameStarted && (
                 <>
                     <div className="absolute inset-x-0 top-1/4 flex justify-center opacity-5 pointer-events-none">
-                        <ChevronUp size={64} className="text-white" />
+                        <ChevronUp size={64} className="text-slate-900 dark:text-white" />
                     </div>
                     <div className="absolute inset-x-0 bottom-1/4 flex justify-center opacity-5 pointer-events-none">
-                        <ChevronDown size={64} className="text-white" />
+                        <ChevronDown size={64} className="text-slate-900 dark:text-white" />
                     </div>
                 </>
             )}

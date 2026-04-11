@@ -198,7 +198,10 @@ const FriendList: React.FC<FriendListProps> = ({ onChatClick, onChallengeClick, 
                 .not('content', 'like', 'INVITE_ACCEPTED:%')
                 .not('content', 'like', 'INVITE_REJECTED:%')
                 .not('content', 'like', 'INVITE_BUSY:%')
-                .not('content', 'like', 'INVITE_CANCELLED:%');
+                .not('content', 'like', 'INVITE_CANCELLED:%')
+                .not('content', 'like', 'REMATCH_REQUEST:%')
+                .not('content', 'like', 'REMATCH_ACCEPTED:%')
+                .not('content', 'like', 'REMATCH_REJECTED:%');
 
             if (error) throw error;
 
@@ -266,18 +269,18 @@ const FriendList: React.FC<FriendListProps> = ({ onChatClick, onChallengeClick, 
     };
 
     if (loading) {
-        return <div className="p-4 text-center text-gray-400">{t('social.loadingFriends')}</div>;
+        return <div className="p-4 text-center text-slate-500 dark:text-gray-400">{t('social.loadingFriends')}</div>;
     }
 
     return (
-        <div className="bg-slate-800 rounded-lg p-4 shadow-lg border border-slate-700">
-            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                <User size={20} className="text-blue-400" />
+        <div className="bg-white dark:bg-slate-800 rounded-lg p-4 shadow-sm dark:shadow-lg border border-slate-200 dark:border-slate-700">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                <User size={20} className="text-blue-600 dark:text-blue-400" />
                 {t('social.friendList')}
             </h3>
 
             {friends.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-slate-500 dark:text-gray-500">
                     <p>{t('social.noFriends')}</p>
                 </div>
             ) : (
@@ -288,105 +291,105 @@ const FriendList: React.FC<FriendListProps> = ({ onChatClick, onChallengeClick, 
                         const isOnline = onlineUsers.has(friend.id);
                         const canChallenge = isOnline && !isInGame;
                         return (
-                        <div
-                            key={friend.id}
-                            className="flex items-center justify-between bg-slate-700/50 p-3 rounded-lg hover:bg-slate-700 transition cursor-pointer"
-                            onClick={() => setViewProfileId(friend.id)}
-                        >
-                            <div className="flex items-center gap-3">
-                                <button
-                                    type="button"
-                                    className="w-10 h-10 rounded-full bg-slate-600 overflow-hidden border border-slate-500 relative cursor-zoom-in"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (friend.avatar_url) {
-                                            setAvatarPreview({ src: friend.avatar_url, alt: friend.nickname });
-                                        }
-                                    }}
-                                    aria-label={t('profile.avatarAltWithName', { nickname: friend.nickname })}
-                                >
-                                    {unreadCount > 0 && (
-                                        <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-slate-700" aria-hidden="true"></span>
-                                    )}
-                                    {friend.avatar_url ? (
-                                        <img src={friend.avatar_url} alt={friend.nickname} className="w-full h-full object-cover" />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-slate-400">
-                                            <User size={20} />
-                                        </div>
-                                    )}
-                                </button>
-                                <div className="flex flex-col">
-                                    <div className="flex items-center gap-1.5">
-                                        <Flag code={friend.country} size="sm" />
-                                        <span className="font-semibold text-white">{friend.nickname}</span>
-                                        {typeof friend.level === 'number' && (
-                                            <LevelBadge level={friend.level} size="xs" className="ml-1" />
+                            <div
+                                key={friend.id}
+                                className="flex items-center justify-between bg-slate-50 dark:bg-slate-700/50 p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer border border-transparent dark:border-transparent"
+                                onClick={() => setViewProfileId(friend.id)}
+                            >
+                                <div className="flex items-center gap-3">
+                                    <button
+                                        type="button"
+                                        className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-600 overflow-hidden border border-slate-300 dark:border-slate-500 relative cursor-zoom-in"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (friend.avatar_url) {
+                                                setAvatarPreview({ src: friend.avatar_url, alt: friend.nickname });
+                                            }
+                                        }}
+                                        aria-label={t('profile.avatarAltWithName', { nickname: friend.nickname })}
+                                    >
+                                        {unreadCount > 0 && (
+                                            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-slate-700" aria-hidden="true"></span>
                                         )}
-                                    </div>
-
-                                    <div className="flex items-center gap-3 text-xs">
-                                        <div className="flex items-center gap-1 text-purple-400 font-medium">
-                                            <Trophy size={10} />
-                                            <span>{friend.mmr || 1000}</span>
+                                        {friend.avatar_url ? (
+                                            <img src={friend.avatar_url} alt={friend.nickname} className="w-full h-full object-cover" />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-slate-400">
+                                                <User size={20} />
+                                            </div>
+                                        )}
+                                    </button>
+                                    <div className="flex flex-col">
+                                        <div className="flex items-center gap-1.5">
+                                            <Flag code={friend.country} size="sm" />
+                                            <span className="font-semibold text-slate-900 dark:text-white">{friend.nickname}</span>
+                                            {typeof friend.level === 'number' && (
+                                                <LevelBadge level={friend.level} size="xs" className="ml-1" />
+                                            )}
                                         </div>
-                                        <div className="flex items-center gap-1 text-gray-400">
-                                            <div className={`w-1.5 h-1.5 rounded-full ${isInGame ? 'bg-amber-400' : isOnline ? 'bg-green-500' : 'bg-gray-500'}`}></div>
-                                            {isInGame
-                                                ? <span className="text-amber-400">{t('social.ingame')}</span>
-                                                : isOnline
-                                                    ? <span className="text-green-400">{t('social.online')}</span>
-                                                    : <span>{formatLastSeen(friend.last_seen)}</span>}
+
+                                        <div className="flex items-center gap-3 text-xs">
+                                            <div className="flex items-center gap-1 text-purple-600 dark:text-purple-400 font-medium">
+                                                <Trophy size={10} />
+                                                <span>{friend.mmr || 1000}</span>
+                                            </div>
+                                            <div className="flex items-center gap-1 text-slate-500 dark:text-gray-400">
+                                                <div className={`w-1.5 h-1.5 rounded-full ${isInGame ? 'bg-amber-500 dark:bg-amber-400' : isOnline ? 'bg-green-500' : 'bg-slate-400 dark:bg-gray-500'}`}></div>
+                                                {isInGame
+                                                    ? <span className="text-amber-500 dark:text-amber-400">{t('social.ingame')}</span>
+                                                    : isOnline
+                                                        ? <span className="text-emerald-600 dark:text-green-400">{t('social.online')}</span>
+                                                        : <span>{formatLastSeen(friend.last_seen)}</span>}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); onChatClick(friend.id, friend.nickname); }}
-                                    className="relative p-2 bg-blue-600/20 text-blue-400 rounded-full hover:bg-blue-600 hover:text-white transition"
-                                    title={t('social.chat')}
-                                >
-                                    <MessageCircle size={18} />
-                                    {unreadCount > 0 && (
-                                        <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-red-500 ring-2 ring-slate-800" aria-hidden="true"></span>
-                                    )}
-                                </button>
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (!isOnline) {
-                                            showToast(t('social.challengeOffline'), 'info');
-                                            return;
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); onChatClick(friend.id, friend.nickname); }}
+                                        className="relative p-2 bg-blue-100 dark:bg-blue-600/20 text-blue-600 dark:text-blue-400 rounded-full hover:bg-blue-600 hover:text-white dark:hover:text-white transition"
+                                        title={t('social.chat')}
+                                    >
+                                        <MessageCircle size={18} />
+                                        {unreadCount > 0 && (
+                                            <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-slate-800" aria-hidden="true"></span>
+                                        )}
+                                    </button>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (!isOnline) {
+                                                showToast(t('social.challengeOffline'), 'info');
+                                                return;
+                                            }
+                                            if (isInGame) {
+                                                showToast(t('social.challengeInGame'), 'info');
+                                                return;
+                                            }
+                                            onChallengeClick(friend.id);
+                                        }}
+                                        className={`p-2 rounded-full transition ${canChallenge ? 'bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white' : 'bg-red-600/10 text-red-400/50 cursor-not-allowed'}`}
+                                        title={
+                                            !isOnline
+                                                ? t('social.challengeOffline')
+                                                : isInGame
+                                                    ? t('social.challengeInGame')
+                                                    : t('social.challenge')
                                         }
-                                        if (isInGame) {
-                                            showToast(t('social.challengeInGame'), 'info');
-                                            return;
-                                        }
-                                        onChallengeClick(friend.id);
-                                    }}
-                                    className={`p-2 rounded-full transition ${canChallenge ? 'bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white' : 'bg-red-600/10 text-red-400/50 cursor-not-allowed'}`}
-                                    title={
-                                        !isOnline
-                                            ? t('social.challengeOffline')
-                                            : isInGame
-                                                ? t('social.challengeInGame')
-                                                : t('social.challenge')
-                                    }
-                                    disabled={!canChallenge}
-                                >
-                                    <Swords size={18} />
-                                </button>
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); handleDelete(friend.id, friend.nickname); }}
-                                    className="p-2 bg-gray-600/20 text-gray-400 rounded-full hover:bg-gray-600 hover:text-white transition"
-                                    title={t('social.deleteFriend')}
-                                >
-                                    <UserMinus size={18} />
-                                </button>
+                                        disabled={!canChallenge}
+                                    >
+                                        <Swords size={18} />
+                                    </button>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); handleDelete(friend.id, friend.nickname); }}
+                                        className="p-2 bg-slate-200 dark:bg-gray-600/20 text-slate-500 dark:text-gray-400 rounded-full hover:bg-slate-300 dark:hover:bg-gray-600 hover:text-slate-900 dark:hover:text-white transition"
+                                        title={t('social.deleteFriend')}
+                                    >
+                                        <UserMinus size={18} />
+                                    </button>
+                                </div>
                             </div>
-                        </div>
                         );
                     })}
                 </div>

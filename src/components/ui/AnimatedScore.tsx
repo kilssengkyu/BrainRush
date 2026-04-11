@@ -4,9 +4,10 @@ interface AnimatedScoreProps {
     value: number;
     duration?: number; // animation duration in ms
     className?: string;
+    useGrouping?: boolean;
 }
 
-export const AnimatedScore = ({ value, duration = 300, className = '' }: AnimatedScoreProps) => {
+export const AnimatedScore = ({ value, duration = 300, className = '', useGrouping = true }: AnimatedScoreProps) => {
     const [displayValue, setDisplayValue] = useState(value);
     const animationRef = useRef<number>(0);
     const startValueRef = useRef(value);
@@ -48,5 +49,9 @@ export const AnimatedScore = ({ value, duration = 300, className = '' }: Animate
         };
     }, [value, duration]);
 
-    return <span className={className}>{displayValue.toLocaleString()}</span>;
+    return (
+        <span className={className}>
+            {displayValue.toLocaleString(undefined, { useGrouping })}
+        </span>
+    );
 };

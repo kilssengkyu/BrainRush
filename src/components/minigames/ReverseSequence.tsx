@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { usePanelProgress } from '../../hooks/usePanelProgress';
 import { motion } from 'framer-motion';
-import { useTranslation } from 'react-i18next';
 import { SeededRandom } from '../../utils/seededRandom';
 import { useSound } from '../../contexts/SoundContext';
 
@@ -20,9 +20,8 @@ const COLORS = [
 ];
 
 const ReverseSequence: React.FC<ReverseSequenceProps> = ({ seed, onScore, isPlaying }) => {
-    const { t } = useTranslation();
     const { playSound } = useSound();
-    const [stage, setStage] = useState(1);
+    const [stage, setStage] = usePanelProgress(seed, 'stage', 1);
     const [sequence, setSequence] = useState<number[]>([]);
     const [phase, setPhase] = useState<'IDLE' | 'SHOWING' | 'INPUT' | 'SUCCESS' | 'FAILURE'>('IDLE');
     const [userInput, setUserInput] = useState<number[]>([]);
@@ -158,17 +157,6 @@ const ReverseSequence: React.FC<ReverseSequenceProps> = ({ seed, onScore, isPlay
 
     return (
         <div className="w-full h-full flex flex-col items-center justify-center relative">
-            <h2 className="text-4xl font-black text-white mb-8 drop-shadow-md">
-                {t('sequence.title')}
-            </h2>
-
-            {/* Instruction */}
-            <div className="h-8 mb-8">
-                {phase === 'SHOWING' && <span className="text-yellow-400 font-bold animate-pulse">{t('sequence.instruction')}</span>}
-                {phase === 'INPUT' && <span className="text-green-400 font-bold">{t('sequence.instruction')}</span>}
-                {phase === 'SUCCESS' && <span className="text-blue-400 font-bold">{t('game.great')}</span>}
-            </div>
-
             <div className="grid grid-cols-3 gap-4 w-72 h-72">
                 {[...Array(GRID_SIZE)].map((_, i) => {
                     const isSequenceMember = sequence.includes(i);
@@ -180,7 +168,7 @@ const ReverseSequence: React.FC<ReverseSequenceProps> = ({ seed, onScore, isPlay
                     // INPUT: isSequenceMember? -> Color. Clicked? -> Dimmed or Checkmark?
                     // Let's keep them colored until clicked? Or just always colored?
 
-                    let bgClass = 'bg-gray-800';
+                    let bgClass = 'bg-white dark:bg-gray-800';
                     let style: React.CSSProperties = {};
 
                     if (phase === 'SHOWING') {
@@ -195,7 +183,7 @@ const ReverseSequence: React.FC<ReverseSequenceProps> = ({ seed, onScore, isPlay
                             // "생긴 반대순으로 누르면" -> usually they disappear or dim.
                             const isClicked = userInput.includes(i);
                             if (isClicked) {
-                                bgClass = 'bg-gray-900 opacity-30';
+                                bgClass = 'bg-slate-200 dark:bg-gray-900 opacity-30';
                             } else {
                                 style = { backgroundColor: color || '#fff' };
                                 bgClass = 'shadow-lg hover:brightness-110';

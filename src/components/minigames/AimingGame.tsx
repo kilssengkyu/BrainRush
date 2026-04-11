@@ -134,24 +134,26 @@ const AimingGame: React.FC<AimingGameProps> = ({ seed, onScore, isPlaying }) => 
         }
 
         // Despawn / Timeout logic
+        let expiredPenaltyBonus = 0;
         setTargets(prev => {
             const nextTargets = prev.filter(t => {
                 const age = now - t.createdAt;
                 const expired = age > t.duration;
 
                 if (expired) {
-                    // Handle expiration logic
                     if (t.type === 'penalty') {
-                        // Blue circle disappeared without being clicked -> Bonus!
-                        onScore(5);
-                        // Optional: play sound or visual effect for "Safe"
+                        expiredPenaltyBonus += 5;
                     }
-                    return false; // Remove
+                    return false;
                 }
-                return true; // Keep
+                return true;
             });
             return nextTargets;
         });
+
+        if (expiredPenaltyBonus !== 0) {
+            onScore(expiredPenaltyBonus);
+        }
 
         requestRef.current = requestAnimationFrame(gameLoop);
     }, [spawnTargets, getGameParams, onScore, isPlaying]);
@@ -199,51 +201,41 @@ const AimingGame: React.FC<AimingGameProps> = ({ seed, onScore, isPlaying }) => 
         setTimeout(() => setScorePopup(null), type === 'perfect' ? 800 : 500);
     };
 
-    if (!seed) return <div className="text-white">{t('common.loading')}</div>;
+    if (!seed) return <div className="text-slate-900 dark:text-white">{t('common.loading')}</div>;
 
     return (
         <div className="relative w-full h-full overflow-hidden select-none touch-manipulation">
-            {/* Instruction Overlay (fades out or stays at top) */}
-            <div className="absolute top-4 left-0 w-full text-center pointer-events-none z-0 opacity-50">
-                <h2 className="text-3xl font-black text-white drop-shadow-md">{t('aim.title')}</h2>
-                <p className="text-sm text-gray-300">{t('aim.instruction')}</p>
-            </div>
-
             {/* Game Field */}
             <div className="relative w-full h-full">
                 <AnimatePresence>
                     {targets.map(target => (
-                        <motion.button
+                        <div
                             key={target.id}
-                            initial={{ scale: 0, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0, opacity: 0 }}
-                            transition={{ duration: 0.2 }}
-                            onPointerDown={(e) => {
-                                e.preventDefault();
-                                if (e.currentTarget.setPointerCapture) {
-                                    try {
-                                        e.currentTarget.setPointerCapture(e.pointerId);
-                                    } catch {
-                                        // Ignore capture errors on unsupported pointer types
-                                    }
-                                }
-                                handleTargetClick(target);
-                            }}
-                            className={`absolute w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 shadow-xl flex items-center justify-center
-                                ${target.type === 'score'
-                                    ? 'bg-red-500 border-red-300 shadow-red-500/50'
-                                    : 'bg-blue-500 border-blue-300 shadow-blue-500/50'}`}
+                            className="absolute"
                             style={{
                                 left: `${target.x}%`,
                                 top: `${target.y}%`,
-                                transform: 'translate(-50%, -50%)', // Centering based on x/y
-                                cursor: 'pointer',
+                                transform: 'translate(-50%, -50%)',
                                 zIndex: 10
                             }}
                         >
-                            <div className="w-2/3 h-2/3 rounded-full bg-white/20 animate-pulse" />
-                        </motion.button>
+                            <motion.div
+                                initial={{ scale: 0, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                exit={{ scale: 0, opacity: 0 }}
+                                transition={{ duration: 0.2 }}
+                                onPointerDown={(e) => {
+                                    e.preventDefault();
+                                    handleTargetClick(target);
+                                }}
+                                className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 shadow-xl flex cursor-pointer items-center justify-center
+                                    ${target.type === 'score'
+                                        ? 'bg-red-500 border-red-300 shadow-red-500/50'
+                                        : 'bg-blue-500 border-blue-300 shadow-blue-500/50'}`}
+                            >
+                                <div className="w-2/3 h-2/3 rounded-full bg-white/20 animate-pulse" />
+                            </motion.div>
+                        </div>
                     ))}
                 </AnimatePresence>
 

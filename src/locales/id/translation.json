@@ -1,469 +1,685 @@
 {
-    "app": {
-        "title": "BrainRush",
-        "subtitle": "Kecepatan & Kecerdasan"
+  "app": {
+    "title": "BrainRush",
+    "subtitle": "Kecepatan & Kecerdasan"
+  },
+  "common": {
+    "cancel": "Batal",
+    "confirm": "Konfirmasi",
+    "close": "Tutup",
+    "retry": "Coba lagi",
+    "loading": "Memuat...",
+    "noResults": "Tidak ada hasil",
+    "add": "Tambah",
+    "error": "Terjadi kesalahan.",
+    "google": "Google",
+    "or": "Atau",
+    "timeAgo": {
+      "justNow": "Baru saja",
+      "minute": "{{count}} m lalu",
+      "hour": "{{count}} j lalu",
+      "day": "{{count}} h lalu",
+      "longAgo": "Lama sekali"
     },
-    "common": {
-        "cancel": "Batal",
-        "confirm": "Konfirmasi",
-        "close": "Tutup",
-        "retry": "Coba lagi",
-        "loading": "Memuat...",
-        "noResults": "Tidak ada hasil",
-        "add": "Tambah",
-        "error": "Terjadi kesalahan.",
-        "google": "Google",
-        "or": "Atau",
-        "timeAgo": {
-            "justNow": "Baru saja",
-            "minute": "{{count}} m lalu",
-            "hour": "{{count}} j lalu",
-            "day": "{{count}} h lalu",
-            "longAgo": "Lama sekali"
-        }
+    "exitAppTitle": "Keluar Aplikasi",
+    "exitAppConfirm": "Apakah Anda ingin keluar dari aplikasi?",
+    "open": "Buka"
+  },
+  "auth": {
+    "loginRequired": "Login diperlukan.",
+    "guestMode": "Mode Tamu",
+    "guestWarning": "Akun tamu bisa kehilangan progres tersimpan.",
+    "terms": "Dengan melanjutkan, Anda menyetujui Syarat Layanan kami.",
+    "loggedOutByOtherDevice": "Anda keluar karena akun ini digunakan di perangkat lain."
+  },
+  "streak": {
+    "bonusActive": "Bonus aktif",
+    "bonusIncluded": "Bonus beruntun +{{bonus}}",
+    "nextBonus": " menang → +{{bonus}}",
+    "loseBonusTitle": "Hadiah Kekalahan Beruntun",
+    "loseBonusMessage": "Kamu kalah 3 kali berturut-turut. Ini pensil penyemangat!",
+    "loseBonusSubtext": "Ini tidak selamanya, jadi menangkan yang berikutnya! 💪"
+  },
+  "social": {
+    "friends": "Teman",
+    "friendList": "Daftar teman",
+    "friendRequests": "Permintaan pertemanan",
+    "addFriend": "Tambah teman",
+    "searchNickname": "Cari nickname",
+    "searchError": "Terjadi kesalahan saat mencari.",
+    "userNotFound": "Pengguna tidak ditemukan.",
+    "cannotAddSelf": "Anda tidak dapat menambahkan diri sendiri.",
+    "alreadyFriends": "Kalian sudah berteman.",
+    "requestPending": "Permintaan sudah dikirim atau masih menunggu.",
+    "blocked": "Pengguna diblokir atau telah memblokir Anda.",
+    "requestSent": "Permintaan pertemanan terkirim!",
+    "requestFail": "Gagal mengirim permintaan pertemanan.",
+    "loadingFriends": "Memuat daftar teman...",
+    "noFriends": "Tidak ada teman ditemukan.",
+    "deleteFriend": "Hapus teman",
+    "deleteFriendConfirm": "Yakin ingin menghapus '{{nickname}}'?",
+    "deleteFriendFail": "Gagal menghapus teman",
+    "online": "Online",
+    "ingame": "Sedang bermain",
+    "offline": "Offline",
+    "challengeTitle": "Tantang teman",
+    "challengeConfirm": "Ingin menantang teman ini?",
+    "challengeFail": "Gagal menantang: ",
+    "challengeWaiting": "Undangan terkirim. Menunggu diterima...",
+    "challengeWaitingTitle": "Menunggu pertandingan persahabatan",
+    "challengeWaitingDesc": "Menunggu teman Anda menerima.",
+    "challengeWaitingTime": "Sisa waktu: {{seconds}}d",
+    "challengeAccepted": "Pertandingan persahabatan diterima!",
+    "challengeRejected": "Pertandingan persahabatan ditolak.",
+    "challengeTimeout": "Undangan habis waktu.",
+    "challengeCancelled": "Undangan dibatalkan.",
+    "challengeAlreadyPending": "Anda sudah punya undangan yang masih aktif.",
+    "challengeInGame": "Anda tidak bisa mengundang teman yang sedang bermain.",
+    "challengeOffline": "Anda hanya bisa mengundang teman yang online.",
+    "inviteSenderFallback": "Teman",
+    "inviteTitle": "Permintaan pertandingan persahabatan",
+    "inviteBody": "'{{nickname}}' menantang Anda ke pertandingan persahabatan. Terima?",
+    "inviteInvalidSession": "Sesi game tidak valid atau sudah dimulai.",
+    "inviteJoinFail": "Gagal masuk ke game.",
+    "typeMessage": "Ketik pesan...",
+    "sendFail": "Gagal mengirim pesan",
+    "chat": "Chat",
+    "challenge": "Tantang",
+    "accept": "Terima",
+    "reject": "Tolak",
+    "newMessage": "Pesan baru dari {{nickname}}",
+    "chatRateLimited": "Batas kirim: kirim lagi dalam {{seconds}} dtk."
+  },
+  "menu": {
+    "normal": {
+      "title": "Mode Normal",
+      "subtitle": "Latihan otak dasar",
+      "matchRule": "Best of 3 (menang 2)"
     },
-    "auth": {
-        "loginRequired": "Login diperlukan.",
-        "guestMode": "Mode Tamu",
-        "guestWarning": "Akun tamu bisa kehilangan progres tersimpan.",
-        "terms": "Dengan melanjutkan, Anda menyetujui Syarat Layanan kami."
+    "rank": {
+      "title": "Mode Rank",
+      "subtitle": "Bersaing secara global",
+      "matchRule": "Best of 5 (menang 3)",
+      "burningTime": "Waktu Burning",
+      "burningTimeBenefit": "Tidak memakai pensil"
     },
-    "social": {
-        "friends": "Teman",
-        "friendList": "Daftar teman",
-        "friendRequests": "Permintaan pertemanan",
-        "addFriend": "Tambah teman",
-        "searchNickname": "Cari nickname",
-        "searchError": "Terjadi kesalahan saat mencari.",
-        "userNotFound": "Pengguna tidak ditemukan.",
-        "cannotAddSelf": "Anda tidak dapat menambahkan diri sendiri.",
-        "alreadyFriends": "Kalian sudah berteman.",
-        "requestPending": "Permintaan sudah dikirim atau masih menunggu.",
-        "blocked": "Pengguna diblokir atau telah memblokir Anda.",
-        "requestSent": "Permintaan pertemanan terkirim!",
-        "requestFail": "Gagal mengirim permintaan pertemanan.",
-        "loadingFriends": "Memuat daftar teman...",
-        "noFriends": "Tidak ada teman ditemukan.",
-        "deleteFriend": "Hapus teman",
-        "deleteFriendConfirm": "Yakin ingin menghapus '{{nickname}}'?",
-        "deleteFriendFail": "Gagal menghapus teman",
-        "online": "Online",
-        "ingame": "Sedang bermain",
-        "offline": "Offline",
-        "challengeTitle": "Tantang teman",
-        "challengeConfirm": "Ingin menantang teman ini?",
-        "challengeFail": "Gagal menantang: ",
-        "challengeWaiting": "Undangan terkirim. Menunggu diterima...",
-        "challengeWaitingTitle": "Menunggu pertandingan persahabatan",
-        "challengeWaitingDesc": "Menunggu teman Anda menerima.",
-        "challengeWaitingTime": "Sisa waktu: {{seconds}}d",
-        "challengeAccepted": "Pertandingan persahabatan diterima!",
-        "challengeRejected": "Pertandingan persahabatan ditolak.",
-        "challengeTimeout": "Undangan habis waktu.",
-        "challengeCancelled": "Undangan dibatalkan.",
-        "challengeAlreadyPending": "Anda sudah punya undangan yang masih aktif.",
-        "challengeInGame": "Anda tidak bisa mengundang teman yang sedang bermain.",
-        "challengeOffline": "Anda hanya bisa mengundang teman yang online.",
-        "inviteSenderFallback": "Teman",
-        "inviteTitle": "Permintaan pertandingan persahabatan",
-        "inviteBody": "'{{nickname}}' menantang Anda ke pertandingan persahabatan. Terima?",
-        "inviteInvalidSession": "Sesi game tidak valid atau sudah dimulai.",
-        "inviteJoinFail": "Gagal masuk ke game.",
-        "typeMessage": "Ketik pesan...",
-        "sendFail": "Gagal mengirim pesan",
-        "chat": "Chat",
-        "challenge": "Tantang",
-        "accept": "Terima",
-        "reject": "Tolak",
-        "newMessage": "Pesan baru dari {{nickname}}"
+    "all": "Semua",
+    "friendly": {
+      "title": "Mode Friendly",
+      "subtitle": "1vs1 dengan teman"
     },
-    "menu": {
-        "normal": {
-            "title": "Mode Normal",
-            "subtitle": "Latihan otak dasar"
-        },
-        "rank": {
-            "title": "Mode Rank",
-            "subtitle": "Bersaing secara global"
-        },
-        "all": "Semua",
-        "friendly": {
-            "title": "Mode Friendly",
-            "subtitle": "1vs1 dengan teman"
-        },
-        "practice": {
-            "title": "Mode Latihan",
-            "subtitle": "Latih mini game secara bebas"
-        },
-        "shop": "Toko",
-        "settings": "Pengaturan",
-        "login": "Masuk",
-        "logout": "Keluar",
-        "profile": "Profil"
+    "practice": {
+      "title": "Mode Latihan",
+      "subtitle": "Latih mini game secara bebas"
     },
-    "shop": {
-        "title": "Toko",
-        "subtitle": "Main lebih lama",
-        "removeAds": {
-            "title": "Paket Hapus Iklan",
-            "desc": "Tanpa iklan. Dapatkan pensil instan saat menekan hadiah iklan."
-        },
-        "pencils5": {
-            "title": "Pensil x5",
-            "desc": "Boost kecil untuk sesi singkat."
-        },
-        "pencils20": {
-            "title": "Pensil x20",
-            "desc": "Cocok untuk bermain harian."
-        },
-        "pencils100": {
-            "title": "Pensil x100",
-            "desc": "Nilai terbaik untuk jangka panjang."
-        },
-        "practiceNotes5": {
-            "title": "10 Catatan Latihan",
-            "desc": "Bagus untuk sesi latihan cepat."
-        },
-        "practiceNotes20": {
-            "title": "Catatan Latihan x20",
-            "desc": "Boost bagus untuk latihan lebih lama."
-        },
-        "practiceNotes100": {
-            "title": "Catatan Latihan x100",
-            "desc": "Nilai terbaik untuk latihan intensif."
-        },
-        "buy": "Beli",
-        "premium": "Premium",
-        "popular": "Populer",
-        "bestValue": "Nilai terbaik",
-        "notice": "Pembayaran diproses melalui App Store / Google Play.",
-        "comingSoon": "Alur pembelian sedang disiapkan...",
-        "priceTbd": "Segera",
-        "loading": "Memuat...",
-        "purchased": "Sudah dibeli",
-        "purchaseSuccess": "Pembelian berhasil.",
-        "purchaseFail": "Pembelian gagal.",
-        "billingUnavailable": "Penagihan tidak didukung di perangkat ini."
+    "shop": "Toko",
+    "settings": "Pengaturan",
+    "login": "Masuk",
+    "logout": "Keluar",
+    "profile": "Profil"
+  },
+  "shop": {
+    "title": "Toko",
+    "subtitle": "Main lebih lama",
+    "removeAds": {
+      "title": "Paket Hapus Iklan",
+      "desc": "Tanpa iklan. Dapatkan pensil instan saat menekan hadiah iklan."
     },
-    "leaderboard": {
-        "button": "Peringkat",
-        "title": "Peringkat",
-        "global": "Global",
-        "country": "Negara"
+    "pencils5": {
+      "title": "Pensil x5",
+      "desc": "Boost kecil untuk sesi singkat."
     },
-    "ad": {
-        "remaining": "Sisa hari ini: {{count}}/{{limit}}",
-        "limitReached": "Batas iklan harian tercapai.",
-        "limitReachedDesc": "Kembali besok untuk menonton lebih banyak iklan.",
-        "adFreeDesc": "Hadiah tanpa iklan. Dapatkan 1 pensil instan.",
-        "adFreeDescPracticeNotes": "Hadiah tanpa iklan. Dapatkan 2 catatan latihan instan.",
-        "claimBtn": "Dapatkan pensil",
-        "claimBtnPracticeNotes": "Dapatkan catatan latihan",
-        "granting": "Memberikan hadiah...",
-        "rewardFailed": "Hadiah gagal.",
-        "rewardFailedDesc": "Silakan coba lagi nanti.",
-        "title": "Dapatkan pensil",
-        "titlePracticeNotes": "Dapatkan catatan latihan",
-        "loading": "Memuat iklan...",
-        "watchDesc": "Tonton iklan singkat untuk mendapatkan 1 pensil!",
-        "watchDescPracticeNotes": "Tonton iklan singkat untuk mendapatkan 2 catatan latihan!",
-        "watchBtn": "Tonton iklan",
-        "watching": "Menonton iklan...",
-        "playing": "Iklan sedang diputar...",
-        "pencils": "Pensil",
-        "practiceNotes": "Catatan latihan",
-        "success": "Hadiah berhasil didapatkan."
+    "pencils20": {
+      "title": "Pensil x20",
+      "desc": "Cocok untuk bermain harian."
     },
-    "notifications": {
-        "fullTitle": "Pensil penuh",
-        "fullBody": "Pensil sudah penuh. Saatnya pakai otakmu!",
-        "reminderTitle": "Saatnya pakai otakmu",
-        "reminderBody": "Sudah 24 jam. Kembali dan main lagi!"
+    "pencils100": {
+      "title": "Pensil x100",
+      "desc": "Nilai terbaik untuk jangka panjang."
     },
-    "user": {
-        "level": "Level",
-        "rank": "Peringkat"
+    "practiceNotes5": {
+      "title": "10 Catatan Latihan",
+      "desc": "Bagus untuk sesi latihan cepat."
     },
-    "settings": {
-        "title": "Pengaturan",
-        "language": "Bahasa",
-        "sound": "Suara",
-        "masterVolume": "Volume utama",
-        "vibration": "Getaran",
-        "deleteAccount": "Hapus akun",
-        "deleteAccountConfirm": "Yakin ingin menghapus akun Anda? Ini permanen dan tidak bisa dibatalkan.",
-        "logoutConfirm": "Yakin ingin keluar?",
-        "restorePurchases": "Pulihkan pembelian",
-        "restorePurchasesDesc": "Pulihkan pembelian non-konsumsi seperti hapus iklan.",
-        "restorePurchasesSuccess": "Pembelian berhasil dipulihkan.",
-        "restorePurchasesFail": "Gagal memulihkan pembelian.",
-        "restorePurchasesUnavailable": "Penagihan tidak didukung di perangkat ini.",
-        "restorePurchasesEmpty": "Tidak ada pembelian untuk dipulihkan.",
-        "privacyPolicy": "Kebijakan Privasi",
-        "privacyPolicyDesc": "Tinjau bagaimana kami menangani data pribadi layanan.",
-        "viewPrivacyPolicy": "Lihat Kebijakan Privasi",
-        "tutorial": "Tutorial",
-        "tutorialDesc": "Jika ingin melihat kembali cara menggunakan aplikasi, buka lagi tutorialnya.",
-        "viewTutorial": "Lihat tutorial lagi"
+    "practiceNotes20": {
+      "title": "Catatan Latihan x20",
+      "desc": "Boost bagus untuk latihan lebih lama."
     },
-    "report": {
-        "button": "Laporkan",
-        "title": "Laporkan pemain",
-        "description": "Masukkan alasan laporan.",
-        "descriptionWithTarget": "Masukkan alasan untuk melaporkan {{target}}.",
-        "placeholder": "Tulis alasan laporan.",
-        "submit": "Kirim laporan",
-        "success": "Laporan berhasil dikirim.",
-        "fail": "Gagal mengirim laporan."
+    "practiceNotes100": {
+      "title": "Catatan Latihan x100",
+      "desc": "Nilai terbaik untuk latihan intensif."
     },
-    "profile": {
-        "nicknameSetupTitle": "Atur nickname",
-        "nicknameSetupDesc": "Silakan masukkan nickname yang akan digunakan di game.",
-        "nicknamePlaceholder": "Masukkan nickname",
-        "selectCountry": "Pilih negara",
-        "edit": "Edit",
-        "highscoresTitle": "Skor tertinggi",
-        "highscoresColumns": {
-            "game": "Game",
-            "highscore": "Skor tertinggi",
-            "rankWinRate": "Win rate rank"
-        },
-        "highscoreLeaderboardTitle": "Top 10",
-        "highscoreLeaderboardEmpty": "Belum ada data.",
-        "highscoreLeaderboardColumns": {
-            "rank": "#",
-            "player": "Pemain",
-            "score": "Skor"
-        },
-        "guestTitle": "Akun tamu",
-        "guestDesc": "Akun tamu bisa hilang jika Anda keluar, menghapus aplikasi, atau ganti perangkat. Hubungkan akun Google untuk menyimpan progres.",
-        "linkGoogle": "Hubungkan akun Google",
-        "statsTitle": "Kemampuan",
-        "stats": {
-            "speed": "Kecepatan",
-            "memory": "Memori",
-            "judgment": "Penilaian",
-            "calculation": "Perhitungan",
-            "accuracy": "Akurasi",
-            "observation": "Observasi"
-        },
-        "changeAvatar": "Ganti foto",
-        "avatarUploading": "Mengunggah...",
-        "avatarInvalidType": "Tipe gambar tidak didukung.",
-        "avatarTooLarge": "Ukuran file terlalu besar.",
-        "avatarUploadSuccess": "Foto profil diperbarui.",
-        "avatarUploadFail": "Gagal mengunggah foto profil",
-        "record": "Riwayat",
-        "noRecord": "Belum ada riwayat pertandingan.",
-        "disconnects": "Disconnect",
-        "updateSuccess": "Profil berhasil diperbarui!",
-        "updateFail": "Gagal memperbarui profil",
-        "deleteSuccess": "Akun berhasil dihapus.",
-        "deleteFail": "Gagal menghapus akun."
+    "nicknameChangeTicket": {
+      "title": "Tiket Ganti Nickname",
+      "desc": "Ubah nickname langsung tanpa menunggu 30 hari.",
+      "unit": "Tiket Ganti Nickname"
     },
-    "game": {
-        "waiting": "Menunggu game...",
-        "victory": "MENANG",
-        "defeat": "KALAH",
-        "returnMenu": "Kembali ke menu",
-        "reconnecting": "Menunggu lawan...",
-        "reconnectingDesc": "Lawan terputus. Menang otomatis dalam:",
-        "myTime": "Waktu saya",
-        "rank": "RANK",
-        "normal": "NORMAL",
-        "unknownPlayer": "Pemain tidak dikenal",
-        "guest": "Tamu",
-        "you": "Anda",
-        "opponent": "Lawan",
-        "opponentWaiting": "Lawan sedang menunggu...",
-        "draw": "SERI",
-        "roundResult": "Hasil ronde {{round}}",
-        "matchResult": "HASIL PERTANDINGAN",
-        "startingIn": "Mulai dalam",
-        "roundFinished": "RONDE SELESAI",
-        "total": "TOTAL",
-        "great": "Bagus!",
-        "tier": "Tier",
-        "table": {
-            "round": "Ronde",
-            "myScore": "Skor saya",
-            "opScore": "Skor lawan",
-            "result": "Hasil",
-            "win": "MENANG",
-            "lose": "KALAH",
-            "draw": "SERI"
-        }
+    "buy": "Beli",
+    "premium": "Premium",
+    "popular": "Populer",
+    "bestValue": "Nilai terbaik",
+    "notice": "Pembayaran diproses melalui App Store.",
+    "comingSoon": "Alur pembelian sedang disiapkan...",
+    "priceTbd": "Segera",
+    "loading": "Memuat...",
+    "purchased": "Sudah dibeli",
+    "purchaseSuccess": "Pembelian berhasil.",
+    "purchaseRewardDesc": "Item yang dibeli sudah diberikan.",
+    "removeAdsApplied": "Penghapusan iklan telah diterapkan.",
+    "purchaseFail": "Pembelian gagal.",
+    "billingUnavailable": "Penagihan tidak didukung di perangkat ini.",
+    "sessionRefreshFailed": "Failed to refresh session: {{message}}",
+    "sessionExpired": "Your login session has expired. Please sign in again.",
+    "purchaseFailWithReason": "Purchase failed: {{message}}"
+  },
+  "leaderboard": {
+    "button": "Peringkat",
+    "title": "Peringkat - Pramusim",
+    "global": "Global",
+    "country": "Negara",
+    "myRank": "MY RANK",
+    "placementNotice": "Kamu akan tampil di ranking setelah {{count}} pertandingan penempatan.",
+    "mmrLabel": "MMR",
+    "avatarPreview": "{{nickname}} avatar"
+  },
+  "ad": {
+    "remaining": "Sisa hari ini: {{count}}/{{limit}}",
+    "limitReached": "Batas iklan harian tercapai.",
+    "limitReachedDesc": "Kembali besok untuk menonton lebih banyak iklan.",
+    "adFreeDesc": "Hadiah tanpa iklan. Dapatkan 1 pensil instan.",
+    "adFreeDescPracticeNotes": "Hadiah tanpa iklan. Dapatkan 2 catatan latihan instan.",
+    "claimBtn": "Dapatkan pensil",
+    "claimBtnPracticeNotes": "Dapatkan catatan latihan",
+    "granting": "Memberikan hadiah...",
+    "rewardFailed": "Hadiah gagal.",
+    "rewardFailedDesc": "Silakan coba lagi nanti.",
+    "title": "Dapatkan pensil",
+    "titlePracticeNotes": "Dapatkan catatan latihan",
+    "loading": "Memuat iklan...",
+    "watchDesc": "Tonton iklan singkat untuk mendapatkan 1 pensil!",
+    "watchDescPracticeNotes": "Tonton iklan singkat untuk mendapatkan 2 catatan latihan!",
+    "watchBtn": "Tonton iklan",
+    "watching": "Menonton iklan...",
+    "playing": "Iklan sedang diputar...",
+    "pencils": "Pensil",
+    "practiceNotes": "Catatan latihan",
+    "success": "Hadiah berhasil didapatkan.",
+    "noFillTitle": "Tidak ada iklan saat ini",
+    "noFillDesc": "Silakan coba lagi nanti.",
+    "noFillRewarded": "Ups, saat ini tidak ada iklan yang bisa diputar. Hadiah akan langsung diberikan."
+  },
+  "notifications": {
+    "fullTitle": "Pensil penuh",
+    "fullBody": "Pensil sudah penuh. Saatnya pakai otakmu!",
+    "reminderTitle": "Saatnya pakai otakmu",
+    "reminderBody": "Sudah 24 jam. Kembali dan main lagi!"
+  },
+  "user": {
+    "level": "Level",
+    "rank": "Peringkat"
+  },
+  "settings": {
+    "title": "Pengaturan",
+    "language": "Bahasa",
+    "sound": "Suara",
+    "masterVolume": "Volume utama",
+    "vibration": "Getaran",
+    "deleteAccount": "Hapus akun",
+    "deleteAccountConfirm": "Yakin ingin menghapus akun Anda? Ini permanen dan tidak bisa dibatalkan.",
+    "logoutConfirm": "Yakin ingin keluar?",
+    "restorePurchases": "Pulihkan pembelian",
+    "restorePurchasesDesc": "Pulihkan pembelian non-konsumsi seperti hapus iklan.",
+    "restorePurchasesSuccess": "Pembelian berhasil dipulihkan.",
+    "restorePurchasesFail": "Gagal memulihkan pembelian.",
+    "restorePurchasesUnavailable": "Penagihan tidak didukung di perangkat ini.",
+    "restorePurchasesEmpty": "Tidak ada pembelian untuk dipulihkan.",
+    "privacyPolicy": "Kebijakan Privasi",
+    "privacyPolicyDesc": "Tinjau bagaimana kami menangani data pribadi layanan.",
+    "viewPrivacyPolicy": "Lihat Kebijakan Privasi",
+    "tutorial": "Tutorial",
+    "tutorialDesc": "Jika ingin melihat kembali cara menggunakan aplikasi, buka lagi tutorialnya.",
+    "viewTutorial": "Lihat tutorial lagi",
+    "notificationNativeOnly": "Pengaturan notifikasi hanya tersedia di aplikasi seluler.",
+    "notificationOff": "Notifikasi dimatikan.",
+    "notificationDeniedIos": "Izinkan notifikasi di iPhone: Pengaturan > Notifikasi.",
+    "notificationDeniedAndroid": "Izinkan notifikasi di Android: Pengaturan > Notifikasi.",
+    "notificationOn": "Notifikasi dinyalakan.",
+    "support": "Hubungi dukungan",
+    "supportDesc": "Lihat bantuan untuk bug, masalah, dan pertanyaan lainnya.",
+    "goToSupport": "Buka dukungan",
+    "notifications": "Notifikasi",
+    "pushNotifications": "Notifikasi Push/Lokal",
+    "notificationNativeHint": "Tombol notifikasi dinonaktifkan di web.",
+    "recommended": "Rekomendasi",
+    "theme": "Tema",
+    "themeMode": "Tampilan",
+    "systemThemeDesc": "Mengikuti pengaturan perangkat.",
+    "darkMode": "Mode gelap",
+    "lightMode": "Mode terang",
+    "light": "Terang",
+    "dark": "Gelap",
+    "system": "Sistem",
+    "assetCredits": "Kredit Aset",
+    "assetCreditsDesc": "Beberapa aset visual berasal dari kreator pihak ketiga dan dicantumkan sesuai lisensinya (mis. CC BY 4.0).",
+    "viewMakers": "Lihat Pembuat & Kredit",
+    "makers": "Pembuat & Kredit",
+    "localCredit": "Kredit lokal",
+    "announcements": "Pengumuman",
+    "announcementsDesc": "Lihat kembali pengumuman terbaru.",
+    "viewAnnouncementAgain": "Lihat lagi pengumuman",
+    "announcementWillShowOnHome": "Pengumuman terbaru akan ditampilkan lagi di Beranda.",
+    "announcementResetFail": "Gagal mengatur ulang visibilitas pengumuman.",
+    "versionLabel": "Versi",
+    "makersRoleCreator": "Pembuat",
+    "makersRoleRankingBadges": "Lencana peringkat (CC BY 4.0)",
+    "makersRoleCcBy": "Lisensi CC BY 4.0",
+    "admin": "Admin",
+    "adminDesc": "Buka halaman khusus admin.",
+    "goToAdmin": "Buka halaman admin",
+    "guestModeWarningTitle": "Peringatan akun tamu",
+    "guestModeWarningDesc": "Akun tamu dapat kehilangan data saat keluar, menghapus aplikasi, atau ganti perangkat. Tautkan akun untuk menyimpan progres."
+  },
+  "report": {
+    "button": "Laporkan",
+    "title": "Laporkan pemain",
+    "description": "Masukkan alasan laporan.",
+    "descriptionWithTarget": "Masukkan alasan untuk melaporkan {{target}}.",
+    "placeholder": "Tulis alasan laporan.",
+    "submit": "Kirim laporan",
+    "success": "Laporan berhasil dikirim.",
+    "fail": "Gagal mengirim laporan."
+  },
+  "profile": {
+    "nicknameSetupTitle": "Atur nickname",
+    "nicknameSetupDesc": "Silakan masukkan nickname yang akan digunakan di game.",
+    "nicknamePlaceholder": "Masukkan nickname",
+    "nicknameTicketsLabel": "Tiket Ganti Nickname",
+    "nicknameChangeAvailableNow": "Nickname bisa diubah sekarang",
+    "nicknameChangeUnavailableNow": "Nickname belum bisa diubah sekarang",
+    "nicknameFreeChangeNow": "Ganti gratis tersedia: sekarang",
+    "nicknameFreeChangeAt": "Ganti gratis tersedia: {{date}}",
+    "selectCountry": "Pilih negara",
+    "edit": "Edit",
+    "highscoresTitle": "Skor tertinggi",
+    "highscoresColumns": {
+      "game": "Game",
+      "highscore": "Skor tertinggi",
+      "rankWinRate": "Win rate rank"
     },
-    "matchmaking": {
-        "searching": "Mencari...",
-        "description": "Mencari lawan yang sepadan",
-        "cancel": "Batal",
-        "found": "Lawan ditemukan!",
-        "entering": "Masuk ke arena...",
-        "timeout": "Lawan tidak ditemukan",
-        "timeoutDesc": "Kami tidak menemukan lawan tepat waktu.",
-        "range": "Rentang",
-        "rankLevelRequired": "Capai level {{level}} untuk membuka Rank."
+    "highscoreLeaderboardTitle": "Top 10",
+    "highscoreLeaderboardEmpty": "Belum ada data.",
+    "highscoreLeaderboardColumns": {
+      "rank": "#",
+      "player": "Pemain",
+      "score": "Skor"
     },
-    "rps": {
-        "ready": "SIAP...",
-        "beatIt": "KALAHKAN!",
-        "lose": "KALAH!",
-        "reverse": "TERBALIK",
-        "round": "Ronde",
-        "titleWin": "RPS Menang",
-        "titleLose": "RPS Kalah",
-        "title": "BATU GUNTING KERTAS",
-        "instruction": "Pilih gerakan menang atau kalah sesuai instruksi!"
+    "guestTitle": "Akun tamu",
+    "guestDesc": "Akun tamu bisa hilang jika Anda keluar, menghapus aplikasi, atau ganti perangkat. Hubungkan akun Google untuk menyimpan progres.",
+    "linkGoogle": "Hubungkan akun Google",
+    "statsTitle": "Kemampuan",
+    "stats": {
+      "speed": "Kecepatan",
+      "memory": "Memori",
+      "judgment": "Penilaian",
+      "calculation": "Perhitungan",
+      "accuracy": "Akurasi",
+      "observation": "Observasi"
     },
-    "number": {
-        "title": "URUTAN ANGKA",
-        "instruction": "Urutan naik",
-        "asc": "Tekan angka dari kecil ke besar!",
-        "desc": "Tekan angka dari besar ke kecil!",
-        "ready": "SIAP",
-        "panel": "PANEL",
-        "titleDesc": "URUT BALIK",
-        "instructionDesc": "Tekan dari besar ke kecil!"
+    "changeAvatar": "Ganti foto",
+    "removeAvatar": "Hapus foto",
+    "removeAvatarConfirm": "Hapus foto profil saat ini?",
+    "avatarUploading": "Mengunggah...",
+    "avatarInvalidType": "Tipe gambar tidak didukung.",
+    "avatarTooLarge": "Ukuran file terlalu besar.",
+    "avatarUploadSuccess": "Foto profil diperbarui.",
+    "avatarUploadFail": "Gagal mengunggah foto profil",
+    "avatarRemoveSuccess": "Foto profil dihapus.",
+    "avatarRemoveFail": "Gagal menghapus foto profil",
+    "record": "Riwayat",
+    "noRecord": "Belum ada riwayat pertandingan.",
+    "disconnects": "Disconnect",
+    "updateSuccess": "Profil berhasil diperbarui!",
+    "nicknameCooldownOrTicket": "Nickname bisa diubah gratis setiap 30 hari. Untuk langsung ubah, diperlukan tiket.",
+    "updateFail": "Gagal memperbarui profil",
+    "deleteSuccess": "Akun berhasil dihapus.",
+    "deleteFail": "Gagal menghapus akun.",
+    "guestDescIOS": "Akun tamu bisa hilang jika Anda keluar, menghapus aplikasi, atau mengganti perangkat. Tautkan akun Apple atau Google untuk menyimpan progres Anda. Selain itu, akun tamu dapat dihapus setelah 7 hari tidak aktif.",
+    "linkApple": "Tautkan Akun Apple",
+    "nicknameChangedSuccess": "Nickname berhasil diubah.",
+    "rankPlacement": "Penempatan",
+    "rankPlacementRemaining": "Sisa {{count}} pertandingan"
+  },
+  "game": {
+    "waiting": "Menunggu game...",
+    "victory": "MENANG",
+    "defeat": "KALAH",
+    "returnMenu": "Kembali ke menu",
+    "setScore": "Skor set",
+    "practiceComplete": "Latihan selesai!",
+    "greatJob": "Kerja bagus!",
+    "rematchIncomingTitle": "Permintaan tanding ulang",
+    "rematchIncomingBody": "'{{nickname}}' meminta tanding ulang. Terima?",
+    "rematchCreateFail": "Tidak dapat memulai tanding ulang.",
+    "rematchAccepted": "Tanding ulang akan dimulai.",
+    "rematchRejected": "Lawan menolak tanding ulang.",
+    "rematchExpired": "Waktu permintaan tanding ulang telah habis.",
+    "rematchConfirmTitle": "Ajukan tanding ulang",
+    "rematchConfirmBody": "Ingin meminta tanding ulang?",
+    "rematchRequesterCostNotice": "Hanya peminta yang menghabiskan 1 pensil.",
+    "rematchReceiverFreeNotice": "Menerima tanding ulang tidak mengurangi pensil.",
+    "rematchWaiting": "Permintaan tanding ulang dikirim.",
+    "rematchRequestFail": "Terjadi kesalahan saat meminta tanding ulang.",
+    "rematchPending": "Menunggu",
+    "rematchClosed": "Selesai",
+    "rematchRequest": "Tanding ulang",
+    "rematchExpiredShort": "Habis",
+    "rematchNoPencilsShort": "Kurang",
+    "rematchCostCountdownShort": "Minta 1 · {{seconds}}d",
+    "rematchNoPencils": "Pensil tidak cukup",
+    "reconnecting": "Menunggu lawan...",
+    "reconnectingDesc": "Lawan terputus. Menang otomatis dalam:",
+    "myTime": "Waktu saya",
+    "rank": "RANK",
+    "normal": "NORMAL",
+    "unknownPlayer": "Pemain tidak dikenal",
+    "guest": "Tamu",
+    "you": "Anda",
+    "opponent": "Lawan",
+    "opponentWaiting": "Lawan sedang menunggu...",
+    "draw": "SERI",
+    "roundResult": "Hasil ronde {{round}}",
+    "matchResult": "HASIL PERTANDINGAN",
+    "startingIn": "Mulai dalam",
+    "roundFinished": "RONDE SELESAI",
+    "total": "TOTAL",
+    "great": "Bagus!",
+    "tier": "Tier",
+    "table": {
+      "round": "Ronde",
+      "myScore": "Skor saya",
+      "opScore": "Skor lawan",
+      "result": "Hasil",
+      "win": "MENANG",
+      "lose": "KALAH",
+      "draw": "SERI"
     },
-    "math": {
-        "title": "TANTANGAN MATEMATIKA",
-        "instruction": "Hitung ekspresi lalu pilih jawaban yang benar"
+    "timeLeft": "Time Left",
+    "connectionLost": "Connection lost. Reconnecting...",
+    "connectionUnstable": "Connection is unstable...",
+    "connecting": "Connecting...",
+    "aiBot": "AI Bot",
+    "me": "Me",
+    "disconnected": "DISCONNECT",
+    "devGhostPreview": "Dev Ghost Preview",
+    "devGhostPreviewGame": "Game",
+    "devGhostPreviewRoundHighscore": "Round Highscore",
+    "devGhostPreviewBotGhost": "Bot Ghost",
+    "devGhostPreviewGap": "Gap"
+  },
+  "matchmaking": {
+    "searching": "Mencari...",
+    "description": "Mencari lawan yang sepadan",
+    "cancel": "Batal",
+    "found": "Lawan ditemukan!",
+    "entering": "Masuk ke arena...",
+    "timeout": "Lawan tidak ditemukan",
+    "timeoutDesc": "Kami tidak menemukan lawan tepat waktu.",
+    "range": "Rentang",
+    "rankLevelRequired": "Capai level {{level}} untuk membuka Rank.",
+    "searchingOpponent": "Mencari lawan..."
+  },
+  "rps": {
+    "ready": "SIAP...",
+    "beatIt": "KALAHKAN!",
+    "lose": "KALAH!",
+    "reverse": "TERBALIK",
+    "round": "Ronde",
+    "titleWin": "RPS Menang",
+    "titleLose": "RPS Kalah",
+    "title": "BATU GUNTING KERTAS",
+    "instruction": "Pilih langkah untuk menang atau kalah!"
+  },
+  "number": {
+    "title": "URUTAN ANGKA",
+    "instruction": "Ketuk dari terendah ke tertinggi!",
+    "asc": "Tekan angka dari kecil ke besar!",
+    "desc": "Tekan angka dari besar ke kecil!",
+    "ready": "SIAP",
+    "panel": "PANEL",
+    "titleDesc": "URUT BALIK",
+    "instructionDesc": "Ketuk dari tertinggi ke terendah!"
+  },
+  "math": {
+    "title": "TANTANGAN MATEMATIKA",
+    "instruction": "Selesaikan persamaannya!"
+  },
+  "mathOx": {
+    "title": "MATH OX",
+    "instruction": "Ketuk O jika benar, X jika salah!"
+  },
+  "oneStroke": {
+    "title": "SATU GORESAN",
+    "instruction": "Hubungkan semua kotak putih dalam satu garis!",
+    "progress": "Jalur"
+  },
+  "ten": {
+    "title": "BUAT 10",
+    "instruction": "Pilih angka yang jumlahnya 10!"
+  },
+  "color": {
+    "title": "COCOKKAN WARNA",
+    "instruction": "Cocokkan ARTI kata dengan warna BINGKAI-nya!",
+    "red": "MERAH",
+    "blue": "BIRU",
+    "green": "HIJAU",
+    "yellow": "KUNING"
+  },
+  "memory": {
+    "title": "MEMORY MATCH",
+    "instruction": "Hafalkan kartu, ketuk Siap, lalu cari pasangannya!",
+    "btn_memorized": "Sudah hafal!",
+    "memorize_hint": "Hafalkan kartunya!",
+    "find_pairs": "Cari pasangannya!"
+  },
+  "sequence": {
+    "title": "URUTAN TERBALIK",
+    "instruction": "Ketuk dengan urutan TERBALIK!",
+    "titleNormal": "SEKUENS",
+    "instructionNormal": "Ketuk sesuai URUTAN!"
+  },
+  "largest": {
+    "title": "HASIL TERBESAR",
+    "instruction": "Ketuk hasil yang paling besar!"
+  },
+  "pair": {
+    "title": "CARI PASANGAN",
+    "instruction": "Temukan pasangan yang cocok!"
+  },
+  "updown": {
+    "title": "ATAS BAWAH",
+    "instruction": "Lebih tinggi dari sebelumnya? Geser ATAS. Lebih rendah? BAWAH.",
+    "prev": "SEBELUMNYA",
+    "start": "MULAI"
+  },
+  "slider": {
+    "title": "Slider Angka",
+    "instruction": "Geser angka untuk mencapai jumlah target!",
+    "target": "Jumlah target"
+  },
+  "arrow": {
+    "title": "Slider Panah",
+    "blue": "Biru = Sama",
+    "red": "Merah = Berlawanan",
+    "instruction": "Biru: Arah sama. Merah: Arah berlawanan!"
+  },
+  "fillBlanks": {
+    "title": "ISI BAGIAN KOSONG",
+    "instruction": "Temukan angka yang hilang!"
+  },
+  "findOperator": {
+    "title": "CARI OPERATOR",
+    "instruction": "Temukan operator yang hilang!"
+  },
+  "ladder": {
+    "title": "Game Tangga",
+    "instruction": "Ikuti jalannya!"
+  },
+  "path": {
+    "title": "Path Runner",
+    "instruction": "Pindahkan blok hijau ke tujuan biru!",
+    "shuffle": "Acak"
+  },
+  "blindPath": {
+    "title": "Jalur Buta",
+    "instruction": "Ingat jalan dan capai tujuan. Jalan menghilang setelah bergerak!",
+    "memorizeHint": "Hafalkan jalurnya!",
+    "runHint": "Ikuti jalurnya!",
+    "memorized": "Sudah hafal!"
+  },
+  "balls": {
+    "title": "Penghitung Bola",
+    "instruction": "Hitung bola bergerak dengan cepat!"
+  },
+  "catchColor": {
+    "title": "Tangkap Warna",
+    "instruction": "Tangkap bola yang warnanya sama dengan barmu!",
+    "switchSoon": "Warna segera berubah"
+  },
+  "tapTheColor": {
+    "title": "Tap Warna",
+    "instruction": "Ingat warna dan ketuk sesuai urutan!",
+    "memorize": "Hafalkan warnanya!",
+    "remembered": "Siap!"
+  },
+  "aim": {
+    "title": "Game Bidik",
+    "instruction": "Tembak hanya target merah!"
+  },
+  "mostColor": {
+    "title": "Cari Warna Terbanyak",
+    "instruction": "Pilih warna yang paling sering muncul!"
+  },
+  "sorting": {
+    "title": "Game Klasifikasi",
+    "instruction": "Simbol sama = Arah sama! Simbol beda = Arah berlawanan!",
+    "firstMoveHint": "Kartu pertama: arah bebas!"
+  },
+  "spy": {
+    "title": "Temukan Mata-mata",
+    "instruction": "Ingat simbol dan temukan Mata-mata baru!",
+    "memorize": "Hafalkan ini!",
+    "find": "Siapa yang baru?",
+    "ready": "Siap!"
+  },
+  "timingBar": {
+    "title": "Timing Bar",
+    "instruction": "Ketuk tepat saat batang yang jatuh mengenai target!"
+  },
+  "colorTiming": {
+    "title": "Timing Warna",
+    "instruction": "Ketuk saat Biru masuk Kiri, Merah masuk Kanan!"
+  },
+  "stairway": {
+    "title": "Tangga ke Surga",
+    "instruction": "Ketuk arah yang benar untuk naik tangga!",
+    "scoreLabel": "Langkah"
+  },
+  "tutorial": {
+    "normal": "🌍 Lawan pemain seluruh dunia di mini game seru!",
+    "rank": "🏆 Bertanding di rank dengan pemain kemampuan serupa!",
+    "practice": "💪 Latih game apa pun yang kamu mau!",
+    "ranking": "👑 Lihat pemain paling cerdas di dunia!",
+    "shop": "🛒 Beli pensil atau hapus iklan!",
+    "settings": "⚙️ Ubah suara, bahasa, dan pengaturan lain!",
+    "login": "👤 Hubungkan akunmu agar bermain lebih aman!",
+    "profile": "📊 Cek kemampuan, statistik, dan skor terbaikmu!",
+    "tryNormalHighlight": "Ketuk mode Normal dulu untuk memulai pertandingan pertamamu!",
+    "startNormalNow": "Mulai Mode Normal",
+    "next": "Berikutnya",
+    "done": "Selesai",
+    "skip": "Lewati",
+    "loginNow": "Masuk sekarang"
+  },
+  "zero": {
+    "title": "Buat Nol",
+    "instruction": "Isi ruang kosong agar persamaannya menjadi 0!",
+    "undoHint": "Ketuk persamaan untuk membatalkan"
+  },
+  "practice": {
+    "random": "Acak",
+    "descriptionPending": "Description coming soon",
+    "myHighscoreLabel": "My High Score",
+    "statGainLabel": "Stat Gain",
+    "none": "None",
+    "guideTitle": "Practice Guide",
+    "guideAtAGlance": "At a glance",
+    "guideObjective": "Objective",
+    "guideHowTo": "How to play",
+    "guideTip": "Tip",
+    "autoGuide": {
+      "summary": "Practice {{title}} and learn the core rule quickly.",
+      "tip": "Read the rule once, then focus on speed and accuracy.",
+      "objectiveFallback": "Start and follow the on-screen rule."
     },
-    "ten": {
-        "title": "BUAT 10",
-        "instruction": "Buat jumlah angka yang dipilih menjadi 10."
-    },
-    "color": {
-        "title": "COCOKKAN WARNA",
-        "instruction": "Pilih tombol saat warna cocok dengan teks",
-        "red": "MERAH",
-        "blue": "BIRU",
-        "green": "HIJAU",
-        "yellow": "KUNING"
-    },
-    "memory": {
-        "title": "MEMORY MATCH",
-        "instruction": "Hafalkan posisi kartu lalu tekan tombol sudah hafal. Setelah itu pilih pasangan yang cocok.",
-        "btn_memorized": "Sudah hafal!",
-        "memorize_hint": "Hafalkan kartunya!",
-        "find_pairs": "Cari pasangannya!"
-    },
-    "sequence": {
-        "title": "URUTAN TERBALIK",
-        "instruction": "Tekan dalam urutan TERBALIK!",
-        "titleNormal": "SEKUENS",
-        "instructionNormal": "Tekan sesuai URUTAN!"
-    },
-    "largest": {
-        "title": "HASIL TERBESAR",
-        "instruction": "Tekan ekspresi dengan nilai terbesar"
-    },
-    "pair": {
-        "title": "CARI PASANGAN",
-        "instruction": "Cari satu-satunya pasangan yang cocok!"
-    },
-    "updown": {
-        "title": "ATAS BAWAH",
-        "instruction": "Jika lebih besar dari angka sebelumnya, geser ke atas. Jika lebih kecil, geser ke bawah.",
-        "prev": "SEBELUMNYA",
-        "start": "MULAI"
-    },
-    "slider": {
-        "title": "Slider Angka",
-        "instruction": "Geser untuk menjumlahkan angka bersebelahan ke target!",
-        "target": "Jumlah target"
-    },
-    "arrow": {
-        "title": "Slider Panah",
-        "blue": "Biru = Sama",
-        "red": "Merah = Berlawanan",
-        "instruction": "Geser ke arah biru, atau kebalikannya untuk merah!"
-    },
-    "fillBlanks": {
-        "title": "ISI BAGIAN KOSONG",
-        "instruction": "Pilih angka yang mengisi bagian kosong agar menjadi jawaban yang benar."
-    },
-    "findOperator": {
-        "title": "CARI OPERATOR",
-        "instruction": "Pilih operator yang tepat agar jawabannya benar."
-    },
-    "ladder": {
-        "title": "Game Tangga",
-        "instruction": "Ikuti jalurnya!"
-    },
-    "path": {
-        "title": "Path Runner",
-        "instruction": "Gunakan tombol untuk memindahkan blok hijau ke blok biru. Hati-hati, posisi tombol bisa berubah.",
-        "shuffle": "Acak"
-    },
-    "blindPath": {
-        "title": "Jalur Buta",
-        "instruction": "Hafalkan jalur putih, lalu gunakan tombol untuk memindahkan blok hijau ke blok biru. Saat mulai bergerak, jalurnya menghilang. Menabrak dinding mengurangi poin, tetapi jalurnya muncul lagi.",
-        "memorizeHint": "Hafalkan jalurnya!",
-        "runHint": "Ikuti jalurnya!",
-        "memorized": "Sudah hafal!"
-    },
-    "balls": {
-        "title": "Penghitung Bola",
-        "instruction": "Hitung bola yang bergerak dan tekan angka yang benar."
-    },
-    "catchColor": {
-        "title": "Tangkap Warna",
-        "instruction": "Geser bar untuk menangkap bola dengan warna yang sama seperti bar. Menangkap warna berbeda mengurangi poin, dan warna bar terus berubah.",
-        "switchSoon": "Warna segera berubah"
-    },
-    "tapTheColor": {
-        "title": "Tap Warna",
-        "instruction": "Hafalkan posisi warna lalu tekan tombol sudah hafal. Pilih tombol yang dihafal sesuai urutan warna yang muncul di atas.",
-        "memorize": "Hafalkan warnanya!",
-        "remembered": "Siap!"
-    },
-    "aim": {
-        "title": "Game Bidik",
-        "instruction": "Ketuk target merah dengan cepat untuk menghapusnya. Jangan hapus target biru."
-    },
-    "mostColor": {
-        "title": "Cari Warna Terbanyak",
-        "instruction": "Pilih warna yang paling sering muncul di layar."
-    },
-    "sorting": {
-        "title": "Game Klasifikasi",
-        "instruction": "Geser kartu pertama ke arah mana pun yang kamu mau. Setelah itu, kartu dengan simbol yang sama digeser ke arah yang sama seperti sebelumnya, dan simbol berbeda ke arah berlawanan. Kamu bisa bersiap dengan melihat kartu berikutnya di bagian atas.",
-        "firstMoveHint": "Kartu pertama: arah bebas!"
-    },
-    "spy": {
-        "title": "Temukan Mata-mata",
-        "instruction": "Hafalkan simbol lalu tekan tombol sudah hafal. Setelah itu, cari simbol yang berubah. Jumlah mata-mata bisa bertambah seiring waktu.",
-        "memorize": "Hafalkan ini!",
-        "find": "Siapa yang baru?",
-        "ready": "Siap!"
-    },
-    "timingBar": {
-        "title": "Timing Bar",
-        "instruction": "Tekan saat bar jatuh bertumpuk dengan bar target."
-    },
-    "colorTiming": {
-        "title": "Timing Warna",
-        "instruction": "Ketuk saat bola biru masuk ke lingkaran kiri dan bola merah masuk ke lingkaran kanan. Warna yang terbalik akan mengurangi poin."
-    },
-    "stairway": {
-        "title": "Tangga ke Surga",
-        "instruction": "Tekan arah tempat tangga berada untuk naik.",
-        "scoreLabel": "Langkah"
-    },
-    "tutorial": {
-        "normal": "🌍 Lawan pemain seluruh dunia di mini game seru!",
-        "rank": "🏆 Bertanding di rank dengan pemain kemampuan serupa!",
-        "practice": "💪 Latih game apa pun yang kamu mau!",
-        "ranking": "👑 Lihat pemain paling cerdas di dunia!",
-        "shop": "🛒 Beli pensil atau hapus iklan!",
-        "settings": "⚙️ Ubah suara, bahasa, dan pengaturan lain!",
-        "login": "👤 Hubungkan akunmu agar bermain lebih aman!",
-        "profile": "📊 Cek kemampuan, statistik, dan skor terbaikmu!",
-        "next": "Berikutnya",
-        "done": "Selesai",
-        "skip": "Lewati",
-        "loginNow": "Masuk sekarang"
-    }
+    "viewGrid": "Grid view",
+    "viewList": "List view",
+    "noNotesTitle": "Catatan latihan habis",
+    "noNotesDesc": "Kamu butuh catatan latihan untuk bermain mode Latihan.",
+    "watchAdForNotes": "Tonton iklan untuk catatan latihan",
+    "goToShopForNotes": "Beli di toko",
+    "waitForRecharge": "Tunggu"
+  },
+  "update": {
+    "title": "Pembaruan Diperlukan",
+    "message": "Versi baru telah tersedia. Silakan perbarui untuk pengalaman terbaik.",
+    "button": "Perbarui",
+    "storeNotReady": "Toko sedang disiapkan.",
+    "versionInfo": "Current: {{current}} / Minimum: {{min}}"
+  },
+  "home": {
+    "resumeMatchTitle": "You have a game in progress",
+    "resumeMatchDesc": "You came back home. Do you want to return to your ongoing match?",
+    "resumeLater": "Later",
+    "resumeNow": "Resume",
+    "levelProgressLevel": "Lv. {{level}}",
+    "levelUp": "LEVEL UP!",
+    "hideAnnouncementToday": "Jangan tampilkan lagi hari ini",
+    "noPencilTitle": "Pensil habis",
+    "noPencilDesc": "Kamu butuh pensil untuk bermain mode Normal/Rank.",
+    "nextPencilIn": "Pensil berikutnya dalam {{time}}",
+    "watchAdForPencil": "Tonton iklan",
+    "goToShopForPencil": "Beli di toko",
+    "waitForRecharge": "Tunggu"
+  },
+  "login": {
+    "bannedTitle": "Account Suspended",
+    "bannedMessage": "Your account has been suspended.",
+    "bannedUntil": "Suspension ends: {{date}}",
+    "bannedDurationUnknown": "The suspension period is determined by the administrator.",
+    "bannedAppeal": "If you want to appeal the suspension, please contact support.",
+    "contactSupport": "Contact Support",
+    "tryLaterKeyword": "later"
+  },
+  "review": {
+    "enjoyTitle": "Suka dengan gamenya?",
+    "enjoySubtitle": "Review singkat sangat membantu kami!",
+    "enjoyYes": "Ya! 😊",
+    "enjoyNo": "Kurang 😐"
+  },
+  "mailbox": {
+    "title": "Mailbox",
+    "unread": "Unread",
+    "read": "Read",
+    "empty": "No mail.",
+    "selectHint": "Select a mail.",
+    "untitled": "Untitled",
+    "noContent": "No content.",
+    "rewardTitle": "Claimable Reward",
+    "rewardPencils": "Pencils +{{count}}",
+    "rewardPracticeNotes": "Practice Notes +{{count}}",
+    "claim": "Claim",
+    "claimed": "Claimed",
+    "claimSuccess": "Reward claimed. (+{{pencils}} pencils, +{{notes}} practice notes)",
+    "claimBlockedPencilsFull": "Kamu tidak dapat mengklaim ini saat memiliki 5 atau lebih pensil. Gunakan pensil terlebih dahulu."
+  }
 }

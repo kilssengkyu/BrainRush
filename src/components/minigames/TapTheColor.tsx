@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { usePanelProgress } from '../../hooks/usePanelProgress';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { SeededRandom } from '../../utils/seededRandom';
@@ -25,13 +26,16 @@ const COLORS = [
 ];
 
 const TapTheColor: React.FC<TapTheColorProps> = ({ seed, onScore, isPlaying }) => {
+    const WRONG_COOLDOWN_MS = 400;
     const { t } = useTranslation();
     const { playSound } = useSound();
-    const [panelIndex, setPanelIndex] = useState(0);
+    const [panelIndex, setPanelIndex] = usePanelProgress(seed);
     const [phase, setPhase] = useState<Phase>('memorize');
     const [currentStep, setCurrentStep] = useState(0);
     const [shakeId, setShakeId] = useState<number | null>(null);
     const [revealedIndices, setRevealedIndices] = useState<number[]>([]);
+    const [isInputLocked, setIsInputLocked] = useState(false);
+    const [isWrongFlash, setIsWrongFlash] = useState(false);
 
     // Difficulty Settings
     const difficulty = useMemo(() => {
@@ -82,14 +86,20 @@ const TapTheColor: React.FC<TapTheColorProps> = ({ seed, onScore, isPlaying }) =
     };
 
     const handleTileClick = (index: number) => {
-        if (phase !== 'input' || !gameState || !isPlaying) return;
+        if (phase !== 'input' || !gameState || !isPlaying || isInputLocked) return;
 
         // Bug fix: prevent clicking the same button twice (even if color matches)
         if (revealedIndices.includes(index)) {
             // Already used this tile - show error feedback
+            setIsInputLocked(true);
+            setIsWrongFlash(true);
             playSound('error');
             setShakeId(index);
-            setTimeout(() => setShakeId(null), 500);
+            setTimeout(() => {
+                setShakeId(null);
+                setIsInputLocked(false);
+                setIsWrongFlash(false);
+            }, WRONG_COOLDOWN_MS);
             return;
         }
 
@@ -114,10 +124,16 @@ const TapTheColor: React.FC<TapTheColorProps> = ({ seed, onScore, isPlaying }) =
             }
         } else {
             // Wrong
+            setIsInputLocked(true);
+            setIsWrongFlash(true);
             onScore(-50);
             playSound('error');
             setShakeId(index);
-            setTimeout(() => setShakeId(null), 500);
+            setTimeout(() => {
+                setShakeId(null);
+                setIsInputLocked(false);
+                setIsWrongFlash(false);
+            }, WRONG_COOLDOWN_MS);
         }
     };
 
@@ -128,14 +144,10 @@ const TapTheColor: React.FC<TapTheColorProps> = ({ seed, onScore, isPlaying }) =
         setRevealedIndices([]);
     };
 
-    if (!gameState) return <div>Loading...</div>;
+    if (!gameState) return <div>{t('common.loading')}</div>;
 
     return (
         <div className="flex flex-col items-center justify-center w-full h-full p-4">
-            <h2 className="text-3xl font-black text-white mb-2 drop-shadow-md">
-                {t('tapTheColor.title', 'Tap the Color')}
-            </h2>
-
             {/* Sequence Bar (Only visible in Input phase) */}
             <div className="h-16 mb-4 flex items-center justify-center space-x-2">
                 {phase === 'input' || phase === 'result' ? (
@@ -184,11 +196,11 @@ const TapTheColor: React.FC<TapTheColorProps> = ({ seed, onScore, isPlaying }) =
                             key={`tile-${index}`}
                             animate={isShake ? { x: [-5, 5, -5, 5, 0] } : {}}
                             className={`relative w-24 h-24 rounded-xl shadow-lg transition-all active:scale-95
-                                ${!isVisible && phase === 'input' ? 'bg-gray-700 hover:bg-gray-600' : ''}
+                                ${!isVisible && phase === 'input' ? 'bg-slate-200 dark:bg-gray-700 hover:bg-slate-300 dark:hover:bg-gray-600' : ''}
                                 ${isUsed ? 'opacity-50 cursor-not-allowed ring-2 ring-white/30' : ''}
                             `}
                             style={{
-                                backgroundColor: isVisible ? color : undefined,
+                                backgroundColor: isWrongFlash ? '#ef4444' : (isVisible ? color : undefined),
                                 filter: isUsed ? 'grayscale(0.4)' : 'none'
                             }}
                             onPointerDown={(e) => {
@@ -202,11 +214,11 @@ const TapTheColor: React.FC<TapTheColorProps> = ({ seed, onScore, isPlaying }) =
                                 }
                                 handleTileClick(index);
                             }}
-                            disabled={phase !== 'input' || isRevealed}
+                            disabled={phase !== 'input' || isRevealed || isInputLocked || !isPlaying}
                         >
                             {isUsed && (
                                 <div className="absolute inset-0 flex items-center justify-center">
-                                    <span className="text-white text-3xl font-bold drop-shadow-lg">✓</span>
+                                    <span className="text-slate-900 dark:text-white text-3xl font-bold drop-shadow-lg">✓</span>
                                 </div>
                             )}
                         </motion.button>
@@ -219,7 +231,7 @@ const TapTheColor: React.FC<TapTheColorProps> = ({ seed, onScore, isPlaying }) =
                 <motion.button
                     initial={{ y: 20, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
-                    className="mt-8 px-8 py-3 bg-yellow-500 rounded-full text-white font-bold text-xl shadow-lg hover:bg-yellow-400 active:scale-95"
+                    className="mt-8 px-8 py-3 bg-yellow-500 rounded-full text-slate-900 dark:text-white font-bold text-xl shadow-lg hover:bg-yellow-400 active:scale-95"
                     onPointerDown={(e) => {
                         e.preventDefault();
                         if (e.currentTarget.setPointerCapture) {

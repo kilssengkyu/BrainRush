@@ -36,6 +36,7 @@ const CatchColor: React.FC<CatchColorProps> = ({ seed, onScore, isPlaying }) => 
     const { playSound } = useSound();
     const containerRef = useRef<HTMLDivElement>(null);
     const rngRef = useRef<SeededRandom | null>(null);
+    const ballsRef = useRef<Ball[]>([]);
 
     const [balls, setBalls] = useState<Ball[]>([]);
     const [barX, setBarX] = useState(0);
@@ -82,6 +83,7 @@ const CatchColor: React.FC<CatchColorProps> = ({ seed, onScore, isPlaying }) => 
     useEffect(() => {
         if (!seed) return;
         rngRef.current = new SeededRandom(`${seed}-catch-color`);
+        ballsRef.current = [];
         setBalls([]);
         setTargetColor('blue');
         targetColorRef.current = 'blue';
@@ -112,7 +114,8 @@ const CatchColor: React.FC<CatchColorProps> = ({ seed, onScore, isPlaying }) => 
             speed,
             color
         };
-        setBalls(prev => [...prev, ball]);
+        ballsRef.current = [...ballsRef.current, ball];
+        setBalls(ballsRef.current);
     }, []);
 
     const clampBar = useCallback((x: number) => {
@@ -189,38 +192,45 @@ const CatchColor: React.FC<CatchColorProps> = ({ seed, onScore, isPlaying }) => 
             const barXNow = barXRef.current;
             const targetNow = targetColorRef.current;
 
-            setBalls(prev => {
-                const next: Ball[] = [];
-                prev.forEach(ball => {
-                    const y = ball.y + ball.speed * speedScale * dt;
-                    const hit =
-                        y + ball.radius >= barY &&
-                        y - ball.radius <= barY + BAR_HEIGHT &&
-                        ball.x >= barXNow &&
-                        ball.x <= barXNow + BAR_WIDTH;
+            let scoreDelta = 0;
+            let feedback: 'wrong' | 'correct' | null = null;
+            const nextBalls: Ball[] = [];
 
-                    if (hit) {
-                        if (ball.color === targetNow) {
-                            playSound('correct');
-                            onScore(60);
-                            setHitFeedback('correct');
-                        } else {
-                            playSound('error');
-                            onScore(-60);
-                            setHitFeedback('wrong');
-                        }
-                        window.setTimeout(() => setHitFeedback(null), 140);
-                        return;
+            ballsRef.current.forEach((ball) => {
+                const y = ball.y + ball.speed * speedScale * dt;
+                const hit =
+                    y + ball.radius >= barY &&
+                    y - ball.radius <= barY + BAR_HEIGHT &&
+                    ball.x >= barXNow &&
+                    ball.x <= barXNow + BAR_WIDTH;
+
+                if (hit) {
+                    if (ball.color === targetNow) {
+                        scoreDelta += 60;
+                        feedback = 'correct';
+                    } else {
+                        scoreDelta -= 60;
+                        feedback = 'wrong';
                     }
+                    return;
+                }
 
-                    if (y - ball.radius > height) {
-                        return;
-                    }
+                if (y - ball.radius > height) {
+                    return;
+                }
 
-                    next.push({ ...ball, y });
-                });
-                return next;
+                nextBalls.push({ ...ball, y });
             });
+
+            ballsRef.current = nextBalls;
+            setBalls(nextBalls);
+
+            if (feedback) {
+                playSound(feedback === 'correct' ? 'correct' : 'error');
+                onScore(scoreDelta);
+                setHitFeedback(feedback);
+                window.setTimeout(() => setHitFeedback(null), 140);
+            }
 
             frameId = requestAnimationFrame(tick);
         };
@@ -229,7 +239,7 @@ const CatchColor: React.FC<CatchColorProps> = ({ seed, onScore, isPlaying }) => 
         return () => cancelAnimationFrame(frameId);
     }, [isPlaying, spawnBall, pickSwitchDelay, onScore, playSound]);
 
-    if (!seed) return <div className="text-white">{t('common.loading')}</div>;
+    if (!seed) return <div className="text-slate-900 dark:text-white">{t('common.loading')}</div>;
 
     return (
         <div className="relative w-full h-full flex justify-center">
@@ -251,11 +261,6 @@ const CatchColor: React.FC<CatchColorProps> = ({ seed, onScore, isPlaying }) => 
                 onPointerUp={onPointerUp}
                 onPointerLeave={onPointerUp}
             >
-                <div className="absolute top-4 left-0 w-full text-center pointer-events-none z-10">
-                    <h2 className="text-3xl font-black text-white drop-shadow-md">{t('catchColor.title')}</h2>
-                    <p className="text-sm text-gray-300">{t('catchColor.instruction')}</p>
-                </div>
-
                 {warning && (
                     <div className="absolute top-20 left-0 w-full text-center text-xs uppercase tracking-widest text-yellow-200 animate-pulse z-10">
                         {t('catchColor.switchSoon')}
@@ -287,7 +292,7 @@ const CatchColor: React.FC<CatchColorProps> = ({ seed, onScore, isPlaying }) => 
                     }}
                 />
                 <div
-                    className="absolute text-[10px] font-mono text-white/80"
+                    className="absolute text-[10px] font-mono text-slate-900 dark:text-white/80"
                     style={{
                         left: barX + BAR_WIDTH + 8,
                         bottom: BAR_OFFSET + BAR_HEIGHT + 6

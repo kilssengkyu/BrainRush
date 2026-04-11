@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { usePanelProgress } from '../../hooks/usePanelProgress';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { SeededRandom } from '../../utils/seededRandom';
@@ -13,7 +14,7 @@ interface NumberOrderProps {
 const NumberOrder: React.FC<NumberOrderProps> = ({ seed, onScore, isPlaying }) => {
     const { t } = useTranslation();
     const { playSound } = useSound();
-    const [panelIndex, setPanelIndex] = useState(0);
+    const [panelIndex, setPanelIndex] = usePanelProgress(seed);
     const [clearedNumbers, setClearedNumbers] = useState<number[]>([]);
     const [shakeId, setShakeId] = useState<number | null>(null);
     const [animationKey, setAnimationKey] = useState(0);
@@ -96,16 +97,10 @@ const NumberOrder: React.FC<NumberOrderProps> = ({ seed, onScore, isPlaying }) =
         }
     };
 
-    if (!seed) return <div className="text-white">{t('common.loading')}</div>;
+    if (!seed) return <div className="text-slate-900 dark:text-white">{t('common.loading')}</div>;
 
     return (
         <div className="flex flex-col items-center justify-center w-full h-full gap-6 relative">
-            {/* Header / Instructions */}
-            <h2 className="text-4xl font-black text-white drop-shadow-md mb-2">
-                {t('number.title')}
-            </h2>
-            <div className="text-gray-400 text-sm mb-4">{t('number.instruction')}</div>
-
             {/* Grid Area */}
             <div className="w-80 h-80 relative flex items-center justify-center">
                 <AnimatePresence mode="popLayout">
@@ -147,7 +142,7 @@ const NumberOrder: React.FC<NumberOrderProps> = ({ seed, onScore, isPlaying }) =
                                         opacity: clearedNumbers.includes(num) ? 0.2 : 1,
                                         pointerEvents: clearedNumbers.includes(num) ? 'none' : 'auto'
                                     }}
-                                    className="w-full h-full rounded-2xl flex items-center justify-center text-4xl font-bold text-white border-2 border-gray-600 bg-gray-800 hover:border-white shadow-lg active:scale-95 transition-colors"
+                                    className="w-full h-full rounded-2xl flex items-center justify-center text-4xl font-bold text-slate-900 dark:text-white border-2 border-gray-600 bg-white dark:bg-gray-800 hover:border-white shadow-lg active:scale-95 transition-colors"
                                 >
                                     {num}
                                 </motion.button>

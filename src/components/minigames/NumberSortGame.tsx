@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { usePanelProgress } from '../../hooks/usePanelProgress';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { SeededRandom } from '../../utils/seededRandom';
@@ -14,7 +15,7 @@ interface NumberSortGameProps {
 const NumberSortGame: React.FC<NumberSortGameProps> = ({ seed, onScore, mode, isPlaying }) => {
     const { t } = useTranslation();
     const { playSound } = useSound();
-    const [panelIndex, setPanelIndex] = useState(0);
+    const [panelIndex, setPanelIndex] = usePanelProgress(seed);
     const [clearedNumbers, setClearedNumbers] = useState<number[]>([]);
     const [shakeId, setShakeId] = useState<number | null>(null);
     const [animationKey, setAnimationKey] = useState(0);
@@ -23,12 +24,14 @@ const NumberSortGame: React.FC<NumberSortGameProps> = ({ seed, onScore, mode, is
     // Level 1: 3 panels (0-2) -> Count 3, Max 9
     // Level 2: 4 panels (3-6) -> Count 3, Max 50
     // Level 3: 5 panels (7-11) -> Count 4, Max 99
-    // Level 4: 6+ panels (12+) -> Count 4, Max 999
+    // Level 4: 4 panels (12-15) -> Count 5, Max 999
+    // Level 5: 4+ panels (16+) -> Count 6, Max 999
     const getDifficulty = (index: number) => {
         if (index < 3) return { count: 3, max: 9, level: 1 };
         if (index < 7) return { count: 3, max: 50, level: 2 };
         if (index < 12) return { count: 4, max: 99, level: 3 };
-        return { count: 4, max: 999, level: 4 };
+        if (index < 16) return { count: 5, max: 999, level: 4 };
+        return { count: 6, max: 999, level: 5 };
     };
 
     // Generate Current Panel Data
@@ -71,7 +74,12 @@ const NumberSortGame: React.FC<NumberSortGameProps> = ({ seed, onScore, mode, is
         const nextExpectedIndex = clearedNumbers.length;
         const expected = sortedAnswer[nextExpectedIndex];
 
-        const scoreAmount = Math.min(10, 6 + Math.floor(panelIndex / 5) * 2);
+        const scoreAmount =
+            panelIndex < 5
+                ? 18
+                : panelIndex < 10
+                    ? 27
+                    : 39;
 
         if (num === expected) {
             // Correct
@@ -83,7 +91,7 @@ const NumberSortGame: React.FC<NumberSortGameProps> = ({ seed, onScore, mode, is
             // Check if Panel Cleared (Compare length against answer key length)
             if (newCleared.length === sortedAnswer.length) {
                 // Bonus
-                onScore(10);
+                onScore(15);
                 setTimeout(() => {
                     setPanelIndex(prev => prev + 1);
                     setClearedNumbers([]);
@@ -99,11 +107,10 @@ const NumberSortGame: React.FC<NumberSortGameProps> = ({ seed, onScore, mode, is
         }
     };
 
-    if (!seed) return <div className="text-white">{t('common.loading')}</div>;
+    if (!seed) return <div className="text-slate-900 dark:text-white">{t('common.loading')}</div>;
 
     // Theme Colors
-    const titleColor = mode === 'asc' ? 'text-blue-300' : 'text-red-300';
-    const cellDefaultColor = 'bg-gray-800';
+    const cellDefaultColor = 'bg-white dark:bg-gray-800';
     const cellErrorColor = '#ef4444'; // Red
     const cellSuccessColor = mode === 'asc' ? '#22c55e' : '#f59e0b'; // Green vs Amber for success? Or just Green/Red separation? 
     // Let's use Green for Asc success, and maybe Amber/Orange for Desc success to differentiate visuals? 
@@ -112,14 +119,6 @@ const NumberSortGame: React.FC<NumberSortGameProps> = ({ seed, onScore, mode, is
 
     return (
         <div className="flex flex-col items-center justify-center w-full h-full gap-6 relative">
-            {/* Header / Instructions */}
-            <h2 className={`text-4xl font-black drop-shadow-md mb-2 ${titleColor}`}>
-                {mode === 'asc' ? t('number.title') : t('number.titleDesc')}
-            </h2>
-            <div className={`text-sm mb-4 font-bold ${mode === 'asc' ? 'text-blue-400' : 'text-red-400'} animate-pulse`}>
-                {mode === 'asc' ? t('number.instruction') : t('number.instructionDesc')}
-            </div>
-
             {/* Grid Area */}
             <div className="w-80 h-80 relative flex items-center justify-center">
                 <AnimatePresence mode="popLayout">
@@ -162,8 +161,8 @@ const NumberSortGame: React.FC<NumberSortGameProps> = ({ seed, onScore, mode, is
                                         pointerEvents: clearedNumbers.includes(num) ? 'none' : 'auto'
                                     }}
                                     className={`
-                                        w-full h-full rounded-2xl flex items-center justify-center text-4xl font-bold text-white border-2 
-                                        ${mode === 'asc' ? 'border-blue-900/50 hover:border-blue-400' : 'border-red-900/50 hover:border-red-400'} 
+                                        w-full h-full rounded-2xl flex items-center justify-center text-4xl font-bold text-slate-900 dark:text-white border-2 
+                                        ${mode === 'asc' ? 'border-blue-300 dark:border-blue-900/50 hover:border-blue-400' : 'border-red-300 dark:border-red-900/50 hover:border-red-400'} 
                                         ${cellDefaultColor} shadow-lg active:scale-95 transition-colors
                                     `}
                                 >

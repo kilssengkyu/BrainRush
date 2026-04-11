@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { X, Loader2, Gift, BookOpen } from 'lucide-react';
+import { X, Loader2, Gift } from 'lucide-react';
 import { useSound } from '../../contexts/SoundContext';
 import { Capacitor } from '@capacitor/core';
 import { AdMob, RewardAdPluginEvents } from '@capacitor-community/admob';
+import { isNoFillError, primeRewardedAd, showRewardedAd } from '../../utils/rewardedAd';
 
 interface AdModalProps {
     isOpen: boolean;
@@ -20,6 +21,7 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
     const { t } = useTranslation();
     const { playSound } = useSound();
     const [adState, setAdState] = useState<'idle' | 'loading' | 'playing' | 'rewarded' | 'limit' | 'error'>('idle');
+    const [rewardedByNoFill, setRewardedByNoFill] = useState(false);
     const [timeLeft, setTimeLeft] = useState(5);
     const hasLimit = typeof adRemaining === 'number' && typeof adLimit === 'number';
     const isLimitReached = hasLimit && adRemaining <= 0;
@@ -36,7 +38,13 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
             claimBtnFallback: 'Get Practice Notes',
             rewardLabelKey: 'ad.practiceNotes',
             rewardLabelFallback: 'Practice Notes',
-            rewardIcon: <BookOpen className="w-10 h-10 text-green-400" />
+            rewardIcon: (
+                <img
+                    src="/images/icon/icon_note.png"
+                    alt="Practice Note"
+                    className="w-10 h-10 object-contain"
+                />
+            )
         }
         : {
             titleKey: 'ad.title',
@@ -62,18 +70,22 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
         import('../../utils/AdLogic').then(({ AdLogic }) => AdLogic.resetAdCounter());
     }, []);
 
-    const grantReward = useCallback(async () => {
+    const grantReward = useCallback(async (source: 'ad' | 'no_fill' = 'ad') => {
         try {
             const result = await onReward();
             if (result === 'ok') {
+                setRewardedByNoFill(source === 'no_fill');
                 setAdState('rewarded');
             } else if (result === 'limit') {
+                setRewardedByNoFill(false);
                 setAdState('limit');
             } else {
+                setRewardedByNoFill(false);
                 setAdState('error');
             }
         } catch (err) {
             console.error('Reward grant failed:', err);
+            setRewardedByNoFill(false);
             setAdState('error');
         }
     }, [onReward]);
@@ -82,6 +94,7 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
     useEffect(() => {
         if (Capacitor.isNativePlatform()) {
             AdMob.initialize().catch(err => console.error('AdMob init failed', err));
+            void primeRewardedAd(false);
         }
     }, []);
 
@@ -91,6 +104,7 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
 
         let rewardListener: any;
         let dismissListener: any;
+        let loadedListener: any;
         let failedLoadListener: any;
 
         const setupListeners = async () => {
@@ -101,6 +115,13 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
                 grantReward();
             });
 
+            loadedListener = await AdMob.addListener(RewardAdPluginEvents.Loaded, (info: any) => {
+                console.log('AdMob Rewarded Loaded:', info);
+                if (info?.mediationAdapterClassName) {
+                    console.log(`[AdMob] mediationAdapterClassName=${info.mediationAdapterClassName}`);
+                }
+            });
+
             dismissListener = await AdMob.addListener(RewardAdPluginEvents.Dismissed, () => {
                 console.log('AdMob Dismissed');
                 // Use a timeout to ensure state updates if dismissed immediately after reward
@@ -108,6 +129,7 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
                 // But if 'rewarded' state is set, we let the user close the modal via "Close" button.
                 // If closed without reward, just reset.
                 setAdState(prev => prev === 'rewarded' ? 'rewarded' : 'idle');
+                void primeRewardedAd(false);
             });
 
             failedLoadListener = await AdMob.addListener(RewardAdPluginEvents.FailedToLoad, (err) => {
@@ -121,6 +143,7 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
 
         return () => {
             if (rewardListener) rewardListener.remove();
+            if (loadedListener) loadedListener.remove();
             if (dismissListener) dismissListener.remove();
             if (failedLoadListener) failedLoadListener.remove();
         };
@@ -131,8 +154,24 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
         if (!isOpen) {
             setAdState('idle');
             setTimeLeft(5);
+            setRewardedByNoFill(false);
         }
     }, [isOpen]);
+
+    useEffect(() => {
+        if (!isOpen) return;
+        const handleModalCloseRequest = (event: Event) => {
+            const customEvent = event as CustomEvent<{ handled?: boolean }>;
+            if (customEvent.detail?.handled) return;
+            if (adState === 'loading' || adState === 'playing') return;
+            if (customEvent.detail) customEvent.detail.handled = true;
+            onClose();
+        };
+        window.addEventListener('brainrush:request-modal-close', handleModalCloseRequest as EventListener);
+        return () => {
+            window.removeEventListener('brainrush:request-modal-close', handleModalCloseRequest as EventListener);
+        };
+    }, [isOpen, adState, onClose]);
 
     const startAd = async () => {
         playSound('click');
@@ -164,28 +203,28 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
         }
 
         // Native AdMob Mode
+        setAdState('loading');
         try {
-            setAdState('loading');
-            const platform = Capacitor.getPlatform();
-            const adsMode = String(import.meta.env.VITE_ADS_MODE ?? import.meta.env.VITE_APP_ENV ?? '').toLowerCase();
-            const isProdAds = adsMode === 'prod' || adsMode === 'production';
-            const adId = isProdAds
-                ? (platform === 'ios'
-                    ? 'ca-app-pub-4893861547827379/8300296145'
-                    : 'ca-app-pub-4893861547827379/1519157571')
-                : (platform === 'ios'
-                    ? 'ca-app-pub-3940256099942544/1712485313'
-                    : 'ca-app-pub-3940256099942544/5224354917');
+            const prepared = await primeRewardedAd(false);
+            if (!prepared) {
+                // Most likely no-fill/cooldown. Avoid request spam and grant fallback reward.
+                console.log('[AdModal] Rewarded not ready (cooldown/no fill) — granting free reward');
+                resetForcedAdCounter();
+                await grantReward('no_fill');
+                return;
+            }
 
-            await AdMob.prepareRewardVideoAd({ adId });
-            await AdMob.showRewardVideoAd();
-            // State change to 'playing' is handled implicitly by the view overlay, 
-            // but we can set it here to update our background modal UI if visible.
+            await showRewardedAd();
             setAdState('playing');
         } catch (err) {
             console.error('Ad preparation failed', err);
-            setAdState('idle');
-            // Allow retry
+            if (isNoFillError(err)) {
+                console.log('[AdModal] NoFill while showing rewarded — granting free reward');
+                resetForcedAdCounter();
+                await grantReward('no_fill');
+            } else {
+                setAdState('idle');
+            }
         }
     };
 
@@ -202,11 +241,11 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
                         initial={{ scale: 0.9, y: 20 }}
                         animate={{ scale: 1, y: 0 }}
                         exit={{ scale: 0.9, y: 20 }}
-                        className="bg-gray-800 w-full max-w-sm rounded-3xl border border-gray-700 shadow-2xl overflow-hidden"
+                        className="bg-white dark:bg-gray-800 w-full max-w-sm rounded-3xl border border-gray-700 shadow-2xl overflow-hidden"
                     >
                         {/* Header */}
                         <div className="flex justify-between items-center p-4 border-b border-gray-700">
-                            <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                            <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                                 <Gift className="text-yellow-400" />
                                 {t(copy.titleKey, copy.titleFallback)}
                             </h3>
@@ -218,7 +257,7 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
                                     : 'hover:bg-gray-700'
                                     }`}
                             >
-                                <X className="w-5 h-5 text-gray-400" />
+                                <X className="w-5 h-5 text-slate-500 dark:text-gray-400" />
                             </button>
                         </div>
 
@@ -237,7 +276,7 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
                                             />
                                         )}
                                     </div>
-                                    <p className="text-gray-300 mb-6">
+                                    <p className="text-slate-600 dark:text-gray-300 mb-6">
                                         {adState === 'loading'
                                             ? adsRemoved
                                                 ? t('ad.granting', 'Granting reward...')
@@ -277,15 +316,15 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
                                     <div className="w-full h-40 bg-black rounded-xl mb-4 flex flex-col items-center justify-center border border-gray-700 relative overflow-hidden">
                                         {/* Fake Ad Content (Web Only) */}
                                         <div className="absolute inset-0 bg-gradient-to-br from-purple-900 to-blue-900 opacity-50" />
-                                        <Loader2 className="w-12 h-12 text-white animate-spin relative z-10" />
-                                        <p className="text-white font-bold mt-4 relative z-10">
+                                        <Loader2 className="w-12 h-12 text-slate-900 dark:text-white animate-spin relative z-10" />
+                                        <p className="text-slate-900 dark:text-white font-bold mt-4 relative z-10">
                                             DEMO ADVERTISEMENT
                                         </p>
-                                        <div className="absolute top-2 right-3 text-xs bg-black/50 px-2 py-1 rounded text-white font-mono">
+                                        <div className="absolute top-2 right-3 text-xs bg-black/50 px-2 py-1 rounded text-slate-900 dark:text-white font-mono">
                                             {timeLeft}s
                                         </div>
                                     </div>
-                                    <p className="text-gray-400 text-sm animate-pulse">
+                                    <p className="text-slate-500 dark:text-gray-400 text-sm animate-pulse">
                                         {t('ad.watching', 'Watching ad...')}
                                     </p>
                                 </>
@@ -297,7 +336,7 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
                                     <div className="w-20 h-20 bg-blue-500/20 rounded-full flex items-center justify-center mb-4">
                                         <Loader2 className="w-10 h-10 text-blue-400 animate-spin" />
                                     </div>
-                                    <p className="text-gray-300 mb-6">
+                                    <p className="text-slate-600 dark:text-gray-300 mb-6">
                                         {t('ad.playing', 'Ad is playing...')}
                                     </p>
                                 </>
@@ -308,15 +347,17 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
                                     <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mb-4 animate-bounce">
                                         {copy.rewardIcon}
                                     </div>
-                                    <h4 className="text-2xl font-bold text-white mb-2">
+                                    <h4 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
                                         +{rewardAmount} {t(copy.rewardLabelKey, copy.rewardLabelFallback)}!
                                     </h4>
-                                    <p className="text-gray-400 mb-6">
-                                        {t('ad.success', 'Reward earned successfully.')}
+                                    <p className="text-slate-500 dark:text-gray-400 mb-6">
+                                        {rewardedByNoFill
+                                            ? t('ad.noFillRewarded', '앗, 지금은 재생할 광고가 없어요! 보상은 바로 드릴게요.')
+                                            : t('ad.success', 'Reward earned successfully.')}
                                     </p>
                                     <button
                                         onClick={() => { playSound('click'); onClose(); }}
-                                        className="w-full py-3 bg-gray-700 hover:bg-gray-600 text-white font-bold rounded-xl transition-all active:scale-95"
+                                        className="w-full py-3 bg-slate-100 dark:bg-gray-700 hover:bg-slate-200 dark:bg-gray-600 text-slate-900 dark:text-white font-bold rounded-xl transition-all active:scale-95"
                                     >
                                         {t('common.close', 'Close')}
                                     </button>
@@ -328,15 +369,15 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
                                     <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mb-4">
                                         <div className="text-3xl">⛔</div>
                                     </div>
-                                    <h4 className="text-2xl font-bold text-white mb-2">
+                                    <h4 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
                                         {t('ad.limitReached', 'Daily ad limit reached.')}
                                     </h4>
-                                    <p className="text-gray-400 mb-6">
+                                    <p className="text-slate-500 dark:text-gray-400 mb-6">
                                         {t('ad.limitReachedDesc', 'Come back tomorrow to watch more ads.')}
                                     </p>
                                     <button
                                         onClick={() => { playSound('click'); onClose(); }}
-                                        className="w-full py-3 bg-gray-700 hover:bg-gray-600 text-white font-bold rounded-xl transition-all active:scale-95"
+                                        className="w-full py-3 bg-slate-100 dark:bg-gray-700 hover:bg-slate-200 dark:bg-gray-600 text-slate-900 dark:text-white font-bold rounded-xl transition-all active:scale-95"
                                     >
                                         {t('common.close', 'Close')}
                                     </button>
@@ -348,15 +389,15 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
                                     <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mb-4">
                                         <div className="text-3xl">⚠️</div>
                                     </div>
-                                    <h4 className="text-2xl font-bold text-white mb-2">
+                                    <h4 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
                                         {t('ad.rewardFailed', 'Reward failed.')}
                                     </h4>
-                                    <p className="text-gray-400 mb-6">
+                                    <p className="text-slate-500 dark:text-gray-400 mb-6">
                                         {t('ad.rewardFailedDesc', 'Please try again later.')}
                                     </p>
                                     <button
                                         onClick={() => { playSound('click'); onClose(); }}
-                                        className="w-full py-3 bg-gray-700 hover:bg-gray-600 text-white font-bold rounded-xl transition-all active:scale-95"
+                                        className="w-full py-3 bg-slate-100 dark:bg-gray-700 hover:bg-slate-200 dark:bg-gray-600 text-slate-900 dark:text-white font-bold rounded-xl transition-all active:scale-95"
                                     >
                                         {t('common.close', 'Close')}
                                     </button>

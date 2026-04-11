@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
+import { usePanelProgress } from '../../hooks/usePanelProgress';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useTranslation } from 'react-i18next';
 import {
     Heart, Star, Circle, Square, Triangle,
     Diamond, Cloud, Sun, Moon, Zap,
@@ -35,9 +35,8 @@ interface CardItem {
 }
 
 const FindPair: React.FC<FindPairProps> = ({ seed, onScore, isPlaying }) => {
-    const { t } = useTranslation();
     const { playSound } = useSound();
-    const [round, setRound] = useState(1);
+    const [round, setRound] = usePanelProgress(seed, 'round', 1);
     const [shakeIds, setShakeIds] = useState<string[]>([]);
     const [clearedIds, setClearedIds] = useState<string[]>([]);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -170,13 +169,6 @@ const FindPair: React.FC<FindPairProps> = ({ seed, onScore, isPlaying }) => {
 
     return (
         <div className="flex flex-col items-center justify-center w-full h-full p-4">
-            <h2 className="text-3xl font-black text-white mb-2 drop-shadow-md">
-                {t('pair.title')}
-            </h2>
-            <div className="text-gray-400 text-sm mb-6 animate-pulse">
-                {t('pair.instruction')}
-            </div>
-
             <AnimatePresence mode="popLayout">
                 <motion.div
                     key={animationKey}

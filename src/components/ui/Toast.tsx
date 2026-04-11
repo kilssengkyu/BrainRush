@@ -20,19 +20,19 @@ const Toast = ({ message, type, onClose }: ToastProps) => {
 
     switch (type) {
         case 'success':
-            icon = <CheckCircle className="w-5 h-5 text-green-400" />;
-            bgClass = 'bg-gray-900/95 border-green-500/50';
-            accentClass = 'bg-green-400';
+            icon = <CheckCircle className="w-5 h-5 text-emerald-500 dark:text-green-400" />;
+            bgClass = 'bg-white dark:bg-gray-900/95 border-emerald-500/50 dark:border-green-500/50';
+            accentClass = 'bg-emerald-500 dark:bg-green-400';
             break;
         case 'error':
-            icon = <XCircle className="w-5 h-5 text-red-400" />;
-            bgClass = 'bg-gray-900/95 border-red-500/50';
-            accentClass = 'bg-red-400';
+            icon = <XCircle className="w-5 h-5 text-red-500 dark:text-red-400" />;
+            bgClass = 'bg-white dark:bg-gray-900/95 border-red-500/50 dark:border-red-500/50';
+            accentClass = 'bg-red-500 dark:bg-red-400';
             break;
         default:
-            icon = <Info className="w-5 h-5 text-blue-400" />;
-            bgClass = 'bg-gray-900/95 border-blue-500/50';
-            accentClass = 'bg-blue-400';
+            icon = <Info className="w-5 h-5 text-blue-500 dark:text-blue-400" />;
+            bgClass = 'bg-white dark:bg-gray-900/95 border-blue-500/50 dark:border-blue-500/50';
+            accentClass = 'bg-blue-500 dark:bg-blue-400';
     }
 
     return (
@@ -45,8 +45,8 @@ const Toast = ({ message, type, onClose }: ToastProps) => {
         >
             <div className={`absolute left-0 top-0 bottom-0 w-1 ${accentClass}`} />
             {icon}
-            <span className="text-white text-[15px] leading-snug font-semibold flex-1">{message}</span>
-            <button onClick={onClose} className="text-gray-300 hover:text-white transition-colors p-1">
+            <span className="text-slate-900 dark:text-white text-[15px] leading-snug flex-1 select-none">{message}</span>
+            <button onClick={onClose} className="text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:text-white transition-colors p-1">
                 <X className="w-5 h-5" />
             </button>
         </motion.div>

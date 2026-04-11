@@ -1,0 +1,51 @@
+-- Add 40 additional bot profiles to increase matchmaking variety.
+-- Keeps the existing style: internal id, nickname, NULL avatar, country, mmr.
+
+INSERT INTO public.bot_profiles (id, nickname, avatar_url, country, mmr)
+VALUES
+    ('bot_ba1m4r7k2', 'mintqueue', NULL, 'US', 720),
+    ('bot_bb5n8s2p6', '김봉남', NULL, 'KR', 755),
+    ('bot_bc9p3t6v1', 'ゆるパン', NULL, 'JP', 790),
+    ('bot_bd2q7u1w5', 'soirpixel', NULL, 'FR', 825),
+    ('bot_be6r1v4x9', 'brotzeit', NULL, 'DE', 860),
+    ('bot_bf1s5w8y3', 'teatimego', NULL, 'GB', 895),
+    ('bot_bg4t9x2z7', 'maplesoda', NULL, 'CA', 930),
+    ('bot_bh8u3y6a1', 'ozlounge', NULL, 'AU', 965),
+    ('bot_bi2v7z1b5', 'brisadoce', NULL, 'BR', 1000),
+    ('bot_bj6w1a4c9', 'kopilane', NULL, 'SG', 1035),
+    ('bot_bk1x5b8d3', 'chaiquest', NULL, 'IN', 1070),
+    ('bot_bl4y9c2e7', 'tacozoom', NULL, 'MX', 1105),
+    ('bot_bm8z3d6f1', 'siestasync', NULL, 'ES', 1140),
+    ('bot_bn2a7e1g5', 'pastapace', NULL, 'IT', 1175),
+    ('bot_bo6b1f4h9', 'ankaraflix', NULL, 'TR', 1210),
+    ('bot_bp1c5g8j3', 'manilamode', NULL, 'PH', 1245),
+    ('bot_bq4d9h2k7', 'bangkokbit', NULL, 'TH', 1280),
+    ('bot_br8e3j6l1', 'saigonspeed', NULL, 'VN', 1315),
+    ('bot_bs2f7k1m5', 'jakjolt', NULL, 'ID', 1350),
+    ('bot_bt6g1l4n9', 'klclick', NULL, 'MY', 1385),
+    ('bot_bu1h5m8p3', 'warsawtap', NULL, 'PL', 1420),
+    ('bot_bv4j9n2q7', 'canalshift', NULL, 'NL', 1455),
+    ('bot_bw8k3p6r1', 'nordicdash', NULL, 'SE', 1490),
+    ('bot_bx2l7q1s5', 'fjordplay', NULL, 'NO', 1525),
+    ('bot_by6m1r4t9', 'copenhype', NULL, 'DK', 1560),
+    ('bot_bz1n5s8u3', 'auroragrid', NULL, 'FI', 1595),
+    ('bot_ca4p9t2v7', 'matevibe', NULL, 'AR', 1630),
+    ('bot_cb8q3u6w1', 'andeslane', NULL, 'CL', 1665),
+    ('bot_cc2r7v1x5', 'cafecubo', NULL, 'CO', 1700),
+    ('bot_cd6s1w4y9', 'dubairank', NULL, 'AE', 1735),
+    ('bot_ce1t5x8z3', 'riyadhrush', NULL, 'SA', 1770),
+    ('bot_cf4u9y2a7', 'johoshot', NULL, 'ZA', 1805),
+    ('bot_cg8v3z6b1', 'nilerhythm', NULL, 'EG', 1840),
+    ('bot_ch2w7a1c5', 'texasping', NULL, 'US', 1875),
+    ('bot_ci6x1b4d9', '오승철', NULL, 'KR', 1910),
+    ('bot_cj1y5c8e3', 'おやつ勢', NULL, 'JP', 1945),
+    ('bot_ck4z9d2f7', 'bleunoise', NULL, 'FR', 1980),
+    ('bot_cl8a3e6g1', 'abendspur', NULL, 'DE', 1990),
+    ('bot_cm2b7f1h5', 'queueflash', NULL, 'GB', 2000),
+    ('bot_cn6c1g4j9', 'northernpop', NULL, 'CA', 2000)
+ON CONFLICT (id) DO UPDATE
+SET nickname = EXCLUDED.nickname,
+    avatar_url = EXCLUDED.avatar_url,
+    country = EXCLUDED.country,
+    mmr = EXCLUDED.mmr;
+

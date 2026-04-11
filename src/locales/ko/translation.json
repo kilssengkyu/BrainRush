@@ -20,13 +20,25 @@
       "hour": "{{count}}시간 전",
       "day": "{{count}}일 전",
       "longAgo": "오래 전"
-    }
+    },
+    "exitAppTitle": "앱 종료",
+    "exitAppConfirm": "앱을 종료하시겠습니까?",
+    "open": "열기"
   },
   "auth": {
     "loginRequired": "로그인이 필요합니다.",
     "guestMode": "게스트 모드",
     "guestWarning": "게스트는 저장된 기록을 잃어버릴 수 있습니다.",
-    "terms": "계속 진행하면 서비스 약관에 동의하는 것으로 간주합니다."
+    "terms": "계속 진행하면 서비스 약관에 동의하는 것으로 간주합니다.",
+    "loggedOutByOtherDevice": "다른 기기에서 로그인되어 종료되었습니다."
+  },
+  "streak": {
+    "bonusActive": "보너스 적용중",
+    "bonusIncluded": "연승 보너스 +{{bonus}}",
+    "nextBonus": "연승 시 +{{bonus}}",
+    "loseBonusTitle": "연패 선물",
+    "loseBonusMessage": "3연패를 하셨네요. 응원의 의미로 연필을 한 개 드립니다.",
+    "loseBonusSubtext": "계속 주는 건 아니니까 다음 판은 이기세요! 💪"
   },
   "social": {
     "friends": "친구",
@@ -75,16 +87,21 @@
     "challenge": "대결 신청",
     "accept": "수락",
     "reject": "거절",
-    "newMessage": "{{nickname}}님에게서 메시지가 왔어요"
+    "newMessage": "{{nickname}}님에게서 메시지가 왔어요",
+    "chatRateLimited": "전송 제한 중: {{seconds}}초 후 다시 보낼 수 있어요."
   },
   "menu": {
     "normal": {
       "title": "일반 모드",
-      "subtitle": "기본적인 두뇌 회전 게임"
+      "subtitle": "기본적인 두뇌 회전 게임",
+      "matchRule": "3판 2선승"
     },
     "rank": {
       "title": "랭크 모드",
-      "subtitle": "전 세계 플레이어와 경쟁"
+      "subtitle": "전 세계 플레이어와 경쟁",
+      "matchRule": "5판 3선승",
+      "burningTime": "버닝타임",
+      "burningTimeBenefit": "연필 소모 없음"
     },
     "friendly": {
       "title": "친선 모드",
@@ -98,7 +115,8 @@
     "settings": "설정",
     "login": "로그인",
     "logout": "로그아웃",
-    "profile": "프로필"
+    "profile": "프로필",
+    "all": "All"
   },
   "shop": {
     "title": "상점",
@@ -131,24 +149,38 @@
       "title": "연습노트 100개",
       "desc": "많이 연습하는 분께 추천."
     },
+    "nicknameChangeTicket": {
+      "title": "닉네임 변경권 1개",
+      "desc": "30일 대기 없이 닉네임을 즉시 변경할 수 있습니다.",
+      "unit": "닉네임 변경권"
+    },
     "buy": "구매",
     "premium": "프리미엄",
     "popular": "인기",
     "bestValue": "가성비",
-    "notice": "결제는 App Store / Google Play에서 처리됩니다.",
+    "notice": "결제는 App Store에서 처리됩니다.",
     "comingSoon": "결제 준비 중입니다...",
     "priceTbd": "가격 미정",
     "loading": "불러오는 중...",
     "purchased": "구매 완료",
     "purchaseSuccess": "구매가 완료되었습니다.",
+    "purchaseRewardDesc": "구매하신 아이템이 지급되었습니다.",
+    "removeAdsApplied": "광고 제거가 적용되었습니다.",
     "purchaseFail": "구매에 실패했습니다.",
-    "billingUnavailable": "이 기기에서는 결제를 지원하지 않습니다."
+    "billingUnavailable": "이 기기에서는 결제를 지원하지 않습니다.",
+    "sessionRefreshFailed": "세션 갱신 실패: {{message}}",
+    "sessionExpired": "로그인 세션이 만료되었습니다. 다시 로그인해 주세요.",
+    "purchaseFailWithReason": "구매 실패: {{message}}"
   },
   "leaderboard": {
     "button": "랭킹",
-    "title": "랭킹",
+    "title": "랭킹 - 프리시즌",
     "global": "전체",
-    "country": "국가별"
+    "country": "국가별",
+    "myRank": "내 랭크",
+    "placementNotice": "배치 {{count}}판 후 랭킹에 표시됩니다.",
+    "mmrLabel": "MMR",
+    "avatarPreview": "{{nickname}} 아바타"
   },
   "ad": {
     "remaining": "오늘 남은 광고: {{count}}/{{limit}}",
@@ -171,7 +203,10 @@
     "playing": "광고 재생 중...",
     "pencils": "연필",
     "practiceNotes": "연습노트",
-    "success": "보상을 획득했어요."
+    "success": "보상을 획득했어요.",
+    "noFillTitle": "지금은 광고가 없어요",
+    "noFillDesc": "잠시 후 다시 시도해 주세요.",
+    "noFillRewarded": "앗, 지금은 재생할 광고가 없어요! 보상은 바로 드릴게요."
   },
   "notifications": {
     "fullTitle": "연필 가득!",
@@ -198,12 +233,51 @@
     "restorePurchasesFail": "구매 복구에 실패했습니다.",
     "restorePurchasesUnavailable": "이 기기에서는 결제를 지원하지 않습니다.",
     "restorePurchasesEmpty": "복구할 구매 내역이 없습니다.",
+    "notificationNativeOnly": "알림 설정은 모바일 앱에서만 사용할 수 있어요.",
+    "notificationOff": "알림이 꺼졌습니다.",
+    "notificationDeniedIos": "iPhone 설정 > 알림에서 권한을 허용해 주세요.",
+    "notificationDeniedAndroid": "Android 설정 > 알림에서 권한을 허용해 주세요.",
+    "notificationOn": "알림이 켜졌습니다.",
+    "support": "문의하기",
+    "supportDesc": "문제 신고, 오류 제보, 기타 문의를 확인할 수 있습니다.",
+    "goToSupport": "고객지원 열기",
     "privacyPolicy": "개인정보 처리방침",
     "privacyPolicyDesc": "서비스 이용에 필요한 개인정보 처리 내용을 확인할 수 있습니다.",
     "viewPrivacyPolicy": "개인정보 처리방침 보기",
     "tutorial": "튜토리얼",
     "tutorialDesc": "앱 사용 방법을 다시 확인하고 싶다면 튜토리얼을 다시 보세요.",
-    "viewTutorial": "튜토리얼 다시 보기"
+    "viewTutorial": "튜토리얼 다시 보기",
+    "notifications": "알림",
+    "pushNotifications": "푸시/로컬 알림",
+    "notificationNativeHint": "웹에서는 알림 토글이 비활성화됩니다.",
+    "recommended": "추천",
+    "theme": "테마",
+    "themeMode": "표시 모드",
+    "systemThemeDesc": "기기 설정을 따릅니다.",
+    "darkMode": "다크 모드",
+    "lightMode": "라이트 모드",
+    "light": "라이트",
+    "dark": "다크",
+    "system": "시스템",
+    "assetCredits": "에셋 크레딧",
+    "assetCreditsDesc": "일부 시각 에셋은 서드파티 제작물이며 각 라이선스(예: CC BY 4.0)에 따라 표기됩니다.",
+    "viewMakers": "만든이 및 크레딧 보기",
+    "makers": "만든이 및 크레딧",
+    "localCredit": "로컬 크레딧",
+    "announcements": "공지사항",
+    "announcementsDesc": "최신 공지사항을 다시 확인할 수 있습니다.",
+    "viewAnnouncementAgain": "공지사항 다시보기",
+    "announcementWillShowOnHome": "홈에서 최신 공지사항을 다시 표시합니다.",
+    "announcementResetFail": "공지사항 숨김 초기화에 실패했습니다.",
+    "versionLabel": "버전",
+    "makersRoleCreator": "만든사람",
+    "makersRoleRankingBadges": "랭킹 뱃지 (CC BY 4.0)",
+    "makersRoleCcBy": "CC BY 4.0 라이선스",
+    "admin": "관리자",
+    "adminDesc": "관리자 전용 페이지로 이동합니다.",
+    "goToAdmin": "관리자 화면 가기",
+    "guestModeWarningTitle": "게스트 계정 안내",
+    "guestModeWarningDesc": "게스트 계정은 로그아웃/앱 삭제/기기 변경 시 데이터가 사라질 수 있습니다. 계정 연동으로 진행 상황을 보호하세요."
   },
   "report": {
     "button": "신고",
@@ -219,6 +293,11 @@
     "nicknameSetupTitle": "닉네임 설정",
     "nicknameSetupDesc": "게임에서 사용할 닉네임을 입력해주세요.",
     "nicknamePlaceholder": "닉네임을 입력하세요",
+    "nicknameTicketsLabel": "닉네임 변경권",
+    "nicknameChangeAvailableNow": "지금 닉네임 변경 가능",
+    "nicknameChangeUnavailableNow": "지금 닉네임 변경 불가",
+    "nicknameFreeChangeNow": "무료 변경 가능: 지금",
+    "nicknameFreeChangeAt": "무료 변경 가능: {{date}}",
     "selectCountry": "국가 선택",
     "edit": "수정",
     "highscoresTitle": "하이스코어",
@@ -249,6 +328,10 @@
       "observation": "관찰력"
     },
     "changeAvatar": "사진 변경",
+    "removeAvatar": "사진 삭제",
+    "removeAvatarConfirm": "현재 프로필 사진을 삭제하시겠습니까?",
+    "avatarRemoveSuccess": "프로필 사진이 삭제되었습니다.",
+    "avatarRemoveFail": "프로필 사진 삭제 실패",
     "avatarUploading": "업로드 중...",
     "avatarInvalidType": "지원되지 않는 이미지 형식입니다.",
     "avatarTooLarge": "파일 용량이 너무 큽니다.",
@@ -257,15 +340,42 @@
     "record": "전적",
     "disconnects": "연결 끊김",
     "updateSuccess": "프로필이 업데이트되었습니다!",
+    "nicknameCooldownOrTicket": "닉네임은 30일마다 무료 변경 가능하며, 즉시 변경하려면 변경권이 필요합니다.",
     "updateFail": "프로필 업데이트 실패",
     "deleteSuccess": "계정이 삭제되었습니다.",
-    "deleteFail": "계정 삭제 실패"
+    "deleteFail": "계정 삭제 실패",
+    "noRecord": "No match history.",
+    "nicknameChangedSuccess": "닉네임이 변경되었습니다.",
+    "rankPlacement": "배치중",
+    "rankPlacementRemaining": "{{count}}판 남음"
   },
   "game": {
     "waiting": "게임 대기 중...",
     "victory": "승리",
     "defeat": "패배",
     "returnMenu": "메뉴로 돌아가기",
+    "setScore": "세트 스코어",
+    "practiceComplete": "연습 완료!",
+    "greatJob": "수고하셨습니다!",
+    "rematchIncomingTitle": "재대결 요청",
+    "rematchIncomingBody": "'{{nickname}}'님이 재대결을 요청했습니다. 수락하시겠습니까?",
+    "rematchCreateFail": "재대결을 시작할 수 없습니다.",
+    "rematchAccepted": "재대결이 시작됩니다.",
+    "rematchRejected": "상대가 재대결을 거절했습니다.",
+    "rematchExpired": "재대결 신청 시간이 종료되었습니다.",
+    "rematchConfirmTitle": "재대결 신청",
+    "rematchConfirmBody": "재대결을 요청하시겠습니까?",
+    "rematchRequesterCostNotice": "신청 시에만 연필 1개가 차감됩니다.",
+    "rematchReceiverFreeNotice": "리매치 수락 시에는 연필이 차감되지 않습니다.",
+    "rematchWaiting": "재대결 요청을 보냈습니다.",
+    "rematchRequestFail": "재대결 요청 중 오류가 발생했습니다.",
+    "rematchPending": "응답 대기중",
+    "rematchClosed": "재대결 종료",
+    "rematchRequest": "재대결 신청",
+    "rematchExpiredShort": "종료",
+    "rematchNoPencilsShort": "부족",
+    "rematchCostCountdownShort": "신청 1개 · {{seconds}}초",
+    "rematchNoPencils": "연필이 부족합니다",
     "reconnecting": "상대 연결 대기 중...",
     "reconnectingDesc": "상대방 연결이 끊겼습니다. 기권승까지 남은 시간:",
     "myTime": "나의 기록",
@@ -284,6 +394,18 @@
     "total": "총점",
     "great": "좋아요!",
     "tier": "티어",
+    "timeLeft": "남은 시간",
+    "connectionLost": "연결이 끊어졌어요. 재연결 중...",
+    "connectionUnstable": "연결 상태가 불안정합니다...",
+    "connecting": "연결 중...",
+    "aiBot": "AI 봇",
+    "me": "나",
+    "disconnected": "연결 끊김",
+    "devGhostPreview": "개발용 고스트 미리보기",
+    "devGhostPreviewGame": "게임",
+    "devGhostPreviewRoundHighscore": "라운드 하이스코어",
+    "devGhostPreviewBotGhost": "봇 고스트",
+    "devGhostPreviewGap": "차이",
     "table": {
       "round": "라운드",
       "myScore": "내 점수",
@@ -303,7 +425,24 @@
     "timeout": "상대를 찾지 못함",
     "timeoutDesc": "매칭 시간이 초과되었습니다.",
     "range": "범위",
-    "rankLevelRequired": "레벨 {{level}}부터 랭크가 열립니다."
+    "rankLevelRequired": "레벨 {{level}}부터 랭크가 열립니다.",
+    "searchingOpponent": "상대를 찾는 중..."
+  },
+  "home": {
+    "resumeMatchTitle": "진행 중인 게임이 있습니다",
+    "resumeMatchDesc": "홈으로 돌아왔어요. 진행 중이던 매치로 복귀할까요?",
+    "resumeLater": "나중에",
+    "resumeNow": "복귀",
+    "loginModalSubtitle": "일반/랭크 매치를 시작하려면 로그인해 주세요.",
+    "levelProgressLevel": "Lv. {{level}}",
+    "levelUp": "레벨 업!",
+    "hideAnnouncementToday": "오늘 다시 보지 않기",
+    "noPencilTitle": "연필이 부족해요",
+    "noPencilDesc": "일반/랭크 모드를 플레이하려면 연필이 필요합니다.",
+    "nextPencilIn": "다음 연필 충전까지 {{time}}",
+    "watchAdForPencil": "광고 보기",
+    "goToShopForPencil": "상점에서 구매하기",
+    "waitForRecharge": "기다리기"
   },
   "rps": {
     "ready": "준비...",
@@ -314,29 +453,38 @@
     "titleWin": "이기는 가위바위보",
     "titleLose": "지는 가위바위보",
     "title": "가위 바위 보",
-    "instruction": "지시에 따라 이기거나 지는 가위바위보를 선택하세요."
+    "instruction": "지시에 따라 이기거나 지는 쪽을 선택!"
   },
   "number": {
     "title": "숫자 정렬",
-    "instruction": "작은 수부터 순서대로 누르세요",
+    "instruction": "작은 수부터 순서대로 터치!",
     "asc": "작은 수에서 큰 수를 누르세요!",
     "desc": "큰 수에서 작은 수를 누르세요!",
     "ready": "준비",
     "panel": "패널",
     "titleDesc": "숫자 역정렬",
-    "instructionDesc": "큰 수부터 작은 수로 누르세요"
+    "instructionDesc": "큰 수부터 작은 수 순서로 터치!"
   },
   "math": {
     "title": "암산 챌린지",
-    "instruction": "수식을 계산하여 정답을 선택하세요."
+    "instruction": "수식을 계산해서 정답 터치!"
+  },
+  "mathOx": {
+    "title": "산수 OX",
+    "instruction": "수식이 맞으면 O, 틀리면 X!"
+  },
+  "oneStroke": {
+    "title": "한 줄 긋기",
+    "instruction": "색깔 칸에서 시작해 모든 빈칸을 한 번에 연결하기!",
+    "progress": "경로"
   },
   "ten": {
     "title": "10 만들기",
-    "instruction": "선택한 숫자의 합이 10이 되도록 만드세요."
+    "instruction": "숫자들을 더해서 10 만들기!"
   },
   "color": {
     "title": "색깔 맞추기",
-    "instruction": "글자와 테두리 색이 일치하는 버튼을 누르세요",
+    "instruction": "단어의 '의미'와 테두리의 '색깔'이 같은 것 찾기!",
     "red": "빨강",
     "blue": "파랑",
     "green": "초록",
@@ -344,112 +492,112 @@
   },
   "memory": {
     "title": "기억력 매칭",
-    "instruction": "카드의 위치를 기억하고 기억함 버튼을 누르세요. 그 뒤 짝을 맞춰 선택하세요.",
+    "instruction": "카드를 외운 뒤 '기억함'을 누르고 같은 짝 찾기!",
     "btn_memorized": "기억함!",
     "memorize_hint": "카드를 기억하세요!",
     "find_pairs": "짝을 찾으세요!"
   },
   "sequence": {
     "title": "거꾸로 순서",
-    "instruction": "나타난 순서의 반대로 누르세요",
+    "instruction": "나타난 순서의 반대로 터치!",
     "titleNormal": "순서 기억",
-    "instructionNormal": "나타난 순서대로 누르세요"
+    "instructionNormal": "나타난 순서대로 터치!"
   },
   "largest": {
     "title": "가장 큰 값 찾기",
-    "instruction": "결과가 가장 큰 수식을 눌러주세요"
+    "instruction": "결과가 가장 큰 수식 고르기!"
   },
   "pair": {
     "title": "짝 찾기",
-    "instruction": "똑같은 그림 두 개를 찾아보세요!"
+    "instruction": "똑같은 그림 두 개 찾기!"
   },
   "updown": {
     "title": "숫자 업 다운",
-    "instruction": "이전 숫자보다 커졌으면 위로, 작으면 아래로 슬라이드 하세요.",
+    "instruction": "이전보다 크면 위로, 작으면 아래로 슬라이드!",
     "prev": "이전 숫자",
     "start": "시작"
   },
   "slider": {
     "title": "숫자 슬라이더",
-    "instruction": "이어진 숫자의 합을 목표 숫자에 맞추세요!",
+    "instruction": "숫자들을 드래그로 이어 붙여서 목표 합계 만들기!",
     "target": "목표 합계"
   },
   "arrow": {
     "title": "화살표 슬라이더",
     "blue": "파랑 = 그대로",
     "red": "빨강 = 반대로",
-    "instruction": "파란색은 방향대로, 빨간색은 반대로 미세요!"
+    "instruction": "파란 화살표는 가리키는 방향, 빨간 화살표는 반대 방향!"
   },
   "fillBlanks": {
     "title": "빈칸 채우기",
-    "instruction": "정답이 되도록 빈칸에 들어갈 숫자를 선택하세요."
+    "instruction": "빈칸에 들어갈 알맞은 숫자 고르기!"
   },
   "findOperator": {
     "title": "기호 채우기",
-    "instruction": "정답이 되도록 알맞은 연산 기호를 선택하세요."
+    "instruction": "수식을 완성할 연산 기호 고르기!"
   },
   "ladder": {
     "title": "사다리 타기",
-    "instruction": "길을 따라 정확한 도착점을 찾으세요!"
+    "instruction": "사다리를 타고 정확한 도착점 찾기!"
   },
   "path": {
     "title": "패스 러너",
-    "instruction": "초록색 칸을 버튼으로 이동해 파란색 칸에 도달하세요. 버튼의 위치가 바뀔 수 있으니 주의하세요.",
+    "instruction": "초록색 칸을 움직여 파란 목적지에 도달하기!",
     "shuffle": "셔플"
   },
   "blindPath": {
     "title": "블라인드 패스",
-    "instruction": "하얀색 길을 외운 뒤, 버튼으로 초록색 칸을 이동해 파란색 칸에 도달하세요. 이동을 시작하면 길이 사라집니다. 벽에 부딪치면 감점되지만 길이 다시 보입니다.",
+    "instruction": "길을 외운 뒤 목적지에 도달하기! (이동 시작 시 길 숨김)",
     "memorizeHint": "길을 외우세요!",
     "runHint": "길을 따라가세요!",
     "memorized": "기억함!"
   },
   "balls": {
     "title": "볼 카운트",
-    "instruction": "움직이는 공 개수를 세고 정답을 눌러주세요."
+    "instruction": "움직이는 공 개수를 빠르고 정확하게 세기!"
   },
   "catchColor": {
     "title": "컬러 캐치",
-    "instruction": "막대를 슬라이드해서 막대와 같은 색 공을 받으세요. 다른 색 공을 받으면 감점되며, 막대의 색은 계속 바뀝니다.",
+    "instruction": "막대와 같은 색깔의 공만 받기! (색이 수시로 변함)",
     "switchSoon": "곧 색이 바뀝니다"
   },
   "tapTheColor": {
     "title": "색깔 터치",
-    "instruction": "색깔의 위치를 기억한 뒤 기억함 버튼을 누르세요. 상단에 표시되는 색 순서대로 기억한 버튼을 선택하세요.",
+    "instruction": "색 위치를 외우고, 표시된 순서대로 터치!",
     "memorize": "색깔의 위치를 기억하세요!",
     "remembered": "기억 했음!"
   },
   "aim": {
     "title": "조준 사격",
-    "instruction": "빨간색 표적을 빠르게 터치해 제거하세요. 파란색 표적은 제거하면 안 됩니다."
+    "instruction": "빨간색 표적만 빠르게 터치!"
   },
   "mostColor": {
     "title": "색깔 탐색",
-    "instruction": "화면에서 가장 많이 나타난 색을 선택하세요."
+    "instruction": "가장 많이 나타난 색깔 고르기!"
   },
   "sorting": {
-    "title": "정의의 분류",
-    "instruction": "첫 카드는 원하는 방향으로 보내세요. 이후 같은 기호 카드는 이전과 같은 방향으로, 다른 기호 카드는 반대 방향으로 슬라이드하세요. 상단의 다음 카드를 미리 보고 준비할 수 있습니다.",
+    "title": "정리정돈",
+    "instruction": "이전과 같으면 같은 방향, 다르면 반대 방향!",
     "firstMoveHint": "첫 카드는 아무 방향이나 OK!"
   },
   "spy": {
     "title": "스파이 찾기",
-    "instruction": "기호를 기억한 뒤 기억함 버튼을 누르세요. 이후 바뀐 기호를 찾으세요. 스파이는 점점 많아질 수 있습니다.",
+    "instruction": "기호를 외운 뒤, 새롭게 나타난 '스파이(달라진 기호)' 찾기!",
     "memorize": "기호를 기억하세요!",
     "find": "달라진 것은?",
     "ready": "기억함!"
   },
   "timingBar": {
     "title": "타이밍바",
-    "instruction": "떨어지는 바가 타겟 바와 겹칠 때 아무 곳이나 탭하세요."
+    "instruction": "떨어지는 바가 타겟과 겹칠 때 터치!"
   },
   "colorTiming": {
-      "title": "컬러 타이밍",
-      "instruction": "왼쪽 원에는 파란 공, 오른쪽 원에는 빨간 공이 들어올 때 터치하세요. 반대 색이면 감점됩니다."
+    "title": "컬러 타이밍",
+    "instruction": "왼쪽에는 파란 공, 오른쪽에는 빨간 공 터치!"
   },
   "stairway": {
     "title": "천국의 계단",
-    "instruction": "계단이 있는 방향을 눌러 계단을 올라가세요.",
+    "instruction": "계단이 있는 방향을 눌러 위로 올라가기!",
     "scoreLabel": "계단"
   },
   "tutorial": {
@@ -461,9 +609,81 @@
     "settings": "⚙️ 소리, 언어 등 게임 설정을 변경할 수 있어요!",
     "login": "👤 계정을 연동해서 안전하게 게임을 즐기세요!",
     "profile": "📊 나의 실력, 능력치, 게임별 점수를 확인할 수 있어요!",
+    "tryModesAfter": "이제 일반 또는 랭크 버튼을 눌러 첫 대전을 시작해보세요!",
+    "tryModesTitle": "첫 대전을 시작해볼까요?",
+    "tryModesDesc": "일반 또는 랭크 중 하나를 눌러 바로 플레이를 시작하세요.",
+    "tryNormalHighlight": "먼저 일반 모드를 눌러 첫 대전을 시작해보세요!",
+    "startNormalNow": "일반모드 시작",
     "next": "다음",
     "done": "완료",
     "skip": "건너뛰기",
     "loginNow": "바로 로그인"
+  },
+  "zero": {
+    "title": "0을 만들어라",
+    "instruction": "숫자를 차례로 넣어 0이 되는 수식 만들기!",
+    "undoHint": "수식을 터치하면 되돌립니다"
+  },
+  "practice": {
+    "random": "랜덤",
+    "descriptionPending": "설명 준비 중",
+    "myHighscoreLabel": "내 하이스코어",
+    "statGainLabel": "증가 능력치",
+    "none": "없음",
+    "guideTitle": "연습 가이드",
+    "guideAtAGlance": "한눈에 보기",
+    "guideObjective": "목표",
+    "guideHowTo": "플레이 방법",
+    "guideTip": "팁",
+    "autoGuide": {
+      "summary": "{{title}}의 핵심 규칙을 빠르게 익히는 연습입니다.",
+      "tip": "규칙을 먼저 확인한 뒤, 속도와 정확성에 집중하세요.",
+      "objectiveFallback": "게임을 시작하고 화면의 규칙을 따라 플레이하세요."
+    },
+    "viewGrid": "그리드로 보기",
+    "viewList": "줄로 보기",
+    "noNotesTitle": "연습노트가 부족해요",
+    "noNotesDesc": "연습모드를 플레이하려면 연습노트가 필요합니다.",
+    "watchAdForNotes": "연습노트 광고보기",
+    "goToShopForNotes": "상점에서 구매하기",
+    "waitForRecharge": "기다리기"
+  },
+  "update": {
+    "title": "업데이트 필요",
+    "message": "새로운 버전이 출시되었습니다. 원활한 플레이를 위해 업데이트해주세요.",
+    "button": "업데이트",
+    "storeNotReady": "스토어 준비 중입니다.",
+    "versionInfo": "현재: {{current}} / 최소: {{min}}"
+  },
+  "login": {
+    "bannedTitle": "계정 정지 안내",
+    "bannedMessage": "계정이 정지되었습니다.",
+    "bannedUntil": "정지 만료 예정: {{date}}",
+    "bannedDurationUnknown": "정지 기간은 관리자 판단에 따라 결정됩니다.",
+    "bannedAppeal": "정지 해제 요청(이의제기)은 고객센터로 문의해 주세요.",
+    "contactSupport": "문의하기",
+    "tryLaterKeyword": "잠시 후"
+  },
+  "review": {
+    "enjoyTitle": "게임 재밌으셨나요?",
+    "enjoySubtitle": "리뷰 한 줄이 큰 힘이 됩니다!",
+    "enjoyYes": "네! 😊",
+    "enjoyNo": "별로요 😐"
+  },
+  "mailbox": {
+    "title": "우편함",
+    "unread": "안읽은 우편",
+    "read": "읽은 우편",
+    "empty": "우편이 없습니다.",
+    "selectHint": "우편을 선택해 주세요.",
+    "untitled": "제목 없음",
+    "noContent": "내용이 없습니다.",
+    "rewardTitle": "수령 가능한 보상",
+    "rewardPencils": "연필 +{{count}}",
+    "rewardPracticeNotes": "연습노트 +{{count}}",
+    "claim": "수령",
+    "claimed": "수령 완료",
+    "claimSuccess": "보상을 수령했습니다. (+{{pencils}} 연필, +{{notes}} 연습노트)",
+    "claimBlockedPencilsFull": "연필이 5개 이상이면 수령할 수 없습니다. 먼저 연필을 사용해 주세요."
   }
 }

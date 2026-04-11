@@ -1,14 +1,18 @@
 import { App as CapacitorApp } from '@capacitor/app';
 import { AdMob } from '@capacitor-community/admob';
 import { Capacitor } from '@capacitor/core';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import Home from './pages/Home';
 
 // BackButton Handler Component (Need inside Router)
 const BackButtonHandler = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { confirm } = useUI();
+  const { t } = useTranslation();
+  const isExitConfirmOpenRef = useRef(false);
 
   useEffect(() => {
     let backButtonListener: { remove: () => void } | null = null;
@@ -17,9 +21,26 @@ const BackButtonHandler = () => {
       // But @capacitor/app supports web mostly or fails silently.
       // Actually, safely check if native? No, just add listener.
       try {
-        backButtonListener = await CapacitorApp.addListener('backButton', ({ canGoBack }) => {
+        backButtonListener = await CapacitorApp.addListener('backButton', async ({ canGoBack }) => {
+          const modalCloseRequest = { handled: false };
+          window.dispatchEvent(new CustomEvent('brainrush:request-modal-close', { detail: modalCloseRequest }));
+          if (modalCloseRequest.handled) return;
+
           if (location.pathname === '/' || location.pathname === '/home') {
-            CapacitorApp.exitApp();
+            if (isExitConfirmOpenRef.current) return;
+            isExitConfirmOpenRef.current = true;
+            try {
+              const shouldExit = await confirm(
+                t('common.exitAppTitle', '앱 종료'),
+                t('common.exitAppConfirm', '앱을 종료하시겠습니까?')
+              );
+              if (shouldExit) {
+                CapacitorApp.exitApp();
+              }
+            } finally {
+              isExitConfirmOpenRef.current = false;
+            }
+            return;
           } else if (canGoBack) {
             window.history.back();
           } else {
@@ -36,7 +57,7 @@ const BackButtonHandler = () => {
       // Avoid removing unrelated listeners (e.g., appUrlOpen for OAuth).
       if (backButtonListener) backButtonListener.remove();
     };
-  }, [navigate, location]);
+  }, [confirm, location, navigate, t]);
 
   return null;
 };
@@ -51,6 +72,11 @@ const AuthErrorRelay = () => {
 
     const errorCode = search.get('error_code') || hash.get('error_code');
     const errorDescription = search.get('error_description') || hash.get('error_description') || '';
+    
+    if (errorDescription) {
+        window.dispatchEvent(new CustomEvent('authDeepLinkError', { detail: { message: decodeURIComponent(errorDescription) } }));
+    }
+
     const isUserBanned = errorCode === 'user_banned' || String(errorDescription).toLowerCase().includes('banned');
 
     if (!isUserBanned) return;
@@ -80,7 +106,8 @@ import Settings from './pages/Settings';
 import { SoundProvider } from './contexts/SoundContext';
 
 import { AuthProvider } from './contexts/AuthContext';
-import { UIProvider } from './contexts/UIContext';
+import { UIProvider, useUI } from './contexts/UIContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { TutorialProvider } from './contexts/TutorialContext';
 // Pages
 import Login from './pages/Login';
@@ -91,16 +118,85 @@ import Privacy from './pages/Privacy';
 import Support from './pages/Support';
 import Admin from './pages/Admin';
 import AdminMember from './pages/AdminMember';
+import AdminCatalogGames from './pages/AdminCatalogGames';
+import AdminCatalogShop from './pages/AdminCatalogShop';
+import AdminNotices from './pages/AdminNotices';
 
 import GameInviteListener from './components/social/GameInviteListener';
+import RematchListener from './components/social/RematchListener';
 import ChatNotificationListener from './components/social/ChatNotificationListener';
 import LocalNotificationScheduler from './components/notifications/LocalNotificationScheduler';
 
+// Force Logout Listener (Single Active Session)
+const ForceLogoutListener = () => {
+  const navigate = useNavigate();
+  const { showToast } = useUI();
+  const { t } = useTranslation();
+
+  useEffect(() => {
+    const handler = () => {
+      showToast(t('auth.loggedOutByOtherDevice', 'You were logged out because this account was used on another device.'), 'error');
+      navigate('/login', { replace: true });
+    };
+    window.addEventListener('forceLogout', handler);
+    return () => window.removeEventListener('forceLogout', handler);
+  }, [navigate, showToast, t]);
+
+  return null;
+};
+
+// Deep Link / OAuth Error Listener
+const AuthDeepLinkErrorListener = () => {
+  const { showToast } = useUI();
+  const { t } = useTranslation();
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const rawMessage = String(customEvent.detail?.message || '');
+      const msg = rawMessage.toLowerCase();
+
+      const isIdentityConflict =
+        msg.includes('already linked') ||
+        msg.includes('identity_already_linked') ||
+        msg.includes('identity_already_exists') ||
+        msg.includes('already exists') ||
+        msg.includes('already registered') ||
+        msg.includes('account exists') ||
+        msg.includes('이미 가입된');
+
+      if (isIdentityConflict) {
+        void logAnalyticsEvent('br_auth_conflict', { location: 'deep_link' });
+        showToast(
+          t('profile.accountExistsLoginHint', '이미 존재하는 계정입니다. 로그아웃 후 해당 계정으로 로그인해 주세요.'),
+          'info'
+        );
+      } else if (msg && !msg.includes('cancel')) {
+        void logAnalyticsEvent('br_auth_error', { location: 'deep_link' });
+        showToast(rawMessage || msg, 'error');
+      }
+    };
+    window.addEventListener('authDeepLinkError', handler);
+    return () => window.removeEventListener('authDeepLinkError', handler);
+  }, [showToast, t]);
+
+  return null;
+};
 
 import BGMManager from './components/audio/BGMManager';
+import ForceUpdateCheck from './components/ForceUpdateCheck';
+import { primeRewardedAd } from './utils/rewardedAd';
+import { logAnalyticsEvent } from './lib/analytics';
 
 function App() {
+  const appOpenLoggedRef = useRef(false);
+
   useEffect(() => {
+    if (!appOpenLoggedRef.current) {
+      appOpenLoggedRef.current = true;
+      void logAnalyticsEvent('br_app_open');
+    }
+
     const isAndroid = Capacitor.getPlatform() === 'android';
     const offset = isAndroid ? '12px' : '0px';
     document.documentElement.style.setProperty('--home-top-offset', offset);
@@ -116,7 +212,13 @@ function App() {
       }
       // Initialize AdMob globally
       if (Capacitor.isNativePlatform()) {
-        AdMob.initialize().catch(e => console.error('Global AdMob init failed:', e));
+        try {
+          await AdMob.initialize();
+          // Preload rewarded ad once at app start (throttled, no infinite retry).
+          void primeRewardedAd(false);
+        } catch (e) {
+          console.error('Global AdMob init failed:', e);
+        }
       }
     };
     requestTracking();
@@ -124,33 +226,44 @@ function App() {
 
   return (
     <SoundProvider>
-      <AuthProvider>
-        <UIProvider>
-          <TutorialProvider>
-            <BrowserRouter>
-              <BackButtonHandler />
-              <AuthErrorRelay />
-              <BGMManager />
-              <GameInviteListener />
-              <ChatNotificationListener />
-              <LocalNotificationScheduler />
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/game/:roomId" element={<Game />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/practice" element={<PracticeMode />} />
-                <Route path="/shop" element={<Shop />} />
-                <Route path="/privacy" element={<Privacy />} />
-                <Route path="/support" element={<Support />} />
-                <Route path="/admin" element={<Admin />} />
-                <Route path="/admin/member" element={<AdminMember />} />
-              </Routes>
-            </BrowserRouter>
-          </TutorialProvider>
-        </UIProvider>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <UIProvider>
+            <TutorialProvider>
+              <BrowserRouter>
+                <div className="app-theme-root">
+                  <BackButtonHandler />
+                  <ForceUpdateCheck />
+                  <AuthErrorRelay />
+                  <BGMManager />
+                  <GameInviteListener />
+                  <RematchListener />
+                  <ChatNotificationListener />
+                  <LocalNotificationScheduler />
+                  <ForceLogoutListener />
+                  <AuthDeepLinkErrorListener />
+                  <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/game/:roomId" element={<Game />} />
+                    <Route path="/settings" element={<Settings />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/practice" element={<PracticeMode />} />
+                    <Route path="/shop" element={<Shop />} />
+                    <Route path="/privacy" element={<Privacy />} />
+                    <Route path="/support" element={<Support />} />
+                    <Route path="/admin" element={<Admin />} />
+                    <Route path="/admin/member" element={<AdminMember />} />
+                    <Route path="/admin/games" element={<AdminCatalogGames />} />
+                    <Route path="/admin/shop" element={<AdminCatalogShop />} />
+                    <Route path="/admin/notices" element={<AdminNotices />} />
+                  </Routes>
+                </div>
+              </BrowserRouter>
+            </TutorialProvider>
+          </UIProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </SoundProvider>
   );
 }

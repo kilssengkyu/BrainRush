@@ -438,22 +438,12 @@ const TimingBar: React.FC<TimingBarProps> = ({ onScore, isPlaying, remainingTime
                             />
                         )}
                         {note.type === 'hold' && !note.isBeingHeld && (
-                            <span className="absolute inset-0 flex items-center justify-center text-white text-xs font-bold drop-shadow">
+                            <span className="absolute inset-0 flex items-center justify-center text-slate-900 dark:text-white text-xs font-bold drop-shadow">
                                 HOLD
                             </span>
                         )}
                     </div>
                 ))}
-
-                {/* Streak - center display, sparkle at 10+ */}
-                {streak > 0 && (
-                    <div className={`absolute top-[15%] left-1/2 -translate-x-1/2 font-bold drop-shadow-lg z-30 ${streak >= 10
-                        ? 'text-4xl text-yellow-300 animate-pulse [text-shadow:0_0_10px_gold,0_0_20px_yellow,0_0_30px_orange]'
-                        : 'text-3xl text-yellow-400'
-                        }`}>
-                        {streak} COMBO
-                    </div>
-                )}
 
                 {/* Hold indicator */}
                 {isHolding && (

@@ -1,7 +1,7 @@
 {
   "name": "temp-app",
   "private": true,
-  "version": "1.9.14",
+  "version": "1.9.16",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -13,8 +13,11 @@
   "dependencies": {
     "@capacitor-community/admob": "^8.0.0",
     "@capacitor-community/apple-sign-in": "^6.0.0",
+    "@capacitor-community/in-app-review": "^6.0.0",
+    "@capacitor-firebase/analytics": "^6.3.1",
     "@capacitor/android": "^6.2.1",
     "@capacitor/app": "^6.0.3",
+    "@capacitor/browser": "^6.0.6",
     "@capacitor/cli": "^6.2.1",
     "@capacitor/core": "^6.2.1",
     "@capacitor/haptics": "^6.0.0",
@@ -26,6 +29,7 @@
     "@supabase/supabase-js": "^2.90.1",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/howler": "^2.2.12",
+    "firebase": "^11.10.0",
     "flag-icons": "^7.5.0",
     "framer-motion": "^12.25.0",
     "howler": "^2.2.4",

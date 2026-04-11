@@ -1,8 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Settings, User, Trophy, Zap, Loader2, Lock, AlertTriangle, Dumbbell, ShoppingBag } from 'lucide-react';
+import { Settings, User, Trophy, Zap, Loader2, Lock, AlertTriangle, Dumbbell, ShoppingBag, Flame, Mail } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
+import HexRadar from '../components/ui/HexRadar';
 import { useMatchmaking } from '../hooks/useMatchmaking';
 import { useSound } from '../contexts/SoundContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -14,45 +16,87 @@ import LeaderboardModal from '../components/ui/LeaderboardModal';
 import { supabase } from '../lib/supabaseClient';
 import { getTierFromMMR, getTierColor, getTierIcon } from '../utils/rankUtils';
 import LevelBadge from '../components/ui/LevelBadge';
-import { getLevelFromXp } from '../utils/levelUtils';
+import { getLevelFromXp, getLevelProgress, getXpSnapshotStorageKey } from '../utils/levelUtils';
 import { useTutorial } from '../contexts/TutorialContext';
 import SpotlightOverlay from '../components/ui/SpotlightOverlay';
+import TierMMRBadge from '../components/ui/TierMMRBadge';
+import MailboxModal from '../components/ui/MailboxModal';
+
+type RadarStats = {
+    speed: number;
+    memory: number;
+    judgment: number;
+    calculation: number;
+    accuracy: number;
+    observation: number;
+};
+
+type XpAnimationPayload = {
+    roomId: string;
+    beforeXp: number;
+    beforeLevel: number;
+    afterXp: number;
+    afterLevel: number;
+    xpGain: number;
+};
+
+const MAX_PENCILS = 5;
+const PENCIL_RECHARGE_MS = 15 * 60 * 1000;
+const GUEST_LINK_PROMPT_LEVEL = 5;
+const GUEST_LINK_PROMPT_INITIAL_DELAY_MS = 3 * 24 * 60 * 60 * 1000;
+const GUEST_LINK_PROMPT_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
+
+const getLivePencilState = (
+    pencils: number | null | undefined,
+    lastRechargeAt: string | null | undefined,
+    nowMs: number
+) => {
+    const basePencils = typeof pencils === 'number' ? pencils : 0;
+    const availablePencils = Math.min(MAX_PENCILS, Math.max(0, basePencils));
+
+    if (!lastRechargeAt || basePencils >= MAX_PENCILS) {
+        return { totalPencils: Math.max(0, basePencils), availablePencils, remainingMs: 0 };
+    }
+
+    const lastMs = new Date(lastRechargeAt).getTime();
+    if (!Number.isFinite(lastMs)) {
+        return { totalPencils: Math.max(0, basePencils), availablePencils, remainingMs: 0 };
+    }
+
+    const elapsedMs = Math.max(0, nowMs - lastMs);
+    const regenerated = Math.floor(elapsedMs / PENCIL_RECHARGE_MS);
+    const livePencils = Math.min(MAX_PENCILS, Math.max(0, basePencils + regenerated));
+
+    if (livePencils >= MAX_PENCILS) {
+        return { totalPencils: MAX_PENCILS, availablePencils: MAX_PENCILS, remainingMs: 0 };
+    }
+
+    return {
+        totalPencils: livePencils,
+        availablePencils: livePencils,
+        remainingMs: PENCIL_RECHARGE_MS - (elapsedMs % PENCIL_RECHARGE_MS)
+    };
+};
 
 // Simple Timer Component
-const RechargeTimer = ({ lastRecharge }: { lastRecharge: string }) => {
+const RechargeTimer = ({ remainingMs }: { remainingMs: number }) => {
     const [timeLeft, setTimeLeft] = useState<string>('');
 
     useEffect(() => {
         const calculateTime = () => {
-            if (!lastRecharge) return;
-            const last = new Date(lastRecharge).getTime();
-            const now = new Date().getTime();
-            const diff = now - last;
-            const thirtyMinutes = 30 * 60 * 1000;
-
-            // Time passed since last recharge
-            // If we have < 5 pencils, the next one comes at (last_recharge + 30min)
-            // Wait, if multiple intervals passed but not synced? 
-            // The DB syncs on load. We assume 'lastRecharge' is the start of the CURRENT 10m cycle.
-
-            const remaining = thirtyMinutes - diff;
-
-            if (remaining <= 0) {
-                setTimeLeft('00:00'); // Ready to sync?
-            } else {
-                const m = Math.floor(remaining / 60000);
-                const s = Math.floor((remaining % 60000) / 1000);
-                setTimeLeft(`${m}:${s.toString().padStart(2, '0')}`);
-            }
+            const safeRemaining = Math.max(0, remainingMs);
+            const m = Math.floor(safeRemaining / 60000);
+            const s = Math.floor((safeRemaining % 60000) / 1000);
+            setTimeLeft(`${m}:${s.toString().padStart(2, '0')}`);
         };
 
         calculateTime();
         const interval = setInterval(calculateTime, 1000);
         return () => clearInterval(interval);
-    }, [lastRecharge]);
+    }, [remainingMs]);
 
     return (
-        <span className="ml-0 text-[10px] text-gray-400 font-mono">
+        <span className="ml-0 text-[10px] text-slate-500 dark:text-gray-400 font-mono">
             +{timeLeft}
         </span>
     );
@@ -60,17 +104,59 @@ const RechargeTimer = ({ lastRecharge }: { lastRecharge: string }) => {
 
 const Home = () => {
     const navigate = useNavigate();
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const { playSound } = useSound();
-    const { user, profile, refreshProfile, loading: authLoading } = useAuth();
-    const { showToast } = useUI();
+    const { user, profile, refreshProfile, loading: authLoading, signInWithGoogle, signInWithApple, linkWithGoogle, linkWithApple, signInAnonymously, signOut } = useAuth();
+    const { showToast, confirm } = useUI();
     const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
     const [unreadChatCount, setUnreadChatCount] = useState(0);
+    const [xpAnimation, setXpAnimation] = useState<XpAnimationPayload | null>(null);
+    const [animatedXpValue, setAnimatedXpValue] = useState<number | null>(null);
+    const [levelUpPulse, setLevelUpPulse] = useState(false);
+    const lastHandledXpRoomRef = useRef<string | null>(null);
+    const xpRefreshRetryRef = useRef(0);
+    const [longPressXpExpanded, setLongPressXpExpanded] = useState(false);
+    const longPressTimerRef = useRef<number | null>(null);
+    const longPressCollapseTimerRef = useRef<number | null>(null);
+    const longPressTouchRef = useRef(false);
+    const longPressTriggeredRef = useRef(false);
+    const suppressProfileClickRef = useRef(false);
+    const suppressProfileClickUntilRef = useRef(0);
+    const [nowMs, setNowMs] = useState(() => Date.now());
+    const lastPencilRefreshAttemptRef = useRef(0);
+    const dailyActivityRecordedUserRef = useRef<string | null>(null);
+    const syncedTimeZoneRef = useRef<string | null>(null);
+    const [rankBurningTimeStatus, setRankBurningTimeStatus] = useState({
+        isActive: false,
+        windowLabel: null as string | null
+    });
+    const deviceTimeZone = useMemo(() => {
+        try {
+            return Intl.DateTimeFormat().resolvedOptions().timeZone || null;
+        } catch {
+            return null;
+        }
+    }, []);
+    const isRankBurningTime = rankBurningTimeStatus.isActive;
+    const rankBurningTimeWindow = rankBurningTimeStatus.windowLabel;
 
     // Refresh profile on mount to get latest MMR after game
     useEffect(() => {
         refreshProfile();
     }, []);
+
+    useEffect(() => {
+        const profilePencils = typeof profile?.pencils === 'number' ? profile.pencils : 0;
+        if (profilePencils >= MAX_PENCILS) {
+            setNowMs(Date.now());
+            return;
+        }
+
+        const timer = window.setInterval(() => {
+            setNowMs(Date.now());
+        }, 1000);
+        return () => window.clearInterval(timer);
+    }, [profile?.pencils]);
 
     useEffect(() => {
         if (!user) {
@@ -135,6 +221,83 @@ const Home = () => {
         };
     }, [user]);
 
+    useEffect(() => {
+        if (!user) {
+            setRankBurningTimeStatus({ isActive: false, windowLabel: null });
+            return;
+        }
+
+        let cancelled = false;
+        let intervalId: number | null = null;
+
+        const loadBurningTimeStatus = async () => {
+            try {
+                if (
+                    deviceTimeZone &&
+                    profile?.timezone !== deviceTimeZone &&
+                    syncedTimeZoneRef.current !== deviceTimeZone
+                ) {
+                    const { error } = await supabase.rpc('set_my_timezone', { p_timezone: deviceTimeZone });
+                    if (!error) {
+                        syncedTimeZoneRef.current = deviceTimeZone;
+                    }
+                }
+
+                const { data, error } = await supabase.rpc('get_rank_burning_time_status', {
+                    p_player_id: user.id
+                });
+                if (error) throw error;
+
+                const status = data as { is_active?: boolean; window_label?: string | null } | null;
+                if (!cancelled) {
+                    setRankBurningTimeStatus({
+                        isActive: Boolean(status?.is_active),
+                        windowLabel: status?.window_label ?? null
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to load rank burning time status:', error);
+                if (!cancelled) {
+                    setRankBurningTimeStatus({ isActive: false, windowLabel: null });
+                }
+            }
+        };
+
+        void loadBurningTimeStatus();
+        intervalId = window.setInterval(loadBurningTimeStatus, 60 * 1000);
+
+        return () => {
+            cancelled = true;
+            if (intervalId !== null) window.clearInterval(intervalId);
+        };
+    }, [deviceTimeZone, profile?.timezone, user?.id]);
+
+    useEffect(() => {
+        if (!user) {
+            dailyActivityRecordedUserRef.current = null;
+            return;
+        }
+        if (dailyActivityRecordedUserRef.current === user.id) return;
+
+        let cancelled = false;
+        const recordActivity = async () => {
+            try {
+                const { error } = await (supabase as any).rpc('record_daily_activity');
+                if (error) throw error;
+                if (!cancelled) {
+                    dailyActivityRecordedUserRef.current = user.id;
+                }
+            } catch (error) {
+                console.error('Failed to record daily activity:', error);
+            }
+        };
+
+        void recordActivity();
+        return () => {
+            cancelled = true;
+        };
+    }, [user]);
+
     // Calculate Level from MMR (Temporary: MMR / 100)
     // const level = profile?.mmr ? Math.floor(profile.mmr / 100) : 1; 
     // Wait, let's just remove it if really unused. But wait, did I remove the usage in the UI? 
@@ -145,18 +308,237 @@ const Home = () => {
     const tier = getTierFromMMR(rank);
     const tierColor = getTierColor(tier);
     const TierIcon = getTierIcon(tier);
+    const isMyShinyTier = tier === 'Diamond' || tier === 'Master';
+    const placementRequiredGames = 1;
+    const rankGamesPlayed = Math.max(0, Number((profile as any)?.rank_games_played ?? 0));
+    const showRankSummary = rankGamesPlayed >= placementRequiredGames;
     const level = typeof profile?.level === 'number'
         ? profile.level
         : typeof profile?.xp === 'number'
             ? getLevelFromXp(profile.xp)
             : 1;
-    const requiredRankLevel = 5;
-    const isRankUnlocked = level >= requiredRankLevel;
-    const canPlayRank = Boolean(user) && isRankUnlocked;
+    const canPlayRank = Boolean(user);
     const nickname = profile?.nickname || user?.email?.split('@')[0] || t('game.unknownPlayer');
     const avatarUrl = profile?.avatar_url;
     const countryCode = profile?.country;
     const hasSocialNotifications = pendingRequestsCount > 0 || unreadChatCount > 0;
+    const livePencilState = getLivePencilState(profile?.pencils, profile?.last_recharge_at, nowMs);
+    const displayedPencils = livePencilState.totalPencils;
+    const availablePencils = livePencilState.availablePencils;
+    const displayedRechargeMs = livePencilState.remainingMs;
+
+    // Stable ref for refreshProfile to avoid effect dependency issues
+    const refreshProfileRef = useRef(refreshProfile);
+    useEffect(() => { refreshProfileRef.current = refreshProfile; }, [refreshProfile]);
+
+    useEffect(() => {
+        const profilePencils = typeof profile?.pencils === 'number' ? profile.pencils : null;
+        if (profilePencils === null || displayedPencils <= profilePencils) return;
+
+        const now = Date.now();
+        if (now - lastPencilRefreshAttemptRef.current < 5000) return;
+        lastPencilRefreshAttemptRef.current = now;
+        void refreshProfileRef.current();
+    }, [displayedPencils, profile?.pencils]);
+
+    useEffect(() => {
+        if (!user || !profile) return;
+
+        const storageKey = getXpSnapshotStorageKey(user.id);
+        let retryTimer: number | null = null;
+
+        const tryProcess = () => {
+            try {
+                const raw = window.sessionStorage.getItem(storageKey);
+                if (!raw) return;
+
+                const snapshot = JSON.parse(raw) as { roomId?: string; beforeXp?: number; beforeLevel?: number; capturedAt?: number } | null;
+                if (!snapshot?.roomId || typeof snapshot.beforeXp !== 'number') return;
+                if (lastHandledXpRoomRef.current === snapshot.roomId) return;
+
+                const afterXp = Math.max(0, Math.floor(Number(profile.xp ?? 0)));
+                const afterLevel = typeof profile.level === 'number'
+                    ? Math.max(1, Math.floor(profile.level))
+                    : getLevelFromXp(afterXp);
+
+                if (afterXp <= snapshot.beforeXp && afterLevel <= (snapshot.beforeLevel ?? 1)) {
+                    const ageMs = Date.now() - Number(snapshot.capturedAt ?? Date.now());
+                    // Games last 30-40s+, so allow retries for up to 5 minutes
+                    if (ageMs < 300000 && xpRefreshRetryRef.current < 8) {
+                        xpRefreshRetryRef.current += 1;
+                        retryTimer = window.setTimeout(() => {
+                            refreshProfileRef.current();
+                        }, 700);
+                        return;
+                    }
+                    // Only expire after 10 minutes
+                    if (ageMs > 600000) {
+                        window.sessionStorage.removeItem(storageKey);
+                    }
+                    return;
+                }
+
+                xpRefreshRetryRef.current = 0;
+                window.sessionStorage.removeItem(storageKey);
+                lastHandledXpRoomRef.current = snapshot.roomId;
+                setXpAnimation({
+                    roomId: snapshot.roomId,
+                    beforeXp: snapshot.beforeXp,
+                    beforeLevel: Math.max(1, Math.floor(snapshot.beforeLevel ?? getLevelFromXp(snapshot.beforeXp))),
+                    afterXp,
+                    afterLevel,
+                    xpGain: Math.max(0, afterXp - snapshot.beforeXp)
+                });
+                setAnimatedXpValue(snapshot.beforeXp);
+            } catch (error) {
+                console.error('Failed to restore xp snapshot', error);
+            }
+        };
+
+        tryProcess();
+
+        return () => {
+            if (retryTimer) window.clearTimeout(retryTimer);
+        };
+    }, [user, profile]);
+
+    useEffect(() => {
+        if (!xpAnimation) return;
+
+        let frameId = 0;
+        let hideTimer: number | null = null;
+        let lastLevel = xpAnimation.beforeLevel;
+        const duration = Math.min(2600, 1100 + (xpAnimation.xpGain * 18));
+        const startTime = performance.now();
+
+        const tick = (now: number) => {
+            const progress = Math.min((now - startTime) / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            const nextXp = Math.round(xpAnimation.beforeXp + ((xpAnimation.afterXp - xpAnimation.beforeXp) * eased));
+            const nextLevel = getLevelFromXp(nextXp);
+
+            setAnimatedXpValue(nextXp);
+
+            if (nextLevel > lastLevel) {
+                lastLevel = nextLevel;
+                setLevelUpPulse(true);
+                playSound('level_complete');
+                window.setTimeout(() => setLevelUpPulse(false), 850);
+            }
+
+            if (progress < 1) {
+                frameId = window.requestAnimationFrame(tick);
+                return;
+            }
+
+            setAnimatedXpValue(xpAnimation.afterXp);
+            hideTimer = window.setTimeout(() => {
+                setXpAnimation(null);
+                setAnimatedXpValue(null);
+                setLevelUpPulse(false);
+            }, xpAnimation.afterLevel > xpAnimation.beforeLevel ? 2600 : 1800);
+        };
+
+        frameId = window.requestAnimationFrame(tick);
+
+        return () => {
+            if (frameId) window.cancelAnimationFrame(frameId);
+            if (hideTimer) window.clearTimeout(hideTimer);
+        };
+    }, [xpAnimation, playSound]);
+
+    // Streak timer
+    const streakCount = profile?.rank_win_streak ?? 0;
+    const streakUpdatedAt = profile?.rank_streak_updated_at;
+    const [streakSecondsLeft, setStreakSecondsLeft] = useState(0);
+
+    useEffect(() => {
+        if (!streakUpdatedAt || streakCount < 1) { setStreakSecondsLeft(0); return; }
+        const calc = () => {
+            const elapsed = (Date.now() - new Date(streakUpdatedAt).getTime()) / 1000;
+            const left = Math.max(0, 600 - elapsed);
+            setStreakSecondsLeft(Math.floor(left));
+        };
+        calc();
+        const iv = setInterval(calc, 1000);
+        return () => clearInterval(iv);
+    }, [streakUpdatedAt, streakCount]);
+
+    const streakActive = streakCount >= 1 && streakSecondsLeft > 0;
+    const shouldHighlightRankButton = streakActive && canPlayRank;
+    const streakMinutes = Math.floor(streakSecondsLeft / 60);
+    const streakSeconds = streakSecondsLeft % 60;
+    const displayedXp = animatedXpValue ?? Math.max(0, Math.floor(Number(profile?.xp ?? 0)));
+    const displayedLevel = typeof profile?.level === 'number' && animatedXpValue === null
+        ? Math.max(1, Math.floor(profile.level))
+        : getLevelFromXp(displayedXp);
+    const displayedXpProgress = getLevelProgress(displayedXp);
+    const shouldShowXpPanel = Boolean(xpAnimation) || longPressXpExpanded;
+    const didLevelUpInAnimation = Boolean(xpAnimation && xpAnimation.afterLevel > xpAnimation.beforeLevel);
+    const staticXp = Math.max(0, Math.floor(Number(profile?.xp ?? 0)));
+    const staticLevel = typeof profile?.level === 'number' ? Math.max(1, Math.floor(profile.level)) : getLevelFromXp(staticXp);
+    const staticXpProgress = getLevelProgress(staticXp);
+
+    const handleProfilePressStart = () => {
+        if (xpAnimation) return; // animation already showing
+        longPressTouchRef.current = true;
+        longPressTriggeredRef.current = false;
+        suppressProfileClickRef.current = false;
+        suppressProfileClickUntilRef.current = 0;
+        longPressTimerRef.current = window.setTimeout(() => {
+            if (longPressTouchRef.current) {
+                longPressTriggeredRef.current = true;
+                suppressProfileClickRef.current = true;
+                setLongPressXpExpanded(true);
+            }
+        }, 300);
+    };
+    const handleProfilePressEnd = () => {
+        longPressTouchRef.current = false;
+        if (longPressTimerRef.current) {
+            window.clearTimeout(longPressTimerRef.current);
+            longPressTimerRef.current = null;
+        }
+        if (longPressTriggeredRef.current) {
+            suppressProfileClickRef.current = true;
+            suppressProfileClickUntilRef.current = Date.now() + 700;
+            if (longPressCollapseTimerRef.current) {
+                window.clearTimeout(longPressCollapseTimerRef.current);
+            }
+            longPressCollapseTimerRef.current = window.setTimeout(() => {
+                setLongPressXpExpanded(false);
+                longPressCollapseTimerRef.current = null;
+            }, 1500);
+            return;
+        }
+    };
+    const handleProfileClick = (event: React.MouseEvent | React.PointerEvent) => {
+        if (
+            suppressProfileClickRef.current
+            || longPressXpExpanded
+            || Date.now() < suppressProfileClickUntilRef.current
+        ) {
+            event.preventDefault();
+            event.stopPropagation();
+            suppressProfileClickRef.current = false;
+            return;
+        }
+        navigate('/profile');
+    };
+
+    useEffect(() => {
+        return () => {
+            if (longPressTimerRef.current) {
+                window.clearTimeout(longPressTimerRef.current);
+            }
+            if (longPressCollapseTimerRef.current) {
+                window.clearTimeout(longPressCollapseTimerRef.current);
+            }
+        };
+    }, []);
+    // Next milestone: 3 -> +5, 6 -> +10, 9 -> +15
+    const nextMilestone = streakCount < 3 ? 3 : streakCount < 6 ? 6 : streakCount < 9 ? 9 : 0;
+    const nextBonusMMR = nextMilestone === 3 ? 5 : nextMilestone === 6 ? 10 : nextMilestone === 9 ? 15 : 0;
     const AD_DAILY_LIMIT = 10;
     const today = new Date().toISOString().slice(0, 10);
     const adRewardDay = profile?.ad_reward_day;
@@ -169,12 +551,89 @@ const Home = () => {
 
     // Track selected mode for navigation callback
     const currentMode = useRef('rank');
-
     // Matchmaking Hook
-    const { status, startSearch, cancelSearch, elapsedTime, playerId } = useMatchmaking((roomId, opponentId) => {
+    const { status, startSearch, cancelSearch, elapsedTime, playerId, matchedOpponentId } = useMatchmaking((roomId, opponentId) => {
         playSound('match_found');
-        navigate(`/game/${roomId}`, { state: { roomId, myId: playerId, opponentId, mode: currentMode.current } });
+        // Delay navigation briefly so matched profile is visible
+        setTimeout(() => {
+            navigate(`/game/${roomId}`, { state: { roomId, myId: playerId, opponentId, mode: currentMode.current, skipWaiting: true } });
+        }, 1500);
     });
+
+    // Matched opponent profile fetch
+    const [matchedOpProfile, setMatchedOpProfile] = useState<any>(null);
+    const [matchedBotRadarStats, setMatchedBotRadarStats] = useState<RadarStats | null>(null);
+    useEffect(() => {
+        if (!matchedOpponentId) {
+            setMatchedOpProfile(null);
+            setMatchedBotRadarStats(null);
+            return;
+        }
+        const fetchOpProfile = async () => {
+            if (matchedOpponentId.startsWith('bot_')) {
+                const { data } = await supabase.from('bot_profiles').select('*').eq('id', matchedOpponentId).maybeSingle();
+                if (data) {
+                    setMatchedOpProfile({ nickname: data.nickname, avatar_url: data.avatar_url, country: data.country, mmr: data.mmr });
+                } else {
+                    setMatchedOpProfile({ nickname: t('game.unknownPlayer'), avatar_url: null });
+                }
+            } else {
+                const { data } = await supabase.from('profiles').select('*').eq('id', matchedOpponentId).single();
+                setMatchedOpProfile(data || { nickname: t('game.opponent'), avatar_url: null });
+            }
+        };
+        fetchOpProfile();
+    }, [matchedOpponentId, t]);
+
+    useEffect(() => {
+        if (!matchedOpponentId?.startsWith('bot_') || !profile) {
+            setMatchedBotRadarStats(null);
+            return;
+        }
+
+        const randomizeAround = (value: number) => {
+            const factor = 0.8 + Math.random() * 0.4;
+            return Math.max(0, Math.round(value * factor));
+        };
+
+        setMatchedBotRadarStats({
+            speed: randomizeAround(profile.speed || 0),
+            memory: randomizeAround(profile.memory || 0),
+            judgment: randomizeAround(profile.judgment || 0),
+            calculation: randomizeAround(profile.calculation || 0),
+            accuracy: randomizeAround(profile.accuracy || 0),
+            observation: randomizeAround(profile.observation || 0)
+        });
+    }, [matchedOpponentId, profile]);
+
+    // Radar stats for matchmaking screen
+    const myRadarStats = {
+        speed: profile?.speed || 0,
+        memory: profile?.memory || 0,
+        judgment: profile?.judgment || 0,
+        calculation: profile?.calculation || 0,
+        accuracy: profile?.accuracy || 0,
+        observation: profile?.observation || 0
+    };
+    const opRadarStats = {
+        speed: matchedOpponentId?.startsWith('bot_') ? (matchedBotRadarStats?.speed || 0) : (matchedOpProfile?.speed || 0),
+        memory: matchedOpponentId?.startsWith('bot_') ? (matchedBotRadarStats?.memory || 0) : (matchedOpProfile?.memory || 0),
+        judgment: matchedOpponentId?.startsWith('bot_') ? (matchedBotRadarStats?.judgment || 0) : (matchedOpProfile?.judgment || 0),
+        calculation: matchedOpponentId?.startsWith('bot_') ? (matchedBotRadarStats?.calculation || 0) : (matchedOpProfile?.calculation || 0),
+        accuracy: matchedOpponentId?.startsWith('bot_') ? (matchedBotRadarStats?.accuracy || 0) : (matchedOpProfile?.accuracy || 0),
+        observation: matchedOpponentId?.startsWith('bot_') ? (matchedBotRadarStats?.observation || 0) : (matchedOpProfile?.observation || 0)
+    };
+    const matchedTier = getTierFromMMR(Number(matchedOpProfile?.mmr ?? 1000));
+    const matchedTierColor = getTierColor(matchedTier);
+    const isMatchedShinyTier = matchedTier === 'Diamond' || matchedTier === 'Master';
+    const radarLabels = {
+        speed: t('profile.stats.speed'),
+        memory: t('profile.stats.memory'),
+        judgment: t('profile.stats.judgment'),
+        calculation: t('profile.stats.calculation'),
+        accuracy: t('profile.stats.accuracy'),
+        observation: t('profile.stats.observation')
+    };
 
     // Animation variants
     const containerVariants = {
@@ -194,7 +653,15 @@ const Home = () => {
     };
 
     const [showAdModal, setShowAdModal] = useState(false);
+    const [showNoPencilChoiceModal, setShowNoPencilChoiceModal] = useState(false);
+    const [isLoginModalLoading, setIsLoginModalLoading] = useState(false);
+    const [showPostTutorialNormalSpotlight, setShowPostTutorialNormalSpotlight] = useState(false);
+    const [showGuestLinkPromptModal, setShowGuestLinkPromptModal] = useState(false);
+    const [isGuestLinkPromptLoading, setIsGuestLinkPromptLoading] = useState(false);
+    const [showMailboxModal, setShowMailboxModal] = useState(false);
+    const [mailboxUnreadCount, setMailboxUnreadCount] = useState(0);
     const [showLeaderboard, setShowLeaderboard] = useState(false);
+    const [activeSessionPrompt, setActiveSessionPrompt] = useState<{ roomId: string; opponentId: string } | null>(null);
     const [showNicknameModal, setShowNicknameModal] = useState(false);
     const [nicknameInput, setNicknameInput] = useState('');
     const [isSavingNickname, setIsSavingNickname] = useState(false);
@@ -217,6 +684,14 @@ const Home = () => {
         if (typeof window === 'undefined') return false;
         return window.innerWidth < 768;
     });
+    const dismissedActiveRoomRef = useRef<string | null>(null);
+    const isIOS = Capacitor.getPlatform() === 'ios';
+    const isGuestUser = Boolean(user?.is_anonymous || user?.app_metadata?.provider === 'anonymous');
+
+    const getGuestLinkPromptStorageKey = useCallback((suffix: string) => {
+        if (!user?.id) return null;
+        return `brainrush_guest_link_prompt_${suffix}:${user.id}`;
+    }, [user?.id]);
 
     useEffect(() => {
         const onResize = () => setIsMobileLayout(window.innerWidth < 768);
@@ -226,11 +701,273 @@ const Home = () => {
 
     const {
         isHomeTutorialActive,
+        isHomeTutorialReplay,
         homeTutorialStep,
         homeTutorialSteps,
         nextHomeTutorialStep,
+        completeHomeTutorial,
         skipHomeTutorial,
     } = useTutorial();
+
+    const markHomeTutorialSeen = useCallback(async () => {
+        if (!user) return;
+        try {
+            const { error } = await (supabase as any).rpc('mark_home_tutorial_seen');
+            if (error) throw error;
+        } catch (error) {
+            console.error('Failed to mark home tutorial seen:', error);
+        }
+    }, [user]);
+
+    useEffect(() => {
+        if (!user) return;
+        const hasSeenOnServer = Boolean((profile as any)?.home_tutorial_seen_at);
+        if (!hasSeenOnServer || isHomeTutorialReplay) return;
+        completeHomeTutorial();
+    }, [user, profile, isHomeTutorialReplay, completeHomeTutorial]);
+
+    useEffect(() => {
+        if (!user || !profile || !isGuestUser) {
+            setShowGuestLinkPromptModal(false);
+            return;
+        }
+
+        if (
+            isHomeTutorialActive ||
+            showPostTutorialNormalSpotlight ||
+            showNicknameModal ||
+            showMailboxModal ||
+            showNoPencilChoiceModal ||
+            activeSessionPrompt ||
+            status !== 'idle'
+        ) {
+            return;
+        }
+
+        const now = Date.now();
+        const createdAtMs = new Date(profile.created_at ?? user.created_at ?? now).getTime();
+        const safeCreatedAtMs = Number.isFinite(createdAtMs) ? createdAtMs : now;
+        const daysEligible = now - safeCreatedAtMs >= GUEST_LINK_PROMPT_INITIAL_DELAY_MS;
+        const levelEligible = Number(profile.level ?? 1) >= GUEST_LINK_PROMPT_LEVEL;
+
+        if (!daysEligible && !levelEligible) return;
+
+        const nextPromptKey = getGuestLinkPromptStorageKey('next_at');
+        if (nextPromptKey) {
+            const rawNextPromptAt = window.localStorage.getItem(nextPromptKey);
+            const nextPromptAt = rawNextPromptAt ? Number(rawNextPromptAt) : 0;
+            if (Number.isFinite(nextPromptAt) && nextPromptAt > now) return;
+        }
+
+        setShowGuestLinkPromptModal(true);
+    }, [
+        user,
+        profile,
+        isGuestUser,
+        isHomeTutorialActive,
+        showPostTutorialNormalSpotlight,
+        showNicknameModal,
+        showMailboxModal,
+        showNoPencilChoiceModal,
+        activeSessionPrompt,
+        status,
+        getGuestLinkPromptStorageKey
+    ]);
+
+    const handleFallbackGoogleLogin = async () => {
+        playSound('click');
+        setIsLoginModalLoading(true);
+        try {
+            await signInWithGoogle();
+        } catch (error) {
+            console.error(error);
+            showToast((error as any)?.message || t('common.error'), 'error');
+        } finally {
+            setIsLoginModalLoading(false);
+        }
+    };
+
+    const handleFallbackAppleLogin = async () => {
+        playSound('click');
+        setIsLoginModalLoading(true);
+        try {
+            await signInWithApple();
+        } catch (error) {
+            console.error(error);
+            showToast((error as any)?.message || t('common.error'), 'error');
+        } finally {
+            setIsLoginModalLoading(false);
+        }
+    };
+
+    const handleFallbackGuestLogin = async () => {
+        playSound('click');
+        setIsLoginModalLoading(true);
+        try {
+            await signInAnonymously();
+        } catch (error) {
+            console.error(error);
+            showToast((error as any)?.message || t('common.error'), 'error');
+        } finally {
+            setIsLoginModalLoading(false);
+        }
+    };
+
+
+    const dismissGuestLinkPrompt = useCallback(() => {
+        const nextPromptKey = getGuestLinkPromptStorageKey('next_at');
+        if (nextPromptKey) {
+            window.localStorage.setItem(nextPromptKey, String(Date.now() + GUEST_LINK_PROMPT_COOLDOWN_MS));
+        }
+        setShowGuestLinkPromptModal(false);
+    }, [getGuestLinkPromptStorageKey]);
+
+    const handleGuestLinkWithGoogle = async () => {
+        playSound('click');
+        setIsGuestLinkPromptLoading(true);
+        try {
+            dismissGuestLinkPrompt();
+            await linkWithGoogle();
+        } catch (error: any) {
+            console.error('Failed to link google:', error);
+            if (error?.message?.includes('이미 가입된')) {
+                const isConfirmed = await confirm(
+                    t('profile.accountConflictTitle', '기존 계정 발견!'),
+                    t('profile.accountExistsLoginHint', '이미 존재하는 계정입니다. 로그아웃 후 해당 계정으로 로그인해 주세요.')
+                );
+                if (isConfirmed) {
+                    await signOut();
+                } else {
+                    setShowGuestLinkPromptModal(true);
+                }
+            } else {
+                showToast(error?.message || t('common.error'), 'error');
+                setShowGuestLinkPromptModal(true);
+            }
+        } finally {
+            setIsGuestLinkPromptLoading(false);
+        }
+    };
+
+    const handleGuestLinkWithApple = async () => {
+        playSound('click');
+        setIsGuestLinkPromptLoading(true);
+        try {
+            dismissGuestLinkPrompt();
+            await linkWithApple();
+        } catch (error: any) {
+            console.error('Failed to link apple:', error);
+            if (error?.message?.includes('이미 가입된')) {
+                const isConfirmed = await confirm(
+                    t('profile.accountConflictTitle', '기존 계정 발견!'),
+                    t('profile.accountExistsLoginHint', '이미 존재하는 계정입니다. 로그아웃 후 해당 계정으로 로그인해 주세요.')
+                );
+                if (isConfirmed) {
+                    await signOut();
+                } else {
+                    setShowGuestLinkPromptModal(true);
+                }
+            } else {
+                showToast(error?.message || t('common.error'), 'error');
+                setShowGuestLinkPromptModal(true);
+            }
+        } finally {
+            setIsGuestLinkPromptLoading(false);
+        }
+    };
+
+    const handleHomeTutorialNext = useCallback(() => {
+        const isLastStep = homeTutorialStep === homeTutorialSteps.length - 1;
+        if (isLastStep && !isHomeTutorialReplay) {
+            void markHomeTutorialSeen();
+        }
+        nextHomeTutorialStep();
+        if (isLastStep && !isHomeTutorialReplay) {
+            setShowPostTutorialNormalSpotlight(true);
+        }
+    }, [homeTutorialStep, homeTutorialSteps.length, isHomeTutorialReplay, markHomeTutorialSeen, nextHomeTutorialStep]);
+
+    const handleHomeTutorialSkip = useCallback(() => {
+        skipHomeTutorial();
+        if (!isHomeTutorialReplay) {
+            void markHomeTutorialSeen();
+            setShowPostTutorialNormalSpotlight(true);
+        }
+    }, [isHomeTutorialReplay, markHomeTutorialSeen, skipHomeTutorial]);
+
+    const checkActiveSessionAndPrompt = useCallback(async () => {
+        if (!user || authLoading || status !== 'idle') return;
+        try {
+            const { data, error } = await supabase.rpc('check_active_session', {
+                p_player_id: user.id
+            }).maybeSingle() as { data: { room_id: string; opponent_id: string; status: string; created_at: string } | null; error: any };
+
+            if (error || !data) return;
+
+            const sessionAgeMs = Date.now() - new Date(data.created_at).getTime();
+            const isStaleWaitingRoom = data.status === 'waiting' && sessionAgeMs > 60 * 1000;
+            const isStaleActiveRoom = data.status !== 'waiting' && sessionAgeMs > 5 * 60 * 1000;
+            if (isStaleWaitingRoom || isStaleActiveRoom) return;
+            if (dismissedActiveRoomRef.current === data.room_id) return;
+
+            setActiveSessionPrompt({ roomId: data.room_id, opponentId: data.opponent_id });
+        } catch (e) {
+            console.error('Active session prompt check failed:', e);
+        }
+    }, [user, authLoading, status]);
+
+    useEffect(() => {
+        checkActiveSessionAndPrompt();
+    }, [checkActiveSessionAndPrompt]);
+
+    useEffect(() => {
+        if (!user) {
+            setActiveSessionPrompt(null);
+            dismissedActiveRoomRef.current = null;
+            return;
+        }
+        const onFocus = () => {
+            checkActiveSessionAndPrompt();
+        };
+        const onVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                checkActiveSessionAndPrompt();
+            }
+        };
+        window.addEventListener('focus', onFocus);
+        document.addEventListener('visibilitychange', onVisibilityChange);
+        return () => {
+            window.removeEventListener('focus', onFocus);
+            document.removeEventListener('visibilitychange', onVisibilityChange);
+        };
+    }, [user, checkActiveSessionAndPrompt]);
+
+    useEffect(() => {
+        if (!user) {
+            setMailboxUnreadCount(0);
+            return;
+        }
+        let cancelled = false;
+
+        const fetchUnreadCount = async () => {
+            try {
+                const { data, error } = await (supabase as any).rpc('get_mailbox_unread_count');
+                if (error) throw error;
+                if (!cancelled) {
+                    setMailboxUnreadCount(Math.max(0, Number(data ?? 0)));
+                }
+            } catch (error) {
+                console.error('Failed to load mailbox unread count:', error);
+            }
+        };
+
+        fetchUnreadCount();
+        const interval = window.setInterval(fetchUnreadCount, 45000);
+        return () => {
+            cancelled = true;
+            window.clearInterval(interval);
+        };
+    }, [user]);
 
     // Map step id to ref
     const tutorialRefs: Record<string, React.RefObject<HTMLButtonElement | null>> = {
@@ -240,7 +977,7 @@ const Home = () => {
         ranking: isMobileLayout ? mobileRankingBtnRef : rankingBtnRef,
         shop: isMobileLayout ? mobileShopBtnRef : shopBtnRef,
         settings: isMobileLayout ? mobileSettingsBtnRef : settingsBtnRef,
-        login: isMobileLayout ? mobileLoginProfileBtnRef : loginProfileBtnRef,
+        profile: isMobileLayout ? mobileLoginProfileBtnRef : loginProfileBtnRef,
     };
 
     const handleAdReward = async (): Promise<'ok' | 'limit' | 'error'> => {
@@ -271,38 +1008,49 @@ const Home = () => {
         }
     };
 
-    const handleModeSelect = async (mode: string) => {
+    const handleModeSelect = async (mode: string, options?: { forceBotImmediate?: boolean }) => {
         playSound('click');
         currentMode.current = mode;
+        setActiveSessionPrompt(null);
 
         // Normal/Rank require an authenticated session (anonymous guest login allowed).
         if (mode === 'rank' || mode === 'normal') {
             if (!user) {
-                navigate('/login');
+                showToast(t('common.loading'), 'info');
                 return;
             }
 
-            const pencils = profile?.pencils ?? 0;
-            if (pencils < 1) {
+            const needsPencil = mode === 'normal' || (mode === 'rank' && !isRankBurningTime);
+            const pencils = displayedPencils;
+            if (needsPencil && pencils < 1) {
                 playSound('error');
-                setShowAdModal(true);
+                setShowNoPencilChoiceModal(true);
                 return;
             }
         }
 
         if (mode === 'rank') {
-            if (!isRankUnlocked) {
-                playSound('error');
-                showToast(t('matchmaking.rankLevelRequired', { level: requiredRankLevel }), 'info');
-                return;
-            }
             startSearch('rank');
         } else if (mode === 'normal') {
-            startSearch('normal');
+            startSearch('normal', options);
+        } else if (mode === 'practice') {
+            navigate('/practice');
         } else {
             console.log(`Selected mode: ${mode} `);
             navigate('/game', { state: { mode } });
         }
+    };
+
+    const handlePostTutorialNormalStart = async () => {
+        setShowPostTutorialNormalSpotlight(false);
+        await handleModeSelect('normal', { forceBotImmediate: true });
+    };
+
+    const formatRemainingTime = (remainingMs: number) => {
+        const safeRemaining = Math.max(0, remainingMs);
+        const minutes = Math.floor(safeRemaining / 60000);
+        const seconds = Math.floor((safeRemaining % 60000) / 1000);
+        return `${minutes}:${String(seconds).padStart(2, '0')}`;
     };
 
     const handleNicknameSubmit = async () => {
@@ -347,17 +1095,73 @@ const Home = () => {
 
     useEffect(() => {
         if (!user || !profile?.needs_nickname_setup) return;
+        if (authLoading || isHomeTutorialActive || showPostTutorialNormalSpotlight || status !== 'idle') return;
+        
+        const hasPlayedNormalGame = (profile?.casual_wins || 0) + (profile?.casual_losses || 0) > 0 || (profile?.xp ?? 0) > 0;
+        if (!hasPlayedNormalGame) return;
+
         const shownKey = `nickname_prompt_shown:${user.id}`;
         if (window.sessionStorage.getItem(shownKey) === '1') return;
 
         setShowNicknameModal(true);
         window.sessionStorage.setItem(shownKey, '1');
-    }, [user, profile?.needs_nickname_setup]);
+    }, [user, profile?.needs_nickname_setup, profile?.xp, profile?.casual_wins, profile?.casual_losses, authLoading, isHomeTutorialActive, showPostTutorialNormalSpotlight, status]);
+
+    useEffect(() => {
+        const handleModalCloseRequest = (event: Event) => {
+            const customEvent = event as CustomEvent<{ handled?: boolean }>;
+            if (customEvent.detail?.handled) return;
+
+            if (showPostTutorialNormalSpotlight) {
+                if (customEvent.detail) customEvent.detail.handled = true;
+                return;
+            }
+
+            if (!authLoading && !user) {
+                if (customEvent.detail) customEvent.detail.handled = true;
+                return;
+            }
+
+            if (showGuestLinkPromptModal && !isGuestLinkPromptLoading) {
+                dismissGuestLinkPrompt();
+                if (customEvent.detail) customEvent.detail.handled = true;
+                return;
+            }
+
+            if (showNicknameModal && !isSavingNickname) {
+                setShowNicknameModal(false);
+                if (customEvent.detail) customEvent.detail.handled = true;
+                return;
+            }
+
+            if (showMailboxModal) {
+                setShowMailboxModal(false);
+                if (customEvent.detail) customEvent.detail.handled = true;
+                return;
+            }
+
+            if (showNoPencilChoiceModal) {
+                setShowNoPencilChoiceModal(false);
+                if (customEvent.detail) customEvent.detail.handled = true;
+                return;
+            }
+
+            if (activeSessionPrompt && status === 'idle') {
+                dismissedActiveRoomRef.current = activeSessionPrompt.roomId;
+                setActiveSessionPrompt(null);
+                if (customEvent.detail) customEvent.detail.handled = true;
+            }
+        };
+        window.addEventListener('brainrush:request-modal-close', handleModalCloseRequest as EventListener);
+        return () => {
+            window.removeEventListener('brainrush:request-modal-close', handleModalCloseRequest as EventListener);
+        };
+    }, [showNicknameModal, isSavingNickname, showMailboxModal, showNoPencilChoiceModal, activeSessionPrompt, status, showPostTutorialNormalSpotlight, authLoading, user, showGuestLinkPromptModal, isGuestLinkPromptLoading, dismissGuestLinkPrompt]);
 
     return (
-        <div className="min-h-[100dvh] bg-gray-900 text-white flex flex-col items-center p-4 relative overflow-hidden">
+        <div className={`min-h-[100dvh] bg-slate-50 dark:bg-gray-900 text-slate-900 dark:text-white flex flex-col items-center p-4 relative overflow-hidden`}>
             {/* Background Effects */}
-            <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-800 via-gray-900 to-black pointer-events-none" />
+            <div className={`absolute top-0 left-0 w-full h-full pointer-events-none bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white via-slate-100 to-slate-200 dark:from-gray-800 dark:via-gray-900 dark:to-black`} />
 
             {/* Authenticated User Header (Top Left - Profile) */}
             {user && (
@@ -367,67 +1171,143 @@ const Home = () => {
                         animate={{ opacity: 1, y: 0 }}
                         className="absolute top-[calc(env(safe-area-inset-top)+0.5rem+var(--home-top-offset))] left-4 z-50 flex items-center"
                     >
-                        <div className="flex items-center gap-4 bg-gray-800/80 backdrop-blur-md p-2 pr-6 rounded-full border border-gray-700 shadow-lg cursor-pointer hover:bg-gray-800 transition-colors" onClick={() => navigate('/profile')}>
-                            <div className="relative w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 p-[2px]">
-                                <div className="w-full h-full rounded-full bg-gray-900 flex items-center justify-center overflow-hidden">
-                                    {avatarUrl ? (
-                                        <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-                                    ) : (
-                                        <User className="w-6 h-6 md:w-7 md:h-7 text-gray-400" />
-                                    )}
-                                </div>
-                                <LevelBadge level={level} size="sm" className="absolute -bottom-1 -right-1 ring-2 ring-gray-900" />
-                                {hasSocialNotifications && (
-                                    <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-gray-900" aria-hidden="true"></span>
-                                )}
-                            </div>
-                            <div>
-                                <div className="font-bold text-white text-base md:text-lg leading-none flex items-center gap-2">
-                                    <Flag code={countryCode} />
-                                    {nickname}
-                                    {shouldSuggestNicknameSetup && (
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                playSound('click');
-                                                handleOpenNicknameModal();
-                                            }}
-                                            className="relative w-4 h-4 rounded-full bg-red-500 ring-2 ring-gray-900 animate-pulse hover:scale-110 transition-transform"
-                                            aria-label={t('profile.nicknameSetupTitle', '닉네임 설정')}
-                                        >
-                                            <span className="absolute inset-0 rounded-full bg-red-400/60 animate-ping" />
-                                        </button>
-                                    )}
-                                </div>
-                                <div className="mt-1.5 flex gap-3 items-center">
-                                    <div className={`px-2 py-0.5 md:px-2.5 md:py-1 rounded-lg text-xs md:text-sm font-black bg-gradient-to-r ${tierColor} text-black flex items-center gap-1 shadow-md transform hover:scale-105 transition-transform`}>
-                                        <TierIcon className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                                        <span>{tier}</span>
-                                        <span className="opacity-60">|</span>
-                                        <span className="font-mono">{rank}</span>
+                        <motion.div
+                            layout
+                            transition={{ type: 'spring', stiffness: 240, damping: 24 }}
+                            className={`bg-white dark:bg-gray-800/80 backdrop-blur-md border shadow-lg cursor-pointer hover:bg-white dark:hover:bg-gray-800/80 transition-colors select-none ${shouldShowXpPanel
+                                ? 'w-[min(22rem,calc(100vw-2rem))] rounded-[1.75rem] border-blue-400/35 px-4 py-3 shadow-[0_0_28px_rgba(59,130,246,0.22)]'
+                                : 'rounded-full border-gray-700 p-2 pr-6'
+                                }`}
+                            onClick={handleProfileClick}
+                            onPointerDown={handleProfilePressStart}
+                            onPointerUp={handleProfilePressEnd}
+                            onPointerCancel={handleProfilePressEnd}
+                            onPointerLeave={handleProfilePressEnd}
+                            onContextMenu={(event) => event.preventDefault()}
+                        >
+                            <div className="flex items-center gap-4">
+                                <div className="relative w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 p-[2px]">
+                                    <div className="w-full h-full rounded-full bg-slate-50 dark:bg-gray-900 flex items-center justify-center overflow-hidden">
+                                        {avatarUrl ? (
+                                            <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <User className="w-6 h-6 md:w-7 md:h-7 text-slate-500 dark:text-gray-400" />
+                                        )}
                                     </div>
+                                    <motion.div
+                                        animate={levelUpPulse ? { scale: [1, 1.24, 1], rotate: [0, -8, 8, 0] } : { scale: 1, rotate: 0 }}
+                                        transition={{ duration: 0.7, ease: 'easeOut' }}
+                                        className="absolute -bottom-1 -right-1"
+                                    >
+                                        <LevelBadge level={shouldShowXpPanel ? displayedLevel : level} size="sm" className="ring-2 ring-gray-900" />
+                                    </motion.div>
+                                    {hasSocialNotifications && (
+                                        <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-gray-900" aria-hidden="true"></span>
+                                    )}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                    <div className="font-bold text-slate-900 dark:text-white text-base md:text-lg leading-none flex items-center gap-2">
+                                        <Flag code={countryCode} />
+                                        <span className="truncate">{nickname}</span>
+                                        {shouldSuggestNicknameSetup && (
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    playSound('click');
+                                                    handleOpenNicknameModal();
+                                                }}
+                                                className="relative w-4 h-4 rounded-full bg-red-500 ring-2 ring-gray-900 animate-pulse hover:scale-110 transition-transform"
+                                                aria-label={t('profile.nicknameSetupTitle', '닉네임 설정')}
+                                            >
+                                                <span className="absolute inset-0 rounded-full bg-red-400/60 animate-ping" />
+                                            </button>
+                                        )}
+                                    </div>
+                                    {showRankSummary && (
+                                        <div className="mt-1.5 flex gap-3 items-center">
+                                            <div className={`px-2 py-0.5 md:px-2.5 md:py-1 rounded-lg text-xs md:text-sm font-black bg-gradient-to-r ${tierColor} text-black flex items-center gap-1 shadow-md transform hover:scale-105 transition-transform`}>
+                                                <TierIcon className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                                                <span>{tier}</span>
+                                                <span className="opacity-60">|</span>
+                                                <span className="font-mono">{rank}</span>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
-                        </div>
+
+                            <AnimatePresence initial={false}>
+                                {shouldShowXpPanel && (
+                                    <motion.div
+                                        key="xp-feedback"
+                                        initial={{ opacity: 0, y: -8, height: 0 }}
+                                        animate={{ opacity: 1, y: 0, height: 'auto' }}
+                                        exit={{ opacity: 0, y: -8, height: 0 }}
+                                        transition={{ duration: 0.28, ease: 'easeOut' }}
+                                        className="overflow-hidden"
+                                    >
+                                        <div className="mt-3 border-t border-white/10 pt-3">
+                                            <div className="mb-2 flex items-center justify-between gap-3">
+                                                <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.22em] text-blue-200/80">
+                                                    <span>XP</span>
+                                                    <span className="text-slate-900 dark:text-white/70 normal-case tracking-normal">
+                                                        {t('home.levelProgressLevel', 'Lv. {{level}}', { level: xpAnimation ? displayedLevel : staticLevel })}
+                                                    </span>
+                                                </div>
+                                                {xpAnimation && (
+                                                    <div className="text-sm font-black text-emerald-300">
+                                                        +{xpAnimation.xpGain} XP
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="h-3 overflow-hidden rounded-full bg-slate-300/70 dark:bg-white/10">
+                                                <motion.div
+                                                    className={`h-full rounded-full ${didLevelUpInAnimation ? 'bg-gradient-to-r from-emerald-300 via-blue-400 to-violet-400' : 'bg-gradient-to-r from-blue-400 to-cyan-300'}`}
+                                                    animate={{ width: `${Math.max(6, (xpAnimation ? displayedXpProgress.ratio : staticXpProgress.ratio) * 100)}%` }}
+                                                    transition={{ duration: 0.18, ease: 'easeOut' }}
+                                                />
+                                            </div>
+                                            <div className="mt-2 flex items-center justify-between text-[11px] font-mono text-slate-600 dark:text-gray-300">
+                                                <span>{(xpAnimation ? displayedXpProgress : staticXpProgress).progressXp} / {(xpAnimation ? displayedXpProgress : staticXpProgress).requiredXp}</span>
+                                                <span>{xpAnimation ? displayedXp : staticXp}</span>
+                                            </div>
+                                            <AnimatePresence>
+                                                {levelUpPulse && (
+                                                    <motion.div
+                                                        initial={{ opacity: 0, y: 6, scale: 0.96 }}
+                                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                        exit={{ opacity: 0, y: -6, scale: 0.96 }}
+                                                        transition={{ duration: 0.3, ease: 'easeOut' }}
+                                                        className="mt-3 inline-flex items-center rounded-full border border-yellow-300/40 bg-yellow-300/15 px-3 py-1 text-xs font-black uppercase tracking-[0.24em] text-yellow-200 shadow-[0_0_18px_rgba(250,204,21,0.2)]"
+                                                    >
+                                                        {t('home.levelUp', 'LEVEL UP!')}
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </motion.div>
                     </motion.div>
 
                     {/* Pencil Display (Top Right) */}
                     <div className="absolute top-[calc(env(safe-area-inset-top)+0.5rem+var(--home-top-offset))] right-4 z-50">
                         <button
                             onClick={() => setShowAdModal(true)}
-                            className="bg-gray-800/80 backdrop-blur-md border border-gray-700 rounded-full py-2 px-3 md:px-5 flex items-center gap-2 md:gap-3 hover:bg-gray-700 transition-all shadow-lg active:scale-95"
+                            className="bg-white dark:bg-gray-800/80 backdrop-blur-md border border-gray-700 rounded-full py-2 px-3 md:px-5 flex items-center gap-2 md:gap-3 hover:bg-slate-100 dark:bg-gray-700 transition-all shadow-lg active:scale-95"
                         >
                             <div className="flex flex-col items-end leading-none">
                                 <div className="flex items-center gap-1.5">
-                                    <span className={`text-lg md:text-xl font-black ${profile?.pencils < 1 ? "text-red-400" : "text-yellow-400"}`}>
-                                        {profile?.pencils ?? 5}
+                                    <span className={`text-lg md:text-xl font-black ${displayedPencils < 1 ? "text-red-400" : "text-yellow-400"}`}>
+                                        {displayedPencils}
                                     </span>
                                     <span className="text-gray-500 text-sm font-bold">/ 5</span>
                                 </div>
-                                {profile?.pencils < 5 && (
-                                    <div className="text-xs text-gray-400 font-mono flex items-center gap-1.5 mt-0.5">
+                                {availablePencils < MAX_PENCILS && (
+                                    <div className="text-xs text-slate-500 dark:text-gray-400 font-mono flex items-center gap-1.5 mt-0.5">
                                         <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                                        <RechargeTimer lastRecharge={profile?.last_recharge_at} />
+                                        <RechargeTimer remainingMs={displayedRechargeMs} />
                                     </div>
                                 )}
                             </div>
@@ -438,15 +1318,108 @@ const Home = () => {
                             />
                         </button>
                     </div>
+
+                    <div className="absolute top-[calc(env(safe-area-inset-top)+4.65rem+var(--home-top-offset))] right-4 z-50">
+                        <button
+                            onClick={() => {
+                                playSound('click');
+                                setShowMailboxModal(true);
+                            }}
+                            className="relative bg-white dark:bg-gray-800/80 backdrop-blur-md border border-gray-700 rounded-full py-2 px-4 flex items-center gap-2 hover:bg-slate-100 dark:bg-gray-700 transition-all shadow-lg active:scale-95"
+                        >
+                            <Mail className="w-4 h-4 text-cyan-300" />
+                            <span className="text-xs font-bold text-slate-600 dark:text-gray-200">{t('mailbox.title', '우편함')}</span>
+                            {mailboxUnreadCount > 0 && (
+                                <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-red-500 text-[10px] leading-4 text-white text-center font-black">
+                                    {mailboxUnreadCount > 9 ? '9+' : mailboxUnreadCount}
+                                </span>
+                            )}
+                        </button>
+                    </div>
                 </>
             )}
 
             {/* Auth Loading Overlay */}
             {authLoading && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm">
-                    <div className="flex items-center gap-3 bg-gray-900/80 border border-white/10 rounded-2xl px-5 py-4 shadow-xl">
+                    <div className="flex items-center gap-3 bg-slate-50 dark:bg-gray-900/80 border border-white/10 rounded-2xl px-5 py-4 shadow-xl">
                         <Loader2 className="w-5 h-5 text-blue-400 animate-spin" />
-                        <span className="text-sm font-bold text-gray-200">{t('common.loading')}</span>
+                        <span className="text-sm font-bold text-slate-700 dark:text-gray-200">{t('common.loading')}</span>
+                    </div>
+                </div>
+            )}
+
+            {/* Login Modal — shown when there is no user session */}
+            {!authLoading && !user && (
+                <div className="fixed inset-0 z-[140] bg-black/80 backdrop-blur-sm flex items-center justify-center px-4">
+                    <div className="w-full max-w-md bg-white dark:bg-gray-800/95 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl">
+                        <div className="text-center mb-8 mt-1">
+                            <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-2">
+                                BrainRush
+                            </h2>
+                            <p className="text-slate-600 dark:text-gray-300 font-semibold">{t('menu.login')}</p>
+                            <p className="text-xs text-slate-500 dark:text-gray-400 mt-2">{t('home.loginModalSubtitle', '일반/랭크 매치를 시작하려면 로그인해 주세요.')}</p>
+                        </div>
+
+                        <div className="space-y-3">
+                            <button
+                                onClick={handleFallbackGoogleLogin}
+                                disabled={isLoginModalLoading}
+                                className="w-full p-4 bg-white text-gray-900 rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed group"
+                            >
+                                {isLoginModalLoading ? (
+                                    <Loader2 className="animate-spin" />
+                                ) : (
+                                    <>
+                                        <svg className="w-5 h-5" viewBox="0 0 24 24">
+                                            <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                                            <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                                            <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.84z" />
+                                            <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                                        </svg>
+                                        {t('common.google')}
+                                    </>
+                                )}
+                            </button>
+
+                            {isIOS && (
+                                <button
+                                    onClick={handleFallbackAppleLogin}
+                                    disabled={isLoginModalLoading}
+                                    className="w-full p-4 rounded-xl font-bold flex items-center justify-center gap-3 transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-white text-black border border-black/15 hover:bg-gray-100 dark:bg-black dark:text-white dark:border-white/20 dark:hover:bg-gray-900"
+                                >
+                                    {isLoginModalLoading ? (
+                                        <Loader2 className="animate-spin" />
+                                    ) : (
+                                        <>
+                                            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                                                <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
+                                            </svg>
+                                            Apple
+                                        </>
+                                    )}
+                                </button>
+                            )}
+
+                            <button
+                                onClick={handleFallbackGuestLogin}
+                                disabled={isLoginModalLoading}
+                                className="w-full p-4 bg-slate-100 dark:bg-gray-700/50 border-2 border-dashed border-gray-600 rounded-xl font-medium text-slate-600 dark:text-gray-300 flex items-center justify-center gap-3 hover:bg-slate-100 dark:hover:bg-gray-700/80 hover:border-gray-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isLoginModalLoading ? (
+                                    <Loader2 className="animate-spin" />
+                                ) : (
+                                    <>
+                                        <User className="w-5 h-5" />
+                                        {t('auth.guestMode')}
+                                    </>
+                                )}
+                            </button>
+
+                            <p className="text-xs text-gray-500 text-center">
+                                {t('auth.guestWarning')}
+                            </p>
+                        </div>
                     </div>
                 </div>
             )}
@@ -454,11 +1427,11 @@ const Home = () => {
             {/* Modals */}
             {showNicknameModal && (
                 <div className="fixed inset-0 z-[120] bg-black/80 backdrop-blur-sm flex items-center justify-center px-4">
-                    <div className="w-full max-w-md rounded-3xl border border-blue-500/30 bg-gray-900/95 p-6 shadow-2xl">
-                        <h2 className="text-2xl font-bold text-white mb-2">
+                    <div className="w-full max-w-md rounded-3xl border border-blue-500/30 bg-slate-50 dark:bg-gray-900/95 p-6 shadow-2xl">
+                        <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
                             {t('profile.nicknameSetupTitle', '닉네임 설정')}
                         </h2>
-                        <p className="text-sm text-gray-300 mb-5">
+                        <p className="text-sm text-slate-600 dark:text-gray-300 mb-5">
                             {t('profile.nicknameSetupDesc', '게임에서 사용할 닉네임을 입력해주세요.')}
                         </p>
 
@@ -475,23 +1448,164 @@ const Home = () => {
                             maxLength={20}
                             autoFocus
                             placeholder={t('profile.nicknamePlaceholder')}
-                            className="w-full rounded-xl border border-gray-700 bg-gray-800 px-4 py-3 text-white outline-none focus:border-blue-500"
+                            className="w-full rounded-xl border border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-slate-900 dark:text-white outline-none focus:border-blue-500"
                         />
 
                         <button
                             onClick={handleNicknameSubmit}
                             disabled={isSavingNickname}
-                            className="mt-4 w-full rounded-xl bg-blue-600 py-3 font-bold text-white transition-colors hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+                            className="mt-4 w-full rounded-xl bg-blue-600 py-3 font-bold text-slate-900 dark:text-white transition-colors hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
                         >
                             {isSavingNickname ? t('common.loading') : t('common.confirm')}
                         </button>
                         <button
                             onClick={() => setShowNicknameModal(false)}
                             disabled={isSavingNickname}
-                            className="mt-2 w-full rounded-xl border border-gray-600 bg-transparent py-3 font-semibold text-gray-300 transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
+                            className="mt-2 w-full rounded-xl border border-gray-600 bg-transparent py-3 font-semibold text-slate-600 dark:text-gray-300 transition-colors hover:bg-white dark:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
                         >
                             {t('common.close')}
                         </button>
+                    </div>
+                </div>
+            )}
+
+            {showGuestLinkPromptModal && (
+                <div className="fixed inset-0 z-[121] bg-black/80 backdrop-blur-sm flex items-center justify-center px-4">
+                    <div className="w-full max-w-md rounded-3xl border border-amber-400/30 bg-slate-50 dark:bg-gray-900/95 p-6 shadow-2xl">
+                        <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-2">
+                            {t('profile.guestTitle')}
+                        </h2>
+                        <p className="text-sm text-slate-600 dark:text-gray-300 mb-5">
+                            {t(isIOS ? 'profile.guestDescIOS' : 'profile.guestDesc')}
+                        </p>
+
+                        <div className="space-y-3">
+                            {isIOS && (
+                                <button
+                                    onClick={handleGuestLinkWithApple}
+                                    disabled={isGuestLinkPromptLoading}
+                                    className="w-full rounded-xl border border-black/15 bg-white py-3 font-bold text-black transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/20 dark:bg-black dark:text-white dark:hover:bg-gray-900"
+                                >
+                                    {isGuestLinkPromptLoading ? t('common.loading') : t('profile.linkApple')}
+                                </button>
+                            )}
+                            <button
+                                onClick={handleGuestLinkWithGoogle}
+                                disabled={isGuestLinkPromptLoading}
+                                className="w-full rounded-xl bg-white py-3 font-bold text-gray-900 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                                {isGuestLinkPromptLoading ? t('common.loading') : t('profile.linkGoogle')}
+                            </button>
+                            <button
+                                onClick={dismissGuestLinkPrompt}
+                                disabled={isGuestLinkPromptLoading}
+                                className="w-full rounded-xl border border-gray-600 bg-transparent py-3 font-semibold text-slate-600 transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-60 dark:text-gray-300 dark:hover:bg-gray-800"
+                            >
+                                {t('common.close')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {activeSessionPrompt && status === 'idle' && (
+                <div className="fixed inset-0 z-[125] bg-black/75 backdrop-blur-sm flex items-center justify-center px-4">
+                    <div className="w-full max-w-md rounded-3xl border border-yellow-400/30 bg-slate-50 dark:bg-gray-900/95 p-6 shadow-2xl">
+                        <h2 className="text-xl font-black text-slate-900 dark:text-white mb-2">
+                            {t('home.resumeMatchTitle')}
+                        </h2>
+                        <p className="text-sm text-slate-600 dark:text-gray-300 mb-5">
+                            {t('home.resumeMatchDesc')}
+                        </p>
+                        <div className="grid grid-cols-2 gap-2">
+                            <button
+                                onClick={() => {
+                                    playSound('click');
+                                    dismissedActiveRoomRef.current = activeSessionPrompt.roomId;
+                                    setActiveSessionPrompt(null);
+                                }}
+                                className="rounded-xl border border-gray-600 bg-transparent py-3 font-semibold text-slate-600 dark:text-gray-300 transition-colors hover:bg-white dark:bg-gray-800"
+                            >
+                                {t('home.resumeLater')}
+                            </button>
+                            <button
+                                onClick={() => {
+                                    playSound('click');
+                                    navigate(`/game/${activeSessionPrompt.roomId}`, {
+                                        state: {
+                                            roomId: activeSessionPrompt.roomId,
+                                            myId: user?.id,
+                                            opponentId: activeSessionPrompt.opponentId
+                                        }
+                                    });
+                                }}
+                                className="rounded-xl bg-yellow-500 py-3 font-black text-black transition-colors hover:bg-yellow-400"
+                            >
+                                {t('home.resumeNow')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <MailboxModal
+                isOpen={showMailboxModal}
+                onClose={() => setShowMailboxModal(false)}
+                userId={user?.id}
+                language={i18n.language}
+                onRequireLogin={() => navigate('/login')}
+                onClaimed={refreshProfile}
+                onUnreadCountChange={setMailboxUnreadCount}
+            />
+
+            {showNoPencilChoiceModal && (
+                <div className="fixed inset-0 z-[126] bg-black/75 backdrop-blur-sm flex items-center justify-center px-4">
+                    <div className="w-full max-w-md rounded-3xl border border-yellow-400/30 bg-slate-50 dark:bg-gray-900/95 p-6 shadow-2xl">
+                        <h2 className="text-xl font-black text-slate-900 dark:text-white mb-2">
+                            {t('home.noPencilTitle')}
+                        </h2>
+                        <p className="text-sm text-slate-600 dark:text-gray-300 mb-1">
+                            {t('home.noPencilDesc')}
+                        </p>
+                        {availablePencils < MAX_PENCILS && (
+                            <p className="text-xs text-yellow-300 mb-5">
+                                {t('home.nextPencilIn', {
+                                    time: formatRemainingTime(displayedRechargeMs)
+                                })}
+                            </p>
+                        )}
+
+                        <div className="grid grid-cols-1 gap-2">
+                            <button
+                                onClick={() => {
+                                    playSound('click');
+                                    setShowNoPencilChoiceModal(false);
+                                    setShowAdModal(true);
+                                }}
+                                className="rounded-xl bg-blue-600 py-3 font-black text-white transition-colors hover:bg-blue-500"
+                            >
+                                {t('home.watchAdForPencil')}
+                            </button>
+                            <button
+                                onClick={() => {
+                                    playSound('click');
+                                    setShowNoPencilChoiceModal(false);
+                                    navigate('/shop');
+                                }}
+                                className="rounded-xl border border-cyan-500/40 bg-cyan-500/15 py-3 font-semibold text-cyan-300 transition-colors hover:bg-cyan-500/25"
+                            >
+                                {t('home.goToShopForPencil')}
+                            </button>
+                            <button
+                                onClick={() => {
+                                    playSound('click');
+                                    setShowNoPencilChoiceModal(false);
+                                }}
+                                className="rounded-xl border border-gray-600 bg-transparent py-3 font-semibold text-slate-600 dark:text-gray-300 transition-colors hover:bg-white dark:bg-gray-800"
+                            >
+                                {t('home.waitForRecharge')}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
@@ -510,44 +1624,30 @@ const Home = () => {
                 onClose={() => setShowLeaderboard(false)}
             />
 
-            {/* Matchmaking Overlay */}
+            {/* Matchmaking Overlay - Profile Based */}
             <AnimatePresence>
                 {(status === 'searching' || status === 'matched' || status === 'timeout') && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="absolute inset-0 z-50 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center pointer-events-auto"
+                        className="fixed inset-0 z-50 bg-slate-50 dark:bg-gray-900 flex flex-col items-center pointer-events-auto"
                     >
-                        <motion.div
-                            initial={{ scale: 0.8 }}
-                            animate={{ scale: 1 }}
-                            className="bg-gray-800 p-8 rounded-3xl border border-blue-500/50 flex flex-col items-center text-center shadow-2xl min-w-[300px]"
-                        >
-                            {status === 'searching' ? (
-                                <>
-                                    <Loader2 className="w-16 h-16 text-blue-500 animate-spin mb-6" />
-                                    <h2 className="text-3xl font-bold mb-2">{t('matchmaking.searching')}</h2>
-                                    <p className="text-gray-400 mb-2">{t('matchmaking.description')}</p>
-                                    <p className="text-2xl font-mono text-white mb-2">
-                                        {Math.floor(elapsedTime / 60)}:{(elapsedTime % 60).toString().padStart(2, '0')}
-                                    </p>
-                                    <button
-                                        onClick={() => { playSound('click'); cancelSearch(); }}
-                                        className="px-6 py-3 rounded-xl bg-gray-700 hover:bg-gray-600 font-bold transition-colors"
-                                    >
-                                        {t('common.cancel')}
-                                    </button>
-                                </>
-                            ) : status === 'timeout' ? (
-                                <>
+                        {status === 'timeout' ? (
+                            /* Timeout Screen - same as before */
+                            <div className="flex-1 flex flex-col items-center justify-center">
+                                <motion.div
+                                    initial={{ scale: 0.8 }}
+                                    animate={{ scale: 1 }}
+                                    className="bg-white dark:bg-gray-800 p-8 rounded-3xl border border-red-500/50 flex flex-col items-center text-center shadow-2xl min-w-[300px]"
+                                >
                                     <AlertTriangle className="w-16 h-16 text-red-500 mb-6" />
-                                    <h2 className="text-2xl font-bold mb-2 text-white">{t('matchmaking.timeout')}</h2>
-                                    <p className="text-gray-400 mb-8">{t('matchmaking.timeoutDesc')}</p>
+                                    <h2 className="text-2xl font-bold mb-2 text-slate-900 dark:text-white">{t('matchmaking.timeout')}</h2>
+                                    <p className="text-slate-500 dark:text-gray-400 mb-8">{t('matchmaking.timeoutDesc')}</p>
                                     <div className="flex gap-4">
                                         <button
                                             onClick={() => { playSound('click'); cancelSearch(); }}
-                                            className="px-6 py-3 rounded-xl bg-gray-700 hover:bg-gray-600 font-bold transition-colors"
+                                            className="px-6 py-3 rounded-xl bg-slate-100 dark:bg-gray-700 hover:bg-gray-600 font-bold transition-colors"
                                         >
                                             {t('common.close')}
                                         </button>
@@ -558,15 +1658,182 @@ const Home = () => {
                                             {t('common.retry')}
                                         </button>
                                     </div>
-                                </>
-                            ) : (
-                                <>
-                                    <Trophy className="w-16 h-16 text-yellow-400 mb-6 animate-bounce" />
-                                    <h2 className="text-3xl font-bold mb-2 text-white">{t('matchmaking.found')}</h2>
-                                    <p className="text-gray-400 mb-0">{t('matchmaking.entering')}</p>
-                                </>
-                            )}
-                        </motion.div>
+                                </motion.div>
+                            </div>
+                        ) : (
+                            /* Searching / Matched Screen - Profile Based */
+                            <>
+                                {/* Background gradients */}
+                                <div className={`absolute inset-0 bg-gradient-to-br from-blue-900/40 via-purple-900/20 to-red-900/40 ${currentMode.current === 'normal' ? 'animate-bg-flow' : currentMode.current === 'rank' ? 'animate-bg-pulse-tense' : ''} pointer-events-none`} />
+                                {currentMode.current === 'rank' && (
+                                    <div className="absolute inset-0 bg-white mix-blend-overlay animate-lightning pointer-events-none" />
+                                )}
+
+                                <div className="relative z-10 flex flex-col items-center w-full h-full pt-[calc(env(safe-area-inset-top)+1.25rem)] pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+                                    {/* My Profile - Top */}
+                                    <motion.div
+                                        initial={{ y: -30, opacity: 0 }}
+                                        animate={{ y: 0, opacity: 1 }}
+                                        transition={{ delay: 0.1 }}
+                                        className="mt-4 flex flex-col items-center"
+                                    >
+                                        <div className={`relative overflow-hidden bg-gradient-to-br ${tierColor} border border-white/35 rounded-2xl px-5 py-4 shadow-xl backdrop-blur-sm min-w-[260px]`}>
+                                            <div className="absolute inset-0 pointer-events-none bg-black/10 dark:bg-black/20" />
+                                            <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(120deg,rgba(255,255,255,0.42)_0%,rgba(255,255,255,0.1)_36%,rgba(0,0,0,0.14)_100%)]" />
+                                            {isMyShinyTier && (
+                                                <motion.div
+                                                    className="absolute inset-y-0 -left-1/2 w-1/2 pointer-events-none"
+                                                    initial={{ x: '-130%' }}
+                                                    animate={{ x: '300%' }}
+                                                    transition={{ duration: 2.0, repeat: Infinity, ease: 'linear' }}
+                                                    style={{ background: 'linear-gradient(105deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.0) 20%, rgba(255,255,255,0.45) 50%, rgba(255,255,255,0) 85%)' }}
+                                                />
+                                            )}
+                                            <div className="absolute inset-[1px] rounded-[15px] border border-white/25 dark:border-white/20 pointer-events-none" />
+                                            <div className="relative z-10">
+                                                <div className="flex items-center justify-between gap-3">
+                                                    <div className="flex items-center gap-2 min-w-0">
+                                                        <Flag code={countryCode} className="w-6 h-4 shrink-0" />
+                                                        <span className="text-base font-bold text-white truncate drop-shadow-[0_1px_1px_rgba(0,0,0,0.25)]">{nickname}</span>
+                                                    </div>
+                                                    <div className="w-11 h-11 rounded-full overflow-hidden border-2 border-blue-500 bg-white dark:bg-gray-800 flex items-center justify-center shrink-0">
+                                                        {avatarUrl ? (
+                                                            <img src={avatarUrl} className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            <User size={20} className="text-blue-500" />
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                {showRankSummary && (
+                                                    <TierMMRBadge
+                                                        mmr={profile?.mmr ?? 1000}
+                                                        className="mt-2"
+                                                    />
+                                                )}
+                                            </div>
+                                        </div>
+                                    </motion.div>
+
+                                    {/* Timer */}
+                                    <div className="flex flex-col items-center justify-center mt-5 min-h-[52px]">
+                                        {status === 'searching' && (
+                                            <motion.p
+                                                initial={{ opacity: 0, y: 10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                className="text-4xl font-black font-mono tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300 drop-shadow-lg"
+                                            >
+                                                {Math.floor(elapsedTime / 60)}:{(elapsedTime % 60).toString().padStart(2, '0')}
+                                            </motion.p>
+                                        )}
+                                        {status === 'matched' && (
+                                            <motion.p
+                                                initial={{ opacity: 0, scale: 0.8 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                className="text-2xl font-black text-yellow-400 drop-shadow-lg animate-pulse"
+                                            >
+                                                {t('matchmaking.found')}
+                                            </motion.p>
+                                        )}
+                                    </div>
+
+                                    {/* Hex Radar - Center */}
+                                    <div className="flex-1 min-h-[220px] flex items-center justify-center">
+                                        <motion.div
+                                            initial={{ scale: 0.8, opacity: 0 }}
+                                            animate={{ scale: 1, opacity: 1 }}
+                                            transition={{ delay: 0.2 }}
+                                            className="relative bg-slate-50 dark:bg-gray-900/60 border border-white/10 rounded-3xl p-3 shadow-2xl backdrop-blur-sm"
+                                        >
+                                            <HexRadar
+                                                values={myRadarStats}
+                                                compareValues={matchedOpProfile ? opRadarStats : undefined}
+                                                labels={radarLabels}
+                                                size={180}
+                                                showLabels={true}
+                                                primaryColor={{ fill: 'rgba(59,130,246,0.28)', stroke: 'rgba(59,130,246,0.95)' }}
+                                                compareColor={{ fill: 'rgba(239,68,68,0.25)', stroke: 'rgba(239,68,68,0.95)' }}
+                                            />
+                                        </motion.div>
+                                    </div>
+
+                                    {/* Opponent Profile - Bottom */}
+                                    <motion.div
+                                        initial={{ y: 30, opacity: 0 }}
+                                        animate={{ y: 0, opacity: 1 }}
+                                        transition={{ delay: 0.15 }}
+                                        className="mb-3 flex flex-col items-center"
+                                    >
+                                        {status === 'matched' && matchedOpProfile ? (
+                                            /* Matched - Show real opponent profile */
+                                            <>
+                                                <motion.div
+                                                    initial={{ scale: 0.9, opacity: 0 }}
+                                                    animate={{ scale: 1, opacity: 1 }}
+                                                    className={`relative overflow-hidden bg-gradient-to-br ${matchedTierColor} border border-white/35 rounded-2xl px-5 py-4 shadow-xl backdrop-blur-sm min-w-[260px]`}
+                                                >
+                                                    <div className="absolute inset-0 pointer-events-none bg-black/10 dark:bg-black/20" />
+                                                    <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(120deg,rgba(255,255,255,0.42)_0%,rgba(255,255,255,0.1)_36%,rgba(0,0,0,0.14)_100%)]" />
+                                                    {isMatchedShinyTier && (
+                                                        <motion.div
+                                                            className="absolute inset-y-0 -left-1/2 w-1/2 pointer-events-none"
+                                                            initial={{ x: '-130%' }}
+                                                            animate={{ x: '300%' }}
+                                                            transition={{ duration: 2.0, repeat: Infinity, ease: 'linear' }}
+                                                            style={{ background: 'linear-gradient(105deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.0) 20%, rgba(255,255,255,0.45) 50%, rgba(255,255,255,0) 85%)' }}
+                                                        />
+                                                    )}
+                                                    <div className="absolute inset-[1px] rounded-[15px] border border-white/25 dark:border-white/20 pointer-events-none" />
+                                                    <div className="relative z-10">
+                                                        <div className="flex items-center justify-between gap-3">
+                                                            <div className="w-11 h-11 rounded-full overflow-hidden border-2 border-red-500 bg-white dark:bg-gray-800 flex items-center justify-center shrink-0">
+                                                                {matchedOpProfile.avatar_url ? (
+                                                                    <img src={matchedOpProfile.avatar_url} className="w-full h-full object-cover" />
+                                                                ) : (
+                                                                    <User size={20} className="text-red-500" />
+                                                                )}
+                                                            </div>
+                                                            <div className="flex items-center gap-2 min-w-0">
+                                                                <span className="text-base font-bold text-white truncate drop-shadow-[0_1px_1px_rgba(0,0,0,0.25)]">{matchedOpProfile.nickname || t('game.unknownPlayer')}</span>
+                                                                <Flag code={matchedOpProfile.country} className="w-6 h-4 shrink-0" />
+                                                            </div>
+                                                        </div>
+                                                        <TierMMRBadge
+                                                            mmr={matchedOpProfile.mmr}
+                                                            className="mt-2"
+                                                        />
+                                                    </div>
+                                                </motion.div>
+                                            </>
+                                        ) : (
+                                            /* Searching - Show skeleton */
+                                            <>
+                                                <div className="bg-slate-50 dark:bg-gray-900/75 border border-red-400/20 rounded-2xl px-5 py-4 shadow-xl backdrop-blur-sm min-w-[260px]">
+                                                    <div className="flex items-center justify-between gap-3">
+                                                        <div className="w-11 h-11 rounded-full border-2 border-red-500/40 bg-white dark:bg-gray-800 flex items-center justify-center animate-pulse shrink-0">
+                                                            <User size={20} className="text-red-500/40" />
+                                                        </div>
+                                                        <span className="text-base font-bold text-gray-500 animate-pulse truncate">{t('matchmaking.searchingOpponent', '상대를 찾는 중...')}</span>
+                                                    </div>
+                                                    <div className="mt-2 h-6 rounded-lg bg-gray-300/50 dark:bg-gray-700/60 animate-pulse" />
+                                                </div>
+                                            </>
+                                        )}
+                                    </motion.div>
+
+                                    {/* Cancel Button */}
+                                    <div className="flex flex-col items-center mb-6 min-h-[56px] justify-center mt-2">
+                                        {status === 'searching' && (
+                                            <button
+                                                onClick={() => { playSound('click'); cancelSearch(); }}
+                                                className="px-10 py-3.5 rounded-2xl bg-white dark:bg-gray-800/60 backdrop-blur-md border border-gray-700 font-bold text-slate-600 dark:text-gray-300 transition-all duration-200 hover:border-red-500/50 hover:bg-white dark:bg-gray-800 hover:text-slate-900 dark:text-white hover:shadow-[0_0_15px_rgba(239,68,68,0.3)] active:scale-[0.98]"
+                                            >
+                                                {t('common.cancel')}
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            </>
+                        )}
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -584,7 +1851,7 @@ const Home = () => {
                         <h1 className="text-5xl md:text-6xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 drop-shadow-lg">
                             {t('app.title')}
                         </h1>
-                        <p className="text-gray-400 mt-2 text-sm uppercase tracking-widest">{t('app.subtitle')}</p>
+                        <p className="text-slate-500 dark:text-gray-400 mt-2 text-sm uppercase tracking-widest">{t('app.subtitle')}</p>
                     </motion.div>
 
                     {/* Game Modes */}
@@ -595,15 +1862,17 @@ const Home = () => {
                             ref={normalModeRef}
                             onMouseEnter={() => playSound('hover')}
                             onClick={() => handleModeSelect('normal')}
-                            className={`group relative w-full p-6 bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-300 hover:border-blue-500 hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] active:scale-95 cursor-pointer flex items-center gap-4 text-left`}
+                            className="group relative w-full p-6 bg-white dark:bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-200 hover:border-blue-500 hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] active:scale-[0.98] active:border-blue-300 active:bg-blue-400/20 active:shadow-[0_0_28px_rgba(59,130,246,0.5)] active:brightness-125 active:saturate-150 cursor-pointer flex items-center gap-4 text-left"
                         >
-                            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                            <div className="p-3 rounded-full bg-blue-500/20 group-hover:bg-blue-500/30 transition-colors">
-                                <Zap className="w-8 h-8 text-blue-400" />
+                            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-300" />
+                            <div className="p-3 rounded-full bg-blue-500/20 group-hover:bg-blue-500/30 group-active:bg-blue-500/40 transition-colors">
+                                <Zap className="w-8 h-8 text-blue-400 group-active:text-blue-200 transition-colors" />
                             </div>
                             <div>
-                                <h3 className="text-2xl font-bold group-hover:text-blue-400 transition-colors">{t('menu.normal.title')}</h3>
-                                <p className="text-gray-500 text-sm mt-1">{t('menu.normal.subtitle')}</p>
+                                <h3 className="text-2xl font-bold group-hover:text-blue-400 group-active:text-blue-200 transition-colors">{t('menu.normal.title')}</h3>
+                                <p className="text-gray-500 text-sm mt-1">
+                                    {t('menu.normal.subtitle')} · {t('menu.normal.matchRule', '3판 2선승')}
+                                </p>
                             </div>
                         </button>
 
@@ -612,20 +1881,50 @@ const Home = () => {
                             ref={rankModeRef}
                             onMouseEnter={() => playSound('hover')}
                             onClick={() => handleModeSelect('rank')}
-                            className={`group relative w-full p-6 bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-300 ${canPlayRank ? 'hover:border-purple-500 hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] active:scale-95 cursor-pointer' : 'opacity-50 grayscale cursor-not-allowed'} flex items-center gap-4 text-left`}
+                            className={`group relative w-full p-6 bg-white dark:bg-gray-800/50 backdrop-blur-md border rounded-2xl overflow-hidden transition-all duration-200 ${canPlayRank ? 'border-purple-400/55 hover:border-purple-300 hover:shadow-[0_0_18px_rgba(168,85,247,0.22)] active:scale-[0.98] active:border-purple-200 active:bg-purple-400/20 active:shadow-[0_0_24px_rgba(168,85,247,0.28)] active:brightness-125 active:saturate-150 cursor-pointer' : 'border-purple-400/30 opacity-50 grayscale cursor-not-allowed'} ${shouldHighlightRankButton ? 'rank-cta-highlight border-purple-300/90' : ''} flex items-center gap-4 text-left`}
                         >
-                            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                            <div className="p-3 rounded-full bg-purple-500/20 group-hover:bg-purple-500/30 transition-colors">
-                                <Trophy className="w-8 h-8 text-purple-400" />
+                            {shouldHighlightRankButton && (
+                                <div className="rank-cta-sheen absolute inset-0 z-0 pointer-events-none" />
+                            )}
+                            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-300" />
+                            <div className="relative z-10 p-3 rounded-full bg-purple-500/20 group-hover:bg-purple-500/30 group-active:bg-purple-500/40 transition-colors">
+                                {showRankSummary ? (
+                                    <TierIcon className="w-8 h-8 object-contain text-purple-400 group-active:text-purple-200 transition-colors" />
+                                ) : (
+                                    <Trophy className="w-8 h-8 text-purple-400 group-active:text-purple-200 transition-colors" />
+                                )}
                             </div>
-                            <div>
-                                <h3 className="text-2xl font-bold group-hover:text-purple-400 transition-colors">{t('menu.rank.title')}</h3>
-                                <p className="text-gray-500 text-sm mt-1">{t('menu.rank.subtitle')}</p>
+                            <div className="relative z-10">
+                                <h3 className="text-2xl font-bold group-hover:text-purple-400 group-active:text-purple-200 transition-colors">{t('menu.rank.title')}</h3>
+                                <p className="text-gray-500 text-sm mt-1">
+                                    {t('menu.rank.subtitle')} · {t('menu.rank.matchRule', '5판 3선승')}
+                                </p>
+                                {isRankBurningTime && (
+                                    <p className="text-amber-300 text-xs font-black mt-1">
+                                        {t('menu.rank.burningTime', 'Burning Time')} ({rankBurningTimeWindow}) · {t('menu.rank.burningTimeBenefit', 'No pencil cost')}
+                                    </p>
+                                )}
                             </div>
 
                             {!user && (
                                 <div className="absolute inset-0 flex items-center justify-center bg-black/60 z-10">
-                                    <Lock className="w-8 h-8 text-white/80" />
+                                    <Lock className="w-8 h-8 text-slate-900 dark:text-white/80" />
+                                </div>
+                            )}
+
+                            {/* Win Streak Badge */}
+                            {streakActive && user && (
+                                <div className="absolute top-2 right-2 z-20 flex flex-col items-end gap-0.5">
+                                    <div className="flex items-center gap-1.5 bg-gradient-to-r from-orange-600/90 to-red-600/90 backdrop-blur-sm rounded-full px-2.5 py-1 shadow-lg border border-orange-400/40 animate-pulse">
+                                        <Flame className="w-4 h-4 text-yellow-300" />
+                                        <span className="text-xs font-black text-slate-900 dark:text-white">{streakCount}</span>
+                                        <span className="text-[10px] text-orange-200 font-mono">{streakMinutes}:{String(streakSeconds).padStart(2, '0')}</span>
+                                    </div>
+                                    {nextMilestone > 0 && (
+                                        <div className="bg-yellow-500/90 backdrop-blur-sm rounded-full px-2 py-0.5 shadow border border-yellow-400/50">
+                                            <span className="text-[10px] font-bold text-black">{nextMilestone}{t('streak.nextBonus', '연승 시 +{{bonus}}', { bonus: nextBonusMMR })}</span>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </button>
@@ -634,15 +1933,15 @@ const Home = () => {
                         <button
                             ref={practiceModeRef}
                             onMouseEnter={() => playSound('hover')}
-                            onClick={() => { playSound('click'); navigate('/practice'); }}
-                            className={`group relative w-full p-6 bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-300 hover:border-green-500 hover:shadow-[0_0_20px_rgba(34,197,94,0.5)] active:scale-95 cursor-pointer flex items-center gap-4 text-left`}
+                            onClick={() => handleModeSelect('practice')}
+                            className="group relative w-full p-6 bg-white dark:bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-200 hover:border-green-500 hover:shadow-[0_0_20px_rgba(34,197,94,0.5)] active:scale-[0.98] active:border-green-300 active:bg-green-400/20 active:shadow-[0_0_28px_rgba(34,197,94,0.5)] active:brightness-125 active:saturate-150 cursor-pointer flex items-center gap-4 text-left"
                         >
-                            <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                            <div className="p-3 rounded-full bg-green-500/20 group-hover:bg-green-500/30 transition-colors">
-                                <Dumbbell className="w-8 h-8 text-green-400" />
+                            <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-transparent opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-300" />
+                            <div className="p-3 rounded-full bg-green-500/20 group-hover:bg-green-500/30 group-active:bg-green-500/40 transition-colors">
+                                <Dumbbell className="w-8 h-8 text-green-400 group-active:text-green-200 transition-colors" />
                             </div>
                             <div>
-                                <h3 className="text-2xl font-bold group-hover:text-green-400 transition-colors">{t('menu.practice.title')}</h3>
+                                <h3 className="text-2xl font-bold group-hover:text-green-400 group-active:text-green-200 transition-colors">{t('menu.practice.title')}</h3>
                                 <p className="text-gray-500 text-sm mt-1">{t('menu.practice.subtitle')}</p>
                             </div>
                         </button>
@@ -654,92 +1953,95 @@ const Home = () => {
                             ref={rankingBtnRef}
                             onMouseEnter={() => playSound('hover')}
                             onClick={() => { playSound('click'); setShowLeaderboard(true); }}
-                            className="p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 group cursor-pointer"
+                            className="p-4 bg-white dark:bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-slate-100 dark:bg-gray-700 active:bg-yellow-400/20 active:border-yellow-300 active:shadow-[0_0_22px_rgba(234,179,8,0.45)] active:brightness-125 active:saturate-150 active:scale-[0.98] transition-all duration-150 flex items-center justify-center gap-2 group cursor-pointer"
                         >
-                            <Trophy className="w-5 h-5 text-yellow-500 group-hover:text-yellow-400 transition-colors" />
-                            <span className="text-gray-300 group-hover:text-white transition-colors">{t('leaderboard.button', 'Ranking')}</span>
+                            <Trophy className="w-5 h-5 text-yellow-500 group-hover:text-yellow-400 group-active:text-yellow-300 transition-colors" />
+                            <span className="text-slate-600 dark:text-gray-300 group-hover:text-slate-900 dark:text-white group-active:text-yellow-100 transition-colors">{t('leaderboard.button', 'Ranking')}</span>
                         </button>
                         <button
                             ref={shopBtnRef}
                             onMouseEnter={() => playSound('hover')}
                             onClick={() => { playSound('click'); navigate('/shop'); }}
-                            className="p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 group cursor-pointer"
+                            className="p-4 bg-white dark:bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-slate-100 dark:bg-gray-700 active:bg-cyan-400/20 active:border-cyan-300 active:shadow-[0_0_22px_rgba(34,211,238,0.45)] active:brightness-125 active:saturate-150 active:scale-[0.98] transition-all duration-150 flex items-center justify-center gap-2 group cursor-pointer"
                         >
-                            <ShoppingBag className="w-5 h-5 text-cyan-400 group-hover:text-white transition-colors" />
-                            <span className="text-gray-300 group-hover:text-white transition-colors">{t('menu.shop', 'Shop')}</span>
+                            <ShoppingBag className="w-5 h-5 text-cyan-400 group-hover:text-slate-900 dark:text-white group-active:text-cyan-200 transition-colors" />
+                            <span className="text-slate-600 dark:text-gray-300 group-hover:text-slate-900 dark:text-white group-active:text-cyan-100 transition-colors">{t('menu.shop', 'Shop')}</span>
                         </button>
                         <button
                             ref={settingsBtnRef}
                             onMouseEnter={() => playSound('hover')}
                             onClick={() => { playSound('click'); navigate('/settings'); }}
-                            className="p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 group cursor-pointer"
+                            className="p-4 bg-white dark:bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-slate-100 dark:bg-gray-700 active:bg-slate-300/20 active:border-slate-200 active:shadow-[0_0_22px_rgba(148,163,184,0.35)] active:brightness-125 active:scale-[0.98] transition-all duration-150 flex items-center justify-center gap-2 group cursor-pointer"
                         >
-                            <Settings className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
-                            <span className="text-gray-300 group-hover:text-white transition-colors">{t('menu.settings')}</span>
+                            <Settings className="w-5 h-5 text-slate-500 dark:text-gray-400 group-hover:text-slate-900 dark:text-white group-active:text-slate-200 transition-colors" />
+                            <span className="text-slate-600 dark:text-gray-300 group-hover:text-slate-900 dark:text-white group-active:text-slate-100 transition-colors">{t('menu.settings')}</span>
                         </button>
                         {user ? (
                             <button
                                 ref={loginProfileBtnRef}
                                 onMouseEnter={() => playSound('hover')}
                                 onClick={() => { playSound('click'); navigate('/profile'); }}
-                                className="p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 group cursor-pointer"
+                                className="p-4 bg-white dark:bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-slate-100 dark:bg-gray-700 active:bg-blue-400/20 active:border-blue-300 active:shadow-[0_0_22px_rgba(59,130,246,0.45)] active:brightness-125 active:saturate-150 active:scale-[0.98] transition-all duration-150 flex items-center justify-center gap-2 group cursor-pointer"
                             >
                                 <span className="relative">
-                                    <User className="w-5 h-5 text-blue-400 group-hover:text-white transition-colors" />
+                                    <User className="w-5 h-5 text-blue-400 group-hover:text-slate-900 dark:text-blue-400 dark:group-hover:text-blue-200 group-active:text-blue-200 transition-colors" />
                                     {hasSocialNotifications && (
                                         <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-gray-900" aria-hidden="true"></span>
                                     )}
                                 </span>
-                                <span className="text-blue-300 group-hover:text-white transition-colors">{t('menu.profile')}</span>
+                                <span className="text-blue-300 group-hover:text-slate-900 dark:text-blue-300 dark:group-hover:text-blue-200 group-active:text-blue-100 transition-colors">{t('menu.profile')}</span>
                             </button>
                         ) : (
                             <button
                                 ref={loginProfileBtnRef}
                                 onMouseEnter={() => playSound('hover')}
-                                onClick={() => { playSound('click'); navigate('/login'); }}
-                                className="p-4 bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 group cursor-pointer"
+                                onClick={() => { playSound('click'); }}
+                                className="p-4 bg-white dark:bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-slate-100 dark:bg-gray-700 active:bg-slate-300/20 active:border-slate-200 active:shadow-[0_0_22px_rgba(148,163,184,0.35)] active:brightness-125 active:scale-[0.98] transition-all duration-150 flex items-center justify-center gap-2 group cursor-pointer"
                             >
-                                <User className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
-                                <span className="text-gray-300 group-hover:text-white transition-colors">{t('menu.login')}</span>
+                                <User className="w-5 h-5 text-slate-500 dark:text-gray-400 group-hover:text-slate-900 dark:group-hover:text-gray-200 group-active:text-slate-200 transition-colors" />
+                                <span className="text-slate-600 dark:text-gray-300 group-hover:text-slate-900 dark:group-hover:text-gray-200 group-active:text-slate-100 transition-colors">{t('menu.login')}</span>
                             </button>
                         )}
                     </motion.div>
                 </motion.div>
             </div>
 
-            <div className="fixed md:hidden bottom-0 inset-x-0 z-20 border-t border-white/10 bg-gray-900/90 backdrop-blur-xl px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-2">
+            <div className="fixed md:hidden bottom-0 inset-x-0 z-20 border-t border-white/10 bg-slate-50 dark:bg-gray-900/90 backdrop-blur-xl px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-2">
                 <div className="mx-auto grid w-full max-w-md grid-cols-4 gap-2">
                     <button
                         ref={mobileRankingBtnRef}
                         onClick={() => { playSound('click'); setShowLeaderboard(true); }}
-                        className="rounded-xl bg-gray-800/70 py-2.5 flex flex-col items-center justify-center gap-1.5 text-gray-200 hover:bg-gray-700 transition-colors"
+                        className="group rounded-xl bg-white dark:bg-gray-800/70 py-2.5 flex flex-col items-center justify-center gap-1.5 text-slate-700 dark:text-gray-200 hover:bg-slate-100 dark:bg-gray-700 active:bg-yellow-400/20 active:border active:border-yellow-300 active:shadow-[0_0_18px_rgba(234,179,8,0.45)] active:brightness-125 active:saturate-150 active:scale-[0.98] transition-all duration-150"
                     >
-                        <Trophy className="w-5 h-5 text-yellow-400" />
-                        <span className="text-[11px] font-semibold leading-none">{t('leaderboard.button', 'Ranking')}</span>
+                        <Trophy className="w-5 h-5 text-yellow-400 group-active:text-yellow-300 transition-colors" />
+                        <span className="text-[11px] font-semibold leading-none group-active:text-yellow-100 transition-colors">{t('leaderboard.button', 'Ranking')}</span>
                     </button>
                     <button
                         ref={mobileShopBtnRef}
                         onClick={() => { playSound('click'); navigate('/shop'); }}
-                        className="rounded-xl bg-gray-800/70 py-2.5 flex flex-col items-center justify-center gap-1.5 text-gray-200 hover:bg-gray-700 transition-colors"
+                        className="group rounded-xl bg-white dark:bg-gray-800/70 py-2.5 flex flex-col items-center justify-center gap-1.5 text-slate-700 dark:text-gray-200 hover:bg-slate-100 dark:bg-gray-700 active:bg-cyan-400/20 active:border active:border-cyan-300 active:shadow-[0_0_18px_rgba(34,211,238,0.45)] active:brightness-125 active:saturate-150 active:scale-[0.98] transition-all duration-150"
                     >
-                        <ShoppingBag className="w-5 h-5 text-cyan-400" />
-                        <span className="text-[11px] font-semibold leading-none">{t('menu.shop', 'Shop')}</span>
+                        <ShoppingBag className="w-5 h-5 text-cyan-400 group-active:text-cyan-200 transition-colors" />
+                        <span className="text-[11px] font-semibold leading-none group-active:text-cyan-100 transition-colors">{t('menu.shop', 'Shop')}</span>
                     </button>
                     <button
                         ref={mobileSettingsBtnRef}
                         onClick={() => { playSound('click'); navigate('/settings'); }}
-                        className="rounded-xl bg-gray-800/70 py-2.5 flex flex-col items-center justify-center gap-1.5 text-gray-200 hover:bg-gray-700 transition-colors"
+                        className="group rounded-xl bg-white dark:bg-gray-800/70 py-2.5 flex flex-col items-center justify-center gap-1.5 text-slate-700 dark:text-gray-200 hover:bg-slate-100 dark:bg-gray-700 active:bg-slate-300/20 active:border active:border-slate-200 active:shadow-[0_0_18px_rgba(148,163,184,0.35)] active:brightness-125 active:scale-[0.98] transition-all duration-150"
                     >
-                        <Settings className="w-5 h-5 text-gray-300" />
-                        <span className="text-[11px] font-semibold leading-none">{t('menu.settings')}</span>
+                        <Settings className="w-5 h-5 text-slate-600 dark:text-gray-300 group-active:text-slate-200 transition-colors" />
+                        <span className="text-[11px] font-semibold leading-none group-active:text-slate-100 transition-colors">{t('menu.settings')}</span>
                     </button>
                     <button
                         ref={mobileLoginProfileBtnRef}
-                        onClick={() => { playSound('click'); navigate(user ? '/profile' : '/login'); }}
-                        className="relative rounded-xl bg-gray-800/70 py-2.5 flex flex-col items-center justify-center gap-1.5 text-gray-200 hover:bg-gray-700 transition-colors"
+                        onClick={() => { playSound('click'); if (user) navigate('/profile'); }}
+                        className={`group relative rounded-xl bg-white dark:bg-gray-800/70 py-2.5 flex flex-col items-center justify-center gap-1.5 text-slate-700 dark:text-gray-200 hover:bg-slate-100 dark:bg-gray-700 active:brightness-125 active:scale-[0.98] transition-all duration-150 ${user
+                            ? 'active:bg-blue-400/20 active:border active:border-blue-300 active:shadow-[0_0_18px_rgba(59,130,246,0.45)] active:saturate-150'
+                            : 'active:bg-slate-300/20 active:border active:border-slate-200 active:shadow-[0_0_18px_rgba(148,163,184,0.35)]'
+                            }`}
                     >
-                        <User className={`w-5 h-5 ${user ? 'text-blue-400' : 'text-gray-300'}`} />
-                        <span className="text-[11px] font-semibold leading-none">{user ? t('menu.profile') : t('menu.login')}</span>
+                        <User className={`w-5 h-5 transition-colors ${user ? 'text-blue-400 group-active:text-blue-200' : 'text-gray-300 group-active:text-slate-200'}`} />
+                        <span className={`text-[11px] font-semibold leading-none transition-colors ${user ? 'group-active:text-blue-100' : 'group-active:text-slate-100'}`}>{user ? t('menu.profile') : t('menu.login')}</span>
                         {user && hasSocialNotifications && (
                             <span className="absolute top-1.5 right-2 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-gray-900" aria-hidden="true"></span>
                         )}
@@ -748,22 +2050,28 @@ const Home = () => {
             </div>
 
             {/* Tutorial Spotlight Overlay */}
-            {isHomeTutorialActive && homeTutorialSteps[homeTutorialStep] && (
+            {user && isHomeTutorialActive && homeTutorialSteps[homeTutorialStep] && (!((profile as any)?.home_tutorial_seen_at) || isHomeTutorialReplay) && (
                 <SpotlightOverlay
                     targetRef={tutorialRefs[homeTutorialSteps[homeTutorialStep].id]}
                     message={t(homeTutorialSteps[homeTutorialStep].messageKey)}
-                    onNext={nextHomeTutorialStep}
-                    onSkip={skipHomeTutorial}
+                    onNext={handleHomeTutorialNext}
+                    onSkip={handleHomeTutorialSkip}
                     isLast={homeTutorialStep === homeTutorialSteps.length - 1}
                     stepNumber={homeTutorialStep}
                     totalSteps={homeTutorialSteps.length}
-                    onAction={homeTutorialSteps[homeTutorialStep].id === 'login' && !user ? () => {
-                        skipHomeTutorial();
-                        navigate('/login');
-                    } : undefined}
-                    actionLabel={homeTutorialSteps[homeTutorialStep].id === 'login' && !user ? t('tutorial.loginNow', '바로 로그인') : undefined}
                 />
             )}
+
+            {user && !isHomeTutorialActive && showPostTutorialNormalSpotlight && (
+                <SpotlightOverlay
+                    targetRef={normalModeRef}
+                    message={t('tutorial.tryNormalHighlight', '먼저 일반 모드를 눌러 첫 대전을 시작해보세요!')}
+                    onNext={() => void handlePostTutorialNormalStart()}
+                    isLast
+                    nextLabel={t('tutorial.startNormalNow', '일반모드 시작')}
+                />
+            )}
+
         </div >
     );
 };

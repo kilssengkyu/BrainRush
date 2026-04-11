@@ -67,9 +67,11 @@ const verifyAppleTransaction = async (transactionId: string): Promise<VerifyResu
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) {
+      console.error(`[Apple Verifier] Failed on ${endpoint.env} with status ${res.status}:`, await res.text());
       continue;
     }
     const data = await res.json();
+
     const signed = data?.signedTransactionInfo as string | undefined;
     const payload = signed ? decodeJwsPayload(signed) : null;
     return {
@@ -80,11 +82,11 @@ const verifyAppleTransaction = async (transactionId: string): Promise<VerifyResu
     };
   }
 
+  console.error('[Apple Verifier] All endpoints failed.');
   return { ok: false };
 };
 
 const verifyGooglePlay = async (packageName: string, productId: string, purchaseToken: string): Promise<VerifyResult> => {
-  console.log(`[Google Play] Verifying ${productId} with token length: ${purchaseToken?.length}`);
   try {
     const serviceAccountJson = JSON.parse(requireEnv('GOOGLE_SERVICE_ACCOUNT_KEY'));
     const clientEmail = serviceAccountJson.client_email as string;
@@ -119,19 +121,17 @@ const verifyGooglePlay = async (packageName: string, productId: string, purchase
     if (!accessToken) return { ok: false };
 
     const url = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${packageName}/purchases/products/${productId}/tokens/${purchaseToken}`;
-    console.log('[Google Play] Calling API...');
+
     const res = await fetch(url, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
 
-    // Log response
     if (!res.ok) {
       console.error('[Google Play] API returned error:', res.status, await res.text());
       return { ok: false };
     }
 
     const data = await res.json();
-    console.log('[Google Play] Response:', JSON.stringify(data));
 
     const purchaseState = data?.purchaseState;
     if (purchaseState !== 0) {
@@ -159,28 +159,33 @@ const grantEntitlement = async (
   if (productId === 'remove_ads') {
     const { error } = await supabase.rpc('grant_ads_removal', { user_id: userId });
     if (error) throw error;
-  } else if (productId === 'pencils_5') {
+  } else if (productId === 'pencils_5' || productId === 'pencil_5') {
     const { error } = await supabase.rpc('grant_pencils', { user_id: userId, amount: 5 });
     if (error) throw error;
-  } else if (productId === 'pencils_20') {
+  } else if (productId === 'pencils_20' || productId === 'pencil_20') {
     const { error } = await supabase.rpc('grant_pencils', { user_id: userId, amount: 20 });
     if (error) throw error;
-  } else if (productId === 'pencils_100') {
+  } else if (productId === 'pencils_100' || productId === 'pencil_100') {
     const { error } = await supabase.rpc('grant_pencils', { user_id: userId, amount: 100 });
     if (error) throw error;
-  } else if (productId === 'practice_notes_10') {
+  } else if (productId === 'practice_notes_10' || productId === 'practice_note_10') {
     const { error } = await supabase.rpc('grant_practice_notes', { user_id: userId, amount: 10 });
     if (error) throw error;
-  } else if (productId === 'practice_notes_20') {
+  } else if (productId === 'practice_notes_20' || productId === 'practice_note_20') {
     const { error } = await supabase.rpc('grant_practice_notes', { user_id: userId, amount: 20 });
     if (error) throw error;
-  } else if (productId === 'practice_notes_100') {
+  } else if (productId === 'practice_notes_100' || productId === 'practice_note_100') {
     const { error } = await supabase.rpc('grant_practice_notes', { user_id: userId, amount: 100 });
     if (error) throw error;
+  } else if (productId === 'nickname_change_ticket' || productId === 'nickname_ticket') {
+    const { error } = await supabase.rpc('grant_nickname_change_tickets', { user_id: userId, amount: 1 });
+    if (error) throw error;
+  } else {
+    throw new Error(`Unsupported productId: ${productId}`);
   }
 };
 
-Deno.serve(async (req) => {
+Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -219,7 +224,7 @@ Deno.serve(async (req) => {
 
     let result: VerifyResult = { ok: false };
     if (platform === 'ios') {
-      result = await verifyAppleTransaction(transactionId);
+      result = await verifyAppleTransaction(transactionId!);
     } else if (platform === 'android') {
       const packageName = requireEnv('GOOGLE_PLAY_PACKAGE_NAME');
       // transactionId is used as orderId for Android if available, but purchaseToken is key for verification
@@ -240,8 +245,6 @@ Deno.serve(async (req) => {
       return jsonResponse(500, { error: 'Failed to obtain transaction ID' });
     }
 
-    console.log(`[Verify Purchase] Recording purchase for ${user.id}, Product: ${productId}, ID: ${confirmedTransactionId}`);
-
     const { data: recorded, error: recordError } = await supabase.rpc('record_purchase', {
       p_user_id: user.id,
       p_product_id: productId,
@@ -253,8 +256,6 @@ Deno.serve(async (req) => {
       console.error('[Verify Purchase] record_purchase RPC failed:', recordError);
       throw recordError;
     }
-
-    console.log(`[Verify Purchase] Recorded: ${recorded}`);
 
     if (recorded) {
       const { error: updateError } = await supabase
@@ -282,13 +283,13 @@ Deno.serve(async (req) => {
     // BUT user might have not received entitlement if previous grant failed.
     // For safety, let's always ensure entitlement if verification passed.
     if (!recorded) {
-      console.log('[Verify Purchase] Duplicate transaction, ensuring entitlement anyway...');
       await grantEntitlement(supabase, user.id, productId);
     }
 
     return jsonResponse(200, { ok: true, duplicate: !recorded });
-  } catch (err) {
+  } catch (err: unknown) {
     console.error('[Verify Purchase] Internal Server Error:', err);
-    return jsonResponse(500, { error: 'Server error', detail: String(err?.message ?? err) });
+    const detail = err instanceof Error ? err.message : String(err);
+    return jsonResponse(500, { error: 'Server error', detail });
   }
 });

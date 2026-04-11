@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { usePanelProgress } from '../../hooks/usePanelProgress';
 import { motion } from 'framer-motion';
-import { useTranslation } from 'react-i18next';
 import { SeededRandom } from '../../utils/seededRandom';
 import { useSound } from '../../contexts/SoundContext';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface SequenceGameProps {
     seed: string | null;
@@ -30,9 +31,10 @@ const FORWARD_COLORS = [
 ];
 
 const SequenceGame: React.FC<SequenceGameProps> = ({ seed, onScore, isPlaying, mode }) => {
-    const { t } = useTranslation();
     const { playSound } = useSound();
-    const [stage, setStage] = useState(1);
+    const { themeMode } = useTheme();
+    const isDark = themeMode === 'dark';
+    const [stage, setStage] = usePanelProgress(seed, 'stage', 1);
     const [sequence, setSequence] = useState<number[]>([]);
     const [phase, setPhase] = useState<'IDLE' | 'SHOWING' | 'INPUT' | 'SUCCESS' | 'FAILURE'>('IDLE');
     const [userInput, setUserInput] = useState<number[]>([]);
@@ -51,6 +53,15 @@ const SequenceGame: React.FC<SequenceGameProps> = ({ seed, onScore, isPlaying, m
         const base = Math.floor((stage - 1) / 3);
         const count = 4 + base;
         return Math.min(count, 7);
+    }, [stage]);
+
+    // Keep current 150ms as top speed.
+    // Start at 2x slower (300ms) and ramp to 150ms by stage 5.
+    const showStepIntervalMs = useMemo(() => {
+        const slowest = 300;
+        const fastest = 150;
+        const progress = Math.max(0, Math.min(1, (stage - 1) / 4));
+        return Math.round(slowest - (slowest - fastest) * progress);
     }, [stage]);
 
     // Start New Round
@@ -98,11 +109,11 @@ const SequenceGame: React.FC<SequenceGameProps> = ({ seed, onScore, isPlaying, m
                     }
                     return next;
                 });
-            }, 150); // fast interval (tak tak tak)
+            }, showStepIntervalMs);
 
             return () => clearInterval(interval);
         }
-    }, [phase, sequence]);
+    }, [phase, sequence, showStepIntervalMs]);
 
 
     const handlePadClick = (index: number) => {
@@ -153,33 +164,22 @@ const SequenceGame: React.FC<SequenceGameProps> = ({ seed, onScore, isPlaying, m
 
     return (
         <div className="w-full h-full flex flex-col items-center justify-center relative">
-            <h2 className={`text-4xl font-black mb-8 drop-shadow-md ${mode === 'forward' ? 'text-blue-200' : 'text-red-200'}`}>
-                {mode === 'forward' ? t('sequence.titleNormal') : t('sequence.title')}
-            </h2>
-
-            {/* Instruction */}
-            <div className="h-8 mb-8">
-                {phase === 'SHOWING' && <span className="text-yellow-400 font-bold animate-pulse">{mode === 'forward' ? t('sequence.instructionNormal') : t('sequence.instruction')}</span>}
-                {phase === 'INPUT' && <span className="text-green-400 font-bold">{mode === 'forward' ? t('sequence.instructionNormal') : t('sequence.instruction')}</span>}
-                {phase === 'SUCCESS' && <span className="text-blue-400 font-bold">Great!</span>}
-            </div>
-
             <div className="grid grid-cols-3 gap-4 w-72 h-72">
                 {[...Array(GRID_SIZE)].map((_, i) => {
                     const isSequenceMember = sequence.includes(i);
                     const seqIndex = sequence.indexOf(i);
                     const color = isSequenceMember ? targetColors[seqIndex] : null;
 
-                    let bgClass = 'bg-gray-800';
+                    let bgClass = 'bg-white dark:bg-gray-800';
                     let style: React.CSSProperties = {};
 
                     if (phase === 'SHOWING') {
                         if (isSequenceMember && seqIndex < seqStep) {
                             bgClass = 'scale-110 z-10';
                             style = {
-                                backgroundColor: '#F8FAFC',
-                                borderColor: 'rgba(255,255,255,0.9)',
-                                boxShadow: 'none'
+                                backgroundColor: color || (isDark ? '#F8FAFC' : '#1e293b'),
+                                borderColor: isDark ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.2)',
+                                boxShadow: isDark ? 'none' : '0 4px 12px rgba(0,0,0,0.15)'
                             };
                         }
                     } else if (phase === 'INPUT' || phase === 'SUCCESS') {
@@ -187,7 +187,7 @@ const SequenceGame: React.FC<SequenceGameProps> = ({ seed, onScore, isPlaying, m
                             // If clicked, dim it?
                             const isClicked = userInput.includes(i);
                             if (isClicked) {
-                                bgClass = 'bg-gray-900 opacity-30';
+                                bgClass = 'bg-slate-200 dark:bg-gray-900 opacity-30';
                             } else {
                                 style = { backgroundColor: color || '#fff' };
                                 bgClass = 'shadow-lg hover:brightness-110';

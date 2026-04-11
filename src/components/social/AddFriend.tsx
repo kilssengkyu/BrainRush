@@ -95,9 +95,9 @@ const AddFriend = () => {
     };
 
     return (
-        <div className="bg-slate-800 rounded-lg p-4 shadow-lg border border-slate-700">
-            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                <UserPlus size={20} className="text-green-400" />
+        <div className="bg-white dark:bg-slate-800 rounded-lg p-4 shadow-sm dark:shadow-lg border border-slate-200 dark:border-slate-700">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                <UserPlus size={20} className="text-emerald-500 dark:text-green-400" />
                 {t('social.addFriend')}
             </h3>
 
@@ -107,12 +107,12 @@ const AddFriend = () => {
                     value={nickname}
                     onChange={(e) => setNickname(e.target.value)}
                     placeholder={t('social.searchNickname')}
-                    className="flex-1 bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+                    className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 shadow-sm"
                 />
                 <button
                     type="submit"
                     disabled={loading}
-                    className="bg-blue-600 hover:bg-blue-500 text-white p-2 rounded-lg transition disabled:opacity-50"
+                    className="bg-blue-600 border border-transparent hover:bg-blue-500 text-white p-2 rounded-lg transition disabled:opacity-50 shadow-sm"
                 >
                     <Search size={20} />
                 </button>
@@ -125,9 +125,9 @@ const AddFriend = () => {
             )}
 
             {searchResult && (
-                <div className="bg-slate-700/50 p-3 rounded-lg flex items-center justify-between">
+                <div className="bg-slate-50 dark:bg-slate-700/50 p-3 rounded-lg flex items-center justify-between border border-slate-200 dark:border-transparent mt-2">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-slate-600 overflow-hidden border border-slate-500">
+                        <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-600 overflow-hidden border border-slate-300 dark:border-slate-500">
                             {searchResult.avatar_url ? (
                                 <img src={searchResult.avatar_url} alt={searchResult.nickname} className="w-full h-full object-cover" />
                             ) : (
@@ -136,12 +136,12 @@ const AddFriend = () => {
                                 </div>
                             )}
                         </div>
-                        <span className="font-semibold text-white">{searchResult.nickname}</span>
+                        <span className="font-semibold text-slate-900 dark:text-white">{searchResult.nickname}</span>
                     </div>
                     <button
                         onClick={sendFriendRequest}
                         disabled={loading}
-                        className="flex items-center gap-1 bg-green-600 hover:bg-green-500 text-white px-3 py-1.5 rounded-lg text-sm transition font-medium"
+                        className="flex items-center gap-1 bg-emerald-600 dark:bg-green-600 hover:bg-emerald-500 dark:hover:bg-green-500 text-white px-3 py-1.5 rounded-lg text-sm transition font-medium shadow-sm"
                     >
                         <UserPlus size={16} /> {t('common.add')}
                     </button>

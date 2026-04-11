@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { usePanelProgress } from '../../hooks/usePanelProgress';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import {
@@ -31,7 +32,7 @@ const ICONS = [
 const MemoryMatch: React.FC<MemoryMatchProps> = ({ seed, onScore, isPlaying }) => {
     const { t } = useTranslation();
     const { playSound } = useSound();
-    const [stage, setStage] = useState(1);
+    const [stage, setStage] = usePanelProgress(seed, 'stage', 1);
     const [cards, setCards] = useState<Card[]>([]);
     const [gameState, setGameState] = useState<'MEMORIZING' | 'PLAYING' | 'CLEARED'>('MEMORIZING');
     const [flippedIndices, setFlippedIndices] = useState<number[]>([]);
@@ -111,7 +112,7 @@ const MemoryMatch: React.FC<MemoryMatchProps> = ({ seed, onScore, isPlaying }) =
             }, 0);
         } else {
             // No Match
-            onScore(-40);
+            onScore(-20);
             playSound('error');
 
             // Auto close fast
@@ -153,7 +154,7 @@ const MemoryMatch: React.FC<MemoryMatchProps> = ({ seed, onScore, isPlaying }) =
 
     return (
         <div className="w-full h-full flex flex-col items-center p-4">
-            <h2 className="text-3xl font-black text-white mb-4 drop-shadow-lg">
+            <h2 className="text-3xl font-black text-slate-900 dark:text-white mb-4 drop-shadow-lg">
                 MEMORY MATCH (Lv. {stage})
             </h2>
 
@@ -164,7 +165,7 @@ const MemoryMatch: React.FC<MemoryMatchProps> = ({ seed, onScore, isPlaying }) =
                     </div>
                 )}
                 {gameState === 'PLAYING' && (
-                    <div className="text-gray-400 font-bold text-lg">
+                    <div className="text-slate-500 dark:text-gray-400 font-bold text-lg">
                         {t('memory.find_pairs')}
                     </div>
                 )}
@@ -259,7 +260,7 @@ const MemoryMatch: React.FC<MemoryMatchProps> = ({ seed, onScore, isPlaying }) =
                         handleMemorizeDone();
                     }}
                     disabled={gameState !== 'MEMORIZING'}
-                    className={`px-7 py-3.5 bg-green-500 text-white font-black text-2xl rounded-2xl shadow-[0_4px_0_rgb(21,128,61)] transition-all ${gameState === 'MEMORIZING'
+                    className={`px-7 py-3.5 bg-green-500 text-slate-900 dark:text-white font-black text-2xl rounded-2xl shadow-[0_4px_0_rgb(21,128,61)] transition-all ${gameState === 'MEMORIZING'
                         ? 'hover:bg-green-600 hover:shadow-[0_2px_0_rgb(21,128,61)] hover:translate-y-[2px]'
                         : 'opacity-0 pointer-events-none'
                         }`}

@@ -1,469 +1,685 @@
 {
-    "app": {
-        "title": "BrainRush",
-        "subtitle": "Tốc độ & Trí tuệ"
+  "app": {
+    "title": "BrainRush",
+    "subtitle": "Tốc độ & Trí tuệ"
+  },
+  "common": {
+    "cancel": "Hủy",
+    "confirm": "Xác nhận",
+    "close": "Đóng",
+    "retry": "Thử lại",
+    "loading": "Đang tải...",
+    "noResults": "Không có kết quả",
+    "add": "Thêm",
+    "error": "Đã xảy ra lỗi.",
+    "google": "Google",
+    "or": "Hoặc",
+    "timeAgo": {
+      "justNow": "Vừa xong",
+      "minute": "{{count}} phút trước",
+      "hour": "{{count}} giờ trước",
+      "day": "{{count}} ngày trước",
+      "longAgo": "Đã lâu"
     },
-    "common": {
-        "cancel": "Hủy",
-        "confirm": "Xác nhận",
-        "close": "Đóng",
-        "retry": "Thử lại",
-        "loading": "Đang tải...",
-        "noResults": "Không có kết quả",
-        "add": "Thêm",
-        "error": "Đã xảy ra lỗi.",
-        "google": "Google",
-        "or": "Hoặc",
-        "timeAgo": {
-            "justNow": "Vừa xong",
-            "minute": "{{count}} phút trước",
-            "hour": "{{count}} giờ trước",
-            "day": "{{count}} ngày trước",
-            "longAgo": "Đã lâu"
-        }
+    "exitAppTitle": "Thoát ứng dụng",
+    "exitAppConfirm": "Bạn có muốn thoát ứng dụng không?",
+    "open": "Mở"
+  },
+  "auth": {
+    "loginRequired": "Yêu cầu đăng nhập.",
+    "guestMode": "Chế độ Khách",
+    "guestWarning": "Tài khoản khách có thể mất tiến trình đã lưu.",
+    "terms": "Tiếp tục đồng nghĩa bạn đồng ý với Điều khoản dịch vụ của chúng tôi.",
+    "loggedOutByOtherDevice": "Bạn đã bị đăng xuất vì tài khoản này được dùng trên thiết bị khác."
+  },
+  "streak": {
+    "bonusActive": "Đang áp dụng",
+    "bonusIncluded": "Thưởng chuỗi thắng +{{bonus}}",
+    "nextBonus": " thắng → +{{bonus}}",
+    "loseBonusTitle": "Quà thua liên tiếp",
+    "loseBonusMessage": "Bạn thua 3 trận liên tiếp. Đây là bút chì cổ vũ bạn!",
+    "loseBonusSubtext": "Không phải lúc nào cũng có đâu, lần sau phải thắng nhé! 💪"
+  },
+  "social": {
+    "friends": "Bạn bè",
+    "friendList": "Danh sách bạn bè",
+    "friendRequests": "Lời mời kết bạn",
+    "addFriend": "Thêm bạn",
+    "searchNickname": "Tìm nickname",
+    "searchError": "Đã xảy ra lỗi khi tìm kiếm.",
+    "userNotFound": "Không tìm thấy người dùng.",
+    "cannotAddSelf": "Bạn không thể tự thêm chính mình.",
+    "alreadyFriends": "Hai bạn đã là bạn bè.",
+    "requestPending": "Yêu cầu đã gửi hoặc đang chờ.",
+    "blocked": "Người dùng đã chặn bạn hoặc bị bạn chặn.",
+    "requestSent": "Đã gửi lời mời kết bạn!",
+    "requestFail": "Gửi lời mời kết bạn thất bại.",
+    "loadingFriends": "Đang tải danh sách bạn bè...",
+    "noFriends": "Không tìm thấy bạn bè.",
+    "deleteFriend": "Xóa bạn",
+    "deleteFriendConfirm": "Bạn có chắc muốn xóa '{{nickname}}' không?",
+    "deleteFriendFail": "Xóa bạn thất bại",
+    "online": "Trực tuyến",
+    "ingame": "Đang trong trận",
+    "offline": "Ngoại tuyến",
+    "challengeTitle": "Thách đấu bạn",
+    "challengeConfirm": "Bạn có muốn thách đấu người bạn này không?",
+    "challengeFail": "Thách đấu thất bại: ",
+    "challengeWaiting": "Đã gửi lời mời. Đang chờ chấp nhận...",
+    "challengeWaitingTitle": "Đang chờ trận giao hữu",
+    "challengeWaitingDesc": "Đang chờ bạn của bạn chấp nhận.",
+    "challengeWaitingTime": "Thời gian còn lại: {{seconds}} giây",
+    "challengeAccepted": "Đã chấp nhận trận giao hữu!",
+    "challengeRejected": "Đã từ chối trận giao hữu.",
+    "challengeTimeout": "Lời mời đã hết hạn.",
+    "challengeCancelled": "Đã hủy lời mời.",
+    "challengeAlreadyPending": "Bạn đã có lời mời đang chờ.",
+    "challengeInGame": "Bạn không thể mời bạn bè đang chơi trận khác.",
+    "challengeOffline": "Bạn chỉ có thể mời bạn bè đang trực tuyến.",
+    "inviteSenderFallback": "Bạn bè",
+    "inviteTitle": "Yêu cầu đấu giao hữu",
+    "inviteBody": "'{{nickname}}' đã thách bạn đấu giao hữu. Chấp nhận không?",
+    "inviteInvalidSession": "Phiên chơi không hợp lệ hoặc đã bắt đầu.",
+    "inviteJoinFail": "Vào trận thất bại.",
+    "typeMessage": "Nhập tin nhắn...",
+    "sendFail": "Gửi tin nhắn thất bại",
+    "chat": "Chat",
+    "challenge": "Thách đấu",
+    "accept": "Chấp nhận",
+    "reject": "Từ chối",
+    "newMessage": "Tin nhắn mới từ {{nickname}}",
+    "chatRateLimited": "Đang giới hạn gửi: gửi lại sau {{seconds}} giây."
+  },
+  "menu": {
+    "normal": {
+      "title": "Chế độ Thường",
+      "subtitle": "Rèn luyện não cơ bản",
+      "matchRule": "Thắng 2 trong 3 ván"
     },
-    "auth": {
-        "loginRequired": "Yêu cầu đăng nhập.",
-        "guestMode": "Chế độ Khách",
-        "guestWarning": "Tài khoản khách có thể mất tiến trình đã lưu.",
-        "terms": "Tiếp tục đồng nghĩa bạn đồng ý với Điều khoản dịch vụ của chúng tôi."
+    "rank": {
+      "title": "Chế độ Xếp hạng",
+      "subtitle": "Thi đấu toàn cầu",
+      "matchRule": "Thắng 3 trong 5 ván",
+      "burningTime": "Giờ bùng nổ",
+      "burningTimeBenefit": "Không tốn bút chì"
     },
-    "social": {
-        "friends": "Bạn bè",
-        "friendList": "Danh sách bạn bè",
-        "friendRequests": "Lời mời kết bạn",
-        "addFriend": "Thêm bạn",
-        "searchNickname": "Tìm nickname",
-        "searchError": "Đã xảy ra lỗi khi tìm kiếm.",
-        "userNotFound": "Không tìm thấy người dùng.",
-        "cannotAddSelf": "Bạn không thể tự thêm chính mình.",
-        "alreadyFriends": "Hai bạn đã là bạn bè.",
-        "requestPending": "Yêu cầu đã gửi hoặc đang chờ.",
-        "blocked": "Người dùng đã chặn bạn hoặc bị bạn chặn.",
-        "requestSent": "Đã gửi lời mời kết bạn!",
-        "requestFail": "Gửi lời mời kết bạn thất bại.",
-        "loadingFriends": "Đang tải danh sách bạn bè...",
-        "noFriends": "Không tìm thấy bạn bè.",
-        "deleteFriend": "Xóa bạn",
-        "deleteFriendConfirm": "Bạn có chắc muốn xóa '{{nickname}}' không?",
-        "deleteFriendFail": "Xóa bạn thất bại",
-        "online": "Trực tuyến",
-        "ingame": "Đang trong trận",
-        "offline": "Ngoại tuyến",
-        "challengeTitle": "Thách đấu bạn",
-        "challengeConfirm": "Bạn có muốn thách đấu người bạn này không?",
-        "challengeFail": "Thách đấu thất bại: ",
-        "challengeWaiting": "Đã gửi lời mời. Đang chờ chấp nhận...",
-        "challengeWaitingTitle": "Đang chờ trận giao hữu",
-        "challengeWaitingDesc": "Đang chờ bạn của bạn chấp nhận.",
-        "challengeWaitingTime": "Thời gian còn lại: {{seconds}} giây",
-        "challengeAccepted": "Đã chấp nhận trận giao hữu!",
-        "challengeRejected": "Đã từ chối trận giao hữu.",
-        "challengeTimeout": "Lời mời đã hết hạn.",
-        "challengeCancelled": "Đã hủy lời mời.",
-        "challengeAlreadyPending": "Bạn đã có lời mời đang chờ.",
-        "challengeInGame": "Bạn không thể mời bạn bè đang chơi trận khác.",
-        "challengeOffline": "Bạn chỉ có thể mời bạn bè đang trực tuyến.",
-        "inviteSenderFallback": "Bạn bè",
-        "inviteTitle": "Yêu cầu đấu giao hữu",
-        "inviteBody": "'{{nickname}}' đã thách bạn đấu giao hữu. Chấp nhận không?",
-        "inviteInvalidSession": "Phiên chơi không hợp lệ hoặc đã bắt đầu.",
-        "inviteJoinFail": "Vào trận thất bại.",
-        "typeMessage": "Nhập tin nhắn...",
-        "sendFail": "Gửi tin nhắn thất bại",
-        "chat": "Chat",
-        "challenge": "Thách đấu",
-        "accept": "Chấp nhận",
-        "reject": "Từ chối",
-        "newMessage": "Tin nhắn mới từ {{nickname}}"
+    "all": "Tất cả",
+    "friendly": {
+      "title": "Chế độ Giao hữu",
+      "subtitle": "1vs1 với bạn bè"
     },
-    "menu": {
-        "normal": {
-            "title": "Chế độ Thường",
-            "subtitle": "Rèn luyện não cơ bản"
-        },
-        "rank": {
-            "title": "Chế độ Xếp hạng",
-            "subtitle": "Thi đấu toàn cầu"
-        },
-        "all": "Tất cả",
-        "friendly": {
-            "title": "Chế độ Giao hữu",
-            "subtitle": "1vs1 với bạn bè"
-        },
-        "practice": {
-            "title": "Chế độ Luyện tập",
-            "subtitle": "Luyện mini game tự do"
-        },
-        "shop": "Cửa hàng",
-        "settings": "Cài đặt",
-        "login": "Đăng nhập",
-        "logout": "Đăng xuất",
-        "profile": "Hồ sơ"
+    "practice": {
+      "title": "Chế độ Luyện tập",
+      "subtitle": "Luyện mini game tự do"
     },
-    "shop": {
-        "title": "Cửa hàng",
-        "subtitle": "Chơi lâu hơn",
-        "removeAds": {
-            "title": "Gói bỏ quảng cáo",
-            "desc": "Không quảng cáo. Nhận bút chì ngay khi bấm phần thưởng quảng cáo."
-        },
-        "pencils5": {
-            "title": "Bút chì x5",
-            "desc": "Tăng nhẹ cho phiên chơi ngắn."
-        },
-        "pencils20": {
-            "title": "Bút chì x20",
-            "desc": "Phù hợp chơi hằng ngày."
-        },
-        "pencils100": {
-            "title": "Bút chì x100",
-            "desc": "Giá trị tốt nhất cho chơi dài hạn."
-        },
-        "practiceNotes5": {
-            "title": "10 Ghi chú luyện tập",
-            "desc": "Tốt cho một phiên luyện tập nhanh."
-        },
-        "practiceNotes20": {
-            "title": "Ghi chú luyện tập x20",
-            "desc": "Tăng tốt cho luyện tập lâu hơn."
-        },
-        "practiceNotes100": {
-            "title": "Ghi chú luyện tập x100",
-            "desc": "Giá trị tốt nhất cho luyện tập cường độ cao."
-        },
-        "buy": "Mua",
-        "premium": "Premium",
-        "popular": "Phổ biến",
-        "bestValue": "Giá trị tốt nhất",
-        "notice": "Thanh toán được xử lý qua App Store / Google Play.",
-        "comingSoon": "Đang chuẩn bị luồng mua...",
-        "priceTbd": "Sắp cập nhật",
-        "loading": "Đang tải...",
-        "purchased": "Đã mua",
-        "purchaseSuccess": "Mua thành công.",
-        "purchaseFail": "Mua thất bại.",
-        "billingUnavailable": "Thiết bị này không hỗ trợ thanh toán."
+    "shop": "Cửa hàng",
+    "settings": "Cài đặt",
+    "login": "Đăng nhập",
+    "logout": "Đăng xuất",
+    "profile": "Hồ sơ"
+  },
+  "shop": {
+    "title": "Cửa hàng",
+    "subtitle": "Chơi lâu hơn",
+    "removeAds": {
+      "title": "Gói bỏ quảng cáo",
+      "desc": "Không quảng cáo. Nhận bút chì ngay khi bấm phần thưởng quảng cáo."
     },
-    "leaderboard": {
-        "button": "Bảng xếp hạng",
-        "title": "Bảng xếp hạng",
-        "global": "Toàn cầu",
-        "country": "Quốc gia"
+    "pencils5": {
+      "title": "Bút chì x5",
+      "desc": "Tăng nhẹ cho phiên chơi ngắn."
     },
-    "ad": {
-        "remaining": "Còn lại hôm nay: {{count}}/{{limit}}",
-        "limitReached": "Đã đạt giới hạn quảng cáo hằng ngày.",
-        "limitReachedDesc": "Hãy quay lại vào ngày mai để xem thêm quảng cáo.",
-        "adFreeDesc": "Phần thưởng không quảng cáo. Nhận ngay 1 bút chì.",
-        "adFreeDescPracticeNotes": "Phần thưởng không quảng cáo. Nhận ngay 2 ghi chú luyện tập.",
-        "claimBtn": "Nhận bút chì",
-        "claimBtnPracticeNotes": "Nhận ghi chú luyện tập",
-        "granting": "Đang cấp phần thưởng...",
-        "rewardFailed": "Nhận thưởng thất bại.",
-        "rewardFailedDesc": "Vui lòng thử lại sau.",
-        "title": "Nhận bút chì",
-        "titlePracticeNotes": "Nhận ghi chú luyện tập",
-        "loading": "Đang tải quảng cáo...",
-        "watchDesc": "Xem quảng cáo ngắn để nhận 1 bút chì!",
-        "watchDescPracticeNotes": "Xem quảng cáo ngắn để nhận 2 ghi chú luyện tập!",
-        "watchBtn": "Xem quảng cáo",
-        "watching": "Đang xem quảng cáo...",
-        "playing": "Quảng cáo đang phát...",
-        "pencils": "Bút chì",
-        "practiceNotes": "Ghi chú luyện tập",
-        "success": "Nhận thưởng thành công."
+    "pencils20": {
+      "title": "Bút chì x20",
+      "desc": "Phù hợp chơi hằng ngày."
     },
-    "notifications": {
-        "fullTitle": "Bút chì đã đầy",
-        "fullBody": "Bút chì đã đầy. Đến lúc dùng não rồi!",
-        "reminderTitle": "Đến lúc dùng não",
-        "reminderBody": "Đã 24 giờ trôi qua. Hãy quay lại chơi!"
+    "pencils100": {
+      "title": "Bút chì x100",
+      "desc": "Giá trị tốt nhất cho chơi dài hạn."
     },
-    "user": {
-        "level": "Cấp",
-        "rank": "Hạng"
+    "practiceNotes5": {
+      "title": "10 Ghi chú luyện tập",
+      "desc": "Tốt cho một phiên luyện tập nhanh."
     },
-    "settings": {
-        "title": "Cài đặt",
-        "language": "Ngôn ngữ",
-        "sound": "Âm thanh",
-        "masterVolume": "Âm lượng chính",
-        "vibration": "Rung",
-        "deleteAccount": "Xóa tài khoản",
-        "deleteAccountConfirm": "Bạn có chắc muốn xóa tài khoản không? Hành động này là vĩnh viễn và không thể hoàn tác.",
-        "logoutConfirm": "Bạn có chắc muốn đăng xuất không?",
-        "restorePurchases": "Khôi phục giao dịch",
-        "restorePurchasesDesc": "Khôi phục các giao dịch không tiêu hao như bỏ quảng cáo.",
-        "restorePurchasesSuccess": "Đã khôi phục giao dịch.",
-        "restorePurchasesFail": "Khôi phục giao dịch thất bại.",
-        "restorePurchasesUnavailable": "Thiết bị này không hỗ trợ thanh toán.",
-        "restorePurchasesEmpty": "Không có giao dịch để khôi phục.",
-        "privacyPolicy": "Chính sách quyền riêng tư",
-        "privacyPolicyDesc": "Xem cách chúng tôi xử lý dữ liệu cá nhân trong dịch vụ.",
-        "viewPrivacyPolicy": "Xem chính sách quyền riêng tư",
-        "tutorial": "Hướng dẫn",
-        "tutorialDesc": "Nếu muốn xem lại cách sử dụng ứng dụng, hãy mở lại phần hướng dẫn.",
-        "viewTutorial": "Xem lại hướng dẫn"
+    "practiceNotes20": {
+      "title": "Ghi chú luyện tập x20",
+      "desc": "Tăng tốt cho luyện tập lâu hơn."
     },
-    "report": {
-        "button": "Báo cáo",
-        "title": "Báo cáo người chơi",
-        "description": "Vui lòng nhập lý do báo cáo.",
-        "descriptionWithTarget": "Vui lòng nhập lý do để báo cáo {{target}}.",
-        "placeholder": "Nhập lý do báo cáo.",
-        "submit": "Gửi báo cáo",
-        "success": "Đã gửi báo cáo.",
-        "fail": "Gửi báo cáo thất bại."
+    "practiceNotes100": {
+      "title": "Ghi chú luyện tập x100",
+      "desc": "Giá trị tốt nhất cho luyện tập cường độ cao."
     },
-    "profile": {
-        "nicknameSetupTitle": "Đặt nickname",
-        "nicknameSetupDesc": "Vui lòng nhập nickname sẽ dùng trong game.",
-        "nicknamePlaceholder": "Nhập nickname",
-        "selectCountry": "Chọn quốc gia",
-        "edit": "Chỉnh sửa",
-        "highscoresTitle": "Điểm cao",
-        "highscoresColumns": {
-            "game": "Game",
-            "highscore": "Điểm cao",
-            "rankWinRate": "Tỷ lệ thắng xếp hạng"
-        },
-        "highscoreLeaderboardTitle": "Top 10",
-        "highscoreLeaderboardEmpty": "Chưa có dữ liệu.",
-        "highscoreLeaderboardColumns": {
-            "rank": "#",
-            "player": "Người chơi",
-            "score": "Điểm"
-        },
-        "guestTitle": "Tài khoản khách",
-        "guestDesc": "Tài khoản khách có thể bị mất khi bạn đăng xuất, xóa ứng dụng hoặc đổi thiết bị. Hãy liên kết Google để giữ tiến trình.",
-        "linkGoogle": "Liên kết tài khoản Google",
-        "statsTitle": "Kỹ năng",
-        "stats": {
-            "speed": "Tốc độ",
-            "memory": "Trí nhớ",
-            "judgment": "Phán đoán",
-            "calculation": "Tính toán",
-            "accuracy": "Độ chính xác",
-            "observation": "Quan sát"
-        },
-        "changeAvatar": "Đổi ảnh",
-        "avatarUploading": "Đang tải lên...",
-        "avatarInvalidType": "Định dạng ảnh không được hỗ trợ.",
-        "avatarTooLarge": "Tệp quá lớn.",
-        "avatarUploadSuccess": "Đã cập nhật ảnh hồ sơ.",
-        "avatarUploadFail": "Tải ảnh hồ sơ thất bại",
-        "record": "Thành tích",
-        "noRecord": "Chưa có lịch sử trận đấu.",
-        "disconnects": "Mất kết nối",
-        "updateSuccess": "Cập nhật hồ sơ thành công!",
-        "updateFail": "Cập nhật hồ sơ thất bại",
-        "deleteSuccess": "Đã xóa tài khoản thành công.",
-        "deleteFail": "Xóa tài khoản thất bại."
+    "nicknameChangeTicket": {
+      "title": "Vé đổi biệt danh",
+      "desc": "Đổi biệt danh ngay lập tức mà không cần chờ 30 ngày.",
+      "unit": "Vé đổi biệt danh"
     },
-    "game": {
-        "waiting": "Đang chờ trận...",
-        "victory": "CHIẾN THẮNG",
-        "defeat": "THẤT BẠI",
-        "returnMenu": "Về menu",
-        "reconnecting": "Đang chờ đối thủ...",
-        "reconnectingDesc": "Đối thủ đã ngắt kết nối. Tự động thắng sau:",
-        "myTime": "Thời gian của tôi",
-        "rank": "RANK",
-        "normal": "THƯỜNG",
-        "unknownPlayer": "Người chơi không xác định",
-        "guest": "Khách",
-        "you": "Bạn",
-        "opponent": "Đối thủ",
-        "opponentWaiting": "Đối thủ đang chờ...",
-        "draw": "HÒA",
-        "roundResult": "Kết quả vòng {{round}}",
-        "matchResult": "KẾT QUẢ TRẬN",
-        "startingIn": "Bắt đầu sau",
-        "roundFinished": "KẾT THÚC VÒNG",
-        "total": "TỔNG",
-        "great": "Tuyệt!",
-        "tier": "Tier",
-        "table": {
-            "round": "Vòng",
-            "myScore": "Điểm của tôi",
-            "opScore": "Điểm đối thủ",
-            "result": "Kết quả",
-            "win": "THẮNG",
-            "lose": "THUA",
-            "draw": "HÒA"
-        }
+    "buy": "Mua",
+    "premium": "Premium",
+    "popular": "Phổ biến",
+    "bestValue": "Giá trị tốt nhất",
+    "notice": "Thanh toán được xử lý qua App Store.",
+    "comingSoon": "Đang chuẩn bị luồng mua...",
+    "priceTbd": "Sắp cập nhật",
+    "loading": "Đang tải...",
+    "purchased": "Đã mua",
+    "purchaseSuccess": "Mua thành công.",
+    "purchaseRewardDesc": "Vật phẩm đã mua đã được cấp.",
+    "removeAdsApplied": "Đã áp dụng xóa quảng cáo.",
+    "purchaseFail": "Mua thất bại.",
+    "billingUnavailable": "Thiết bị này không hỗ trợ thanh toán.",
+    "sessionRefreshFailed": "Failed to refresh session: {{message}}",
+    "sessionExpired": "Your login session has expired. Please sign in again.",
+    "purchaseFailWithReason": "Purchase failed: {{message}}"
+  },
+  "leaderboard": {
+    "button": "Bảng xếp hạng",
+    "title": "Bảng xếp hạng - Tiền mùa giải",
+    "global": "Toàn cầu",
+    "country": "Quốc gia",
+    "myRank": "MY RANK",
+    "placementNotice": "Bạn sẽ xuất hiện trên bảng xếp hạng sau {{count}} trận phân hạng.",
+    "mmrLabel": "MMR",
+    "avatarPreview": "{{nickname}} avatar"
+  },
+  "ad": {
+    "remaining": "Còn lại hôm nay: {{count}}/{{limit}}",
+    "limitReached": "Đã đạt giới hạn quảng cáo hằng ngày.",
+    "limitReachedDesc": "Hãy quay lại vào ngày mai để xem thêm quảng cáo.",
+    "adFreeDesc": "Phần thưởng không quảng cáo. Nhận ngay 1 bút chì.",
+    "adFreeDescPracticeNotes": "Phần thưởng không quảng cáo. Nhận ngay 2 ghi chú luyện tập.",
+    "claimBtn": "Nhận bút chì",
+    "claimBtnPracticeNotes": "Nhận ghi chú luyện tập",
+    "granting": "Đang cấp phần thưởng...",
+    "rewardFailed": "Nhận thưởng thất bại.",
+    "rewardFailedDesc": "Vui lòng thử lại sau.",
+    "title": "Nhận bút chì",
+    "titlePracticeNotes": "Nhận ghi chú luyện tập",
+    "loading": "Đang tải quảng cáo...",
+    "watchDesc": "Xem quảng cáo ngắn để nhận 1 bút chì!",
+    "watchDescPracticeNotes": "Xem quảng cáo ngắn để nhận 2 ghi chú luyện tập!",
+    "watchBtn": "Xem quảng cáo",
+    "watching": "Đang xem quảng cáo...",
+    "playing": "Quảng cáo đang phát...",
+    "pencils": "Bút chì",
+    "practiceNotes": "Ghi chú luyện tập",
+    "success": "Nhận thưởng thành công.",
+    "noFillTitle": "Hiện không có quảng cáo",
+    "noFillDesc": "Vui lòng thử lại sau giây lát.",
+    "noFillRewarded": "Rất tiếc, hiện chưa có quảng cáo để xem. Phần thưởng sẽ được trao ngay."
+  },
+  "notifications": {
+    "fullTitle": "Bút chì đã đầy",
+    "fullBody": "Bút chì đã đầy. Đến lúc dùng não rồi!",
+    "reminderTitle": "Đến lúc dùng não",
+    "reminderBody": "Đã 24 giờ trôi qua. Hãy quay lại chơi!"
+  },
+  "user": {
+    "level": "Cấp",
+    "rank": "Hạng"
+  },
+  "settings": {
+    "title": "Cài đặt",
+    "language": "Ngôn ngữ",
+    "sound": "Âm thanh",
+    "masterVolume": "Âm lượng chính",
+    "vibration": "Rung",
+    "deleteAccount": "Xóa tài khoản",
+    "deleteAccountConfirm": "Bạn có chắc muốn xóa tài khoản không? Hành động này là vĩnh viễn và không thể hoàn tác.",
+    "logoutConfirm": "Bạn có chắc muốn đăng xuất không?",
+    "restorePurchases": "Khôi phục giao dịch",
+    "restorePurchasesDesc": "Khôi phục các giao dịch không tiêu hao như bỏ quảng cáo.",
+    "restorePurchasesSuccess": "Đã khôi phục giao dịch.",
+    "restorePurchasesFail": "Khôi phục giao dịch thất bại.",
+    "restorePurchasesUnavailable": "Thiết bị này không hỗ trợ thanh toán.",
+    "restorePurchasesEmpty": "Không có giao dịch để khôi phục.",
+    "privacyPolicy": "Chính sách quyền riêng tư",
+    "privacyPolicyDesc": "Xem cách chúng tôi xử lý dữ liệu cá nhân trong dịch vụ.",
+    "viewPrivacyPolicy": "Xem chính sách quyền riêng tư",
+    "tutorial": "Hướng dẫn",
+    "tutorialDesc": "Nếu muốn xem lại cách sử dụng ứng dụng, hãy mở lại phần hướng dẫn.",
+    "viewTutorial": "Xem lại hướng dẫn",
+    "notificationNativeOnly": "Cài đặt thông báo chỉ khả dụng trên ứng dụng di động.",
+    "notificationOff": "Đã tắt thông báo.",
+    "notificationDeniedIos": "Vui lòng cho phép thông báo trong iPhone: Cài đặt > Thông báo.",
+    "notificationDeniedAndroid": "Vui lòng cho phép thông báo trong Android: Cài đặt > Thông báo.",
+    "notificationOn": "Đã bật thông báo.",
+    "support": "Liên hệ hỗ trợ",
+    "supportDesc": "Xem trợ giúp cho lỗi, sự cố và các yêu cầu khác.",
+    "goToSupport": "Mở hỗ trợ",
+    "notifications": "Thông báo",
+    "pushNotifications": "Thông báo Đẩy/Cục bộ",
+    "notificationNativeHint": "Nút bật/tắt thông báo bị vô hiệu hóa trên web.",
+    "recommended": "Đề xuất",
+    "theme": "Giao diện",
+    "themeMode": "Chế độ hiển thị",
+    "systemThemeDesc": "Theo cài đặt của thiết bị.",
+    "darkMode": "Chế độ tối",
+    "lightMode": "Chế độ sáng",
+    "light": "Sáng",
+    "dark": "Tối",
+    "system": "Hệ thống",
+    "assetCredits": "Ghi công tài nguyên",
+    "assetCreditsDesc": "Một số tài nguyên hình ảnh đến từ bên thứ ba và được ghi công theo giấy phép của họ (ví dụ: CC BY 4.0).",
+    "viewMakers": "Xem tác giả & ghi công",
+    "makers": "Tác giả & ghi công",
+    "localCredit": "Ghi công nội bộ",
+    "announcements": "Thông báo",
+    "announcementsDesc": "Xem lại thông báo mới nhất.",
+    "viewAnnouncementAgain": "Xem lại thông báo",
+    "announcementWillShowOnHome": "Thông báo mới nhất sẽ hiển thị lại ở Trang chủ.",
+    "announcementResetFail": "Không thể đặt lại trạng thái ẩn thông báo.",
+    "versionLabel": "Phiên bản",
+    "makersRoleCreator": "Nhà phát triển",
+    "makersRoleRankingBadges": "Huy hiệu xếp hạng (CC BY 4.0)",
+    "makersRoleCcBy": "Giấy phép CC BY 4.0",
+    "admin": "Quản trị",
+    "adminDesc": "Đi tới trang chỉ dành cho quản trị viên.",
+    "goToAdmin": "Mở trang quản trị",
+    "guestModeWarningTitle": "Lưu ý tài khoản khách",
+    "guestModeWarningDesc": "Tài khoản khách có thể mất dữ liệu khi đăng xuất, gỡ ứng dụng hoặc đổi thiết bị. Hãy liên kết tài khoản để giữ tiến trình."
+  },
+  "report": {
+    "button": "Báo cáo",
+    "title": "Báo cáo người chơi",
+    "description": "Vui lòng nhập lý do báo cáo.",
+    "descriptionWithTarget": "Vui lòng nhập lý do để báo cáo {{target}}.",
+    "placeholder": "Nhập lý do báo cáo.",
+    "submit": "Gửi báo cáo",
+    "success": "Đã gửi báo cáo.",
+    "fail": "Gửi báo cáo thất bại."
+  },
+  "profile": {
+    "nicknameSetupTitle": "Đặt nickname",
+    "nicknameSetupDesc": "Vui lòng nhập nickname sẽ dùng trong game.",
+    "nicknamePlaceholder": "Nhập nickname",
+    "nicknameTicketsLabel": "Vé đổi biệt danh",
+    "nicknameChangeAvailableNow": "Có thể đổi biệt danh ngay",
+    "nicknameChangeUnavailableNow": "Hiện chưa thể đổi biệt danh",
+    "nicknameFreeChangeNow": "Đổi miễn phí khả dụng: ngay bây giờ",
+    "nicknameFreeChangeAt": "Đổi miễn phí khả dụng: {{date}}",
+    "selectCountry": "Chọn quốc gia",
+    "edit": "Chỉnh sửa",
+    "highscoresTitle": "Điểm cao",
+    "highscoresColumns": {
+      "game": "Game",
+      "highscore": "Điểm cao",
+      "rankWinRate": "Tỷ lệ thắng xếp hạng"
     },
-    "matchmaking": {
-        "searching": "Đang tìm...",
-        "description": "Đang tìm đối thủ xứng tầm",
-        "cancel": "Hủy",
-        "found": "Đã tìm thấy trận!",
-        "entering": "Đang vào đấu trường...",
-        "timeout": "Không tìm thấy trận",
-        "timeoutDesc": "Chúng tôi không thể tìm được đối thủ kịp thời gian.",
-        "range": "Khoảng",
-        "rankLevelRequired": "Đạt cấp {{level}} để mở khóa Xếp hạng."
+    "highscoreLeaderboardTitle": "Top 10",
+    "highscoreLeaderboardEmpty": "Chưa có dữ liệu.",
+    "highscoreLeaderboardColumns": {
+      "rank": "#",
+      "player": "Người chơi",
+      "score": "Điểm"
     },
-    "rps": {
-        "ready": "SẴN SÀNG...",
-        "beatIt": "ĐÁNH BẠI NÓ!",
-        "lose": "THUA NÓ!",
-        "reverse": "ĐẢO NGƯỢC",
-        "round": "Vòng",
-        "titleWin": "RPS thắng",
-        "titleLose": "RPS thua",
-        "title": "OẲN TÙ TÌ",
-        "instruction": "Chọn nước đi thắng hoặc thua theo hướng dẫn!"
+    "guestTitle": "Tài khoản khách",
+    "guestDesc": "Tài khoản khách có thể bị mất khi bạn đăng xuất, xóa ứng dụng hoặc đổi thiết bị. Hãy liên kết Google để giữ tiến trình.",
+    "linkGoogle": "Liên kết tài khoản Google",
+    "statsTitle": "Kỹ năng",
+    "stats": {
+      "speed": "Tốc độ",
+      "memory": "Trí nhớ",
+      "judgment": "Phán đoán",
+      "calculation": "Tính toán",
+      "accuracy": "Độ chính xác",
+      "observation": "Quan sát"
     },
-    "number": {
-        "title": "THỨ TỰ SỐ",
-        "instruction": "Thứ tự tăng dần",
-        "asc": "Nhấn số từ nhỏ đến lớn!",
-        "desc": "Nhấn số từ lớn đến nhỏ!",
-        "ready": "SẴN SÀNG",
-        "panel": "BẢNG",
-        "titleDesc": "SẮP XẾP NGƯỢC",
-        "instructionDesc": "Nhấn từ lớn đến nhỏ!"
+    "changeAvatar": "Đổi ảnh",
+    "removeAvatar": "Xóa ảnh",
+    "removeAvatarConfirm": "Bạn có muốn xóa ảnh hồ sơ hiện tại không?",
+    "avatarUploading": "Đang tải lên...",
+    "avatarInvalidType": "Định dạng ảnh không được hỗ trợ.",
+    "avatarTooLarge": "Tệp quá lớn.",
+    "avatarUploadSuccess": "Đã cập nhật ảnh hồ sơ.",
+    "avatarUploadFail": "Tải ảnh hồ sơ thất bại",
+    "avatarRemoveSuccess": "Đã xóa ảnh hồ sơ.",
+    "avatarRemoveFail": "Xóa ảnh hồ sơ thất bại",
+    "record": "Thành tích",
+    "noRecord": "Chưa có lịch sử trận đấu.",
+    "disconnects": "Mất kết nối",
+    "updateSuccess": "Cập nhật hồ sơ thành công!",
+    "nicknameCooldownOrTicket": "Biệt danh được đổi miễn phí mỗi 30 ngày. Muốn đổi ngay cần có vé.",
+    "updateFail": "Cập nhật hồ sơ thất bại",
+    "deleteSuccess": "Đã xóa tài khoản thành công.",
+    "deleteFail": "Xóa tài khoản thất bại.",
+    "guestDescIOS": "Tài khoản khách có thể bị mất nếu bạn đăng xuất, xóa ứng dụng hoặc đổi thiết bị. Hãy liên kết tài khoản Apple hoặc Google để giữ tiến trình. Ngoài ra, tài khoản khách có thể bị xóa sau 7 ngày không hoạt động.",
+    "linkApple": "Liên kết tài khoản Apple",
+    "nicknameChangedSuccess": "Đã đổi biệt danh.",
+    "rankPlacement": "Phân hạng",
+    "rankPlacementRemaining": "Còn {{count}} trận"
+  },
+  "game": {
+    "waiting": "Đang chờ trận...",
+    "victory": "CHIẾN THẮNG",
+    "defeat": "THẤT BẠI",
+    "returnMenu": "Về menu",
+    "setScore": "Tỉ số set",
+    "practiceComplete": "Hoàn thành luyện tập!",
+    "greatJob": "Làm tốt lắm!",
+    "rematchIncomingTitle": "Yêu cầu tái đấu",
+    "rematchIncomingBody": "'{{nickname}}' muốn tái đấu. Chấp nhận?",
+    "rematchCreateFail": "Không thể bắt đầu tái đấu.",
+    "rematchAccepted": "Trận tái đấu sắp bắt đầu.",
+    "rematchRejected": "Đối thủ đã từ chối tái đấu.",
+    "rematchExpired": "Hết thời gian yêu cầu tái đấu.",
+    "rematchConfirmTitle": "Yêu cầu tái đấu",
+    "rematchConfirmBody": "Bạn có muốn yêu cầu tái đấu không?",
+    "rematchRequesterCostNotice": "Chỉ người gửi yêu cầu mới tốn 1 bút chì.",
+    "rematchReceiverFreeNotice": "Chấp nhận tái đấu không bị trừ bút chì.",
+    "rematchWaiting": "Đã gửi yêu cầu tái đấu.",
+    "rematchRequestFail": "Có lỗi xảy ra khi yêu cầu tái đấu.",
+    "rematchPending": "Đang chờ",
+    "rematchClosed": "Kết thúc",
+    "rematchRequest": "Tái đấu",
+    "rematchExpiredShort": "Hết giờ",
+    "rematchNoPencilsShort": "Thiếu",
+    "rematchCostCountdownShort": "Yêu cầu 1 · {{seconds}}gi",
+    "rematchNoPencils": "Không đủ bút chì",
+    "reconnecting": "Đang chờ đối thủ...",
+    "reconnectingDesc": "Đối thủ đã ngắt kết nối. Tự động thắng sau:",
+    "myTime": "Thời gian của tôi",
+    "rank": "RANK",
+    "normal": "THƯỜNG",
+    "unknownPlayer": "Người chơi không xác định",
+    "guest": "Khách",
+    "you": "Bạn",
+    "opponent": "Đối thủ",
+    "opponentWaiting": "Đối thủ đang chờ...",
+    "draw": "HÒA",
+    "roundResult": "Kết quả vòng {{round}}",
+    "matchResult": "KẾT QUẢ TRẬN",
+    "startingIn": "Bắt đầu sau",
+    "roundFinished": "KẾT THÚC VÒNG",
+    "total": "TỔNG",
+    "great": "Tuyệt!",
+    "tier": "Tier",
+    "table": {
+      "round": "Vòng",
+      "myScore": "Điểm của tôi",
+      "opScore": "Điểm đối thủ",
+      "result": "Kết quả",
+      "win": "THẮNG",
+      "lose": "THUA",
+      "draw": "HÒA"
     },
-    "math": {
-        "title": "THỬ THÁCH TOÁN HỌC",
-        "instruction": "Tính phép toán và chọn đáp án đúng"
+    "timeLeft": "Time Left",
+    "connectionLost": "Connection lost. Reconnecting...",
+    "connectionUnstable": "Connection is unstable...",
+    "connecting": "Connecting...",
+    "aiBot": "AI Bot",
+    "me": "Me",
+    "disconnected": "DISCONNECT",
+    "devGhostPreview": "Dev Ghost Preview",
+    "devGhostPreviewGame": "Game",
+    "devGhostPreviewRoundHighscore": "Round Highscore",
+    "devGhostPreviewBotGhost": "Bot Ghost",
+    "devGhostPreviewGap": "Gap"
+  },
+  "matchmaking": {
+    "searching": "Đang tìm...",
+    "description": "Đang tìm đối thủ xứng tầm",
+    "cancel": "Hủy",
+    "found": "Đã tìm thấy trận!",
+    "entering": "Đang vào đấu trường...",
+    "timeout": "Không tìm thấy trận",
+    "timeoutDesc": "Chúng tôi không thể tìm được đối thủ kịp thời gian.",
+    "range": "Khoảng",
+    "rankLevelRequired": "Đạt cấp {{level}} để mở khóa Xếp hạng.",
+    "searchingOpponent": "Đang tìm đối thủ..."
+  },
+  "rps": {
+    "ready": "SẴN SÀNG...",
+    "beatIt": "ĐÁNH BẠI NÓ!",
+    "lose": "THUA NÓ!",
+    "reverse": "ĐẢO NGƯỢC",
+    "round": "Vòng",
+    "titleWin": "RPS thắng",
+    "titleLose": "RPS thua",
+    "title": "OẲN TÙ TÌ",
+    "instruction": "Chọn nước đi thắng hoặc thua!"
+  },
+  "number": {
+    "title": "THỨ TỰ SỐ",
+    "instruction": "Chạm từ thấp đến cao!",
+    "asc": "Nhấn số từ nhỏ đến lớn!",
+    "desc": "Nhấn số từ lớn đến nhỏ!",
+    "ready": "SẴN SÀNG",
+    "panel": "BẢNG",
+    "titleDesc": "SẮP XẾP NGƯỢC",
+    "instructionDesc": "Chạm từ cao xuống thấp!"
+  },
+  "math": {
+    "title": "THỬ THÁCH TOÁN HỌC",
+    "instruction": "Giải phương trình toán học!"
+  },
+  "mathOx": {
+    "title": "MATH OX",
+    "instruction": "Chạm O nếu đúng, X nếu sai!"
+  },
+  "oneStroke": {
+    "title": "MỘT NÉT",
+    "instruction": "Nối tất cả các ô trắng bằng một đường duy nhất!",
+    "progress": "Đường đi"
+  },
+  "ten": {
+    "title": "TẠO SỐ 10",
+    "instruction": "Chọn các số có tổng là 10!"
+  },
+  "color": {
+    "title": "GHÉP MÀU",
+    "instruction": "Chọn nút có Ý NGHĨA giống với MÀU VIỀN của nó!",
+    "red": "ĐỎ",
+    "blue": "XANH DƯƠNG",
+    "green": "XANH LÁ",
+    "yellow": "VÀNG"
+  },
+  "memory": {
+    "title": "TRÍ NHỚ",
+    "instruction": "Ghi nhớ bài, chạm Xong, tìm các cặp!",
+    "btn_memorized": "Đã nhớ!",
+    "memorize_hint": "Hãy ghi nhớ các lá bài!",
+    "find_pairs": "Tìm các cặp!"
+  },
+  "sequence": {
+    "title": "THỨ TỰ NGƯỢC",
+    "instruction": "Chạm theo thứ tự NGƯỢC!",
+    "titleNormal": "TRÌNH TỰ",
+    "instructionNormal": "Chạm đúng THỨ TỰ!"
+  },
+  "largest": {
+    "title": "KẾT QUẢ LỚN NHẤT",
+    "instruction": "Chạm vào kết quả lớn nhất!"
+  },
+  "pair": {
+    "title": "TÌM CẶP",
+    "instruction": "Tìm hai hình giống nhau!"
+  },
+  "updown": {
+    "title": "LÊN XUỐNG",
+    "instruction": "Lớn hơn trước? Vuốt LÊN. Nhỏ hơn? Vuốt XUỐNG.",
+    "prev": "TRƯỚC",
+    "start": "BẮT ĐẦU"
+  },
+  "slider": {
+    "title": "Thanh trượt số",
+    "instruction": "Vuốt để cộng số đạt tổng mục tiêu!",
+    "target": "Tổng mục tiêu"
+  },
+  "arrow": {
+    "title": "Thanh trượt mũi tên",
+    "blue": "Xanh = Cùng hướng",
+    "red": "Đỏ = Ngược hướng",
+    "instruction": "Màu xanh: Cùng hướng. Màu đỏ: Ngược hướng!"
+  },
+  "fillBlanks": {
+    "title": "ĐIỀN CHỖ TRỐNG",
+    "instruction": "Tìm số còn thiếu!"
+  },
+  "findOperator": {
+    "title": "TÌM TOÁN TỬ",
+    "instruction": "Tìm dấu còn thiếu!"
+  },
+  "ladder": {
+    "title": "Trò chơi thang",
+    "instruction": "Đi theo con đường!"
+  },
+  "path": {
+    "title": "Path Runner",
+    "instruction": "Di chuyển khối xanh lục đến đích xanh dương!",
+    "shuffle": "Xáo trộn"
+  },
+  "blindPath": {
+    "title": "Đường mù",
+    "instruction": "Ghi nhớ và đi đến đích. Đường bị ẩn đi khi chuyển động!",
+    "memorizeHint": "Hãy nhớ đường đi!",
+    "runHint": "Đi theo đường đi!",
+    "memorized": "Đã nhớ!"
+  },
+  "balls": {
+    "title": "Đếm bóng",
+    "instruction": "Đếm số bóng di chuyển thật nhanh!"
+  },
+  "catchColor": {
+    "title": "Bắt màu",
+    "instruction": "Chỉ hứng những quả bóng cùng màu với thanh!",
+    "switchSoon": "Sắp đổi màu"
+  },
+  "tapTheColor": {
+    "title": "Chạm màu",
+    "instruction": "Ghi nhớ và chạm đúng theo thứ tự!",
+    "memorize": "Hãy nhớ các màu!",
+    "remembered": "Sẵn sàng!"
+  },
+  "aim": {
+    "title": "Trò chơi ngắm bắn",
+    "instruction": "Bắn tiêu diệt hồng tâm ngay!"
+  },
+  "mostColor": {
+    "title": "Tìm màu xuất hiện nhiều nhất",
+    "instruction": "Chọn màu hiển thị nhiều nhất!"
+  },
+  "sorting": {
+    "title": "Trò chơi phân loại",
+    "instruction": "Cùng ký hiệu = Cùng hướng! Khác ký hiệu = Ngược hướng!",
+    "firstMoveHint": "Lá bài đầu tiên: đi hướng nào cũng được!"
+  },
+  "spy": {
+    "title": "Tìm gián điệp",
+    "instruction": "Ghi nhớ kí hiệu, tìm kẻ xuất hiện mới!",
+    "memorize": "Ghi nhớ những cái này!",
+    "find": "Ai là người mới?",
+    "ready": "Sẵn sàng!"
+  },
+  "timingBar": {
+    "title": "Thanh canh nhịp",
+    "instruction": "Chạm khi thanh vừa rớt trúng hồng tâm!"
+  },
+  "colorTiming": {
+    "title": "Canh màu",
+    "instruction": "Chạm khi xanh bên trái, đỏ bên phải!"
+  },
+  "stairway": {
+    "title": "Nấc thang thiên đường",
+    "instruction": "Chạm hướng hiện cầu thang!",
+    "scoreLabel": "Bậc"
+  },
+  "tutorial": {
+    "normal": "🌍 Đấu với người chơi toàn thế giới qua các mini game vui nhộn!",
+    "rank": "🏆 Thi đấu xếp hạng với người chơi có trình độ tương đương!",
+    "practice": "💪 Luyện tập bất kỳ game nào bạn muốn!",
+    "ranking": "👑 Xem những người chơi thông minh nhất thế giới!",
+    "shop": "🛒 Mua bút chì hoặc bỏ quảng cáo!",
+    "settings": "⚙️ Đổi âm thanh, ngôn ngữ và các cài đặt khác!",
+    "login": "👤 Liên kết tài khoản để chơi an toàn hơn!",
+    "profile": "📊 Xem kỹ năng, chỉ số và điểm cao của bạn!",
+    "tryNormalHighlight": "Hãy nhấn chế độ Thường trước để bắt đầu trận đầu tiên!",
+    "startNormalNow": "Bắt đầu Chế độ Thường",
+    "next": "Tiếp",
+    "done": "Xong",
+    "skip": "Bỏ qua",
+    "loginNow": "Đăng nhập ngay"
+  },
+  "zero": {
+    "title": "Tạo Số Không",
+    "instruction": "Điền để ra 0!",
+    "undoHint": "Chạm phương trình để hoàn tác"
+  },
+  "practice": {
+    "random": "Ngẫu nhiên",
+    "descriptionPending": "Description coming soon",
+    "myHighscoreLabel": "My High Score",
+    "statGainLabel": "Stat Gain",
+    "none": "None",
+    "guideTitle": "Practice Guide",
+    "guideAtAGlance": "At a glance",
+    "guideObjective": "Objective",
+    "guideHowTo": "How to play",
+    "guideTip": "Tip",
+    "autoGuide": {
+      "summary": "Practice {{title}} and learn the core rule quickly.",
+      "tip": "Read the rule once, then focus on speed and accuracy.",
+      "objectiveFallback": "Start and follow the on-screen rule."
     },
-    "ten": {
-        "title": "TẠO SỐ 10",
-        "instruction": "Hãy làm cho tổng các số đã chọn bằng 10."
-    },
-    "color": {
-        "title": "GHÉP MÀU",
-        "instruction": "Chọn nút có Màu trùng với Chữ",
-        "red": "ĐỎ",
-        "blue": "XANH DƯƠNG",
-        "green": "XANH LÁ",
-        "yellow": "VÀNG"
-    },
-    "memory": {
-        "title": "TRÍ NHỚ",
-        "instruction": "Ghi nhớ vị trí các thẻ rồi nhấn nút Đã ghi nhớ. Sau đó chọn các cặp đúng.",
-        "btn_memorized": "Đã nhớ!",
-        "memorize_hint": "Hãy ghi nhớ các lá bài!",
-        "find_pairs": "Tìm các cặp!"
-    },
-    "sequence": {
-        "title": "THỨ TỰ NGƯỢC",
-        "instruction": "Nhấn theo thứ tự NGƯỢC lại!",
-        "titleNormal": "TRÌNH TỰ",
-        "instructionNormal": "Nhấn theo đúng THỨ TỰ!"
-    },
-    "largest": {
-        "title": "KẾT QUẢ LỚN NHẤT",
-        "instruction": "Nhấn biểu thức có giá trị lớn nhất"
-    },
-    "pair": {
-        "title": "TÌM CẶP",
-        "instruction": "Tìm cặp giống nhau duy nhất!"
-    },
-    "updown": {
-        "title": "LÊN XUỐNG",
-        "instruction": "Nếu lớn hơn số trước thì vuốt lên, nếu nhỏ hơn thì vuốt xuống.",
-        "prev": "TRƯỚC",
-        "start": "BẮT ĐẦU"
-    },
-    "slider": {
-        "title": "Thanh trượt số",
-        "instruction": "Vuốt để cộng các số liền kề thành tổng mục tiêu!",
-        "target": "Tổng mục tiêu"
-    },
-    "arrow": {
-        "title": "Thanh trượt mũi tên",
-        "blue": "Xanh = Cùng hướng",
-        "red": "Đỏ = Ngược hướng",
-        "instruction": "Vuốt theo hướng xanh, hoặc ngược lại với đỏ!"
-    },
-    "fillBlanks": {
-        "title": "ĐIỀN CHỖ TRỐNG",
-        "instruction": "Chọn số điền vào ô trống để tạo thành đáp án đúng."
-    },
-    "findOperator": {
-        "title": "TÌM TOÁN TỬ",
-        "instruction": "Chọn phép toán phù hợp để đáp án đúng."
-    },
-    "ladder": {
-        "title": "Trò chơi thang",
-        "instruction": "Đi theo đường đi!"
-    },
-    "path": {
-        "title": "Path Runner",
-        "instruction": "Dùng các nút để di chuyển ô xanh lá đến ô xanh dương. Lưu ý vị trí các nút có thể thay đổi.",
-        "shuffle": "Xáo trộn"
-    },
-    "blindPath": {
-        "title": "Đường mù",
-        "instruction": "Hãy ghi nhớ đường màu trắng, sau đó dùng nút để di chuyển ô xanh lá đến ô xanh dương. Khi bắt đầu di chuyển, đường sẽ biến mất. Va vào tường sẽ bị trừ điểm, nhưng đường sẽ hiện lại.",
-        "memorizeHint": "Hãy nhớ đường đi!",
-        "runHint": "Đi theo đường đi!",
-        "memorized": "Đã nhớ!"
-    },
-    "balls": {
-        "title": "Đếm bóng",
-        "instruction": "Đếm các quả bóng đang di chuyển và nhấn số đúng."
-    },
-    "catchColor": {
-        "title": "Bắt màu",
-        "instruction": "Trượt thanh để bắt bóng cùng màu với thanh. Bắt sai màu sẽ bị trừ điểm và màu của thanh sẽ liên tục thay đổi.",
-        "switchSoon": "Sắp đổi màu"
-    },
-    "tapTheColor": {
-        "title": "Chạm màu",
-        "instruction": "Hãy ghi nhớ vị trí màu rồi nhấn nút Đã ghi nhớ. Sau đó chọn các nút đã nhớ theo thứ tự màu hiển thị ở phía trên.",
-        "memorize": "Hãy nhớ các màu!",
-        "remembered": "Sẵn sàng!"
-    },
-    "aim": {
-        "title": "Trò chơi ngắm bắn",
-        "instruction": "Chạm nhanh vào mục tiêu màu đỏ để loại bỏ. Không được loại bỏ mục tiêu màu xanh dương."
-    },
-    "mostColor": {
-        "title": "Tìm màu xuất hiện nhiều nhất",
-        "instruction": "Chọn màu xuất hiện nhiều nhất trên màn hình."
-    },
-    "sorting": {
-        "title": "Trò chơi phân loại",
-        "instruction": "Hãy đẩy lá đầu tiên theo bất kỳ hướng nào bạn muốn. Sau đó, thẻ có cùng ký hiệu thì vuốt cùng hướng như trước, còn thẻ khác ký hiệu thì vuốt ngược hướng. Bạn có thể chuẩn bị trước bằng cách xem lá tiếp theo ở phía trên.",
-        "firstMoveHint": "Lá bài đầu tiên: đi hướng nào cũng được!"
-    },
-    "spy": {
-        "title": "Tìm gián điệp",
-        "instruction": "Hãy ghi nhớ các ký hiệu rồi nhấn nút Đã ghi nhớ. Sau đó tìm ký hiệu đã thay đổi. Số lượng gián điệp có thể tăng dần theo thời gian.",
-        "memorize": "Ghi nhớ những cái này!",
-        "find": "Ai là người mới?",
-        "ready": "Sẵn sàng!"
-    },
-    "timingBar": {
-        "title": "Thanh canh nhịp",
-        "instruction": "Chạm khi thanh rơi chồng lên thanh mục tiêu."
-    },
-    "colorTiming": {
-        "title": "Canh màu",
-        "instruction": "Chạm khi bóng xanh vào vòng tròn bên trái và bóng đỏ vào vòng tròn bên phải. Chạm màu ngược sẽ bị trừ điểm."
-    },
-    "stairway": {
-        "title": "Nấc thang thiên đường",
-        "instruction": "Nhấn vào hướng có cầu thang để leo lên.",
-        "scoreLabel": "Bậc"
-    },
-    "tutorial": {
-        "normal": "🌍 Đấu với người chơi toàn thế giới qua các mini game vui nhộn!",
-        "rank": "🏆 Thi đấu xếp hạng với người chơi có trình độ tương đương!",
-        "practice": "💪 Luyện tập bất kỳ game nào bạn muốn!",
-        "ranking": "👑 Xem những người chơi thông minh nhất thế giới!",
-        "shop": "🛒 Mua bút chì hoặc bỏ quảng cáo!",
-        "settings": "⚙️ Đổi âm thanh, ngôn ngữ và các cài đặt khác!",
-        "login": "👤 Liên kết tài khoản để chơi an toàn hơn!",
-        "profile": "📊 Xem kỹ năng, chỉ số và điểm cao của bạn!",
-        "next": "Tiếp",
-        "done": "Xong",
-        "skip": "Bỏ qua",
-        "loginNow": "Đăng nhập ngay"
-    }
+    "viewGrid": "Grid view",
+    "viewList": "List view",
+    "noNotesTitle": "Không đủ ghi chú luyện tập",
+    "noNotesDesc": "Bạn cần ghi chú luyện tập để chơi chế độ Luyện tập.",
+    "watchAdForNotes": "Xem quảng cáo để nhận ghi chú luyện tập",
+    "goToShopForNotes": "Mua tại cửa hàng",
+    "waitForRecharge": "Chờ"
+  },
+  "update": {
+    "title": "Cần cập nhật",
+    "message": "Phiên bản mới đã có sẵn. Vui lòng cập nhật để có trải nghiệm tốt nhất.",
+    "button": "Cập nhật",
+    "storeNotReady": "Cửa hàng đang được chuẩn bị.",
+    "versionInfo": "Current: {{current}} / Minimum: {{min}}"
+  },
+  "home": {
+    "resumeMatchTitle": "You have a game in progress",
+    "resumeMatchDesc": "You came back home. Do you want to return to your ongoing match?",
+    "resumeLater": "Later",
+    "resumeNow": "Resume",
+    "levelProgressLevel": "Lv. {{level}}",
+    "levelUp": "LEVEL UP!",
+    "hideAnnouncementToday": "Hôm nay không hiển thị lại",
+    "noPencilTitle": "Không đủ bút chì",
+    "noPencilDesc": "Bạn cần bút chì để chơi chế độ Thường/Xếp hạng.",
+    "nextPencilIn": "Bút chì tiếp theo sau {{time}}",
+    "watchAdForPencil": "Xem quảng cáo",
+    "goToShopForPencil": "Mua tại cửa hàng",
+    "waitForRecharge": "Chờ"
+  },
+  "login": {
+    "bannedTitle": "Account Suspended",
+    "bannedMessage": "Your account has been suspended.",
+    "bannedUntil": "Suspension ends: {{date}}",
+    "bannedDurationUnknown": "The suspension period is determined by the administrator.",
+    "bannedAppeal": "If you want to appeal the suspension, please contact support.",
+    "contactSupport": "Contact Support",
+    "tryLaterKeyword": "later"
+  },
+  "review": {
+    "enjoyTitle": "Bạn thích trò chơi không?",
+    "enjoySubtitle": "Đánh giá nhanh giúp chúng tôi rất nhiều!",
+    "enjoyYes": "Có! 😊",
+    "enjoyNo": "Không hẳn 😐"
+  },
+  "mailbox": {
+    "title": "Mailbox",
+    "unread": "Unread",
+    "read": "Read",
+    "empty": "No mail.",
+    "selectHint": "Select a mail.",
+    "untitled": "Untitled",
+    "noContent": "No content.",
+    "rewardTitle": "Claimable Reward",
+    "rewardPencils": "Pencils +{{count}}",
+    "rewardPracticeNotes": "Practice Notes +{{count}}",
+    "claim": "Claim",
+    "claimed": "Claimed",
+    "claimSuccess": "Reward claimed. (+{{pencils}} pencils, +{{notes}} practice notes)",
+    "claimBlockedPencilsFull": "Ban khong the nhan khi co tu 5 but chi tro len. Hay dung but chi truoc."
+  }
 }

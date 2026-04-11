@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { usePanelProgress } from '../../hooks/usePanelProgress';
 import { motion } from 'framer-motion';
-import { useTranslation } from 'react-i18next';
 import { SeededRandom } from '../../utils/seededRandom';
 import { useSound } from '../../contexts/SoundContext';
 
@@ -40,22 +40,24 @@ const SAFE_TRIADS = [
 ];
 
 const FindMostColor: React.FC<FindMostColorProps> = ({ seed, onScore, isPlaying }) => {
-    const { t } = useTranslation();
+    const WRONG_COOLDOWN_MS = 400;
     const { playSound } = useSound();
 
     const [grid, setGrid] = useState<string[]>([]);
     const [cols, setCols] = useState(3);
-    const [successCount, setSuccessCount] = useState(0);
+    const [successCount, setSuccessCount] = usePanelProgress(seed, 'successCount');
     const [roundKey, setRoundKey] = useState(0); // To trigger animations
+    const [isInputLocked, setIsInputLocked] = useState(false);
+    const [isWrongFlash, setIsWrongFlash] = useState(false);
 
     const rng = useRef<SeededRandom | null>(null);
 
     useEffect(() => {
         if (seed) {
             rng.current = new SeededRandom(seed);
-            setSuccessCount(0);
             generateRound();
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [seed]);
 
     const generateRound = useCallback(() => {
@@ -179,7 +181,7 @@ const FindMostColor: React.FC<FindMostColorProps> = ({ seed, onScore, isPlaying 
     }, [successCount]);
 
     const handleTileClick = (color: string) => {
-        if (!isPlaying) return;
+        if (!isPlaying || isInputLocked) return;
         // Count frequencies in current grid
         const counts: { [key: string]: number } = {};
         grid.forEach(c => counts[c] = (counts[c] || 0) + 1);
@@ -198,29 +200,31 @@ const FindMostColor: React.FC<FindMostColorProps> = ({ seed, onScore, isPlaying 
             generateRound();
         } else {
             // Wrong
+            setIsInputLocked(true);
+            setIsWrongFlash(true);
             playSound('error');
             onScore(-30);
-            // Shake effect or feedback?
+            window.setTimeout(() => {
+                setIsInputLocked(false);
+                setIsWrongFlash(false);
+            }, WRONG_COOLDOWN_MS);
         }
     };
 
     return (
         <div className="w-full h-full flex flex-col items-center justify-center p-4">
-            <h2 className="text-2xl font-black text-white mb-6 drop-shadow-md animate-pulse">
-                {t('mostColor.title')}
-            </h2>
-
             <motion.div
                 key={roundKey}
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                className={`grid gap-2 p-4 bg-gray-800/50 rounded-2xl backdrop-blur-sm shadow-xl aspect-square w-full max-w-md
+                className={`grid gap-2 p-4 bg-white dark:bg-gray-800/50 rounded-2xl backdrop-blur-sm shadow-xl aspect-square w-full max-w-md
                     ${cols === 3 ? 'grid-cols-3' : cols === 4 ? 'grid-cols-4' : 'grid-cols-5'}`}
             >
                 {grid.map((color, idx) => (
                     <motion.button
                         key={idx}
+                        disabled={isInputLocked || !isPlaying}
                         whileHover={{ scale: 0.95 }}
                         whileTap={{ scale: 0.9 }}
                         onPointerDown={(e) => {
@@ -235,12 +239,12 @@ const FindMostColor: React.FC<FindMostColorProps> = ({ seed, onScore, isPlaying 
                             handleTileClick(color);
                         }}
                         className="w-full h-full rounded-lg shadow-inner border-2 border-white/10 transition-colors"
-                        style={{ backgroundColor: color }}
+                        style={{ backgroundColor: isWrongFlash ? '#ef4444' : color }}
                     />
                 ))}
             </motion.div>
 
-            <div className="mt-8 text-white/50 font-mono text-sm">
+            <div className="mt-8 text-slate-900 dark:text-white/50 font-mono text-sm">
                 Streak: {successCount}
             </div>
         </div>

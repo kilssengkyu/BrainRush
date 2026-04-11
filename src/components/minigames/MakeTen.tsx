@@ -1,8 +1,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { usePanelProgress } from '../../hooks/usePanelProgress';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { SeededRandom } from '../../utils/seededRandom';
 import { useSound } from '../../contexts/SoundContext';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface MakeTenProps {
     seed: string | null;
@@ -10,91 +12,92 @@ interface MakeTenProps {
     isPlaying: boolean;
 }
 
+type PanelConfig = {
+    level: number;
+    count: number;
+    minAnswerSize: number;
+    maxAnswerSize: number;
+};
+
+const TARGET_COMBINATIONS: Record<number, number[][]> = {
+    2: [[1, 9], [2, 8], [3, 7], [4, 6]],
+    3: [[1, 2, 7], [1, 3, 6], [1, 4, 5], [2, 3, 5]]
+};
+
+const getTimingAdjustment = (reactionSeconds: number): number => {
+    if (reactionSeconds <= 1) {
+        return 0.2 * ((1 - reactionSeconds) / 1); // +20% -> 0%
+    }
+    if (reactionSeconds <= 3) {
+        return -0.2 * ((reactionSeconds - 1) / 2); // 0% -> -20%
+    }
+    return -0.2;
+};
+
 const MakeTen: React.FC<MakeTenProps> = ({ seed, onScore, isPlaying }) => {
     const { t } = useTranslation();
     const { playSound } = useSound();
-    const [panelIndex, setPanelIndex] = useState(0);
+    const { themeMode } = useTheme();
+    const isDark = themeMode === 'dark';
+    const [panelIndex, setPanelIndex] = usePanelProgress(seed);
     const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
     const [animationKey, setAnimationKey] = useState(0);
     const [isSolved, setIsSolved] = useState(false); // Prevent double scoring
+    const [panelShownAtMs, setPanelShownAtMs] = useState<number>(Date.now());
 
-    // Difficulty Configuration
-    // Level 1 (0-4): 3 numbers. Target subset sums to 10.
-    // Level 2 (5-14): 4 numbers. Target subset sums to 10.
-    // Level 3 (15+): 4 numbers. Includes negative numbers.
-    const getLevel = (index: number) => {
-        if (index < 5) return 1;
-        if (index < 15) return 2;
-        return 3;
-    };
-
-    const countTenSolutions = (numbers: number[]) => {
-        let totalSolutions = 0;
-        let pairSolutions = 0;
-        const n = numbers.length;
-
-        for (let mask = 1; mask < (1 << n); mask += 1) {
-            let sum = 0;
-            let size = 0;
-            for (let i = 0; i < n; i += 1) {
-                if (mask & (1 << i)) {
-                    sum += numbers[i];
-                    size += 1;
-                }
-            }
-            if (sum === 10) {
-                totalSolutions += 1;
-                if (size === 2) pairSolutions += 1;
-            }
+    const getPanelConfig = (index: number): PanelConfig => {
+        if (index < 5) {
+            return { level: 1, count: 3, minAnswerSize: 2, maxAnswerSize: 2 };
         }
-
-        return { totalSolutions, pairSolutions };
+        if (index < 10) {
+            return { level: 2, count: 4, minAnswerSize: 2, maxAnswerSize: 2 };
+        }
+        if (index < 15) {
+            return { level: 3, count: 6, minAnswerSize: 2, maxAnswerSize: 3 };
+        }
+        return { level: 4, count: 8, minAnswerSize: 2, maxAnswerSize: 3 };
     };
 
     const currentPanel = useMemo(() => {
         if (!seed) return null;
 
         const rng = new SeededRandom(`${seed}_ten_${panelIndex} `);
-        const level = getLevel(panelIndex);
-
-        // 1. Determine Count (3 or 4)
-        const count = level === 1 ? 3 : 4;
-
-        // Build panels so "make 10" usually uses exactly two numbers
-        // and the valid combination is unique.
-        const candidatePairs: Array<[number, number]> = [[1, 9], [2, 8], [3, 7], [4, 6]];
-        const distractorPool = level < 3
-            ? [1, 2, 3, 4, 5, 6, 7, 8, 9]
-            : [-5, -4, -3, -2, -1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15];
-
-        let validNumbers: number[] | null = null;
-        for (let attempt = 0; attempt < 500; attempt += 1) {
-            const [a, b] = candidatePairs[Math.floor(rng.next() * candidatePairs.length)];
-            const picked = new Set<number>([a, b]);
-
-            while (picked.size < count) {
-                const candidate = distractorPool[Math.floor(rng.next() * distractorPool.length)];
-                if (candidate === 10 || picked.has(candidate)) continue;
-                picked.add(candidate);
-            }
-
-            const numbers = Array.from(picked);
-            const { totalSolutions, pairSolutions } = countTenSolutions(numbers);
-            if (pairSolutions === 1 && totalSolutions === 1) {
-                validNumbers = numbers;
-                break;
-            }
+        const config = getPanelConfig(panelIndex);
+        const distractorPool = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+        let answerSize = config.minAnswerSize;
+        // Rules:
+        // - 4 tiles: always include a 2-number solution
+        // - 6+ tiles: include either a 2-number or 3-number solution
+        if (config.count >= 6) {
+            answerSize = rng.next() < 0.5 ? 2 : 3;
+        } else {
+            answerSize = 2;
         }
 
-        const fallback = count === 3 ? [1, 9, 4] : [1, 9, 4, 7];
-        const shuffled = rng.shuffle(validNumbers ?? fallback);
+        const candidates = TARGET_COMBINATIONS[answerSize];
+        const targetCombo = candidates[Math.floor(rng.next() * candidates.length)];
+        const picked = new Set<number>(targetCombo);
+
+        while (picked.size < config.count) {
+            const candidate = distractorPool[Math.floor(rng.next() * distractorPool.length)];
+            picked.add(candidate);
+        }
+
+        const shuffled = rng.shuffle(Array.from(picked));
 
         return {
             numbers: shuffled,
-            level
+            level: config.level,
+            count: config.count,
+            allowNegative: false,
+            answerSize
         };
 
     }, [seed, panelIndex]);
+
+    useEffect(() => {
+        setPanelShownAtMs(Date.now());
+    }, [currentPanel, panelIndex]);
 
     // Handle Selection
     const toggleSelection = (index: number) => {
@@ -110,17 +113,21 @@ const MakeTen: React.FC<MakeTenProps> = ({ seed, onScore, isPlaying }) => {
 
     // Check Sum Effect
     useEffect(() => {
-        if (!currentPanel || isSolved) return;
+        if (!currentPanel || isSolved || !isPlaying) return;
+        if (selectedIndices.size === 0) return;
 
         let sum = 0;
         selectedIndices.forEach(idx => {
             sum += currentPanel.numbers[idx];
         });
 
-        if (sum === 10 && selectedIndices.size > 0) {
+        if (sum === 10) {
             // Correct!
             setIsSolved(true);
-            onScore(100); // Fixed 100 points
+            const reactionSeconds = Math.max(0, (Date.now() - panelShownAtMs) / 1000);
+            const timingAdjustment = getTimingAdjustment(reactionSeconds);
+            const adjustedScore = Math.round(100 * (1 + timingAdjustment));
+            onScore(adjustedScore);
             playSound('correct');
 
             // Transition
@@ -131,55 +138,20 @@ const MakeTen: React.FC<MakeTenProps> = ({ seed, onScore, isPlaying }) => {
                 setAnimationKey(prev => prev + 1);
             }, 150);
         } else if (sum > 10) {
-            // Penalty! (Only if positive sum exceeds 10. Dealing with negatives is tricky, but "Sum > 10" is a fair fail condition for Make 10)
-            // Wait, if we have negatives, sum > 10 is possible transiently? 
-            // Example: 5 + 6 (11) ... + (-1) = 10.
-            // If user clicks 5 then 6, sum is 11. Should we fail immediately? 
-            // Yes, "Make 10" usually implies "don't exceed 10" in simple versions, but with negatives it's harder.
-            // Let's stick to "If sum > 10 AND no negatives in the level" OR just loose check?
-            // Actually, if level 3 uses negatives, exceeding 10 temporarily MIGHT be valid if the next number is -2.
-            // BUT, usually these games require you to pick positive numbers to reach 10.
-            // Let's look at level logic.
-            // Level 3 allows negatives. If I have 15, and I pick -5, I get 10.
-            // So immediate failure on > 10 is BAD for Level 3.
-
-            // Revised Plan:
-            // Only penalize if ALL remaining numbers are positive? Or just don't penalize on intermediate sums.
-            // But User ASKED for penalty. 
-            // Maybe penalize if matching is "Finalized"? But we don't have a submit button.
-            // Alternative: Penalize only if Sum > 10 AND Level < 3 (No negatives).
-            // For Level 3, maybe we just don't penalize overflow? Or we penalize if Sum > 20 (way off)?
-
-            // Let's implement: Penalty if Sum > 10 AND Level < 3. 
-            // For Level 3, we simply can't auto-fail easily without more logic.
-
-            if (currentPanel.level < 3) {
-                onScore(-20);
+            if (!currentPanel.allowNegative) {
+                onScore(-80);
                 playSound('error');
                 setSelectedIndices(new Set()); // Reset to force retry
-                // Visual feedback needed? They will see the selection clear.
             }
         }
-    }, [selectedIndices, currentPanel, panelIndex, onScore, isSolved]);
+    }, [selectedIndices, currentPanel, panelIndex, onScore, isSolved, isPlaying]);
 
-    if (!currentPanel) return <div className="text-white">{t('common.loading')}</div>;
+    if (!currentPanel) return <div className="text-slate-900 dark:text-white">{t('common.loading')}</div>;
 
     return (
         <div className="flex flex-col items-center justify-center w-full h-full gap-8 relative">
-
-            {/* Header Info */}
-            <div className="absolute top-0 text-gray-500 font-mono text-sm mt-2">
-                Level: {currentPanel.level} | Panel: {panelIndex + 1}
-            </div>
-
-            {/* Title / Help */}
-            <h2 className="text-4xl font-black text-white drop-shadow-[0_0_10px_rgba(255,215,0,0.5)]">
-                {t('ten.title')}
-            </h2>
-            <div className="text-gray-400 text-sm mb-4">{t('ten.instruction')}</div>
-
             {/* Numbers Grid */}
-            <div className={`grid gap-6 ${currentPanel.numbers.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+            <div className={`grid gap-4 md:gap-6 ${currentPanel.count === 8 ? 'grid-cols-4' : currentPanel.count === 6 ? 'grid-cols-3' : currentPanel.numbers.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
                 <AnimatePresence mode="popLayout">
                     {currentPanel.numbers.map((num, idx) => (
                         <motion.button
@@ -189,8 +161,8 @@ const MakeTen: React.FC<MakeTenProps> = ({ seed, onScore, isPlaying }) => {
                             animate={{
                                 scale: selectedIndices.has(idx) ? 1.1 : 1,
                                 opacity: 1,
-                                backgroundColor: selectedIndices.has(idx) ? '#3b82f6' : '#1f2937',
-                                boxShadow: selectedIndices.has(idx) ? '0 0 20px rgba(59, 130, 246, 0.5)' : 'none'
+                                backgroundColor: selectedIndices.has(idx) ? '#3b82f6' : (isDark ? '#1f2937' : '#f1f5f9'),
+                                boxShadow: selectedIndices.has(idx) ? '0 0 20px rgba(59, 130, 246, 0.5)' : (isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.1)')
                             }}
                             exit={{ scale: 0, opacity: 0 }}
                             whileTap={{ scale: 0.95 }}
@@ -205,7 +177,8 @@ const MakeTen: React.FC<MakeTenProps> = ({ seed, onScore, isPlaying }) => {
                                 }
                                 toggleSelection(idx);
                             }}
-                            className={`w-28 h-28 rounded-3xl flex items-center justify-center text-5xl font-bold text-white border-4 border-gray-700 transition-colors shadow-xl`}
+                            className={`rounded-3xl flex items-center justify-center font-bold ${selectedIndices.has(idx) ? 'text-white' : 'text-slate-900 dark:text-white'} border-4 border-slate-300 dark:border-gray-700 transition-colors shadow-xl
+                                ${currentPanel.count >= 8 ? 'w-20 h-20 md:w-24 md:h-24 text-3xl md:text-4xl' : currentPanel.count >= 6 ? 'w-[5.5rem] h-[5.5rem] md:w-[6.5rem] md:h-[6.5rem] text-4xl md:text-[2.7rem]' : 'w-28 h-28 text-5xl'}`}
                         >
                             {num}
                         </motion.button>
@@ -216,7 +189,7 @@ const MakeTen: React.FC<MakeTenProps> = ({ seed, onScore, isPlaying }) => {
             {/* Current Sum Indicator */}
             <div className="mt-8 text-xl font-mono text-gray-500">
                 Sum: <span className={
-                    Array.from(selectedIndices).reduce((a, b) => a + currentPanel.numbers[b], 0) === 10 ? 'text-green-400 font-bold' : 'text-white'
+                    Array.from(selectedIndices).reduce((a, b) => a + currentPanel.numbers[b], 0) === 10 ? 'text-green-500 dark:text-green-400 font-bold' : 'text-slate-900 dark:text-white'
                 }>
                     {Array.from(selectedIndices).reduce((a, b) => a + currentPanel.numbers[b], 0)}
                 </span>

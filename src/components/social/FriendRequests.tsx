@@ -115,37 +115,37 @@ const FriendRequests: React.FC<FriendRequestsProps> = ({ onCountChange }) => {
     if (requests.length === 0) return null;
 
     return (
-        <div className="bg-slate-800 rounded-lg p-4 shadow-lg border border-slate-700 mb-6">
-            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                <Bell size={20} className="text-yellow-400" />
+        <div className="bg-white dark:bg-slate-800 rounded-lg p-4 shadow-sm dark:shadow-lg border border-slate-200 dark:border-slate-700 mb-6">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                <Bell size={20} className="text-amber-500 dark:text-yellow-400" />
                 {t('social.friendRequests')} ({requests.length})
             </h3>
 
             <div className="space-y-3">
                 {requests.map(req => (
-                    <div key={req.friendship_id} className="flex items-center justify-between bg-slate-700/50 p-3 rounded-lg">
+                    <div key={req.friendship_id} className="flex items-center justify-between bg-slate-50 dark:bg-slate-700/50 p-3 rounded-lg border border-slate-200 dark:border-transparent">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-slate-600 overflow-hidden border border-slate-500">
+                            <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-600 overflow-hidden border border-slate-300 dark:border-slate-500">
                                 {req.avatar_url ? (
                                     <img src={req.avatar_url} alt={req.nickname} className="w-full h-full object-cover" />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs">?</div>
                                 )}
                             </div>
-                            <span className="font-semibold text-white">{req.nickname}</span>
+                            <span className="font-semibold text-slate-900 dark:text-white">{req.nickname}</span>
                         </div>
 
                         <div className="flex gap-2">
                             <button
                                 onClick={() => handleResponse(req.friendship_id, true)}
-                                className="p-1.5 bg-green-600/20 text-green-400 rounded hover:bg-green-600 hover:text-white transition"
+                                className="p-1.5 bg-emerald-100 dark:bg-green-600/20 text-emerald-600 dark:text-green-400 rounded hover:bg-emerald-600 hover:text-white dark:hover:bg-green-600 dark:hover:text-white transition shadow-sm dark:shadow-none"
                                 title={t('social.accept')}
                             >
                                 <Check size={18} />
                             </button>
                             <button
                                 onClick={() => handleResponse(req.friendship_id, false)}
-                                className="p-1.5 bg-red-600/20 text-red-400 rounded hover:bg-red-600 hover:text-white transition"
+                                className="p-1.5 bg-red-100 dark:bg-red-600/20 text-red-600 dark:text-red-400 rounded hover:bg-red-600 hover:text-white dark:hover:bg-red-600 dark:hover:text-white transition shadow-sm dark:shadow-none"
                                 title={t('social.reject')}
                             >
                                 <X size={18} />

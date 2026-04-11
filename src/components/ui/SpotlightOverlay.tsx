@@ -12,6 +12,7 @@ interface SpotlightOverlayProps {
     totalSteps?: number;
     onAction?: () => void;
     actionLabel?: string;
+    nextLabel?: string;
 }
 
 const SpotlightOverlay: React.FC<SpotlightOverlayProps> = ({
@@ -24,6 +25,7 @@ const SpotlightOverlay: React.FC<SpotlightOverlayProps> = ({
     totalSteps,
     onAction,
     actionLabel,
+    nextLabel,
 }) => {
     const { t } = useTranslation();
     const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
@@ -154,7 +156,7 @@ const SpotlightOverlay: React.FC<SpotlightOverlayProps> = ({
                         bottom: tooltipBelow ? 'auto' : window.innerHeight - tooltipY,
                     }}
                 >
-                    <div className="bg-gray-900/95 backdrop-blur-md border border-blue-500/30 rounded-2xl p-5 max-w-sm shadow-2xl">
+                    <div className="bg-slate-50 dark:bg-gray-900/95 backdrop-blur-md border border-blue-500/30 rounded-2xl p-5 max-w-sm shadow-2xl">
                         {/* Step indicator */}
                         {stepNumber !== undefined && totalSteps !== undefined && (
                             <div className="flex items-center gap-1.5 mb-3">
@@ -173,7 +175,7 @@ const SpotlightOverlay: React.FC<SpotlightOverlayProps> = ({
                         )}
 
                         {/* Message */}
-                        <p className="text-white text-base font-medium leading-relaxed mb-4">
+                        <p className="text-slate-900 dark:text-white text-base font-medium leading-relaxed mb-4">
                             {message}
                         </p>
 
@@ -182,7 +184,7 @@ const SpotlightOverlay: React.FC<SpotlightOverlayProps> = ({
                             {onSkip && !isLast && (
                                 <button
                                     onClick={onSkip}
-                                    className="px-4 py-2 text-gray-400 hover:text-white text-sm font-medium transition-colors"
+                                    className="px-4 py-2 text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:text-white text-sm font-medium transition-colors"
                                 >
                                     {t('tutorial.skip', '건너뛰기')}
                                 </button>
@@ -191,16 +193,16 @@ const SpotlightOverlay: React.FC<SpotlightOverlayProps> = ({
                             {onAction && actionLabel && (
                                 <button
                                     onClick={onAction}
-                                    className="px-5 py-2.5 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl transition-colors active:scale-95"
+                                    className="px-5 py-2.5 bg-green-600 hover:bg-green-500 text-slate-900 dark:text-white font-bold rounded-xl transition-colors active:scale-95"
                                 >
                                     {actionLabel}
                                 </button>
                             )}
                             <button
                                 onClick={onNext}
-                                className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-colors active:scale-95"
+                                className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-slate-900 dark:text-white font-bold rounded-xl transition-colors active:scale-95"
                             >
-                                {isLast ? t('tutorial.done', '완료') : t('tutorial.next', '다음')}
+                                {nextLabel ?? (isLast ? t('tutorial.done', '완료') : t('tutorial.next', '다음'))}
                             </button>
                         </div>
                     </div>

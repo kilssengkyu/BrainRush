@@ -5,11 +5,12 @@ import { App } from '@capacitor/app';
 import type { PluginListenerHandle } from '@capacitor/core';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
+import { getNotificationsEnabled } from '../../lib/notificationPrefs';
 
 const FULL_PENCILS_ID = 2001;
 const REMINDER_24H_ID = 2002;
 const MAX_PENCILS = 5;
-const RECHARGE_MINUTES = 30;
+const RECHARGE_MINUTES = 15;
 
 const scheduleNotification = async (id: number, title: string, body: string, at: Date) => {
     await LocalNotifications.schedule({
@@ -40,6 +41,10 @@ const LocalNotificationScheduler = () => {
         };
 
         const setup = async () => {
+            if (!getNotificationsEnabled()) {
+                await clearNotifications();
+                return;
+            }
             const permission = await LocalNotifications.requestPermissions();
             if (permission.display !== 'granted') return;
 
@@ -79,6 +84,10 @@ const LocalNotificationScheduler = () => {
         };
 
         const init = async () => {
+            if (!getNotificationsEnabled()) {
+                await clearNotifications();
+                return;
+            }
             const state = await App.getState();
             if (state.isActive) {
                 await clearNotifications();

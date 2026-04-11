@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, Users } from 'lucide-react';
+import { Gamepad2, Megaphone, Shield, ShoppingBag, Users } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useSound } from '../contexts/SoundContext';
 
@@ -27,14 +27,14 @@ const Admin = () => {
   if (loading || !user || !isAdmin) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-950 to-black text-white p-6">
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-950 to-black text-slate-900 dark:text-white p-6">
       <div className="max-w-4xl mx-auto">
         <button
           onClick={() => {
             playSound('click');
             navigate('/');
           }}
-          className="mb-4 rounded-lg border border-white/20 px-4 py-2 text-sm text-white/80 hover:text-white hover:border-white/40"
+          className="mb-4 rounded-lg border border-white/20 px-4 py-2 text-sm text-slate-900 dark:text-white/80 hover:text-slate-900 dark:text-white hover:border-white/40"
         >
           Back
         </button>
@@ -44,7 +44,7 @@ const Admin = () => {
             <Shield className="h-5 w-5" />
             <h1 className="text-xl font-bold">Admin</h1>
           </div>
-          <p className="text-sm text-white/80">관리 기능 메뉴</p>
+          <p className="text-sm text-slate-900 dark:text-white/80">관리 기능 메뉴</p>
         </div>
 
         <div className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -59,7 +59,49 @@ const Admin = () => {
               <Users className="h-5 w-5" />
             </div>
             <div className="text-lg font-semibold">회원관리</div>
-            <div className="mt-1 text-sm text-white/70">회원 목록, 검색, 프로필 사진 확인</div>
+            <div className="mt-1 text-sm text-slate-900 dark:text-white/70">회원 목록, 검색, 프로필 사진 확인</div>
+          </button>
+
+          <button
+            onClick={() => {
+              playSound('click');
+              navigate('/admin/games');
+            }}
+            className="rounded-2xl border border-white/10 bg-white/5 p-5 text-left transition-colors hover:bg-white/10"
+          >
+            <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/20 text-indigo-300">
+              <Gamepad2 className="h-5 w-5" />
+            </div>
+            <div className="text-lg font-semibold">미니게임 관리</div>
+            <div className="mt-1 text-sm text-slate-900 dark:text-white/70">사용 여부, 모드별 사용 여부, 아이콘 URL 관리</div>
+          </button>
+
+          <button
+            onClick={() => {
+              playSound('click');
+              navigate('/admin/shop');
+            }}
+            className="rounded-2xl border border-white/10 bg-white/5 p-5 text-left transition-colors hover:bg-white/10"
+          >
+            <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-300">
+              <ShoppingBag className="h-5 w-5" />
+            </div>
+            <div className="text-lg font-semibold">상점 상품 관리</div>
+            <div className="mt-1 text-sm text-slate-900 dark:text-white/70">사용 여부, 노출 순서, 아이콘 URL 관리</div>
+          </button>
+
+          <button
+            onClick={() => {
+              playSound('click');
+              navigate('/admin/notices');
+            }}
+            className="rounded-2xl border border-white/10 bg-white/5 p-5 text-left transition-colors hover:bg-white/10"
+          >
+            <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/20 text-amber-300">
+              <Megaphone className="h-5 w-5" />
+            </div>
+            <div className="text-lg font-semibold">공지사항 관리</div>
+            <div className="mt-1 text-sm text-slate-900 dark:text-white/70">홈 진입 공지 작성, 활성화, 기간 설정</div>
           </button>
         </div>
       </div>
