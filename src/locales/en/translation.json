@@ -99,7 +99,9 @@
     "rank": {
       "title": "Rank Mode",
       "subtitle": "Compete globally",
-      "matchRule": "Best of 5 (First to 3)"
+      "matchRule": "Best of 5 (First to 3)",
+      "burningTime": "Burning Time",
+      "burningTimeBenefit": "No pencil cost"
     },
     "all": "All",
     "friendly": {
@@ -172,7 +174,7 @@
   },
   "leaderboard": {
     "button": "Ranking",
-    "title": "Ranking",
+    "title": "Ranking - Preseason",
     "global": "Global",
     "country": "Country",
     "myRank": "MY RANK",

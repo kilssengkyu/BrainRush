@@ -99,7 +99,9 @@
     "rank": {
       "title": "Rangmodus",
       "subtitle": "Weltweit konkurrieren",
-      "matchRule": "Best of 5 (3 Siege)"
+      "matchRule": "Best of 5 (3 Siege)",
+      "burningTime": "Brennzeit",
+      "burningTimeBenefit": "Kein Stiftverbrauch"
     },
     "all": "Alle",
     "friendly": {
@@ -172,7 +174,7 @@
   },
   "leaderboard": {
     "button": "Rangliste",
-    "title": "Rangliste",
+    "title": "Rangliste - Vorsaison",
     "global": "Global",
     "country": "Land",
     "myRank": "MY RANK",

@@ -183,31 +183,6 @@ const AuthDeepLinkErrorListener = () => {
   return null;
 };
 
-const AppDeepLinkRouter = () => {
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const handler = (event: Event) => {
-      const customEvent = event as CustomEvent;
-      const rawPath = String(customEvent.detail?.path || '').trim();
-      if (!rawPath) return;
-
-      if (rawPath === '/profile') {
-        navigate('/profile');
-        return;
-      }
-
-      navigate('/');
-    };
-
-    window.addEventListener('brainrush:app-link', handler as EventListener);
-    return () => window.removeEventListener('brainrush:app-link', handler as EventListener);
-  }, [navigate]);
-
-  return null;
-};
-
-
 import BGMManager from './components/audio/BGMManager';
 import ForceUpdateCheck from './components/ForceUpdateCheck';
 import { primeRewardedAd } from './utils/rewardedAd';
@@ -267,7 +242,6 @@ function App() {
                   <LocalNotificationScheduler />
                   <ForceLogoutListener />
                   <AuthDeepLinkErrorListener />
-                  <AppDeepLinkRouter />
                   <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/game/:roomId" element={<Game />} />

@@ -277,11 +277,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             console.log('Processing Deep Link:', urlString.substring(0, 50) + '...');
             try {
                 const url = new URL(urlString);
-                const normalizedPath = (() => {
-                    const hostPath = url.host && url.host !== 'login-callback' ? `/${url.host}` : '';
-                    const joined = `${hostPath}${url.pathname || ''}`.replace(/\/{2,}/g, '/');
-                    return joined.startsWith('/') ? joined : `/${joined}`;
-                })();
                 const hashParams = new URLSearchParams(url.hash.substring(1));
                 const searchParams = new URLSearchParams(url.search);
 
@@ -290,15 +285,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 const code = hashParams.get('code') || searchParams.get('code');
                 const errName = hashParams.get('error') || searchParams.get('error');
                 const errDesc = hashParams.get('error_description') || searchParams.get('error_description');
-                const isAuthCallback =
-                    url.host === 'login-callback' ||
-                    Boolean(accessToken || refreshToken || code || errName || errDesc);
-
-                if (!isAuthCallback && normalizedPath.startsWith('/open/')) {
-                    const appPath = normalizedPath.replace(/^\/open/, '') || '/';
-                    window.dispatchEvent(new CustomEvent('brainrush:app-link', { detail: { path: appPath } }));
-                    return;
-                }
 
                 if (errName || errDesc) {
                     const decoded = decodeURIComponent(errDesc || errName || '');

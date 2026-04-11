@@ -99,7 +99,9 @@
     "rank": {
       "title": "Mode classé",
       "subtitle": "Compétition mondiale",
-      "matchRule": "BO5 (3 manches gagnantes)"
+      "matchRule": "BO5 (3 manches gagnantes)",
+      "burningTime": "Heure bonus",
+      "burningTimeBenefit": "Aucun crayon consommé"
     },
     "all": "Tous",
     "friendly": {
@@ -172,7 +174,7 @@
   },
   "leaderboard": {
     "button": "Classement",
-    "title": "Classement",
+    "title": "Classement - Pré-saison",
     "global": "Global",
     "country": "Pays",
     "myRank": "MY RANK",

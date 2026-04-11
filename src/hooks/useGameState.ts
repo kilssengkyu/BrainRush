@@ -130,39 +130,40 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
         const opServerScore = isP1 ? sP2_points : sP1_points;
         const myWins = isP1 ? sP1_wins : sP2_wins;
         const opWins = isP1 ? sP2_wins : sP1_wins;
+        const nowMs = Date.now() + serverOffset;
+        const startMs = record.start_at ? new Date(record.start_at).getTime() : 0;
+        const isBeforeRoundStart = Boolean(startMs && nowMs < startMs);
+        const isActivePlaying = record.status === 'playing' && !isBeforeRoundStart;
 
         if (record.status === 'finished') {
             console.log('Game FINISHED! Winner:', record.winner_id);
         }
 
-        // Fix: Sync local score ref if server is ahead (e.g. reload or round transition)
-        // This ensures that if we reload page in Round 2, we pick up the accumulated score
-        if (!hasLocalScoreChanges.current) {
+        // During warmup/countdown, the next round has been selected but input has not started.
+        // Keep local refs aligned with the server reset so old round scores cannot leak forward.
+        if (myServerScore === 0 && (record.status === 'countdown' || isBeforeRoundStart)) {
+            scoreRef.current = 0;
+            lastSyncedScore.current = 0;
+            hasLocalScoreChanges.current = false;
+        } else if (!hasLocalScoreChanges.current) {
+            // Sync local score ref if server is ahead (e.g. reload or reconnect mid-round).
             // If local score is 0 (new round) or server has more points, take server
             if (scoreRef.current === 0 || myServerScore > scoreRef.current) {
                 scoreRef.current = myServerScore;
             }
         }
 
-        // Safety: If server reset to 0 (new round), verify local ref reset
-        if (myServerScore === 0 && record.status === 'countdown') {
-            scoreRef.current = 0;
-            hasLocalScoreChanges.current = false;
-        }
-
         setGameState(prev => {
             // Ticker Logic Update
             let remaining = prev.remainingTime;
             if (record.end_at) {
-                const now = Date.now() + serverOffset;
-                const start = record.start_at ? new Date(record.start_at).getTime() : 0;
                 const end = new Date(record.end_at).getTime();
 
                 // If Warm-up phase (Now < Start): Show countdown to start
-                if (now < start) {
-                    remaining = Math.max(0, (start - now) / 1000);
+                if (isBeforeRoundStart) {
+                    remaining = Math.max(0, (startMs - nowMs) / 1000);
                 } else {
-                    remaining = Math.max(0, (end - now) / 1000);
+                    remaining = Math.max(0, (end - nowMs) / 1000);
                 }
             }
 
@@ -175,8 +176,8 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
                 seed: record.seed,
                 startAt,
                 endAt,
-                myScore: record.status === 'playing' ? scoreRef.current : myServerScore,
-                opScore: ghostTimelineRef.current ? ghostScoreRef.current : opServerScore,
+                myScore: isActivePlaying ? scoreRef.current : myServerScore,
+                opScore: isActivePlaying && ghostTimelineRef.current ? ghostScoreRef.current : opServerScore,
                 myWins: myWins, // New
                 opWins: opWins, // New
                 winnerId: record.winner_id,
@@ -495,6 +496,7 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
         hasFinalSynced.current = false;
         setIsTimeUp(false); // Reset TimeUp flag
         scoreRef.current = 0; // Reset local score for new round
+        lastSyncedScore.current = 0;
         hasLocalScoreChanges.current = false;
         scoreTimelineRef.current = []; // Reset ghost timeline for new round
         ghostTimelineRef.current = null; // Reset ghost replay

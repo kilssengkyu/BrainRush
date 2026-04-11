@@ -54,6 +54,8 @@ const HIGHSCORE_GAME_TYPES = [
     { type: 'MAKE_ZERO', labelKey: 'zero.title' },
 ] as const;
 
+type HighscoreGameType = typeof HIGHSCORE_GAME_TYPES[number];
+
 const Profile = () => {
     const { user, profile, signOut, refreshProfile, linkWithGoogle, linkWithApple } = useAuth();
     const { playSound } = useSound();
@@ -74,6 +76,7 @@ const Profile = () => {
     const [highscores, setHighscores] = useState<Record<string, number>>({});
     const [rankStats, setRankStats] = useState<Record<string, { wins: number; losses: number; draws: number }>>({});
     const [isHighscoresLoading, setIsHighscoresLoading] = useState(false);
+    const [enabledHighscoreGameIds, setEnabledHighscoreGameIds] = useState<Set<string> | null>(null);
     const [avatarPreview, setAvatarPreview] = useState<{ src: string; alt: string } | null>(null);
 
     const MAX_AVATAR_SIZE = 2 * 1024 * 1024; // 2MB
@@ -266,6 +269,43 @@ const Profile = () => {
             isActive = false;
         };
     }, [activeTab, user]);
+
+    useEffect(() => {
+        if (activeTab !== 'profile') return;
+
+        let isActive = true;
+        const fetchEnabledHighscoreGames = async () => {
+            const { data, error } = await (supabase as any)
+                .from('game_catalog')
+                .select('game_type, is_enabled, use_in_rank, use_in_normal')
+                .eq('is_enabled', true);
+
+            if (!isActive) return;
+
+            if (error) {
+                console.error('Failed to load highscore game catalog', error);
+                setEnabledHighscoreGameIds(null);
+                return;
+            }
+
+            const ids = new Set<string>(
+                (data || [])
+                    .filter((row: any) => Boolean(row.use_in_rank) || Boolean(row.use_in_normal))
+                    .map((row: any) => String(row.game_type))
+            );
+            setEnabledHighscoreGameIds(ids);
+        };
+
+        fetchEnabledHighscoreGames();
+        return () => {
+            isActive = false;
+        };
+    }, [activeTab]);
+
+    const highscoreGameTypes = useMemo<HighscoreGameType[]>(() => {
+        if (!enabledHighscoreGameIds) return [...HIGHSCORE_GAME_TYPES];
+        return HIGHSCORE_GAME_TYPES.filter((game) => enabledHighscoreGameIds.has(game.type));
+    }, [enabledHighscoreGameIds]);
 
     const cancelPendingInvite = useCallback(async (reason: 'cancel' | 'timeout', inviteOverride?: { inviteId: string; friendId: string }) => {
         if (!user) return;
@@ -1095,7 +1135,7 @@ const Profile = () => {
                                             <span className="text-right">{t('profile.highscoresColumns.highscore')}</span>
                                             <span className="text-right">{t('profile.highscoresColumns.rankWinRate')}</span>
                                         </div>
-                                        {HIGHSCORE_GAME_TYPES.map(({ type, labelKey }) => {
+                                        {highscoreGameTypes.map(({ type, labelKey }) => {
                                             const stats = rankStats[type] ?? { wins: 0, losses: 0, draws: 0 };
                                             const total = stats.wins + stats.losses + stats.draws;
                                             const winRate = total > 0 ? Math.round((stats.wins / total) * 100) : 0;

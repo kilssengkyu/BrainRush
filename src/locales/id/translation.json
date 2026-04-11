@@ -99,7 +99,9 @@
     "rank": {
       "title": "Mode Rank",
       "subtitle": "Bersaing secara global",
-      "matchRule": "Best of 5 (menang 3)"
+      "matchRule": "Best of 5 (menang 3)",
+      "burningTime": "Waktu Burning",
+      "burningTimeBenefit": "Tidak memakai pensil"
     },
     "all": "Semua",
     "friendly": {
@@ -172,7 +174,7 @@
   },
   "leaderboard": {
     "button": "Peringkat",
-    "title": "Peringkat",
+    "title": "Peringkat - Pramusim",
     "global": "Global",
     "country": "Negara",
     "myRank": "MY RANK",

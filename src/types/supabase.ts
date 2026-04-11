@@ -364,6 +364,7 @@ export type Database = {
           practice_last_recharge_at: string | null
           practice_notes: number | null
           speed: number | null
+          timezone: string | null
           wins: number | null
           xp: number
         }
@@ -398,6 +399,7 @@ export type Database = {
           practice_last_recharge_at?: string | null
           practice_notes?: number | null
           speed?: number | null
+          timezone?: string | null
           wins?: number | null
           xp?: number
         }
@@ -432,6 +434,7 @@ export type Database = {
           practice_last_recharge_at?: string | null
           practice_notes?: number | null
           speed?: number | null
+          timezone?: string | null
           wins?: number | null
           xp?: number
         }
@@ -548,6 +551,10 @@ export type Database = {
         }[]
       }
       cleanup_stale_game_sessions: { Args: never; Returns: undefined }
+      consume_match_pencil: {
+        Args: { p_mode?: string; user_id: string }
+        Returns: boolean
+      }
       consume_pencil: { Args: { user_id: string }; Returns: boolean }
       consume_practice_note: { Args: { user_id: string }; Returns: boolean }
       create_bot_session: {
@@ -687,8 +694,20 @@ export type Database = {
           practice_notes: number
         }[]
       }
+      get_rank_burning_time_status: {
+        Args: { p_player_id: string }
+        Returns: Json
+      }
       get_server_time: { Args: never; Returns: string }
       get_tier_name: { Args: { p_mmr: number }; Returns: string }
+      is_rank_burning_time: {
+        Args: { p_player_id: string }
+        Returns: boolean
+      }
+      set_my_timezone: {
+        Args: { p_timezone: string }
+        Returns: undefined
+      }
       register_guest_signup: {
         Args: { p_device_id: string; p_limit?: number; p_window?: unknown }
         Returns: undefined

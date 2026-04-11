@@ -45,7 +45,9 @@
     "rank": {
       "title": "排位模式",
       "subtitle": "全球玩家竞技",
-      "matchRule": "五局三胜"
+      "matchRule": "五局三胜",
+      "burningTime": "燃烧时间",
+      "burningTimeBenefit": "不消耗铅笔"
     },
     "friendly": {
       "title": "好友对战",
@@ -168,7 +170,7 @@
   },
   "leaderboard": {
     "button": "排行榜",
-    "title": "排行榜",
+    "title": "排行榜 - 季前赛",
     "global": "全体",
     "country": "国家",
     "myRank": "MY RANK",
