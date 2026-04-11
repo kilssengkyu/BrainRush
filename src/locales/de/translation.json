@@ -457,6 +457,14 @@
     "title": "MATHE OX",
     "instruction": "Tippe O falls richtig, X falls falsch!"
   },
+  "infiniteAdd": {
+    "title": "ENDLOS-ADDITION",
+    "instruction": "Tippe Zahlen, bis deine Summe dem Ziel entspricht!",
+    "progress": "Kette",
+    "total": "Summe",
+    "target": "Ziel",
+    "add": "Dazu"
+  },
   "oneStroke": {
     "title": "EIN STRICH",
     "instruction": "Verbinde alle weißen Felder in einem Zug!",
