@@ -99,7 +99,9 @@
     "rank": {
       "title": "โหมดแรงก์",
       "subtitle": "แข่งขันระดับโลก",
-      "matchRule": "ชนะ 3 ใน 5 เกม"
+      "matchRule": "ชนะ 3 ใน 5 เกม",
+      "burningTime": "ช่วงเวลาเบิร์นนิง",
+      "burningTimeBenefit": "ไม่ใช้ดินสอ"
     },
     "all": "ทั้งหมด",
     "friendly": {

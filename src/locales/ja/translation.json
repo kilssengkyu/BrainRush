@@ -45,7 +45,9 @@
     "rank": {
       "title": "ランク戦",
       "subtitle": "世界中のプレイヤーと競争",
-      "matchRule": "5本勝負（3本先取）"
+      "matchRule": "5本勝負（3本先取）",
+      "burningTime": "バーニングタイム",
+      "burningTimeBenefit": "鉛筆消費なし"
     },
     "friendly": {
       "title": "フレンド対戦",

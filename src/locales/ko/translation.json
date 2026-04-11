@@ -99,7 +99,9 @@
     "rank": {
       "title": "랭크 모드",
       "subtitle": "전 세계 플레이어와 경쟁",
-      "matchRule": "5판 3선승"
+      "matchRule": "5판 3선승",
+      "burningTime": "버닝타임",
+      "burningTimeBenefit": "연필 소모 없음"
     },
     "friendly": {
       "title": "친선 모드",

@@ -88,7 +88,21 @@ export const useMatchmaking = (
         }
     };
 
-    const createBotMatch = async (playerId: string, forceBot: boolean) => {
+    const consumeMatchPencil = async (mode: MatchMode, context: string) => {
+        if (!user || pencilConsumed.current) return;
+
+        pencilConsumed.current = true;
+        const { data: consumed } = await supabase.rpc('consume_match_pencil', {
+            user_id: user.id,
+            p_mode: mode
+        });
+
+        if (!consumed) {
+            console.error(`Failed to consume pencil (${context})!`);
+        }
+    };
+
+    const createBotMatch = async (playerId: string, forceBot: boolean, mode: MatchMode) => {
         const { data, error } = await supabase
             .rpc('create_bot_session', { p_player_id: playerId, p_force: forceBot })
             .maybeSingle() as { data: { room_id: string, opponent_id: string } | null, error: any };
@@ -97,13 +111,7 @@ export const useMatchmaking = (
         if (!data?.room_id || !data?.opponent_id) return null;
 
         try {
-            if (user && !pencilConsumed.current) {
-                pencilConsumed.current = true;
-                const { data: consumed } = await supabase.rpc('consume_pencil', { user_id: user.id });
-                if (!consumed) {
-                    console.error('Failed to consume pencil (Bot Match)!');
-                }
-            }
+            await consumeMatchPencil(mode, 'Bot Match');
         } catch (e) {
             console.error('Pencil consumption error (Bot Match):', e);
         }
@@ -148,7 +156,7 @@ export const useMatchmaking = (
             botMatchTriggered.current = true;
             try {
                 const forceBot = true;
-                const botMatch = await createBotMatch(playerId, forceBot);
+                const botMatch = await createBotMatch(playerId, forceBot, mode);
                 if (botMatch) {
                     console.log('Immediate tutorial bot match found. Room:', botMatch.room_id);
                     return;
@@ -216,7 +224,7 @@ export const useMatchmaking = (
             if (isBotEligible && !botMatchTriggered.current && elapsedMs >= botDelayMs) {
                 botMatchTriggered.current = true;
                 try {
-                    const botMatch = await createBotMatch(playerId, forceBot);
+                    const botMatch = await createBotMatch(playerId, forceBot, mode);
                     if (botMatch) {
                         console.log('Bot Match Found! Room:', botMatch.room_id);
                         if (searchInterval.current) clearInterval(searchInterval.current);
@@ -237,13 +245,7 @@ export const useMatchmaking = (
 
                 // Consume pencil for passive match (same as active match)
                 try {
-                    if (user && !pencilConsumed.current) {
-                        pencilConsumed.current = true;
-                        const { data: consumed } = await supabase.rpc('consume_pencil', { user_id: user.id });
-                        if (!consumed) {
-                            console.error('Failed to consume pencil (Passive Match)!');
-                        }
-                    }
+                    await consumeMatchPencil(mode, 'Passive Match');
                 } catch (e) {
                     console.error('Pencil consumption error (Passive Match):', e);
                 }
@@ -298,18 +300,7 @@ export const useMatchmaking = (
 
                 try {
                     // Only Authenticated users consume pencils
-                    if (user && !pencilConsumed.current) {
-                        pencilConsumed.current = true;
-                        const { data: consumed } = await supabase.rpc('consume_pencil', { user_id: user.id });
-                        if (!consumed) {
-                            console.error('Failed to consume pencil! Maybe ran out during search?');
-                            // Should we abort?
-                            // It's rare. Let's let them play but maybe show warning?
-                            // Or abort match? strict: cancelSearch(true); return;
-                            // But match is already made in DB.
-                            // Let's just log for now.
-                        }
-                    }
+                    await consumeMatchPencil(mode as MatchMode, 'Match Found');
                 } catch (e) {
                     console.error('Pencil consumption error:', e);
                 }

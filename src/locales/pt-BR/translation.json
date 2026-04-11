@@ -99,7 +99,9 @@
     "rank": {
       "title": "Modo Ranqueado",
       "subtitle": "Compita globalmente",
-      "matchRule": "Melhor de 5 (vence 3)"
+      "matchRule": "Melhor de 5 (vence 3)",
+      "burningTime": "Horário bônus",
+      "burningTimeBenefit": "Sem custo de lápis"
     },
     "all": "Todos",
     "friendly": {

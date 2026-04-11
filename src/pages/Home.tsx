@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -125,6 +125,20 @@ const Home = () => {
     const [nowMs, setNowMs] = useState(() => Date.now());
     const lastPencilRefreshAttemptRef = useRef(0);
     const dailyActivityRecordedUserRef = useRef<string | null>(null);
+    const syncedTimeZoneRef = useRef<string | null>(null);
+    const [rankBurningTimeStatus, setRankBurningTimeStatus] = useState({
+        isActive: false,
+        windowLabel: null as string | null
+    });
+    const deviceTimeZone = useMemo(() => {
+        try {
+            return Intl.DateTimeFormat().resolvedOptions().timeZone || null;
+        } catch {
+            return null;
+        }
+    }, []);
+    const isRankBurningTime = rankBurningTimeStatus.isActive;
+    const rankBurningTimeWindow = rankBurningTimeStatus.windowLabel;
 
     // Refresh profile on mount to get latest MMR after game
     useEffect(() => {
@@ -206,6 +220,57 @@ const Home = () => {
             supabase.removeChannel(unreadChatChannel);
         };
     }, [user]);
+
+    useEffect(() => {
+        if (!user) {
+            setRankBurningTimeStatus({ isActive: false, windowLabel: null });
+            return;
+        }
+
+        let cancelled = false;
+        let intervalId: number | null = null;
+
+        const loadBurningTimeStatus = async () => {
+            try {
+                if (
+                    deviceTimeZone &&
+                    profile?.timezone !== deviceTimeZone &&
+                    syncedTimeZoneRef.current !== deviceTimeZone
+                ) {
+                    const { error } = await supabase.rpc('set_my_timezone', { p_timezone: deviceTimeZone });
+                    if (!error) {
+                        syncedTimeZoneRef.current = deviceTimeZone;
+                    }
+                }
+
+                const { data, error } = await supabase.rpc('get_rank_burning_time_status', {
+                    p_player_id: user.id
+                });
+                if (error) throw error;
+
+                const status = data as { is_active?: boolean; window_label?: string | null } | null;
+                if (!cancelled) {
+                    setRankBurningTimeStatus({
+                        isActive: Boolean(status?.is_active),
+                        windowLabel: status?.window_label ?? null
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to load rank burning time status:', error);
+                if (!cancelled) {
+                    setRankBurningTimeStatus({ isActive: false, windowLabel: null });
+                }
+            }
+        };
+
+        void loadBurningTimeStatus();
+        intervalId = window.setInterval(loadBurningTimeStatus, 60 * 1000);
+
+        return () => {
+            cancelled = true;
+            if (intervalId !== null) window.clearInterval(intervalId);
+        };
+    }, [deviceTimeZone, profile?.timezone, user?.id]);
 
     useEffect(() => {
         if (!user) {
@@ -955,8 +1020,9 @@ const Home = () => {
                 return;
             }
 
+            const needsPencil = mode === 'normal' || (mode === 'rank' && !isRankBurningTime);
             const pencils = displayedPencils;
-            if (pencils < 1) {
+            if (needsPencil && pencils < 1) {
                 playSound('error');
                 setShowNoPencilChoiceModal(true);
                 return;
@@ -1833,6 +1899,11 @@ const Home = () => {
                                 <p className="text-gray-500 text-sm mt-1">
                                     {t('menu.rank.subtitle')} · {t('menu.rank.matchRule', '5판 3선승')}
                                 </p>
+                                {isRankBurningTime && (
+                                    <p className="text-amber-300 text-xs font-black mt-1">
+                                        {t('menu.rank.burningTime', 'Burning Time')} ({rankBurningTimeWindow}) · {t('menu.rank.burningTimeBenefit', 'No pencil cost')}
+                                    </p>
+                                )}
                             </div>
 
                             {!user && (

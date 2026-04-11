@@ -45,7 +45,9 @@
     "rank": {
       "title": "排位模式",
       "subtitle": "全球玩家競技",
-      "matchRule": "五局三勝"
+      "matchRule": "五局三勝",
+      "burningTime": "燃燒時間",
+      "burningTimeBenefit": "不消耗鉛筆"
     },
     "friendly": {
       "title": "好友對戰",

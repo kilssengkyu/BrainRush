@@ -99,7 +99,9 @@
     "rank": {
       "title": "Chế độ Xếp hạng",
       "subtitle": "Thi đấu toàn cầu",
-      "matchRule": "Thắng 3 trong 5 ván"
+      "matchRule": "Thắng 3 trong 5 ván",
+      "burningTime": "Giờ bùng nổ",
+      "burningTimeBenefit": "Không tốn bút chì"
     },
     "all": "Tất cả",
     "friendly": {
