@@ -471,6 +471,14 @@
     "title": "산수 OX",
     "instruction": "수식이 맞으면 O, 틀리면 X!"
   },
+  "infiniteAdd": {
+    "title": "무한 더하기",
+    "instruction": "패널 숫자를 눌러 현재 합계를 목표 숫자와 같게 만드세요!",
+    "progress": "연속",
+    "total": "합계",
+    "target": "목표",
+    "add": "더하기"
+  },
   "oneStroke": {
     "title": "한 줄 긋기",
     "instruction": "색깔 칸에서 시작해 모든 빈칸을 한 번에 연결하기!",

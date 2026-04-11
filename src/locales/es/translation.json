@@ -455,6 +455,14 @@
     "title": "MATH OX",
     "instruction": "¡Toca O si es correcto, X si es incorrecto!"
   },
+  "infiniteAdd": {
+    "title": "SUMA INFINITA",
+    "instruction": "¡Toca números hasta que tu total iguale el objetivo!",
+    "progress": "Cadena",
+    "total": "Total",
+    "target": "Objetivo",
+    "add": "Sumar"
+  },
   "oneStroke": {
     "title": "UN SOLO TRAZO",
     "instruction": "¡Conecta todas las baldosas blancas en un solo trazo!",

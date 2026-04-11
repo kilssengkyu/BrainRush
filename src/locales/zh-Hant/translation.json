@@ -451,6 +451,14 @@
     "title": "心算 OX",
     "instruction": "正確選 O，錯誤選 X！"
   },
+  "infiniteAdd": {
+    "title": "無限加法",
+    "instruction": "點擊面板數字，讓目前總和等於目標！",
+    "progress": "連續",
+    "total": "總和",
+    "target": "目標",
+    "add": "加上"
+  },
   "oneStroke": {
     "title": "一筆連線",
     "instruction": "一筆連起所有白色方塊！",

@@ -455,6 +455,14 @@
     "title": "MATH OX",
     "instruction": "Toque em O se certo, X se errado!"
   },
+  "infiniteAdd": {
+    "title": "SOMA INFINITA",
+    "instruction": "Toque nos números até seu total igualar o alvo!",
+    "progress": "Sequência",
+    "total": "Total",
+    "target": "Alvo",
+    "add": "Somar"
+  },
   "oneStroke": {
     "title": "UM TRAÇO",
     "instruction": "Conecte todos os espaços brancos com um traço!",

@@ -451,6 +451,14 @@
     "title": "暗算 OX",
     "instruction": "正解ならO、間違いならX！"
   },
+  "infiniteAdd": {
+    "title": "無限足し算",
+    "instruction": "パネルの数字を押して合計を目標と同じにしましょう！",
+    "progress": "連続",
+    "total": "合計",
+    "target": "目標",
+    "add": "足す"
+  },
   "oneStroke": {
     "title": "一筆書き",
     "instruction": "一筆書きで全ての白いマスをつなげ！",

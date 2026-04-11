@@ -11,6 +11,7 @@ import RockPaperScissors from '../components/minigames/RockPaperScissors';
 import NumberSortGame from '../components/minigames/NumberSortGame';
 import MathChallenge from '../components/minigames/MathChallenge';
 import MathOXGame from '../components/minigames/MathOXGame';
+import InfiniteAddition from '../components/minigames/InfiniteAddition';
 import OneStrokePath from '../components/minigames/OneStrokePath';
 import MakeTen from '../components/minigames/MakeTen';
 import MakeZero from '../components/minigames/MakeZero';
@@ -1229,6 +1230,7 @@ const Game: React.FC = () => {
             case 'NUMBER_DESC': return t('number.titleDesc');
             case 'MATH': return t('math.title');
             case 'MATH_OX': return t('mathOx.title', '산수 OX');
+            case 'INFINITE_ADD': return t('infiniteAdd.title', '무한 더하기');
             case 'ONE_STROKE': return t('oneStroke.title', '한 줄 긋기');
             case 'TEN': return t('ten.title');
             case 'COLOR': return t('color.title');
@@ -1658,6 +1660,7 @@ const Game: React.FC = () => {
                                             {gameState.gameType === 'NUMBER_DESC' && t('number.titleDesc')}
                                             {gameState.gameType === 'MATH' && t('math.title')}
                                             {gameState.gameType === 'MATH_OX' && t('mathOx.title', '산수 OX')}
+                                            {gameState.gameType === 'INFINITE_ADD' && t('infiniteAdd.title', '무한 더하기')}
                                             {gameState.gameType === 'ONE_STROKE' && t('oneStroke.title', '한 줄 긋기')}
                                             {gameState.gameType === 'TEN' && t('ten.title')}
                                             {gameState.gameType === 'COLOR' && t('color.title')}
@@ -1693,6 +1696,7 @@ const Game: React.FC = () => {
                                         {gameState.gameType === 'NUMBER_DESC' && t('number.instructionDesc')}
                                         {gameState.gameType === 'MATH' && t('math.instruction')}
                                         {gameState.gameType === 'MATH_OX' && t('mathOx.instruction', '수식이 맞으면 O, 틀리면 X를 누르세요.')}
+                                        {gameState.gameType === 'INFINITE_ADD' && t('infiniteAdd.instruction', '현재 합계에 새 숫자를 더한 값을 고르세요.')}
                                         {gameState.gameType === 'ONE_STROKE' && t('oneStroke.instruction', '시작점부터 길을 한 번씩만 지나가며 모두 연결하세요.')}
                                         {gameState.gameType === 'TEN' && t('ten.instruction')}
                                         {gameState.gameType === 'COLOR' && t('color.instruction')}
@@ -1742,6 +1746,9 @@ const Game: React.FC = () => {
                                     )}
                                     {gameState.gameType === 'MATH_OX' && (
                                         <MathOXGame seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
+                                    )}
+                                    {gameState.gameType === 'INFINITE_ADD' && (
+                                        <InfiniteAddition seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'ONE_STROKE' && (
                                         <OneStrokePath seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />

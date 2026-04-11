@@ -1,4 +1,4 @@
-import { Brain, BookOpen, CircleDot, EyeOff, Ghost, Hash, MousePointer2, Route, Shuffle, Star, Zap } from 'lucide-react';
+import { Brain, BookOpen, CircleDot, EyeOff, Ghost, Hash, MousePointer2, Plus, Route, Shuffle, Star, Zap } from 'lucide-react';
 
 export const PRACTICE_GAMES = [
     { id: 'RANDOM', title: 'practice.random', icon: null, defaultIcon: <Shuffle className="w-12 h-12 text-slate-500 dark:text-white" />, type: 'random' },
@@ -7,6 +7,7 @@ export const PRACTICE_GAMES = [
     { id: 'NUMBER_DESC', title: 'number.titleDesc', icon: <img src="/icons/number_desc.png" alt="Number Desc" className="w-full h-full object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Hash className="w-12 h-12 text-red-400" />, type: 'speed' },
     { id: 'MATH', title: 'math.title', icon: <img src="/icons/math.png" alt="Math" className="w-full h-full object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Brain className="w-12 h-12 text-purple-400" />, type: 'brain' },
     { id: 'MATH_OX', title: 'mathOx.title', icon: <img src="/icons/math_ox.png" alt="Math OX" className="w-full h-full object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <CircleDot className="w-12 h-12 text-cyan-400" />, type: 'brain' },
+    { id: 'INFINITE_ADD', title: 'infiniteAdd.title', icon: null, defaultIcon: <Plus className="w-12 h-12 text-amber-400" />, type: 'brain' },
     { id: 'TEN', title: 'ten.title', icon: <img src="/icons/make_ten.png" alt="Make Ten" className="w-full h-full object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Hash className="w-12 h-12 text-green-400" />, type: 'brain' },
     { id: 'COLOR', title: 'color.title', icon: <img src="/icons/color_match.png" alt="Color" className="w-full h-full object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Zap className="w-12 h-12 text-pink-400" />, type: 'speed' },
     { id: 'MEMORY', title: 'memory.title', icon: <img src="/icons/memory.png" alt="Memory" className="w-full h-full object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />, defaultIcon: <Brain className="w-12 h-12 text-orange-400" />, type: 'brain' },

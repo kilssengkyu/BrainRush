@@ -455,6 +455,14 @@
     "title": "MATH OX",
     "instruction": "Ketuk O jika benar, X jika salah!"
   },
+  "infiniteAdd": {
+    "title": "PENJUMLAHAN TANPA BATAS",
+    "instruction": "Ketuk angka panel sampai totalmu sama dengan target!",
+    "progress": "Rantai",
+    "total": "Total",
+    "target": "Target",
+    "add": "Tambah"
+  },
   "oneStroke": {
     "title": "SATU GORESAN",
     "instruction": "Hubungkan semua kotak putih dalam satu garis!",
