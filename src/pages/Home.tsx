@@ -3,7 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Settings, User, Trophy, Zap, Loader2, Lock, AlertTriangle, Dumbbell, ShoppingBag, Flame, Mail } from 'lucide-react';
+import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
+import type { PluginListenerHandle } from '@capacitor/core';
 import HexRadar from '../components/ui/HexRadar';
 import { useMatchmaking } from '../hooks/useMatchmaking';
 import { useSound } from '../contexts/SoundContext';
@@ -45,6 +47,7 @@ const PENCIL_RECHARGE_MS = 15 * 60 * 1000;
 const GUEST_LINK_PROMPT_LEVEL = 5;
 const GUEST_LINK_PROMPT_INITIAL_DELAY_MS = 3 * 24 * 60 * 60 * 1000;
 const GUEST_LINK_PROMPT_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
+const ACTIVITY_PING_COOLDOWN_MS = 60 * 1000;
 
 const getLivePencilState = (
     pencils: number | null | undefined,
@@ -102,6 +105,62 @@ const RechargeTimer = ({ remainingMs }: { remainingMs: number }) => {
     );
 };
 
+const PencilCostChip = ({ cost = 1 }: { cost?: number }) => (
+    <div className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/15 px-2.5 py-1 text-[11px] font-black text-white/90 backdrop-blur-sm">
+        <img
+            src="/images/icon/icon_pen.png"
+            alt="Pencil"
+            className="h-3.5 w-3.5 object-contain"
+        />
+        <span>x{cost}</span>
+    </div>
+);
+
+const BurningTimeChip = ({
+    windowLabel,
+    isTooltipOpen,
+    onToggle,
+    label,
+    benefit,
+}: {
+    windowLabel: string | null;
+    isTooltipOpen: boolean;
+    onToggle: () => void;
+    label: string;
+    benefit: string;
+}) => (
+    <div className="relative">
+        <div
+            role="button"
+            tabIndex={0}
+            aria-label={`${label} ${windowLabel ? `(${windowLabel})` : ''}`}
+            onClick={(event) => {
+                event.stopPropagation();
+                onToggle();
+            }}
+            onKeyDown={(event) => {
+                if (event.key !== 'Enter' && event.key !== ' ') return;
+                event.preventDefault();
+                event.stopPropagation();
+                onToggle();
+            }}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-amber-200/70 bg-gradient-to-br from-yellow-300 via-orange-500 to-red-600 shadow-[0_0_24px_rgba(251,146,60,0.65)] ring-2 ring-orange-400/25 transition-transform hover:scale-110 active:scale-95"
+        >
+            <Flame className="h-5 w-5 text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.75)]" />
+        </div>
+        {isTooltipOpen && (
+            <div className="absolute right-0 top-12 z-30 w-48 rounded-2xl border border-amber-300/40 bg-slate-950/95 px-3 py-2 text-right shadow-2xl shadow-orange-500/20 backdrop-blur-md">
+                <div className="absolute -top-1.5 right-4 h-3 w-3 rotate-45 border-l border-t border-amber-300/40 bg-slate-950/95" />
+                <p className="text-[11px] font-black uppercase tracking-[0.16em] text-amber-300">{label}</p>
+                {windowLabel && (
+                    <p className="mt-0.5 text-xs font-bold text-white">{windowLabel}</p>
+                )}
+                <p className="mt-1 text-[11px] font-semibold text-orange-100">{benefit}</p>
+            </div>
+        )}
+    </div>
+);
+
 const Home = () => {
     const navigate = useNavigate();
     const { t, i18n } = useTranslation();
@@ -116,6 +175,7 @@ const Home = () => {
     const lastHandledXpRoomRef = useRef<string | null>(null);
     const xpRefreshRetryRef = useRef(0);
     const [longPressXpExpanded, setLongPressXpExpanded] = useState(false);
+    const [isStartingSolo, setIsStartingSolo] = useState(false);
     const longPressTimerRef = useRef<number | null>(null);
     const longPressCollapseTimerRef = useRef<number | null>(null);
     const longPressTouchRef = useRef(false);
@@ -125,11 +185,13 @@ const Home = () => {
     const [nowMs, setNowMs] = useState(() => Date.now());
     const lastPencilRefreshAttemptRef = useRef(0);
     const dailyActivityRecordedUserRef = useRef<string | null>(null);
+    const lastActivityPingAtRef = useRef(0);
     const syncedTimeZoneRef = useRef<string | null>(null);
     const [rankBurningTimeStatus, setRankBurningTimeStatus] = useState({
         isActive: false,
         windowLabel: null as string | null
     });
+    const [showRankBurningTooltip, setShowRankBurningTooltip] = useState(false);
     const deviceTimeZone = useMemo(() => {
         try {
             return Intl.DateTimeFormat().resolvedOptions().timeZone || null;
@@ -221,6 +283,27 @@ const Home = () => {
         };
     }, [user]);
 
+    const pingActivity = useCallback(async (force = false) => {
+        if (!user) return false;
+
+        const now = Date.now();
+        if (!force && now - lastActivityPingAtRef.current < ACTIVITY_PING_COOLDOWN_MS) {
+            return false;
+        }
+
+        try {
+            const { error } = await (supabase as any).rpc('record_daily_activity');
+            if (error) throw error;
+
+            lastActivityPingAtRef.current = now;
+            dailyActivityRecordedUserRef.current = user.id;
+            return true;
+        } catch (error) {
+            console.error('Failed to record daily activity:', error);
+            return false;
+        }
+    }, [user]);
+
     useEffect(() => {
         if (!user) {
             setRankBurningTimeStatus({ isActive: false, windowLabel: null });
@@ -275,28 +358,54 @@ const Home = () => {
     useEffect(() => {
         if (!user) {
             dailyActivityRecordedUserRef.current = null;
+            lastActivityPingAtRef.current = 0;
             return;
         }
         if (dailyActivityRecordedUserRef.current === user.id) return;
 
         let cancelled = false;
         const recordActivity = async () => {
-            try {
-                const { error } = await (supabase as any).rpc('record_daily_activity');
-                if (error) throw error;
-                if (!cancelled) {
-                    dailyActivityRecordedUserRef.current = user.id;
-                }
-            } catch (error) {
-                console.error('Failed to record daily activity:', error);
-            }
+            const recorded = await pingActivity(true);
+            if (!recorded || cancelled) return;
         };
 
         void recordActivity();
         return () => {
             cancelled = true;
         };
-    }, [user]);
+    }, [pingActivity, user]);
+
+    useEffect(() => {
+        if (!user) return;
+
+        let nativeListener: PluginListenerHandle | null = null;
+        const handleAppResume = () => {
+            void pingActivity();
+        };
+
+        const onVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                handleAppResume();
+            }
+        };
+
+        document.addEventListener('visibilitychange', onVisibilityChange);
+
+        void CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+            if (isActive) {
+                handleAppResume();
+            }
+        }).then((listener) => {
+            nativeListener = listener;
+        }).catch(() => {
+            // Ignore on platforms where the App plugin listener is unavailable.
+        });
+
+        return () => {
+            document.removeEventListener('visibilitychange', onVisibilityChange);
+            nativeListener?.remove();
+        };
+    }, [pingActivity, user]);
 
     // Calculate Level from MMR (Temporary: MMR / 100)
     // const level = profile?.mmr ? Math.floor(profile.mmr / 100) : 1; 
@@ -671,6 +780,7 @@ const Home = () => {
     // Tutorial refs
     const normalModeRef = useRef<HTMLButtonElement>(null);
     const rankModeRef = useRef<HTMLButtonElement>(null);
+    const soloModeRef = useRef<HTMLButtonElement>(null);
     const practiceModeRef = useRef<HTMLButtonElement>(null);
     const rankingBtnRef = useRef<HTMLButtonElement>(null);
     const shopBtnRef = useRef<HTMLButtonElement>(null);
@@ -1044,6 +1154,51 @@ const Home = () => {
     const handlePostTutorialNormalStart = async () => {
         setShowPostTutorialNormalSpotlight(false);
         await handleModeSelect('normal', { forceBotImmediate: true });
+    };
+
+    const handleSoloModeSelect = async () => {
+        playSound('click');
+        if (!user) {
+            showToast(t('common.loading'), 'info');
+            return;
+        }
+
+        if (isStartingSolo) {
+            return;
+        }
+
+        if (displayedPencils < 1) {
+            playSound('error');
+            setShowNoPencilChoiceModal(true);
+            return;
+        }
+
+        setIsStartingSolo(true);
+
+        try {
+            const { data: consumed, error } = await supabase.rpc('consume_match_pencil', {
+                user_id: user.id,
+                p_mode: 'solo'
+            });
+
+            if (error) {
+                throw error;
+            }
+
+            if (!consumed) {
+                playSound('error');
+                setShowNoPencilChoiceModal(true);
+                return;
+            }
+
+            await refreshProfile();
+            navigate('/solo');
+        } catch (error) {
+            console.error('Failed to consume pencil for solo mode:', error);
+            showToast(t('common.error'), 'error');
+        } finally {
+            setIsStartingSolo(false);
+        }
     };
 
     const formatRemainingTime = (remainingMs: number) => {
@@ -1855,24 +2010,32 @@ const Home = () => {
                     </motion.div>
 
                     {/* Game Modes */}
-                    <motion.div variants={itemVariants} className="w-full flex flex-col gap-4">
+                    <motion.div variants={itemVariants} className="grid w-full grid-cols-2 gap-4">
 
                         {/* Normal Mode */}
                         <button
                             ref={normalModeRef}
                             onMouseEnter={() => playSound('hover')}
                             onClick={() => handleModeSelect('normal')}
-                            className="group relative w-full p-6 bg-white dark:bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-200 hover:border-blue-500 hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] active:scale-[0.98] active:border-blue-300 active:bg-blue-400/20 active:shadow-[0_0_28px_rgba(59,130,246,0.5)] active:brightness-125 active:saturate-150 cursor-pointer flex items-center gap-4 text-left"
+                            className="group relative min-h-[180px] w-full overflow-hidden rounded-2xl border border-gray-700 bg-white p-5 text-left backdrop-blur-md transition-all duration-200 hover:border-blue-500 hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] active:scale-[0.98] active:border-blue-300 active:bg-blue-400/20 active:shadow-[0_0_28px_rgba(59,130,246,0.5)] active:brightness-125 active:saturate-150 dark:bg-gray-800/50"
                         >
-                            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-300" />
-                            <div className="p-3 rounded-full bg-blue-500/20 group-hover:bg-blue-500/30 group-active:bg-blue-500/40 transition-colors">
-                                <Zap className="w-8 h-8 text-blue-400 group-active:text-blue-200 transition-colors" />
+                            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/14 via-blue-500/6 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-active:opacity-100" />
+                            <div className="absolute right-4 top-4 z-10">
+                                <PencilCostChip />
                             </div>
-                            <div>
-                                <h3 className="text-2xl font-bold group-hover:text-blue-400 group-active:text-blue-200 transition-colors">{t('menu.normal.title')}</h3>
-                                <p className="text-gray-500 text-sm mt-1">
-                                    {t('menu.normal.subtitle')} · {t('menu.normal.matchRule', '3판 2선승')}
-                                </p>
+                            <div className="relative flex h-full flex-col items-start justify-between">
+                                <div className="rounded-full bg-blue-500/20 p-3 transition-colors group-hover:bg-blue-500/30 group-active:bg-blue-500/40">
+                                    <Zap className="h-7 w-7 text-blue-400 transition-colors group-active:text-blue-200" />
+                                </div>
+                                <div>
+                                    <h3 className="text-2xl font-bold transition-colors group-hover:text-blue-400 group-active:text-blue-200">{t('menu.normal.title')}</h3>
+                                    <p className="mt-2 text-sm text-gray-500">
+                                        {t('menu.normal.subtitle')}
+                                    </p>
+                                    <p className="mt-1 text-xs font-semibold uppercase tracking-[0.16em] text-blue-300/80">
+                                        {t('menu.normal.matchRule', '3판 2선승')}
+                                    </p>
+                                </div>
                             </div>
                         </button>
 
@@ -1881,47 +2044,65 @@ const Home = () => {
                             ref={rankModeRef}
                             onMouseEnter={() => playSound('hover')}
                             onClick={() => handleModeSelect('rank')}
-                            className={`group relative w-full p-6 bg-white dark:bg-gray-800/50 backdrop-blur-md border rounded-2xl overflow-hidden transition-all duration-200 ${canPlayRank ? 'border-purple-400/55 hover:border-purple-300 hover:shadow-[0_0_18px_rgba(168,85,247,0.22)] active:scale-[0.98] active:border-purple-200 active:bg-purple-400/20 active:shadow-[0_0_24px_rgba(168,85,247,0.28)] active:brightness-125 active:saturate-150 cursor-pointer' : 'border-purple-400/30 opacity-50 grayscale cursor-not-allowed'} ${shouldHighlightRankButton ? 'rank-cta-highlight border-purple-300/90' : ''} flex items-center gap-4 text-left`}
+                            className={`group relative min-h-[180px] w-full overflow-hidden rounded-2xl border bg-white p-5 text-left backdrop-blur-md transition-all duration-200 dark:bg-gray-800/50 ${canPlayRank ? 'border-purple-400/55 hover:border-purple-300 hover:shadow-[0_0_18px_rgba(168,85,247,0.22)] active:scale-[0.98] active:border-purple-200 active:bg-purple-400/20 active:shadow-[0_0_24px_rgba(168,85,247,0.28)] active:brightness-125 active:saturate-150 cursor-pointer' : 'border-purple-400/30 opacity-50 grayscale cursor-not-allowed'} ${shouldHighlightRankButton ? 'rank-cta-highlight border-purple-300/90' : ''} ${isRankBurningTime ? 'border-orange-300/80 shadow-[0_0_28px_rgba(249,115,22,0.24)] hover:border-amber-200 hover:shadow-[0_0_34px_rgba(251,146,60,0.36)]' : ''}`}
                         >
                             {shouldHighlightRankButton && (
                                 <div className="rank-cta-sheen absolute inset-0 z-0 pointer-events-none" />
                             )}
-                            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-300" />
-                            <div className="relative z-10 p-3 rounded-full bg-purple-500/20 group-hover:bg-purple-500/30 group-active:bg-purple-500/40 transition-colors">
-                                {showRankSummary ? (
-                                    <TierIcon className="w-8 h-8 object-contain text-purple-400 group-active:text-purple-200 transition-colors" />
+                            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/14 via-purple-500/6 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-active:opacity-100" />
+                            {isRankBurningTime && (
+                                <>
+                                    <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_80%_10%,rgba(251,191,36,0.36),transparent_26%),radial-gradient(circle_at_20%_100%,rgba(239,68,68,0.28),transparent_34%),linear-gradient(135deg,rgba(126,34,206,0.18),rgba(249,115,22,0.16))] opacity-90" />
+                                    <div className="pointer-events-none absolute -bottom-10 left-0 right-0 z-0 h-24 bg-gradient-to-t from-red-500/28 via-orange-400/12 to-transparent blur-sm" />
+                                </>
+                            )}
+                            <div className="absolute right-4 top-4 z-20">
+                                {isRankBurningTime ? (
+                                    <BurningTimeChip
+                                        windowLabel={rankBurningTimeWindow}
+                                        isTooltipOpen={showRankBurningTooltip}
+                                        onToggle={() => setShowRankBurningTooltip((prev) => !prev)}
+                                        label={t('menu.rank.burningTime', 'Burning Time')}
+                                        benefit={t('menu.rank.burningTimeBenefit', 'No pencil cost')}
+                                    />
                                 ) : (
-                                    <Trophy className="w-8 h-8 text-purple-400 group-active:text-purple-200 transition-colors" />
+                                    <PencilCostChip />
                                 )}
                             </div>
-                            <div className="relative z-10">
-                                <h3 className="text-2xl font-bold group-hover:text-purple-400 group-active:text-purple-200 transition-colors">{t('menu.rank.title')}</h3>
-                                <p className="text-gray-500 text-sm mt-1">
-                                    {t('menu.rank.subtitle')} · {t('menu.rank.matchRule', '5판 3선승')}
-                                </p>
-                                {isRankBurningTime && (
-                                    <p className="text-amber-300 text-xs font-black mt-1">
-                                        {t('menu.rank.burningTime', 'Burning Time')} ({rankBurningTimeWindow}) · {t('menu.rank.burningTimeBenefit', 'No pencil cost')}
+                            <div className="relative z-10 flex h-full flex-col items-start justify-between">
+                                <div className={`rounded-full p-3 transition-colors ${isRankBurningTime ? 'bg-orange-500/25 shadow-[0_0_18px_rgba(251,146,60,0.35)] group-hover:bg-orange-500/35' : 'bg-purple-500/20 group-hover:bg-purple-500/30 group-active:bg-purple-500/40'}`}>
+                                    {showRankSummary ? (
+                                        <TierIcon className={`h-7 w-7 object-contain transition-colors group-active:text-purple-200 ${isRankBurningTime ? 'text-amber-300' : 'text-purple-400'}`} />
+                                    ) : (
+                                        <Trophy className={`h-7 w-7 transition-colors group-active:text-purple-200 ${isRankBurningTime ? 'text-amber-300' : 'text-purple-400'}`} />
+                                    )}
+                                </div>
+                                <div className="pr-10">
+                                    <h3 className={`text-2xl font-bold transition-colors group-active:text-purple-200 ${isRankBurningTime ? 'text-amber-200 group-hover:text-yellow-200' : 'group-hover:text-purple-400'}`}>{t('menu.rank.title')}</h3>
+                                    <p className="mt-2 text-sm text-gray-500">
+                                        {t('menu.rank.subtitle')}
                                     </p>
-                                )}
+                                    <p className={`mt-1 text-xs font-semibold uppercase tracking-[0.16em] ${isRankBurningTime ? 'text-orange-200/90' : 'text-purple-300/80'}`}>
+                                        {t('menu.rank.matchRule', '5판 3선승')}
+                                    </p>
+                                </div>
                             </div>
 
                             {!user && (
-                                <div className="absolute inset-0 flex items-center justify-center bg-black/60 z-10">
-                                    <Lock className="w-8 h-8 text-slate-900 dark:text-white/80" />
+                                <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/60">
+                                    <Lock className="h-8 w-8 text-slate-900 dark:text-white/80" />
                                 </div>
                             )}
 
-                            {/* Win Streak Badge */}
                             {streakActive && user && (
-                                <div className="absolute top-2 right-2 z-20 flex flex-col items-end gap-0.5">
-                                    <div className="flex items-center gap-1.5 bg-gradient-to-r from-orange-600/90 to-red-600/90 backdrop-blur-sm rounded-full px-2.5 py-1 shadow-lg border border-orange-400/40 animate-pulse">
-                                        <Flame className="w-4 h-4 text-yellow-300" />
+                                <div className="absolute right-2 top-2 z-20 flex flex-col items-end gap-0.5">
+                                    <div className="flex items-center gap-1.5 rounded-full border border-orange-400/40 bg-gradient-to-r from-orange-600/90 to-red-600/90 px-2.5 py-1 shadow-lg backdrop-blur-sm animate-pulse">
+                                        <Flame className="h-4 w-4 text-yellow-300" />
                                         <span className="text-xs font-black text-slate-900 dark:text-white">{streakCount}</span>
-                                        <span className="text-[10px] text-orange-200 font-mono">{streakMinutes}:{String(streakSeconds).padStart(2, '0')}</span>
+                                        <span className="font-mono text-[10px] text-orange-200">{streakMinutes}:{String(streakSeconds).padStart(2, '0')}</span>
                                     </div>
                                     {nextMilestone > 0 && (
-                                        <div className="bg-yellow-500/90 backdrop-blur-sm rounded-full px-2 py-0.5 shadow border border-yellow-400/50">
+                                        <div className="rounded-full border border-yellow-400/50 bg-yellow-500/90 px-2 py-0.5 shadow backdrop-blur-sm">
                                             <span className="text-[10px] font-bold text-black">{nextMilestone}{t('streak.nextBonus', '연승 시 +{{bonus}}', { bonus: nextBonusMMR })}</span>
                                         </div>
                                     )}
@@ -1929,20 +2110,51 @@ const Home = () => {
                             )}
                         </button>
 
+                        {/* Solo Mode */}
+                        <button
+                            ref={soloModeRef}
+                            onMouseEnter={() => playSound('hover')}
+                            onClick={handleSoloModeSelect}
+                            disabled={isStartingSolo}
+                            className={`group relative min-h-[180px] w-full overflow-hidden rounded-2xl border border-orange-400/45 bg-white p-5 text-left backdrop-blur-md transition-all duration-200 dark:bg-gray-800/50 ${isStartingSolo ? 'cursor-wait opacity-80' : 'hover:border-orange-300 hover:shadow-[0_0_18px_rgba(251,146,60,0.26)] active:scale-[0.98] active:border-orange-200 active:bg-orange-400/20 active:shadow-[0_0_24px_rgba(251,146,60,0.3)] active:brightness-125 active:saturate-150'}`}
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/14 via-orange-500/6 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-active:opacity-100" />
+                            <div className="absolute right-4 top-4 z-10">
+                                <PencilCostChip />
+                            </div>
+                            <div className="relative flex h-full flex-col items-start justify-between">
+                                <div className="rounded-full bg-orange-500/20 p-3 transition-colors group-hover:bg-orange-500/30 group-active:bg-orange-500/40">
+                                    {isStartingSolo ? (
+                                        <Loader2 className="h-7 w-7 animate-spin text-orange-400 transition-colors group-active:text-orange-200" />
+                                    ) : (
+                                        <User className="h-7 w-7 text-orange-400 transition-colors group-active:text-orange-200" />
+                                    )}
+                                </div>
+                                <div>
+                                    <h3 className="text-2xl font-bold transition-colors group-hover:text-orange-400 group-active:text-orange-200">{t('menu.solo.title', '혼자하기')}</h3>
+                                    <p className="mt-2 text-sm text-gray-500">
+                                        {t('menu.solo.subtitle', '랜덤 미니게임을 혼자 즐겨보세요')}
+                                    </p>
+                                </div>
+                            </div>
+                        </button>
+
                         {/* Practice Mode */}
                         <button
                             ref={practiceModeRef}
                             onMouseEnter={() => playSound('hover')}
                             onClick={() => handleModeSelect('practice')}
-                            className="group relative w-full p-6 bg-white dark:bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-200 hover:border-green-500 hover:shadow-[0_0_20px_rgba(34,197,94,0.5)] active:scale-[0.98] active:border-green-300 active:bg-green-400/20 active:shadow-[0_0_28px_rgba(34,197,94,0.5)] active:brightness-125 active:saturate-150 cursor-pointer flex items-center gap-4 text-left"
+                            className="group relative min-h-[180px] w-full overflow-hidden rounded-2xl border border-green-500/45 bg-white p-5 text-left backdrop-blur-md transition-all duration-200 hover:border-green-400 hover:shadow-[0_0_20px_rgba(34,197,94,0.5)] active:scale-[0.98] active:border-green-300 active:bg-green-400/20 active:shadow-[0_0_28px_rgba(34,197,94,0.5)] active:brightness-125 active:saturate-150 dark:bg-gray-800/50"
                         >
-                            <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-transparent opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-300" />
-                            <div className="p-3 rounded-full bg-green-500/20 group-hover:bg-green-500/30 group-active:bg-green-500/40 transition-colors">
-                                <Dumbbell className="w-8 h-8 text-green-400 group-active:text-green-200 transition-colors" />
-                            </div>
-                            <div>
-                                <h3 className="text-2xl font-bold group-hover:text-green-400 group-active:text-green-200 transition-colors">{t('menu.practice.title')}</h3>
-                                <p className="text-gray-500 text-sm mt-1">{t('menu.practice.subtitle')}</p>
+                            <div className="absolute inset-0 bg-gradient-to-br from-green-500/14 via-green-500/6 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-active:opacity-100" />
+                            <div className="relative flex h-full flex-col items-start justify-between">
+                                <div className="rounded-full bg-green-500/20 p-3 transition-colors group-hover:bg-green-500/30 group-active:bg-green-500/40">
+                                    <Dumbbell className="h-7 w-7 text-green-400 transition-colors group-active:text-green-200" />
+                                </div>
+                                <div>
+                                    <h3 className="text-2xl font-bold transition-colors group-hover:text-green-400 group-active:text-green-200">{t('menu.practice.title')}</h3>
+                                    <p className="mt-2 text-sm text-gray-500">{t('menu.practice.subtitle')}</p>
+                                </div>
                             </div>
                         </button>
                     </motion.div>

@@ -12,7 +12,7 @@ interface InfiniteAdditionProps {
 }
 
 const TILE_COUNT = 9;
-const WRONG_COOLDOWN_MS = 400;
+const WRONG_COOLDOWN_MS = 500;
 
 const createTile = (rng: SeededRandom) => Math.floor(rng.next() * 9) + 1;
 
@@ -87,22 +87,12 @@ const InfiniteAddition: React.FC<InfiniteAdditionProps> = ({ seed, onScore, isPl
         setTargetPulseKey(0);
     }, [seed]);
 
-    const replaceTile = (index: number, sourceTiles: number[], remainingTarget: number | null = null, nextClearCount = clearCount) => {
+    const replaceTile = (index: number, sourceTiles: number[]) => {
         const rng = rngRef.current;
         if (!rng) return sourceTiles;
 
-        for (let attempt = 0; attempt < 20; attempt += 1) {
-            const candidate = sourceTiles.map((value, tileIndex) => (
-                tileIndex === index ? createTile(rng) : value
-            ));
-
-            if (remainingTarget === null || canReachTarget(remainingTarget, candidate, nextClearCount)) {
-                return candidate;
-            }
-        }
-
         return sourceTiles.map((value, tileIndex) => (
-            tileIndex === index ? Math.min(9, Math.max(1, remainingTarget || createTile(rng))) : value
+            tileIndex === index ? createTile(rng) : value
         ));
     };
 
@@ -112,8 +102,7 @@ const InfiniteAddition: React.FC<InfiniteAdditionProps> = ({ seed, onScore, isPl
 
         const addedValue = tiles[index];
         const nextCurrentValue = currentValue + addedValue;
-        const nextRemainingTarget = targetValue - nextCurrentValue;
-        const nextTiles = replaceTile(index, tiles, nextRemainingTarget > 0 ? nextRemainingTarget : null);
+        const nextTiles = replaceTile(index, tiles);
 
         setTiles(nextTiles);
         setCurrentValue(nextCurrentValue);
@@ -203,8 +192,12 @@ const InfiniteAddition: React.FC<InfiniteAdditionProps> = ({ seed, onScore, isPl
                             handleTilePress(index);
                         }}
                         animate={
-                            wrongTileIndex === index
-                                ? { x: [-5, 5, -5, 5, 0], backgroundColor: '#ef4444' }
+                            wrongTileIndex !== null
+                                ? {
+                                    x: wrongTileIndex === index ? [-5, 5, -5, 5, 0] : 0,
+                                    backgroundColor: '#ef4444',
+                                    borderColor: '#7f1d1d',
+                                }
                                 : {}
                         }
                         whileTap={{ scale: 0.94 }}

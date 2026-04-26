@@ -23,7 +23,9 @@
     },
     "exitAppTitle": "App beenden",
     "exitAppConfirm": "Möchtest du die App beenden?",
-    "open": "Öffnen"
+    "open": "Öffnen",
+    "exit": "Beenden",
+    "start": "Start"
   },
   "auth": {
     "loginRequired": "Anmeldung erforderlich.",
@@ -116,7 +118,11 @@
     "settings": "Einstellungen",
     "login": "Anmelden",
     "logout": "Abmelden",
-    "profile": "Profil"
+    "profile": "Profil",
+    "solo": {
+      "title": "Solo-Modus",
+      "subtitle": "Spiele zufällige Minispiele allein"
+    }
   },
   "shop": {
     "title": "Shop",
@@ -635,7 +641,8 @@
     "noNotesDesc": "Für den Übungsmodus brauchst du Übungsnotizen.",
     "watchAdForNotes": "Werbung für Übungsnotizen ansehen",
     "goToShopForNotes": "Im Shop kaufen",
-    "waitForRecharge": "Warten"
+    "waitForRecharge": "Warten",
+    "noEnabledGames": "Derzeit sind keine Übungsspiele verfügbar."
   },
   "update": {
     "title": "Update erforderlich",
@@ -653,7 +660,7 @@
     "levelUp": "LEVEL UP!",
     "hideAnnouncementToday": "Heute nicht mehr anzeigen",
     "noPencilTitle": "Dir fehlen Stifte",
-    "noPencilDesc": "Für den Normal-/Rangmodus brauchst du Stifte.",
+    "noPencilDesc": "Für den Normal-/Rang-/Solo-Modus brauchst du Stifte.",
     "nextPencilIn": "Nächster Stift in {{time}}",
     "watchAdForPencil": "Werbung ansehen",
     "goToShopForPencil": "Im Shop kaufen",
@@ -689,5 +696,30 @@
     "claimed": "Claimed",
     "claimSuccess": "Reward claimed. (+{{pencils}} pencils, +{{notes}} practice notes)",
     "claimBlockedPencilsFull": "Du kannst dies nicht einlösen, solange du 5 oder mehr Stifte hast. Bitte verbrauche zuerst Stifte."
+  },
+  "solo": {
+    "complete": "Solo abgeschlossen!",
+    "resultTitle": "Solo-Ergebnis",
+    "gameLabel": "Spiel",
+    "topPercent": "Top %",
+    "topPercentValue": "Top {{percent}}%",
+    "percentileUnlocked": "Top % freigeschaltet",
+    "percentileSaving": "Nach dem Speichern verfügbar",
+    "unlockPercentileCta": "Werbung ansehen, um Top % zu sehen",
+    "percentileHint": "Sieh eine Werbung an, um die Top-%-Werte aller drei Spiele aufzudecken.",
+    "percentileUnavailable": "Wird berechnet",
+    "percentileLocked": "Gesperrt",
+    "nextGame": "Nächstes Spiel",
+    "saved": "Gespeichert",
+    "saving": "Wird gespeichert...",
+    "exitConfirmTitle": "Solo-Modus beenden?",
+    "exitConfirmMessage": "Wenn du jetzt gehst, wird dieser Solo-Lauf beendet und der verbrauchte Stift nicht zurückerstattet.",
+    "newHighscore": "Neuer Rekord",
+    "percentileAdTitle": "Top-% freischalten",
+    "percentileAdDesc": "Sieh dir eine kurze Anzeige an, um die Top-% für alle 3 Spiele zu sehen.",
+    "percentileAdFreeDesc": "Werbefreie Belohnung. Zeige die Top-% für alle 3 Spiele sofort an.",
+    "percentileAdClaim": "Top-% anzeigen",
+    "percentileRewardLabel": "Top-%",
+    "percentileRewardHeadline": "Top-% für alle 3 Spiele freigeschaltet!"
   }
 }

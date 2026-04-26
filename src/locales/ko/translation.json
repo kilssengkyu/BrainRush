@@ -23,7 +23,9 @@
     },
     "exitAppTitle": "앱 종료",
     "exitAppConfirm": "앱을 종료하시겠습니까?",
-    "open": "열기"
+    "open": "열기",
+    "exit": "나가기",
+    "start": "시작"
   },
   "auth": {
     "loginRequired": "로그인이 필요합니다.",
@@ -116,7 +118,11 @@
     "login": "로그인",
     "logout": "로그아웃",
     "profile": "프로필",
-    "all": "All"
+    "all": "All",
+    "solo": {
+      "title": "혼자하기",
+      "subtitle": "랜덤 미니게임을 혼자 즐겨보세요"
+    }
   },
   "shop": {
     "title": "상점",
@@ -438,7 +444,7 @@
     "levelUp": "레벨 업!",
     "hideAnnouncementToday": "오늘 다시 보지 않기",
     "noPencilTitle": "연필이 부족해요",
-    "noPencilDesc": "일반/랭크 모드를 플레이하려면 연필이 필요합니다.",
+    "noPencilDesc": "일반/랭크/혼자하기 모드를 플레이하려면 연필이 필요합니다.",
     "nextPencilIn": "다음 연필 충전까지 {{time}}",
     "watchAdForPencil": "광고 보기",
     "goToShopForPencil": "상점에서 구매하기",
@@ -654,7 +660,8 @@
     "noNotesDesc": "연습모드를 플레이하려면 연습노트가 필요합니다.",
     "watchAdForNotes": "연습노트 광고보기",
     "goToShopForNotes": "상점에서 구매하기",
-    "waitForRecharge": "기다리기"
+    "waitForRecharge": "기다리기",
+    "noEnabledGames": "현재 이용 가능한 연습 게임이 없습니다."
   },
   "update": {
     "title": "업데이트 필요",
@@ -693,5 +700,30 @@
     "claimed": "수령 완료",
     "claimSuccess": "보상을 수령했습니다. (+{{pencils}} 연필, +{{notes}} 연습노트)",
     "claimBlockedPencilsFull": "연필이 5개 이상이면 수령할 수 없습니다. 먼저 연필을 사용해 주세요."
+  },
+  "solo": {
+    "complete": "혼자하기 완료!",
+    "resultTitle": "혼자하기 결과",
+    "gameLabel": "게임",
+    "topPercent": "상위 %",
+    "topPercentValue": "상위 {{percent}}%",
+    "percentileUnlocked": "상위 % 공개 완료",
+    "percentileSaving": "기록 저장 후 확인 가능",
+    "unlockPercentileCta": "광고 보고 상위 % 확인",
+    "percentileHint": "광고 한 번으로 세 게임의 상위 %를 모두 볼 수 있어요.",
+    "percentileUnavailable": "집계 중",
+    "percentileLocked": "잠금",
+    "nextGame": "다음 게임",
+    "saved": "저장 완료",
+    "saving": "저장 중...",
+    "exitConfirmTitle": "혼자하기를 종료할까요?",
+    "exitConfirmMessage": "지금 나가면 이번 혼자하기는 종료되며, 사용한 연필은 반환되지 않습니다.",
+    "newHighscore": "신기록",
+    "percentileAdTitle": "상위 % 해금",
+    "percentileAdDesc": "짧은 광고를 보고 세 게임의 상위 %를 모두 확인하세요.",
+    "percentileAdFreeDesc": "광고 없이 세 게임의 상위 %를 바로 확인합니다.",
+    "percentileAdClaim": "상위 % 확인",
+    "percentileRewardLabel": "상위 %",
+    "percentileRewardHeadline": "세 게임의 상위 %가 공개됐어요!"
   }
 }

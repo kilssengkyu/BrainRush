@@ -23,7 +23,9 @@
     },
     "exitAppTitle": "Exit App",
     "exitAppConfirm": "Do you want to exit the app?",
-    "open": "Open"
+    "open": "Open",
+    "exit": "Exit",
+    "start": "Start"
   },
   "auth": {
     "loginRequired": "Login required.",
@@ -116,7 +118,11 @@
     "settings": "Settings",
     "login": "Login",
     "logout": "Logout",
-    "profile": "Profile"
+    "profile": "Profile",
+    "solo": {
+      "title": "Solo Mode",
+      "subtitle": "Play a random set of minigames on your own"
+    }
   },
   "shop": {
     "title": "Shop",
@@ -438,7 +444,7 @@
     "levelUp": "LEVEL UP!",
     "hideAnnouncementToday": "Don't show again today",
     "noPencilTitle": "You're out of pencils",
-    "noPencilDesc": "You need pencils to play Normal/Rank mode.",
+    "noPencilDesc": "You need pencils to play Normal/Rank/Solo mode.",
     "nextPencilIn": "Next pencil in {{time}}",
     "watchAdForPencil": "Watch Ad",
     "goToShopForPencil": "Buy in Shop",
@@ -654,7 +660,8 @@
     "noNotesDesc": "You need Practice Notes to play Practice mode.",
     "watchAdForNotes": "Watch Ad for Practice Notes",
     "goToShopForNotes": "Buy in Shop",
-    "waitForRecharge": "Wait"
+    "waitForRecharge": "Wait",
+    "noEnabledGames": "No practice games are available right now."
   },
   "update": {
     "title": "Update Required",
@@ -693,5 +700,30 @@
     "claimed": "Claimed",
     "claimSuccess": "Reward claimed. (+{{pencils}} pencils, +{{notes}} practice notes)",
     "claimBlockedPencilsFull": "You can't claim this while you have 5 or more pencils. Please use pencils first."
+  },
+  "solo": {
+    "complete": "Solo Complete!",
+    "resultTitle": "Solo Results",
+    "gameLabel": "Game",
+    "topPercent": "Top %",
+    "topPercentValue": "Top {{percent}}%",
+    "percentileUnlocked": "Top % revealed",
+    "percentileSaving": "Available after save",
+    "unlockPercentileCta": "Watch ad to reveal Top %",
+    "percentileHint": "Watch one ad to reveal the Top % for all three games.",
+    "percentileUnavailable": "Calculating",
+    "percentileLocked": "Locked",
+    "nextGame": "Next Game",
+    "saved": "Saved",
+    "saving": "Saving...",
+    "exitConfirmTitle": "Leave Solo Mode?",
+    "exitConfirmMessage": "If you leave now, this solo run will end and the pencil you used will not be refunded.",
+    "newHighscore": "New Record",
+    "percentileAdTitle": "Unlock Top %",
+    "percentileAdDesc": "Watch a short ad to reveal the Top % for all 3 games.",
+    "percentileAdFreeDesc": "Ad-free reward. Reveal the Top % for all 3 games instantly.",
+    "percentileAdClaim": "Reveal Top %",
+    "percentileRewardLabel": "Top %",
+    "percentileRewardHeadline": "Top % unlocked for all 3 games!"
   }
 }

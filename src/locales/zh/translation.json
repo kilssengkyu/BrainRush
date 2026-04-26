@@ -19,7 +19,9 @@
     },
     "exitAppTitle": "退出应用",
     "exitAppConfirm": "要退出应用吗？",
-    "open": "打开"
+    "open": "打开",
+    "exit": "離開",
+    "start": "開始"
   },
   "auth": {
     "loginRequired": "需要登录。",
@@ -62,7 +64,11 @@
     "login": "登录",
     "logout": "登出",
     "profile": "个人资料",
-    "all": "All"
+    "all": "All",
+    "solo": {
+      "title": "單人模式",
+      "subtitle": "獨自遊玩隨機迷你遊戲"
+    }
   },
   "shop": {
     "title": "商店",
@@ -631,7 +637,8 @@
     "noNotesDesc": "遊玩練習模式需要練習筆記。",
     "watchAdForNotes": "觀看廣告獲取練習筆記",
     "goToShopForNotes": "前往商店購買",
-    "waitForRecharge": "等待"
+    "waitForRecharge": "等待",
+    "noEnabledGames": "目前沒有可用的練習遊戲。"
   },
   "update": {
     "title": "需要更新",
@@ -649,7 +656,7 @@
     "levelUp": "LEVEL UP!",
     "hideAnnouncementToday": "今日不再显示",
     "noPencilTitle": "鉛筆不足",
-    "noPencilDesc": "遊玩一般/排位模式需要鉛筆。",
+    "noPencilDesc": "遊玩一般/排位/單人模式需要鉛筆。",
     "nextPencilIn": "下一支鉛筆充能還需 {{time}}",
     "watchAdForPencil": "觀看廣告",
     "goToShopForPencil": "前往商店購買",
@@ -689,5 +696,30 @@
     "claimed": "已領取",
     "claimSuccess": "獎勵已領取。(+{{pencils}} 鉛筆, +{{notes}} 練習筆記)",
     "claimBlockedPencilsFull": "當鉛筆達到5支或以上時無法領取。請先使用鉛筆。"
+  },
+  "solo": {
+    "complete": "單人模式完成！",
+    "resultTitle": "單人結果",
+    "gameLabel": "遊戲",
+    "topPercent": "前 %",
+    "topPercentValue": "前 {{percent}}%",
+    "percentileUnlocked": "前 % 已公開",
+    "percentileSaving": "儲存紀錄後可查看",
+    "unlockPercentileCta": "觀看廣告查看前 %",
+    "percentileHint": "觀看一次廣告即可查看三個遊戲的前 %。",
+    "percentileUnavailable": "統計中",
+    "percentileLocked": "已鎖定",
+    "nextGame": "下一個遊戲",
+    "saved": "已儲存",
+    "saving": "儲存中...",
+    "exitConfirmTitle": "要結束單人模式嗎？",
+    "exitConfirmMessage": "如果現在離開，本次單人模式將結束，已消耗的鉛筆不會退還。",
+    "newHighscore": "新紀錄",
+    "percentileAdTitle": "解鎖前%排名",
+    "percentileAdDesc": "觀看一段短廣告，查看全部 3 個遊戲的前%排名。",
+    "percentileAdFreeDesc": "免廣告獎勵。立即查看全部 3 個遊戲的前%排名。",
+    "percentileAdClaim": "查看前%排名",
+    "percentileRewardLabel": "前%排名",
+    "percentileRewardHeadline": "已解鎖全部 3 個遊戲的前%排名！"
   }
 }

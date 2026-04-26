@@ -23,7 +23,9 @@
     },
     "exitAppTitle": "Quitter l'application",
     "exitAppConfirm": "Voulez-vous quitter l'application ?",
-    "open": "Ouvrir"
+    "open": "Ouvrir",
+    "exit": "Quitter",
+    "start": "Commencer"
   },
   "auth": {
     "loginRequired": "Connexion requise.",
@@ -116,7 +118,11 @@
     "settings": "Paramètres",
     "login": "Connexion",
     "logout": "Déconnexion",
-    "profile": "Profil"
+    "profile": "Profil",
+    "solo": {
+      "title": "Mode Solo",
+      "subtitle": "Jouez seul à une sélection aléatoire de mini-jeux"
+    }
   },
   "shop": {
     "title": "Boutique",
@@ -635,7 +641,8 @@
     "noNotesDesc": "Vous avez besoin de notes d'entraînement pour jouer en mode Entraînement.",
     "watchAdForNotes": "Regarder une pub pour des notes",
     "goToShopForNotes": "Acheter dans la boutique",
-    "waitForRecharge": "Attendre"
+    "waitForRecharge": "Attendre",
+    "noEnabledGames": "Aucun jeu d’entraînement n’est disponible pour le moment."
   },
   "update": {
     "title": "Mise à jour requise",
@@ -653,7 +660,7 @@
     "levelUp": "LEVEL UP!",
     "hideAnnouncementToday": "Ne plus afficher aujourd'hui",
     "noPencilTitle": "Plus de crayons",
-    "noPencilDesc": "Vous avez besoin de crayons pour jouer en mode Normal/Classé.",
+    "noPencilDesc": "Vous avez besoin de crayons pour jouer en mode Normal/Classé/Solo.",
     "nextPencilIn": "Prochain crayon dans {{time}}",
     "watchAdForPencil": "Regarder une pub",
     "goToShopForPencil": "Acheter dans la boutique",
@@ -689,5 +696,30 @@
     "claimed": "Claimed",
     "claimSuccess": "Reward claimed. (+{{pencils}} pencils, +{{notes}} practice notes)",
     "claimBlockedPencilsFull": "Vous ne pouvez pas recuperer ceci tant que vous avez 5 crayons ou plus. Utilisez d'abord des crayons."
+  },
+  "solo": {
+    "complete": "Mode Solo terminé !",
+    "resultTitle": "Résultats Solo",
+    "gameLabel": "Jeu",
+    "topPercent": "Top %",
+    "topPercentValue": "Top {{percent}}%",
+    "percentileUnlocked": "Top % révélé",
+    "percentileSaving": "Disponible après l’enregistrement",
+    "unlockPercentileCta": "Regarder une pub pour révéler le Top %",
+    "percentileHint": "Regardez une pub pour révéler le Top % des trois jeux.",
+    "percentileUnavailable": "Calcul en cours",
+    "percentileLocked": "Verrouillé",
+    "nextGame": "Jeu suivant",
+    "saved": "Enregistré",
+    "saving": "Enregistrement...",
+    "exitConfirmTitle": "Quitter le mode Solo ?",
+    "exitConfirmMessage": "Si vous quittez maintenant, cette partie solo prendra fin et le crayon utilisé ne sera pas remboursé.",
+    "newHighscore": "Nouveau record",
+    "percentileAdTitle": "Debloquer le Top %",
+    "percentileAdDesc": "Regardez une courte pub pour reveler le Top % des 3 jeux.",
+    "percentileAdFreeDesc": "Recompense sans pub. Revelez instantanement le Top % des 3 jeux.",
+    "percentileAdClaim": "Reveler le Top %",
+    "percentileRewardLabel": "Top %",
+    "percentileRewardHeadline": "Top % debloque pour les 3 jeux !"
   }
 }

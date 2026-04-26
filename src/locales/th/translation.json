@@ -23,7 +23,9 @@
     },
     "exitAppTitle": "ออกจากแอป",
     "exitAppConfirm": "ต้องการออกจากแอปหรือไม่?",
-    "open": "เปิด"
+    "open": "เปิด",
+    "exit": "ออก",
+    "start": "เริ่ม"
   },
   "auth": {
     "loginRequired": "ต้องเข้าสู่ระบบ",
@@ -116,7 +118,11 @@
     "settings": "ตั้งค่า",
     "login": "เข้าสู่ระบบ",
     "logout": "ออกจากระบบ",
-    "profile": "โปรไฟล์"
+    "profile": "โปรไฟล์",
+    "solo": {
+      "title": "โหมดเดี่ยว",
+      "subtitle": "เล่นมินิเกมแบบสุ่มคนเดียว"
+    }
   },
   "shop": {
     "title": "ร้านค้า",
@@ -635,7 +641,8 @@
     "noNotesDesc": "ต้องใช้โน้ตฝึกซ้อมเพื่อเล่นโหมดฝึกซ้อม",
     "watchAdForNotes": "ดูโฆษณาเพื่อรับโน้ตฝึกซ้อม",
     "goToShopForNotes": "ซื้อที่ร้านค้า",
-    "waitForRecharge": "รอ"
+    "waitForRecharge": "รอ",
+    "noEnabledGames": "ขณะนี้ยังไม่มีเกมฝึกซ้อมที่ใช้งานได้"
   },
   "update": {
     "title": "จำเป็นต้องอัปเดต",
@@ -653,7 +660,7 @@
     "levelUp": "LEVEL UP!",
     "hideAnnouncementToday": "วันนี้ไม่ต้องแสดงอีก",
     "noPencilTitle": "ดินสอไม่พอ",
-    "noPencilDesc": "ต้องใช้ดินสอเพื่อเล่นโหมดทั่วไป/แรงค์",
+    "noPencilDesc": "ต้องใช้ดินสอเพื่อเล่นโหมดทั่วไป/แรงค์/เล่นคนเดียว",
     "nextPencilIn": "ดินสอแท่งถัดไปในอีก {{time}}",
     "watchAdForPencil": "ดูโฆษณา",
     "goToShopForPencil": "ซื้อที่ร้านค้า",
@@ -689,5 +696,30 @@
     "claimed": "Claimed",
     "claimSuccess": "Reward claimed. (+{{pencils}} pencils, +{{notes}} practice notes)",
     "claimBlockedPencilsFull": "คุณไม่สามารถรับได้เมื่อมีดินสอ 5 แท่งขึ้นไป โปรดใช้ดินสอก่อน"
+  },
+  "solo": {
+    "complete": "จบโหมดเดี่ยว!",
+    "resultTitle": "ผลโหมดเดี่ยว",
+    "gameLabel": "เกม",
+    "topPercent": "ท็อป %",
+    "topPercentValue": "ท็อป {{percent}}%",
+    "percentileUnlocked": "เปิดดูท็อป % แล้ว",
+    "percentileSaving": "ดูได้หลังบันทึก",
+    "unlockPercentileCta": "ดูโฆษณาเพื่อดูท็อป %",
+    "percentileHint": "ดูโฆษณา 1 ครั้งเพื่อเปิดดูท็อป % ของทั้ง 3 เกม",
+    "percentileUnavailable": "กำลังคำนวณ",
+    "percentileLocked": "ล็อก",
+    "nextGame": "เกมถัดไป",
+    "saved": "บันทึกแล้ว",
+    "saving": "กำลังบันทึก...",
+    "exitConfirmTitle": "ออกจากโหมดเดี่ยวหรือไม่?",
+    "exitConfirmMessage": "หากออกตอนนี้ การเล่นเดี่ยวรอบนี้จะจบลง และดินสอที่ใช้ไปจะไม่ถูกคืน",
+    "newHighscore": "สถิติใหม่",
+    "percentileAdTitle": "ปลดล็อก Top %",
+    "percentileAdDesc": "ดูโฆษณาสั้นๆ เพื่อเปิดเผย Top % ของทั้ง 3 เกม",
+    "percentileAdFreeDesc": "รางวัลแบบไม่มีโฆษณา เปิดเผย Top % ของทั้ง 3 เกมทันที",
+    "percentileAdClaim": "เปิดเผย Top %",
+    "percentileRewardLabel": "Top %",
+    "percentileRewardHeadline": "ปลดล็อก Top % ของทั้ง 3 เกมแล้ว!"
   }
 }

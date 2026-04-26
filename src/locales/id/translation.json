@@ -23,7 +23,9 @@
     },
     "exitAppTitle": "Keluar Aplikasi",
     "exitAppConfirm": "Apakah Anda ingin keluar dari aplikasi?",
-    "open": "Buka"
+    "open": "Buka",
+    "exit": "Keluar",
+    "start": "Mulai"
   },
   "auth": {
     "loginRequired": "Login diperlukan.",
@@ -116,7 +118,11 @@
     "settings": "Pengaturan",
     "login": "Masuk",
     "logout": "Keluar",
-    "profile": "Profil"
+    "profile": "Profil",
+    "solo": {
+      "title": "Mode Solo",
+      "subtitle": "Mainkan kumpulan minigame acak sendirian"
+    }
   },
   "shop": {
     "title": "Toko",
@@ -635,7 +641,8 @@
     "noNotesDesc": "Kamu butuh catatan latihan untuk bermain mode Latihan.",
     "watchAdForNotes": "Tonton iklan untuk catatan latihan",
     "goToShopForNotes": "Beli di toko",
-    "waitForRecharge": "Tunggu"
+    "waitForRecharge": "Tunggu",
+    "noEnabledGames": "Saat ini tidak ada game latihan yang tersedia."
   },
   "update": {
     "title": "Pembaruan Diperlukan",
@@ -653,7 +660,7 @@
     "levelUp": "LEVEL UP!",
     "hideAnnouncementToday": "Jangan tampilkan lagi hari ini",
     "noPencilTitle": "Pensil habis",
-    "noPencilDesc": "Kamu butuh pensil untuk bermain mode Normal/Rank.",
+    "noPencilDesc": "Kamu butuh pensil untuk bermain mode Normal/Rank/Solo.",
     "nextPencilIn": "Pensil berikutnya dalam {{time}}",
     "watchAdForPencil": "Tonton iklan",
     "goToShopForPencil": "Beli di toko",
@@ -689,5 +696,30 @@
     "claimed": "Claimed",
     "claimSuccess": "Reward claimed. (+{{pencils}} pencils, +{{notes}} practice notes)",
     "claimBlockedPencilsFull": "Kamu tidak dapat mengklaim ini saat memiliki 5 atau lebih pensil. Gunakan pensil terlebih dahulu."
+  },
+  "solo": {
+    "complete": "Solo selesai!",
+    "resultTitle": "Hasil Solo",
+    "gameLabel": "Game",
+    "topPercent": "Top %",
+    "topPercentValue": "Top {{percent}}%",
+    "percentileUnlocked": "Top % terbuka",
+    "percentileSaving": "Tersedia setelah disimpan",
+    "unlockPercentileCta": "Tonton iklan untuk melihat Top %",
+    "percentileHint": "Tonton satu iklan untuk membuka Top % dari ketiga game.",
+    "percentileUnavailable": "Menghitung",
+    "percentileLocked": "Terkunci",
+    "nextGame": "Game Berikutnya",
+    "saved": "Tersimpan",
+    "saving": "Menyimpan...",
+    "exitConfirmTitle": "Keluar dari mode Solo?",
+    "exitConfirmMessage": "Jika keluar sekarang, permainan solo ini akan berakhir dan pensil yang sudah dipakai tidak akan dikembalikan.",
+    "newHighscore": "Rekor Baru",
+    "percentileAdTitle": "Buka Top %",
+    "percentileAdDesc": "Tonton iklan singkat untuk melihat Top % dari semua 3 game.",
+    "percentileAdFreeDesc": "Hadiah tanpa iklan. Lihat Top % dari semua 3 game sekarang.",
+    "percentileAdClaim": "Lihat Top %",
+    "percentileRewardLabel": "Top %",
+    "percentileRewardHeadline": "Top % untuk semua 3 game terbuka!"
   }
 }

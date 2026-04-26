@@ -19,7 +19,9 @@
     },
     "exitAppTitle": "アプリ終了",
     "exitAppConfirm": "アプリを終了しますか？",
-    "open": "開く"
+    "open": "開く",
+    "exit": "終了",
+    "start": "スタート"
   },
   "auth": {
     "loginRequired": "ログインが必要です。",
@@ -62,7 +64,11 @@
     "login": "ログイン",
     "logout": "ログアウト",
     "profile": "プロフィール",
-    "all": "All"
+    "all": "All",
+    "solo": {
+      "title": "ひとりプレイ",
+      "subtitle": "ランダムなミニゲームをひとりで楽しもう"
+    }
   },
   "shop": {
     "title": "ショップ",
@@ -631,7 +637,8 @@
     "noNotesDesc": "練習モードをプレイするには練習ノートが必要です。",
     "watchAdForNotes": "練習ノートの広告を見る",
     "goToShopForNotes": "ショップで購入",
-    "waitForRecharge": "待つ"
+    "waitForRecharge": "待つ",
+    "noEnabledGames": "現在利用できる練習ゲームはありません。"
   },
   "update": {
     "title": "アップデートが必要です",
@@ -649,7 +656,7 @@
     "levelUp": "LEVEL UP!",
     "hideAnnouncementToday": "今日は表示しない",
     "noPencilTitle": "鉛筆が足りません",
-    "noPencilDesc": "ノーマル/ランクモードをプレイするには鉛筆が必要です。",
+    "noPencilDesc": "ノーマル/ランク/ひとりプレイモードをプレイするには鉛筆が必要です。",
     "nextPencilIn": "次の鉛筆まで {{time}}",
     "watchAdForPencil": "広告を見る",
     "goToShopForPencil": "ショップで購入",
@@ -689,5 +696,30 @@
     "claimed": "受け取り済み",
     "claimSuccess": "報酬を受け取りました。(+{{pencils}} 鉛筆, +{{notes}} 練習ノート)",
     "claimBlockedPencilsFull": "鉛筆が5本以上ある間は受け取れません。先に鉛筆を使ってください。"
+  },
+  "solo": {
+    "complete": "ひとりプレイ完了！",
+    "resultTitle": "ひとりプレイ結果",
+    "gameLabel": "ゲーム",
+    "topPercent": "上位 %",
+    "topPercentValue": "上位 {{percent}}%",
+    "percentileUnlocked": "上位 % を公開しました",
+    "percentileSaving": "記録保存後に確認できます",
+    "unlockPercentileCta": "広告を見て上位 % を確認",
+    "percentileHint": "広告を1回見ると、3つのゲームすべての上位 % を確認できます。",
+    "percentileUnavailable": "集計中",
+    "percentileLocked": "ロック",
+    "nextGame": "次のゲーム",
+    "saved": "保存完了",
+    "saving": "保存中...",
+    "exitConfirmTitle": "ひとりプレイを終了しますか？",
+    "exitConfirmMessage": "今終了すると今回のひとりプレイは終了し、使用した鉛筆は返却されません。",
+    "newHighscore": "新記録",
+    "percentileAdTitle": "上位%を解放",
+    "percentileAdDesc": "短い広告を見ると、3つのゲームすべての上位%を確認できます。",
+    "percentileAdFreeDesc": "広告なし報酬。3つのゲームすべての上位%をすぐに表示します。",
+    "percentileAdClaim": "上位%を表示",
+    "percentileRewardLabel": "上位%",
+    "percentileRewardHeadline": "3つのゲームすべての上位%を解放しました！"
   }
 }

@@ -14,7 +14,7 @@ interface AdModalProps {
     adRemaining?: number;
     adLimit?: number;
     adsRemoved?: boolean;
-    variant?: 'pencils' | 'practice_notes';
+    variant?: 'pencils' | 'practice_notes' | 'solo_percentile';
 }
 
 const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemaining, adLimit, adsRemoved, variant = 'pencils' }) => {
@@ -25,7 +25,7 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
     const [timeLeft, setTimeLeft] = useState(5);
     const hasLimit = typeof adRemaining === 'number' && typeof adLimit === 'number';
     const isLimitReached = hasLimit && adRemaining <= 0;
-    const rewardAmount = variant === 'practice_notes' ? 2 : 1;
+    const rewardAmount = variant === 'practice_notes' ? 2 : variant === 'solo_percentile' ? null : 1;
     const copy = variant === 'practice_notes'
         ? {
             titleKey: 'ad.titlePracticeNotes',
@@ -46,6 +46,26 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
                 />
             )
         }
+        : variant === 'solo_percentile'
+            ? {
+                titleKey: 'solo.percentileAdTitle',
+                titleFallback: 'Unlock Top %',
+                watchDescKey: 'solo.percentileAdDesc',
+                watchDescFallback: 'Watch a short ad to reveal the top percentage for all 3 games.',
+                adFreeDescKey: 'solo.percentileAdFreeDesc',
+                adFreeDescFallback: 'Ad-free reward. Reveal the top percentage for all 3 games instantly.',
+                claimBtnKey: 'solo.percentileAdClaim',
+                claimBtnFallback: 'Reveal Top %',
+                rewardLabelKey: 'solo.percentileRewardLabel',
+                rewardLabelFallback: 'Top %',
+                rewardHeadlineKey: 'solo.percentileRewardHeadline',
+                rewardHeadlineFallback: 'Top % unlocked for all 3 games!',
+                rewardIcon: (
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-400 text-lg font-black text-slate-950">
+                        %
+                    </div>
+                )
+            }
         : {
             titleKey: 'ad.title',
             titleFallback: 'Get Pencils',
@@ -235,7 +255,7 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+                    className="fixed inset-0 z-[90] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
                 >
                     <motion.div
                         initial={{ scale: 0.9, y: 20 }}
@@ -348,7 +368,9 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
                                         {copy.rewardIcon}
                                     </div>
                                     <h4 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
-                                        +{rewardAmount} {t(copy.rewardLabelKey, copy.rewardLabelFallback)}!
+                                        {'rewardHeadlineKey' in copy
+                                            ? t(copy.rewardHeadlineKey ?? 'ad.success', copy.rewardHeadlineFallback ?? 'Reward earned successfully!')
+                                            : `+${rewardAmount} ${t(copy.rewardLabelKey, copy.rewardLabelFallback)}!`}
                                     </h4>
                                     <p className="text-slate-500 dark:text-gray-400 mb-6">
                                         {rewardedByNoFill

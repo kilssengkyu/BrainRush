@@ -23,7 +23,9 @@
     },
     "exitAppTitle": "Sair do app",
     "exitAppConfirm": "Deseja sair do app?",
-    "open": "Abrir"
+    "open": "Abrir",
+    "exit": "Sair",
+    "start": "Começar"
   },
   "auth": {
     "loginRequired": "Login obrigatório.",
@@ -116,7 +118,11 @@
     "settings": "Configurações",
     "login": "Entrar",
     "logout": "Sair",
-    "profile": "Perfil"
+    "profile": "Perfil",
+    "solo": {
+      "title": "Modo Solo",
+      "subtitle": "Jogue uma seleção aleatória de minijogos sozinho"
+    }
   },
   "shop": {
     "title": "Loja",
@@ -635,7 +641,8 @@
     "noNotesDesc": "Você precisa de notas de treino para jogar no modo Prática.",
     "watchAdForNotes": "Ver anúncio por notas de treino",
     "goToShopForNotes": "Comprar na loja",
-    "waitForRecharge": "Aguardar"
+    "waitForRecharge": "Aguardar",
+    "noEnabledGames": "Nenhum jogo de treino está disponível no momento."
   },
   "update": {
     "title": "Atualização Necessária",
@@ -653,7 +660,7 @@
     "levelUp": "LEVEL UP!",
     "hideAnnouncementToday": "Não mostrar novamente hoje",
     "noPencilTitle": "Sem lápis",
-    "noPencilDesc": "Você precisa de lápis para jogar no modo Normal/Rank.",
+    "noPencilDesc": "Você precisa de lápis para jogar no modo Normal/Rank/Solo.",
     "nextPencilIn": "Próximo lápis em {{time}}",
     "watchAdForPencil": "Ver anúncio",
     "goToShopForPencil": "Comprar na loja",
@@ -689,5 +696,30 @@
     "claimed": "Claimed",
     "claimSuccess": "Reward claimed. (+{{pencils}} pencils, +{{notes}} practice notes)",
     "claimBlockedPencilsFull": "Voce nao pode resgatar isso enquanto tiver 5 ou mais lapis. Use lapis primeiro."
+  },
+  "solo": {
+    "complete": "Modo Solo concluído!",
+    "resultTitle": "Resultado Solo",
+    "gameLabel": "Jogo",
+    "topPercent": "Top %",
+    "topPercentValue": "Top {{percent}}%",
+    "percentileUnlocked": "Top % revelado",
+    "percentileSaving": "Disponível após salvar",
+    "unlockPercentileCta": "Assista a um anúncio para revelar o Top %",
+    "percentileHint": "Assista a um anúncio para revelar o Top % dos três jogos.",
+    "percentileUnavailable": "Calculando",
+    "percentileLocked": "Bloqueado",
+    "nextGame": "Próximo jogo",
+    "saved": "Salvo",
+    "saving": "Salvando...",
+    "exitConfirmTitle": "Sair do modo Solo?",
+    "exitConfirmMessage": "Se você sair agora, esta partida solo será encerrada e o lápis usado não será reembolsado.",
+    "newHighscore": "Novo recorde",
+    "percentileAdTitle": "Desbloquear Top %",
+    "percentileAdDesc": "Assista a um anúncio curto para revelar o Top % dos 3 jogos.",
+    "percentileAdFreeDesc": "Recompensa sem anúncios. Revele o Top % dos 3 jogos instantaneamente.",
+    "percentileAdClaim": "Revelar Top %",
+    "percentileRewardLabel": "Top %",
+    "percentileRewardHeadline": "Top % desbloqueado para os 3 jogos!"
   }
 }

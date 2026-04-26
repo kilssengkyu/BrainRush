@@ -61,7 +61,7 @@ const BOT_EMOJI_BURST = ['🙂', '😂', '👍'];
 const BOT_EMOJI_MIRROR = ['🙂', '😂', '👍', '❤️'];
 type BotEmojiPattern = 'burst' | 'mirror_count';
 
-const FINAL_ROUND_FINISHED_MS = 2000;
+const FINAL_ROUND_FINISHED_MS = 900;
 const REMATCH_WINDOW_MS = 30000;
 const BOT_EMOJI_FINAL_RESULT_AUTO_STOP_MS = 10000;
 
@@ -107,7 +107,7 @@ const Game: React.FC = () => {
 
     // BGM Control for timing-focused games
     useEffect(() => {
-        if (gameState.gameType === 'TIMING_BAR' || gameState.gameType === 'COLOR_TIMING') {
+        if (gameState.gameType === 'TIMING_BAR') {
             stopBGM();
         } else if (gameState.gameType) {
             playBGM('bgm_game');
@@ -308,7 +308,7 @@ const Game: React.FC = () => {
         my: requiredWins,
         op: requiredWins
     });
-    const [finishRevealDelayMs, setFinishRevealDelayMs] = useState(460);
+    const [finishRevealDelayMs, setFinishRevealDelayMs] = useState(220);
     const displayedLivesRef = useRef(displayedLives);
     const roundLifeFxRoundRef = useRef<string>('');
 
@@ -468,14 +468,14 @@ const Game: React.FC = () => {
 
     useEffect(() => {
         if (!isFinished) {
-            setFinishRevealDelayMs(460);
+            setFinishRevealDelayMs(220);
             return;
         }
 
         if (terminalRoundFinishedActive) return;
 
         if (gameState.mode === 'practice' || !gameState.winnerId || !myId) {
-            setFinishRevealDelayMs(460);
+            setFinishRevealDelayMs(220);
             return;
         }
 
@@ -483,7 +483,7 @@ const Game: React.FC = () => {
             ? 'op'
             : (gameState.winnerId === opponentId ? 'my' : null);
         if (!losingSide) {
-            setFinishRevealDelayMs(460);
+            setFinishRevealDelayMs(220);
             return;
         }
         const forceSideAllOff = () => {
@@ -499,13 +499,13 @@ const Game: React.FC = () => {
         const timers: number[] = [];
         let maxEnd = 0;
         for (let idx = 0; idx < requiredWins; idx++) {
-            const startAt = idx * 220 + Math.floor(Math.random() * 140);
-            const flickers = 8 + Math.floor(Math.random() * 5);
+            const startAt = idx * 90 + Math.floor(Math.random() * 60);
+            const flickers = 4 + Math.floor(Math.random() * 3);
             let cursor = startAt;
 
             for (let step = 0; step < flickers; step++) {
                 // Accelerate blink cadence for a "power dying" feel.
-                const interval = Math.max(38, 86 - step * 6) + Math.floor(Math.random() * 16);
+                const interval = Math.max(28, 58 - step * 7) + Math.floor(Math.random() * 10);
                 cursor += interval;
                 const at = cursor;
                 maxEnd = Math.max(maxEnd, at);
@@ -518,7 +518,7 @@ const Game: React.FC = () => {
                 }, at));
             }
 
-            const offAt = cursor + 120 + Math.floor(Math.random() * 70);
+            const offAt = cursor + 60 + Math.floor(Math.random() * 30);
             maxEnd = Math.max(maxEnd, offAt);
             timers.push(window.setTimeout(() => {
                 setBackdropHeartOn((prev) => {
@@ -529,7 +529,7 @@ const Game: React.FC = () => {
             }, offAt));
         }
 
-        setFinishRevealDelayMs(Math.max(760, maxEnd + 220));
+        setFinishRevealDelayMs(Math.max(260, maxEnd + 80));
         return () => {
             timers.forEach((timerId) => window.clearTimeout(timerId));
             forceSideAllOff();
@@ -1890,7 +1890,7 @@ const Game: React.FC = () => {
                                         <motion.button
                                             initial={{ opacity: 0, y: 20 }}
                                             animate={{ opacity: 1, y: 0 }}
-                                            transition={{ delay: 0.5 }}
+                                            transition={{ delay: 0.25 }}
                                             onClick={handleReturnMenu}
                                             className="px-8 py-4 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold text-xl transition-all shadow-lg hover:shadow-green-500/50"
                                         >
@@ -1941,7 +1941,7 @@ const Game: React.FC = () => {
                                             initial={{ scale: 5, opacity: 0, rotate: -10 }}
                                             animate={{ scale: 1, opacity: 1, rotate: 0 }}
                                             transition={{
-                                                delay: 0.2 + (gameState.roundScores.length + 1) * 0.4,
+                                                delay: 0.1,
                                                 type: "spring", stiffness: 200, damping: 15
                                             }}
                                             className="mb-8 w-full grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 md:gap-5"
@@ -2037,7 +2037,7 @@ const Game: React.FC = () => {
                                                         key={idx}
                                                         initial={{ opacity: 0, x: -50 }}
                                                         animate={{ opacity: 1, x: 0 }}
-                                                        transition={{ delay: 0.5 + idx * 0.4 }}
+                                                        transition={{ delay: 0.16 + idx * 0.1 }}
                                                         className="grid grid-cols-3 p-2 md:p-4 border-t border-white/5 items-center font-mono relative overflow-hidden"
                                                     >
                                                         {/* Background Bar */}
@@ -2046,14 +2046,14 @@ const Game: React.FC = () => {
                                                             <motion.div
                                                                 initial={{ width: 0 }}
                                                                 animate={{ width: `${myRatio}%` }}
-                                                                transition={{ delay: 0.5 + idx * 0.4, duration: 0.8, ease: "easeOut" }}
+                                                                transition={{ delay: 0.16 + idx * 0.1, duration: 0.45, ease: "easeOut" }}
                                                                 className="absolute left-0 top-0 h-full bg-blue-500"
                                                             />
                                                             {/* Right (Red) - Anchored Right */}
                                                             <motion.div
                                                                 initial={{ width: 0 }}
                                                                 animate={{ width: `${100 - myRatio}%` }}
-                                                                transition={{ delay: 0.5 + idx * 0.4, duration: 0.8, ease: "easeOut" }}
+                                                                transition={{ delay: 0.16 + idx * 0.1, duration: 0.45, ease: "easeOut" }}
                                                                 className="absolute right-0 top-0 h-full bg-red-500"
                                                             />
                                                         </div>
@@ -2066,9 +2066,9 @@ const Game: React.FC = () => {
                                             })}
                                             {/* TOTAL */}
                                             <motion.div
-                                                initial={{ opacity: 0, y: 20 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                transition={{ delay: 0.5 + gameState.roundScores.length * 0.4 }}
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: 0.22 + gameState.roundScores.length * 0.1 }}
                                                 className="grid grid-cols-3 p-2 md:p-4 bg-white/5 border-t-2 border-white/10 items-center font-mono"
                                             >
                                                 <div className="text-left pl-2 md:pl-4 text-yellow-400 font-black text-sm md:text-base">{t('game.total')}</div>
@@ -2080,9 +2080,9 @@ const Game: React.FC = () => {
                                         {/* Rank Result Animation */}
                                         {gameState.mode === 'rank' && displayMMR !== null && (
                                             <motion.div
-                                                initial={{ opacity: 0, height: 0 }}
-                                                animate={{ opacity: 1, height: 'auto' }}
-                                                transition={{ delay: 0.8 + gameState.roundScores.length * 0.4 }}
+                                            initial={{ opacity: 0, height: 0 }}
+                                            animate={{ opacity: 1, height: 'auto' }}
+                                                transition={{ delay: 0.3 + gameState.roundScores.length * 0.1 }}
                                                 className="mb-8 p-4 bg-white/10 rounded-xl border border-white/20 overflow-hidden"
                                             >
                                                 <div className="flex items-center justify-center gap-4 text-3xl font-black">
@@ -2092,7 +2092,7 @@ const Game: React.FC = () => {
                                                             <motion.div
                                                                 initial={{ opacity: 0, y: 10 }}
                                                                 animate={{ opacity: 1, y: 0 }}
-                                                                transition={{ delay: 0.5 }}
+                                                                transition={{ delay: 0.2 }}
                                                                 className={`text-2xl ${mmrDelta > 0 ? 'text-green-400' : 'text-red-400'}`}
                                                             >
                                                                 {mmrDelta > 0 ? `+${mmrDelta}` : mmrDelta}
@@ -2101,7 +2101,7 @@ const Game: React.FC = () => {
                                                                 <motion.div
                                                                     initial={{ opacity: 0, y: 5 }}
                                                                     animate={{ opacity: 1, y: 0 }}
-                                                                    transition={{ delay: 1.0 }}
+                                                                    transition={{ delay: 0.35 }}
                                                                     className="text-xs text-yellow-400 font-bold flex items-center gap-1"
                                                                 >
                                                                     🔥 {t('streak.bonusIncluded', '연승 보너스 +{{bonus}}', { bonus: streakBonus })}
@@ -2132,7 +2132,7 @@ const Game: React.FC = () => {
                                                 <motion.button
                                                     initial={{ opacity: 0, y: 20 }}
                                                     animate={{ opacity: 1, y: 0 }}
-                                                    transition={{ delay: 1.5 + (gameState.roundScores.length + 1) * 0.4 }}
+                                                    transition={{ delay: 0.38 + gameState.roundScores.length * 0.08 }}
                                                     onClick={handleRequestRematch}
                                                     disabled={!isButtonEnabled || isSubmittingRematch || isReturningToMenu || !!pendingRematchInviteId || isRematchClosed || !hasRematchPencils}
                                                     className={`w-full rounded-xl px-4 py-3 text-slate-900 dark:text-white transition-all ${!isButtonEnabled || isSubmittingRematch || isReturningToMenu || !!pendingRematchInviteId || isRematchClosed
@@ -2176,7 +2176,7 @@ const Game: React.FC = () => {
                                             <motion.button
                                                 initial={{ opacity: 0, y: 20 }}
                                                 animate={{ opacity: 1, y: 0 }}
-                                                transition={{ delay: 1.5 + (gameState.roundScores.length + 1) * 0.4 }}
+                                                transition={{ delay: 0.38 + gameState.roundScores.length * 0.08 }}
                                                 onClick={handleReturnMenu}
                                                 disabled={!isButtonEnabled || isReturningToMenu}
                                                 className={`w-full py-4 font-bold text-xl rounded-xl transition-all ${isButtonEnabled
