@@ -43,6 +43,7 @@ import { PRACTICE_GAMES } from '../content/practiceGames';
 import { supabase } from '../lib/supabaseClient';
 import { clearGameProgress } from '../hooks/usePanelProgress';
 import AdModal from '../components/ui/AdModal';
+import { logAnalyticsEvent } from '../lib/analytics';
 
 type SoloPhase = 'loading' | 'intro' | 'playing' | 'roundResult' | 'final';
 
@@ -488,6 +489,11 @@ const SoloGame: React.FC = () => {
             });
             if (error) throw error;
             if (data) setSoloRunId(String(data));
+            void logAnalyticsEvent('br_solo_end', {
+                rounds_played: finishedRounds.length,
+                total_score: payload.reduce((sum, round) => sum + round.score, 0),
+                game_types: payload.map((round) => round.game_type).join(','),
+            });
 
             await fetchHighscores();
         } catch (error) {
@@ -541,6 +547,12 @@ const SoloGame: React.FC = () => {
             const nextPercentiles = await fetchPercentiles(rounds);
             setPercentiles(nextPercentiles);
             setPercentilesUnlocked(true);
+            const percentileValues = Object.values(nextPercentiles).filter((value): value is number => typeof value === 'number' && Number.isFinite(value));
+            void logAnalyticsEvent('br_solo_percentile_unlock', {
+                games_count: rounds.length,
+                revealed_count: percentileValues.length,
+                best_top_percent: percentileValues.length > 0 ? Math.min(...percentileValues) : null,
+            });
 
             if (soloRunId) {
                 const { error } = await (supabase as any).rpc('unlock_solo_run_percentile', {

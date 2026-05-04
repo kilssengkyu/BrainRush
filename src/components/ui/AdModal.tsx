@@ -6,6 +6,7 @@ import { useSound } from '../../contexts/SoundContext';
 import { Capacitor } from '@capacitor/core';
 import { AdMob, RewardAdPluginEvents } from '@capacitor-community/admob';
 import { isNoFillError, primeRewardedAd, showRewardedAd } from '../../utils/rewardedAd';
+import { logAnalyticsEvent } from '../../lib/analytics';
 
 interface AdModalProps {
     isOpen: boolean;
@@ -14,10 +15,12 @@ interface AdModalProps {
     adRemaining?: number;
     adLimit?: number;
     adsRemoved?: boolean;
-    variant?: 'pencils' | 'practice_notes' | 'solo_percentile';
+    variant?: 'pencils' | 'practice_notes' | 'solo_percentile' | 'gold';
+    rewardAmountOverride?: number | null;
+    closeOnReward?: boolean;
 }
 
-const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemaining, adLimit, adsRemoved, variant = 'pencils' }) => {
+const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemaining, adLimit, adsRemoved, variant = 'pencils', rewardAmountOverride, closeOnReward = false }) => {
     const { t } = useTranslation();
     const { playSound } = useSound();
     const [adState, setAdState] = useState<'idle' | 'loading' | 'playing' | 'rewarded' | 'limit' | 'error'>('idle');
@@ -25,7 +28,7 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
     const [timeLeft, setTimeLeft] = useState(5);
     const hasLimit = typeof adRemaining === 'number' && typeof adLimit === 'number';
     const isLimitReached = hasLimit && adRemaining <= 0;
-    const rewardAmount = variant === 'practice_notes' ? 2 : variant === 'solo_percentile' ? null : 1;
+    const rewardAmount = rewardAmountOverride ?? (variant === 'practice_notes' ? 2 : variant === 'solo_percentile' || variant === 'gold' ? null : 1);
     const copy = variant === 'practice_notes'
         ? {
             titleKey: 'ad.titlePracticeNotes',
@@ -65,6 +68,28 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
                         %
                     </div>
                 )
+        }
+        : variant === 'gold'
+            ? {
+                titleKey: 'ad.titleGold',
+                titleFallback: 'Get Gold',
+                watchDescKey: 'ad.watchDescGold',
+                watchDescFallback: 'Watch a short ad to get bonus gold!',
+                adFreeDescKey: 'ad.adFreeDescGold',
+                adFreeDescFallback: 'Ad-free reward. Get bonus gold instantly.',
+                claimBtnKey: 'ad.claimBtnGold',
+                claimBtnFallback: 'Get Gold',
+                rewardLabelKey: 'ad.gold',
+                rewardLabelFallback: 'Gold',
+                rewardHeadlineKey: 'ad.goldRewardHeadline',
+                rewardHeadlineFallback: 'Gold received!',
+                rewardIcon: (
+                    <img
+                        src="/images/icon/icon_coin.png"
+                        alt="Gold"
+                        className="w-10 h-10 object-contain"
+                    />
+                )
             }
         : {
             titleKey: 'ad.title',
@@ -93,8 +118,18 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
     const grantReward = useCallback(async (source: 'ad' | 'no_fill' = 'ad') => {
         try {
             const result = await onReward();
+            void logAnalyticsEvent('br_rewarded_ad', {
+                placement: variant,
+                source,
+                result,
+                ads_removed: Boolean(adsRemoved),
+            });
             if (result === 'ok') {
                 setRewardedByNoFill(source === 'no_fill');
+                if (closeOnReward) {
+                    onClose();
+                    return;
+                }
                 setAdState('rewarded');
             } else if (result === 'limit') {
                 setRewardedByNoFill(false);
@@ -105,10 +140,16 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
             }
         } catch (err) {
             console.error('Reward grant failed:', err);
+            void logAnalyticsEvent('br_rewarded_ad', {
+                placement: variant,
+                source,
+                result: 'error',
+                ads_removed: Boolean(adsRemoved),
+            });
             setRewardedByNoFill(false);
             setAdState('error');
         }
-    }, [onReward]);
+    }, [adsRemoved, closeOnReward, onClose, onReward, variant]);
 
     // Initialize AdMob on mount
     useEffect(() => {
@@ -195,7 +236,18 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
 
     const startAd = async () => {
         playSound('click');
+        void logAnalyticsEvent('br_rewarded_ad_start', {
+            placement: variant,
+            ads_removed: Boolean(adsRemoved),
+            platform: Capacitor.getPlatform(),
+        });
         if (isLimitReached) {
+            void logAnalyticsEvent('br_rewarded_ad', {
+                placement: variant,
+                source: 'limit',
+                result: 'limit',
+                ads_removed: Boolean(adsRemoved),
+            });
             setAdState('limit');
             return;
         }
@@ -364,19 +416,30 @@ const AdModal: React.FC<AdModalProps> = ({ isOpen, onClose, onReward, adRemainin
 
                             {adState === 'rewarded' && (
                                 <>
-                                    <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mb-4 animate-bounce">
-                                        {copy.rewardIcon}
-                                    </div>
-                                    <h4 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
-                                        {'rewardHeadlineKey' in copy
-                                            ? t(copy.rewardHeadlineKey ?? 'ad.success', copy.rewardHeadlineFallback ?? 'Reward earned successfully!')
-                                            : `+${rewardAmount} ${t(copy.rewardLabelKey, copy.rewardLabelFallback)}!`}
-                                    </h4>
-                                    <p className="text-slate-500 dark:text-gray-400 mb-6">
-                                        {rewardedByNoFill
-                                            ? t('ad.noFillRewarded', '앗, 지금은 재생할 광고가 없어요! 보상은 바로 드릴게요.')
-                                            : t('ad.success', 'Reward earned successfully.')}
-                                    </p>
+                                    {rewardAmount !== null ? (
+                                        <div className="mb-8 flex items-center justify-center gap-3 rounded-2xl border border-yellow-400/20 bg-yellow-400/10 px-5 py-4">
+                                            {copy.rewardIcon}
+                                            <span className="text-3xl font-black text-yellow-400">
+                                                +{rewardAmount}
+                                            </span>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mb-4 animate-bounce">
+                                                {copy.rewardIcon}
+                                            </div>
+                                            <h4 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">
+                                                {'rewardHeadlineKey' in copy
+                                                    ? t(copy.rewardHeadlineKey ?? 'ad.success', copy.rewardHeadlineFallback ?? 'Reward earned successfully!')
+                                                    : t('ad.success', 'Reward earned successfully.')}
+                                            </h4>
+                                        </>
+                                    )}
+                                    {rewardedByNoFill && (
+                                        <p className="text-slate-500 dark:text-gray-400 mb-6">
+                                            {t('ad.noFillRewarded', '앗, 지금은 재생할 광고가 없어요! 보상은 바로 드릴게요.')}
+                                        </p>
+                                    )}
                                     <button
                                         onClick={() => { playSound('click'); onClose(); }}
                                         className="w-full py-3 bg-slate-100 dark:bg-gray-700 hover:bg-slate-200 dark:bg-gray-600 text-slate-900 dark:text-white font-bold rounded-xl transition-all active:scale-95"

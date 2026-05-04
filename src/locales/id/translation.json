@@ -94,8 +94,8 @@
   },
   "menu": {
     "normal": {
-      "title": "Mode Normal",
-      "subtitle": "Latihan otak dasar",
+      "title": "Mode Item",
+      "subtitle": "Pertarungan santai dengan item",
       "matchRule": "Best of 3 (menang 2)"
     },
     "rank": {
@@ -176,7 +176,39 @@
     "billingUnavailable": "Penagihan tidak didukung di perangkat ini.",
     "sessionRefreshFailed": "Failed to refresh session: {{message}}",
     "sessionExpired": "Your login session has expired. Please sign in again.",
-    "purchaseFailWithReason": "Purchase failed: {{message}}"
+    "purchaseFailWithReason": "Purchase failed: {{message}}",
+    "goldTab": "Gold",
+    "goldPencils": {
+      "oneTitle": "1 Pencil",
+      "oneDesc": "Refill a pencil instantly with gold.",
+      "fiveTitle": "5 Pencils",
+      "fiveDesc": "A 10% discounted gold bundle."
+    },
+    "goldPencilPurchaseSuccess": "Purchased pencils with gold.",
+    "goldPencilPurchaseFailed": "Failed to purchase pencils.",
+    "dailyFreePencilBadge": "Daily Gift",
+    "dailyFreePencilTitle": "Today's Free Pencil",
+    "dailyFreePencilDesc": "Claim 1 free pencil from the shop once per day.",
+    "dailyFreePencilClaimedDesc": "You already claimed today's gift. Come back tomorrow.",
+    "dailyFreePencilClaimButton": "Claim Free",
+    "dailyFreePencilClaimedButton": "Claimed",
+    "dailyFreePencilClaimSuccess": "You claimed today's free pencil.",
+    "dailyFreePencilAlreadyClaimed": "You already claimed today's free pencil.",
+    "dailyFreePencilClaimFailed": "Failed to claim the free pencil.",
+    "dailyFreeAdClaimButton": "Watch Ad Again",
+    "dailyFreeBaseRequired": "Claim the free gift first.",
+    "dailyFreeGoldBadge": "Daily Gold",
+    "dailyFreeGoldTitle": "Today’s Free Gold",
+    "dailyFreeGoldDesc": "Claim {{count}} free gold from the shop once per day.",
+    "dailyFreeGoldAdDesc": "Watch an ad to claim it one more time today.",
+    "dailyFreeGoldClaimedDesc": "You already claimed today’s gift. Come back tomorrow.",
+    "dailyFreeGoldClaimButton": "Claim Free",
+    "dailyFreeGoldClaimedButton": "Claimed",
+    "dailyFreeGoldClaimSuccess": "You claimed today’s free gold.",
+    "dailyFreeGoldAlreadyClaimed": "You already claimed today’s free gold.",
+    "dailyFreeGoldClaimFailed": "Failed to claim the free gold.",
+    "dailyFreePencilAdDesc": "Watch an ad to claim it one more time today.",
+    "rewardTitle": "Diperoleh"
   },
   "leaderboard": {
     "button": "Peringkat",
@@ -212,7 +244,13 @@
     "success": "Hadiah berhasil didapatkan.",
     "noFillTitle": "Tidak ada iklan saat ini",
     "noFillDesc": "Silakan coba lagi nanti.",
-    "noFillRewarded": "Ups, saat ini tidak ada iklan yang bisa diputar. Hadiah akan langsung diberikan."
+    "noFillRewarded": "Ups, saat ini tidak ada iklan yang bisa diputar. Hadiah akan langsung diberikan.",
+    "titleGold": "Get Gold",
+    "watchDescGold": "Watch a short ad to get bonus gold!",
+    "adFreeDescGold": "Ad-free reward. Get bonus gold instantly.",
+    "claimBtnGold": "Get Gold",
+    "gold": "Gold",
+    "goldRewardHeadline": "Gold received!"
   },
   "notifications": {
     "fullTitle": "Pensil penuh",
@@ -386,7 +424,7 @@
     "reconnectingDesc": "Lawan terputus. Menang otomatis dalam:",
     "myTime": "Waktu saya",
     "rank": "RANK",
-    "normal": "NORMAL",
+    "normal": "ITEM",
     "unknownPlayer": "Pemain tidak dikenal",
     "guest": "Tamu",
     "you": "Anda",
@@ -400,6 +438,7 @@
     "total": "TOTAL",
     "great": "Bagus!",
     "tier": "Tier",
+    "opponentUsedItem": "Lawan menggunakan {{item}}.",
     "table": {
       "round": "Ronde",
       "myScore": "Skor saya",
@@ -599,7 +638,7 @@
     "scoreLabel": "Langkah"
   },
   "tutorial": {
-    "normal": "🌍 Lawan pemain seluruh dunia di mini game seru!",
+    "normal": "🌍 Nikmati duel minigame santai melawan pemain dari seluruh dunia dengan item!",
     "rank": "🏆 Bertanding di rank dengan pemain kemampuan serupa!",
     "practice": "💪 Latih game apa pun yang kamu mau!",
     "ranking": "👑 Lihat pemain paling cerdas di dunia!",
@@ -607,12 +646,14 @@
     "settings": "⚙️ Ubah suara, bahasa, dan pengaturan lain!",
     "login": "👤 Hubungkan akunmu agar bermain lebih aman!",
     "profile": "📊 Cek kemampuan, statistik, dan skor terbaikmu!",
-    "tryNormalHighlight": "Ketuk mode Normal dulu untuk memulai pertandingan pertamamu!",
-    "startNormalNow": "Mulai Mode Normal",
+    "tryNormalHighlight": "Item Mode is a great first match for learning the rules casually. You can also look around the home screen first.",
+    "startNormalNow": "Mulai Mode Item",
     "next": "Berikutnya",
     "done": "Selesai",
     "skip": "Lewati",
-    "loginNow": "Masuk sekarang"
+    "loginNow": "Masuk sekarang",
+    "solo": "🎯 Enjoy 3 random minigames solo and check your skills without competitive pressure!",
+    "browseFirst": "I'll look around first"
   },
   "zero": {
     "title": "Buat Nol",
@@ -721,5 +762,100 @@
     "percentileAdClaim": "Lihat Top %",
     "percentileRewardLabel": "Top %",
     "percentileRewardHeadline": "Top % untuk semua 3 game terbuka!"
+  },
+  "items": {
+    "screenBlock": {
+      "name": "Awan Gelap",
+      "description": "Menutupi layar lawan selama 2 detik."
+    },
+    "autoSolve": {
+      "name": "Peluang Ganda",
+      "description": "Menggandakan skor yang kamu peroleh selama 3 detik."
+    },
+    "emojiBomb": {
+      "name": "Bom Emoji",
+      "description": "Menyebarkan emoji di layar lawan selama 5 detik."
+    }
+  },
+  "dailyQuests": {
+    "shortTitle": "Quests",
+    "badge": "Daily",
+    "title": "Daily Quests",
+    "subtitle": "Complete today's goals and claim rewards.",
+    "progress": "Progress",
+    "questSection": "Today's Tasks",
+    "rewardSection": "Rewards",
+    "claim": "Claim",
+    "claimed": "Claimed",
+    "claimSuccess": "Reward claimed.",
+    "claimFail": "Failed to claim reward.",
+    "loadFail": "Failed to load daily quests.",
+    "reward": {
+      "milestone": "{{points}} pt reward",
+      "xp": "XP +{{count}}",
+      "gold": "Gold +{{count}}",
+      "pencils": "Pencil +{{count}}",
+      "randomItem": "Random item +{{count}}",
+      "itemWithCode": "Random item +{{count}} ({{itemCode}})",
+      "empty": "Reward",
+      "randomItemShort": "Item"
+    },
+    "quests": {
+      "login": {
+        "title": "Log in",
+        "description": "Open BrainRush today."
+      },
+      "profileView": {
+        "title": "Check profile",
+        "description": "Open your profile."
+      },
+      "shopVisit": {
+        "title": "Visit shop",
+        "description": "Open the shop."
+      },
+      "rankingView": {
+        "title": "Check ranking",
+        "description": "Open the ranking board."
+      },
+      "pencilSpend1": {
+        "title": "Use 1 pencil",
+        "description": "Play one pencil-cost mode."
+      },
+      "pencilSpend3": {
+        "title": "Use 3 pencils",
+        "description": "Play three pencil-cost modes."
+      },
+      "pencilSpend5": {
+        "title": "Use 5 pencils",
+        "description": "Play five pencil-cost modes."
+      },
+      "adWatch1": {
+        "title": "Watch 1 ad",
+        "description": "Watch one reward ad."
+      },
+      "adWatch3": {
+        "title": "Watch 3 ads",
+        "description": "Watch three reward ads."
+      },
+      "goldSpend1": {
+        "title": "Spend gold once",
+        "description": "Buy an item or pencils with gold."
+      }
+    },
+    "completeQuest": "Complete",
+    "questClaimSuccess": "Quest complete!",
+    "questClaimFail": "Failed to complete quest.",
+    "claimAllSuccess": "All rewards claimed.",
+    "claimAvailableRewards": "Claim available rewards",
+    "claimAvailableRewardsHint": "Tap the unlocked chest to claim your rewards.",
+    "rewardProgressHint": "Chests unlock as you complete quest points.",
+    "rewardAlreadyClaimed": "Already claimed.",
+    "rewardReady": "Ready to claim now.",
+    "rewardLockedUntil": "Unlocks at {{points}} points.",
+    "rewardClaimModal": {
+      "title": "Rewards Claimed!",
+      "subtitle": "Total from {{count}} chest(s)",
+      "items": "Items received"
+    }
   }
 }

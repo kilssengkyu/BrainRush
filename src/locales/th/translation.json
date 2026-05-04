@@ -94,8 +94,8 @@
   },
   "menu": {
     "normal": {
-      "title": "โหมดปกติ",
-      "subtitle": "ฝึกสมองพื้นฐาน",
+      "title": "โหมดไอเท็ม",
+      "subtitle": "การต่อสู้สบาย ๆ ด้วยไอเท็ม",
       "matchRule": "ชนะ 2 ใน 3 เกม"
     },
     "rank": {
@@ -176,7 +176,39 @@
     "billingUnavailable": "อุปกรณ์นี้ไม่รองรับการชำระเงิน",
     "sessionRefreshFailed": "Failed to refresh session: {{message}}",
     "sessionExpired": "Your login session has expired. Please sign in again.",
-    "purchaseFailWithReason": "Purchase failed: {{message}}"
+    "purchaseFailWithReason": "Purchase failed: {{message}}",
+    "goldTab": "Gold",
+    "goldPencils": {
+      "oneTitle": "1 Pencil",
+      "oneDesc": "Refill a pencil instantly with gold.",
+      "fiveTitle": "5 Pencils",
+      "fiveDesc": "A 10% discounted gold bundle."
+    },
+    "goldPencilPurchaseSuccess": "Purchased pencils with gold.",
+    "goldPencilPurchaseFailed": "Failed to purchase pencils.",
+    "dailyFreePencilBadge": "Daily Gift",
+    "dailyFreePencilTitle": "Today's Free Pencil",
+    "dailyFreePencilDesc": "Claim 1 free pencil from the shop once per day.",
+    "dailyFreePencilClaimedDesc": "You already claimed today's gift. Come back tomorrow.",
+    "dailyFreePencilClaimButton": "Claim Free",
+    "dailyFreePencilClaimedButton": "Claimed",
+    "dailyFreePencilClaimSuccess": "You claimed today's free pencil.",
+    "dailyFreePencilAlreadyClaimed": "You already claimed today's free pencil.",
+    "dailyFreePencilClaimFailed": "Failed to claim the free pencil.",
+    "dailyFreeAdClaimButton": "Watch Ad Again",
+    "dailyFreeBaseRequired": "Claim the free gift first.",
+    "dailyFreeGoldBadge": "Daily Gold",
+    "dailyFreeGoldTitle": "Today’s Free Gold",
+    "dailyFreeGoldDesc": "Claim {{count}} free gold from the shop once per day.",
+    "dailyFreeGoldAdDesc": "Watch an ad to claim it one more time today.",
+    "dailyFreeGoldClaimedDesc": "You already claimed today’s gift. Come back tomorrow.",
+    "dailyFreeGoldClaimButton": "Claim Free",
+    "dailyFreeGoldClaimedButton": "Claimed",
+    "dailyFreeGoldClaimSuccess": "You claimed today’s free gold.",
+    "dailyFreeGoldAlreadyClaimed": "You already claimed today’s free gold.",
+    "dailyFreeGoldClaimFailed": "Failed to claim the free gold.",
+    "dailyFreePencilAdDesc": "Watch an ad to claim it one more time today.",
+    "rewardTitle": "ได้รับแล้ว"
   },
   "leaderboard": {
     "button": "อันดับ",
@@ -212,7 +244,13 @@
     "success": "รับรางวัลสำเร็จ",
     "noFillTitle": "ไม่มีโฆษณาในขณะนี้",
     "noFillDesc": "กรุณาลองใหม่ในอีกสักครู่",
-    "noFillRewarded": "อ๊ะ ตอนนี้ยังไม่มีโฆษณาให้รับชม! เราจะมอบรางวัลให้ทันที"
+    "noFillRewarded": "อ๊ะ ตอนนี้ยังไม่มีโฆษณาให้รับชม! เราจะมอบรางวัลให้ทันที",
+    "titleGold": "Get Gold",
+    "watchDescGold": "Watch a short ad to get bonus gold!",
+    "adFreeDescGold": "Ad-free reward. Get bonus gold instantly.",
+    "claimBtnGold": "Get Gold",
+    "gold": "Gold",
+    "goldRewardHeadline": "Gold received!"
   },
   "notifications": {
     "fullTitle": "ดินสอเต็มแล้ว",
@@ -386,7 +424,7 @@
     "reconnectingDesc": "คู่แข่งหลุดการเชื่อมต่อ ชนะอัตโนมัติใน:",
     "myTime": "เวลาของฉัน",
     "rank": "แรงก์",
-    "normal": "ปกติ",
+    "normal": "ไอเท็ม",
     "unknownPlayer": "ผู้เล่นไม่ทราบชื่อ",
     "guest": "ผู้เยี่ยมชม",
     "you": "คุณ",
@@ -400,6 +438,7 @@
     "total": "รวม",
     "great": "เยี่ยม!",
     "tier": "Tier",
+    "opponentUsedItem": "คู่ต่อสู้ใช้{{item}}แล้ว",
     "table": {
       "round": "รอบ",
       "myScore": "คะแนนฉัน",
@@ -599,7 +638,7 @@
     "scoreLabel": "ก้าว"
   },
   "tutorial": {
-    "normal": "🌍 สู้กับผู้เล่นทั่วโลกในมินิเกมสุดสนุก!",
+    "normal": "🌍 สนุกกับการดวลมินิเกมแบบสบาย ๆ กับผู้เล่นทั่วโลกด้วยไอเท็ม!",
     "rank": "🏆 แข่งแรงก์กับผู้เล่นที่มีฝีมือใกล้เคียงกัน!",
     "practice": "💪 ฝึกเกมไหนก็ได้ตามต้องการ!",
     "ranking": "👑 ดูผู้เล่นที่ฉลาดที่สุดจากทั่วโลก!",
@@ -607,12 +646,14 @@
     "settings": "⚙️ ปรับเสียง ภาษา และการตั้งค่าอื่น ๆ!",
     "login": "👤 เชื่อมบัญชีเพื่อเล่นได้อย่างปลอดภัย!",
     "profile": "📊 ดูทักษะ สถิติ และคะแนนสูงสุดของคุณ!",
-    "tryNormalHighlight": "แตะโหมดปกติก่อนเพื่อเริ่มแมตช์แรกของคุณ!",
-    "startNormalNow": "เริ่มโหมดปกติ",
+    "tryNormalHighlight": "Item Mode is a great first match for learning the rules casually. You can also look around the home screen first.",
+    "startNormalNow": "เริ่มโหมดไอเท็ม",
     "next": "ถัดไป",
     "done": "เสร็จสิ้น",
     "skip": "ข้าม",
-    "loginNow": "เข้าสู่ระบบตอนนี้"
+    "loginNow": "เข้าสู่ระบบตอนนี้",
+    "solo": "🎯 Enjoy 3 random minigames solo and check your skills without competitive pressure!",
+    "browseFirst": "I'll look around first"
   },
   "zero": {
     "title": "ทำให้เป็นศูนย์",
@@ -721,5 +762,100 @@
     "percentileAdClaim": "เปิดเผย Top %",
     "percentileRewardLabel": "Top %",
     "percentileRewardHeadline": "ปลดล็อก Top % ของทั้ง 3 เกมแล้ว!"
+  },
+  "items": {
+    "screenBlock": {
+      "name": "เมฆหมอก",
+      "description": "บังหน้าจอคู่ต่อสู้เป็นเวลา 2 วินาที"
+    },
+    "autoSolve": {
+      "name": "ดับเบิลชานซ์",
+      "description": "ทำให้คะแนนที่ได้รับเพิ่มเป็น 2 เท่านาน 3 วินาที"
+    },
+    "emojiBomb": {
+      "name": "ระเบิดอีโมจิ",
+      "description": "โปรยอีโมจิบนหน้าจอคู่ต่อสู้เป็นเวลา 5 วินาที"
+    }
+  },
+  "dailyQuests": {
+    "shortTitle": "Quests",
+    "badge": "Daily",
+    "title": "Daily Quests",
+    "subtitle": "Complete today's goals and claim rewards.",
+    "progress": "Progress",
+    "questSection": "Today's Tasks",
+    "rewardSection": "Rewards",
+    "claim": "Claim",
+    "claimed": "Claimed",
+    "claimSuccess": "Reward claimed.",
+    "claimFail": "Failed to claim reward.",
+    "loadFail": "Failed to load daily quests.",
+    "reward": {
+      "milestone": "{{points}} pt reward",
+      "xp": "XP +{{count}}",
+      "gold": "Gold +{{count}}",
+      "pencils": "Pencil +{{count}}",
+      "randomItem": "Random item +{{count}}",
+      "itemWithCode": "Random item +{{count}} ({{itemCode}})",
+      "empty": "Reward",
+      "randomItemShort": "Item"
+    },
+    "quests": {
+      "login": {
+        "title": "Log in",
+        "description": "Open BrainRush today."
+      },
+      "profileView": {
+        "title": "Check profile",
+        "description": "Open your profile."
+      },
+      "shopVisit": {
+        "title": "Visit shop",
+        "description": "Open the shop."
+      },
+      "rankingView": {
+        "title": "Check ranking",
+        "description": "Open the ranking board."
+      },
+      "pencilSpend1": {
+        "title": "Use 1 pencil",
+        "description": "Play one pencil-cost mode."
+      },
+      "pencilSpend3": {
+        "title": "Use 3 pencils",
+        "description": "Play three pencil-cost modes."
+      },
+      "pencilSpend5": {
+        "title": "Use 5 pencils",
+        "description": "Play five pencil-cost modes."
+      },
+      "adWatch1": {
+        "title": "Watch 1 ad",
+        "description": "Watch one reward ad."
+      },
+      "adWatch3": {
+        "title": "Watch 3 ads",
+        "description": "Watch three reward ads."
+      },
+      "goldSpend1": {
+        "title": "Spend gold once",
+        "description": "Buy an item or pencils with gold."
+      }
+    },
+    "completeQuest": "Complete",
+    "questClaimSuccess": "Quest complete!",
+    "questClaimFail": "Failed to complete quest.",
+    "claimAllSuccess": "All rewards claimed.",
+    "claimAvailableRewards": "Claim available rewards",
+    "claimAvailableRewardsHint": "Tap the unlocked chest to claim your rewards.",
+    "rewardProgressHint": "Chests unlock as you complete quest points.",
+    "rewardAlreadyClaimed": "Already claimed.",
+    "rewardReady": "Ready to claim now.",
+    "rewardLockedUntil": "Unlocks at {{points}} points.",
+    "rewardClaimModal": {
+      "title": "Rewards Claimed!",
+      "subtitle": "Total from {{count}} chest(s)",
+      "items": "Items received"
+    }
   }
 }

@@ -279,19 +279,21 @@ BEGIN
         END IF;
     END IF;
 
-    -- XP/Level Update (Rank + Normal only)
+    -- XP/Level/Gold Update (Rank + Normal only)
     IF v_session.mode IN ('rank', 'normal') THEN
         IF v_session.player1_id ~ '^[0-9a-fA-F-]{36}$' THEN
             UPDATE profiles
             SET xp = COALESCE(xp, 0) + (10 + CASE WHEN v_winner = v_session.player1_id THEN 5 ELSE 0 END),
-                level = floor((-(45)::numeric + sqrt((45 * 45) + (40 * (COALESCE(xp, 0) + (10 + CASE WHEN v_winner = v_session.player1_id THEN 5 ELSE 0 END))))) / 10) + 1
+                level = floor((-(45)::numeric + sqrt((45 * 45) + (40 * (COALESCE(xp, 0) + (10 + CASE WHEN v_winner = v_session.player1_id THEN 5 ELSE 0 END))))) / 10) + 1,
+                gold = COALESCE(gold, 0) + CASE WHEN v_winner = v_session.player1_id THEN 5 ELSE 0 END
             WHERE id = v_session.player1_id::uuid;
         END IF;
 
         IF v_session.player2_id ~ '^[0-9a-fA-F-]{36}$' THEN
             UPDATE profiles
             SET xp = COALESCE(xp, 0) + (10 + CASE WHEN v_winner = v_session.player2_id THEN 5 ELSE 0 END),
-                level = floor((-(45)::numeric + sqrt((45 * 45) + (40 * (COALESCE(xp, 0) + (10 + CASE WHEN v_winner = v_session.player2_id THEN 5 ELSE 0 END))))) / 10) + 1
+                level = floor((-(45)::numeric + sqrt((45 * 45) + (40 * (COALESCE(xp, 0) + (10 + CASE WHEN v_winner = v_session.player2_id THEN 5 ELSE 0 END))))) / 10) + 1,
+                gold = COALESCE(gold, 0) + CASE WHEN v_winner = v_session.player2_id THEN 5 ELSE 0 END
             WHERE id = v_session.player2_id::uuid;
         END IF;
     END IF;

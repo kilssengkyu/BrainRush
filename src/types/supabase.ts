@@ -95,6 +95,170 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_quest_catalog: {
+        Row: {
+          created_at: string
+          event_type: string
+          is_enabled: boolean
+          metadata: Json
+          points: number
+          quest_code: string
+          sort_order: number
+          threshold: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          is_enabled?: boolean
+          metadata?: Json
+          points: number
+          quest_code: string
+          sort_order?: number
+          threshold: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          is_enabled?: boolean
+          metadata?: Json
+          points?: number
+          quest_code?: string
+          sort_order?: number
+          threshold?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      daily_quest_progress: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          claimed_at: string | null
+          progress_count: number
+          quest_code: string
+          quest_date: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          claimed_at?: string | null
+          progress_count?: number
+          quest_code: string
+          quest_date: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          claimed_at?: string | null
+          progress_count?: number
+          quest_code?: string
+          quest_date?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_quest_progress_quest_code_fkey"
+            columns: ["quest_code"]
+            isOneToOne: false
+            referencedRelation: "daily_quest_catalog"
+            referencedColumns: ["quest_code"]
+          },
+          {
+            foreignKeyName: "daily_quest_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_quest_reward_claims: {
+        Row: {
+          claimed_at: string
+          milestone: number
+          quest_date: string
+          reward: Json
+          user_id: string
+        }
+        Insert: {
+          claimed_at?: string
+          milestone: number
+          quest_date: string
+          reward?: Json
+          user_id: string
+        }
+        Update: {
+          claimed_at?: string
+          milestone?: number
+          quest_date?: string
+          reward?: Json
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_quest_reward_claims_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      item_catalog: {
+        Row: {
+          cooldown_seconds: number
+          created_at: string
+          description_key: string
+          duration_seconds: number
+          effect_type: string
+          gold_price: number
+          is_enabled: boolean
+          item_code: string
+          metadata: Json
+          name_key: string
+          sort_order: number
+          target_type: string
+          updated_at: string
+        }
+        Insert: {
+          cooldown_seconds?: number
+          created_at?: string
+          description_key: string
+          duration_seconds?: number
+          effect_type: string
+          gold_price?: number
+          is_enabled?: boolean
+          item_code: string
+          metadata?: Json
+          name_key: string
+          sort_order?: number
+          target_type: string
+          updated_at?: string
+        }
+        Update: {
+          cooldown_seconds?: number
+          created_at?: string
+          description_key?: string
+          duration_seconds?: number
+          effect_type?: string
+          gold_price?: number
+          is_enabled?: boolean
+          item_code?: string
+          metadata?: Json
+          name_key?: string
+          sort_order?: number
+          target_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       game_moves: {
         Row: {
           created_at: string | null
@@ -124,6 +288,60 @@ export type Database = {
           {
             foreignKeyName: "game_moves_room_id_fkey"
             columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "game_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_session_item_events: {
+        Row: {
+          created_at: string
+          effect_ends_at: string | null
+          id: string
+          item_code: string
+          payload: Json
+          round_number: number
+          session_id: string
+          target_player_id: string
+          used_at: string
+          used_by: string
+        }
+        Insert: {
+          created_at?: string
+          effect_ends_at?: string | null
+          id?: string
+          item_code: string
+          payload?: Json
+          round_number: number
+          session_id: string
+          target_player_id: string
+          used_at?: string
+          used_by: string
+        }
+        Update: {
+          created_at?: string
+          effect_ends_at?: string | null
+          id?: string
+          item_code?: string
+          payload?: Json
+          round_number?: number
+          session_id?: string
+          target_player_id?: string
+          used_at?: string
+          used_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_session_item_events_item_code_fkey"
+            columns: ["item_code"]
+            isOneToOne: false
+            referencedRelation: "item_catalog"
+            referencedColumns: ["item_code"]
+          },
+          {
+            foreignKeyName: "game_session_item_events_session_id_fkey"
+            columns: ["session_id"]
             isOneToOne: false
             referencedRelation: "game_sessions"
             referencedColumns: ["id"]
@@ -347,6 +565,7 @@ export type Database = {
           disconnects: number | null
           email: string | null
           full_name: string | null
+          gold: number
           id: string
           judgment: number | null
           last_recharge_at: string | null
@@ -363,6 +582,10 @@ export type Database = {
           practice_ad_reward_day: string | null
           practice_last_recharge_at: string | null
           practice_notes: number | null
+          shop_free_gold_ad_claimed_on: string | null
+          shop_free_gold_claimed_on: string | null
+          shop_free_pencil_ad_claimed_on: string | null
+          shop_free_pencil_claimed_on: string | null
           speed: number | null
           timezone: string | null
           wins: number | null
@@ -382,6 +605,7 @@ export type Database = {
           disconnects?: number | null
           email?: string | null
           full_name?: string | null
+          gold?: number
           id: string
           judgment?: number | null
           last_recharge_at?: string | null
@@ -398,6 +622,10 @@ export type Database = {
           practice_ad_reward_day?: string | null
           practice_last_recharge_at?: string | null
           practice_notes?: number | null
+          shop_free_gold_ad_claimed_on?: string | null
+          shop_free_gold_claimed_on?: string | null
+          shop_free_pencil_ad_claimed_on?: string | null
+          shop_free_pencil_claimed_on?: string | null
           speed?: number | null
           timezone?: string | null
           wins?: number | null
@@ -417,6 +645,7 @@ export type Database = {
           disconnects?: number | null
           email?: string | null
           full_name?: string | null
+          gold?: number
           id?: string
           judgment?: number | null
           last_recharge_at?: string | null
@@ -433,6 +662,10 @@ export type Database = {
           practice_ad_reward_day?: string | null
           practice_last_recharge_at?: string | null
           practice_notes?: number | null
+          shop_free_gold_ad_claimed_on?: string | null
+          shop_free_gold_claimed_on?: string | null
+          shop_free_pencil_ad_claimed_on?: string | null
+          shop_free_pencil_claimed_on?: string | null
           speed?: number | null
           timezone?: string | null
           wins?: number | null
@@ -476,6 +709,45 @@ export type Database = {
           {
             foreignKeyName: "player_reports_reporter_id_fkey"
             columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_items: {
+        Row: {
+          created_at: string
+          item_code: string
+          quantity: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          item_code: string
+          quantity?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          item_code?: string
+          quantity?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_items_item_code_fkey"
+            columns: ["item_code"]
+            isOneToOne: false
+            referencedRelation: "item_catalog"
+            referencedColumns: ["item_code"]
+          },
+          {
+            foreignKeyName: "user_items_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -554,6 +826,30 @@ export type Database = {
       consume_match_pencil: {
         Args: { p_mode?: string; user_id: string }
         Returns: boolean
+      }
+      get_daily_quest_status: {
+        Args: never
+        Returns: Json
+      }
+      record_daily_quest_event: {
+        Args: { p_amount?: number; p_event_type: string }
+        Returns: Json
+      }
+      claim_daily_quest_reward: {
+        Args: { p_milestone: number }
+        Returns: Json
+      }
+      claim_daily_quest_points: {
+        Args: { p_quest_code: string }
+        Returns: Json
+      }
+      grant_gold: {
+        Args: { amount: number; user_id: string }
+        Returns: number
+      }
+      grant_user_item: {
+        Args: { p_item_code: string; p_quantity?: number; p_user_id: string }
+        Returns: number
       }
       consume_pencil: { Args: { user_id: string }; Returns: boolean }
       consume_practice_note: { Args: { user_id: string }; Returns: boolean }
@@ -704,6 +1000,22 @@ export type Database = {
         Args: { p_player_id: string }
         Returns: boolean
       }
+      claim_daily_shop_pencil: {
+        Args: { p_is_ad?: boolean }
+        Returns: Json
+      }
+      claim_daily_shop_gold: {
+        Args: { p_is_ad?: boolean }
+        Returns: Json
+      }
+      purchase_item: {
+        Args: { p_item_code: string; p_quantity?: number }
+        Returns: Json
+      }
+      purchase_pencils_with_gold: {
+        Args: { p_quantity: number }
+        Returns: Json
+      }
       set_my_timezone: {
         Args: { p_timezone: string }
         Returns: undefined
@@ -767,7 +1079,12 @@ export type Database = {
         Args: { p_move: string; p_player_id: string; p_room_id: string }
         Returns: undefined
       }
+      spend_gold: { Args: { amount: number }; Returns: number }
       trigger_game_start: { Args: { p_room_id: string }; Returns: undefined }
+      use_match_item: {
+        Args: { p_item_code: string; p_room_id: string }
+        Returns: Json
+      }
       update_mmr: { Args: { p_room_id: string }; Returns: undefined }
       update_score: {
         Args: { p_player_id: string; p_room_id: string; p_score: number }

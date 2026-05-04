@@ -94,8 +94,8 @@
   },
   "menu": {
     "normal": {
-      "title": "Mode normal",
-      "subtitle": "Entraînement cérébral de base",
+      "title": "Mode objets",
+      "subtitle": "Affrontements décontractés avec objets",
       "matchRule": "BO3 (2 manches gagnantes)"
     },
     "rank": {
@@ -176,7 +176,39 @@
     "billingUnavailable": "Facturation non prise en charge sur cet appareil.",
     "sessionRefreshFailed": "Failed to refresh session: {{message}}",
     "sessionExpired": "Your login session has expired. Please sign in again.",
-    "purchaseFailWithReason": "Purchase failed: {{message}}"
+    "purchaseFailWithReason": "Purchase failed: {{message}}",
+    "goldTab": "Gold",
+    "goldPencils": {
+      "oneTitle": "1 Pencil",
+      "oneDesc": "Refill a pencil instantly with gold.",
+      "fiveTitle": "5 Pencils",
+      "fiveDesc": "A 10% discounted gold bundle."
+    },
+    "goldPencilPurchaseSuccess": "Purchased pencils with gold.",
+    "goldPencilPurchaseFailed": "Failed to purchase pencils.",
+    "dailyFreePencilBadge": "Daily Gift",
+    "dailyFreePencilTitle": "Today's Free Pencil",
+    "dailyFreePencilDesc": "Claim 1 free pencil from the shop once per day.",
+    "dailyFreePencilClaimedDesc": "You already claimed today's gift. Come back tomorrow.",
+    "dailyFreePencilClaimButton": "Claim Free",
+    "dailyFreePencilClaimedButton": "Claimed",
+    "dailyFreePencilClaimSuccess": "You claimed today's free pencil.",
+    "dailyFreePencilAlreadyClaimed": "You already claimed today's free pencil.",
+    "dailyFreePencilClaimFailed": "Failed to claim the free pencil.",
+    "dailyFreeAdClaimButton": "Watch Ad Again",
+    "dailyFreeBaseRequired": "Claim the free gift first.",
+    "dailyFreeGoldBadge": "Daily Gold",
+    "dailyFreeGoldTitle": "Today’s Free Gold",
+    "dailyFreeGoldDesc": "Claim {{count}} free gold from the shop once per day.",
+    "dailyFreeGoldAdDesc": "Watch an ad to claim it one more time today.",
+    "dailyFreeGoldClaimedDesc": "You already claimed today’s gift. Come back tomorrow.",
+    "dailyFreeGoldClaimButton": "Claim Free",
+    "dailyFreeGoldClaimedButton": "Claimed",
+    "dailyFreeGoldClaimSuccess": "You claimed today’s free gold.",
+    "dailyFreeGoldAlreadyClaimed": "You already claimed today’s free gold.",
+    "dailyFreeGoldClaimFailed": "Failed to claim the free gold.",
+    "dailyFreePencilAdDesc": "Watch an ad to claim it one more time today.",
+    "rewardTitle": "Obtenu"
   },
   "leaderboard": {
     "button": "Classement",
@@ -212,7 +244,13 @@
     "success": "Récompense obtenue avec succès.",
     "noFillTitle": "Aucune publicité disponible pour le moment",
     "noFillDesc": "Veuillez réessayer dans un instant.",
-    "noFillRewarded": "Oups, aucune pub n'est disponible pour le moment. La récompense est accordée immédiatement."
+    "noFillRewarded": "Oups, aucune pub n'est disponible pour le moment. La récompense est accordée immédiatement.",
+    "titleGold": "Get Gold",
+    "watchDescGold": "Watch a short ad to get bonus gold!",
+    "adFreeDescGold": "Ad-free reward. Get bonus gold instantly.",
+    "claimBtnGold": "Get Gold",
+    "gold": "Gold",
+    "goldRewardHeadline": "Gold received!"
   },
   "notifications": {
     "fullTitle": "Crayons pleins",
@@ -386,7 +424,7 @@
     "reconnectingDesc": "Adversaire déconnecté. Victoire automatique dans :",
     "myTime": "Mon temps",
     "rank": "CLASSÉ",
-    "normal": "NORMAL",
+    "normal": "OBJETS",
     "unknownPlayer": "Joueur inconnu",
     "guest": "Invité",
     "you": "Vous",
@@ -400,6 +438,7 @@
     "total": "TOTAL",
     "great": "Super !",
     "tier": "Tier",
+    "opponentUsedItem": "Votre adversaire a utilisé {{item}}.",
     "table": {
       "round": "Manche",
       "myScore": "Mon score",
@@ -599,7 +638,7 @@
     "scoreLabel": "Marches"
   },
   "tutorial": {
-    "normal": "🌍 Affrontez des joueurs du monde entier dans des mini-jeux amusants !",
+    "normal": "🌍 Affrontez des joueurs du monde entier dans des mini-jeux décontractés avec objets !",
     "rank": "🏆 Affrontez des joueurs de niveau similaire en mode classé !",
     "practice": "💪 Entraînez-vous sur le jeu que vous voulez !",
     "ranking": "👑 Découvrez les joueurs les plus intelligents du monde !",
@@ -607,12 +646,14 @@
     "settings": "⚙️ Changez le son, la langue et d'autres paramètres !",
     "login": "👤 Associez votre compte pour jouer en toute sécurité !",
     "profile": "📊 Consultez vos compétences, stats et meilleurs scores !",
-    "tryNormalHighlight": "Appuie d'abord sur le mode Normal pour commencer ton premier match !",
-    "startNormalNow": "Démarrer le mode normal",
+    "tryNormalHighlight": "Item Mode is a great first match for learning the rules casually. You can also look around the home screen first.",
+    "startNormalNow": "Démarrer le mode objets",
     "next": "Suivant",
     "done": "Terminé",
     "skip": "Passer",
-    "loginNow": "Se connecter"
+    "loginNow": "Se connecter",
+    "solo": "🎯 Enjoy 3 random minigames solo and check your skills without competitive pressure!",
+    "browseFirst": "I'll look around first"
   },
   "zero": {
     "title": "Fais Zéro",
@@ -721,5 +762,100 @@
     "percentileAdClaim": "Reveler le Top %",
     "percentileRewardLabel": "Top %",
     "percentileRewardHeadline": "Top % debloque pour les 3 jeux !"
+  },
+  "items": {
+    "screenBlock": {
+      "name": "Nuage sombre",
+      "description": "Couvre l'écran de votre adversaire pendant 2 secondes."
+    },
+    "autoSolve": {
+      "name": "Double chance",
+      "description": "Double les points gagnés pendant 3 secondes."
+    },
+    "emojiBomb": {
+      "name": "Bombe d'émojis",
+      "description": "Projette des émojis sur l'écran de votre adversaire pendant 5 secondes."
+    }
+  },
+  "dailyQuests": {
+    "shortTitle": "Quests",
+    "badge": "Daily",
+    "title": "Daily Quests",
+    "subtitle": "Complete today's goals and claim rewards.",
+    "progress": "Progress",
+    "questSection": "Today's Tasks",
+    "rewardSection": "Rewards",
+    "claim": "Claim",
+    "claimed": "Claimed",
+    "claimSuccess": "Reward claimed.",
+    "claimFail": "Failed to claim reward.",
+    "loadFail": "Failed to load daily quests.",
+    "reward": {
+      "milestone": "{{points}} pt reward",
+      "xp": "XP +{{count}}",
+      "gold": "Gold +{{count}}",
+      "pencils": "Pencil +{{count}}",
+      "randomItem": "Random item +{{count}}",
+      "itemWithCode": "Random item +{{count}} ({{itemCode}})",
+      "empty": "Reward",
+      "randomItemShort": "Item"
+    },
+    "quests": {
+      "login": {
+        "title": "Log in",
+        "description": "Open BrainRush today."
+      },
+      "profileView": {
+        "title": "Check profile",
+        "description": "Open your profile."
+      },
+      "shopVisit": {
+        "title": "Visit shop",
+        "description": "Open the shop."
+      },
+      "rankingView": {
+        "title": "Check ranking",
+        "description": "Open the ranking board."
+      },
+      "pencilSpend1": {
+        "title": "Use 1 pencil",
+        "description": "Play one pencil-cost mode."
+      },
+      "pencilSpend3": {
+        "title": "Use 3 pencils",
+        "description": "Play three pencil-cost modes."
+      },
+      "pencilSpend5": {
+        "title": "Use 5 pencils",
+        "description": "Play five pencil-cost modes."
+      },
+      "adWatch1": {
+        "title": "Watch 1 ad",
+        "description": "Watch one reward ad."
+      },
+      "adWatch3": {
+        "title": "Watch 3 ads",
+        "description": "Watch three reward ads."
+      },
+      "goldSpend1": {
+        "title": "Spend gold once",
+        "description": "Buy an item or pencils with gold."
+      }
+    },
+    "completeQuest": "Complete",
+    "questClaimSuccess": "Quest complete!",
+    "questClaimFail": "Failed to complete quest.",
+    "claimAllSuccess": "All rewards claimed.",
+    "claimAvailableRewards": "Claim available rewards",
+    "claimAvailableRewardsHint": "Tap the unlocked chest to claim your rewards.",
+    "rewardProgressHint": "Chests unlock as you complete quest points.",
+    "rewardAlreadyClaimed": "Already claimed.",
+    "rewardReady": "Ready to claim now.",
+    "rewardLockedUntil": "Unlocks at {{points}} points.",
+    "rewardClaimModal": {
+      "title": "Rewards Claimed!",
+      "subtitle": "Total from {{count}} chest(s)",
+      "items": "Items received"
+    }
   }
 }

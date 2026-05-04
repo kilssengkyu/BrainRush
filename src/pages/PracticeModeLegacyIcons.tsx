@@ -149,6 +149,7 @@ const PracticeMode = () => {
             const { error } = await supabase.rpc('reward_ad_practice_notes', { user_id: user.id });
             if (!error) {
                 await refreshProfile();
+                window.dispatchEvent(new CustomEvent('brainrush:daily-quest-updated'));
                 playSound('level_complete');
                 return 'ok';
             }

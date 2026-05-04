@@ -94,8 +94,8 @@
   },
   "menu": {
     "normal": {
-      "title": "Chế độ Thường",
-      "subtitle": "Rèn luyện não cơ bản",
+      "title": "Chế độ Vật phẩm",
+      "subtitle": "Đấu casual với vật phẩm",
       "matchRule": "Thắng 2 trong 3 ván"
     },
     "rank": {
@@ -176,7 +176,39 @@
     "billingUnavailable": "Thiết bị này không hỗ trợ thanh toán.",
     "sessionRefreshFailed": "Failed to refresh session: {{message}}",
     "sessionExpired": "Your login session has expired. Please sign in again.",
-    "purchaseFailWithReason": "Purchase failed: {{message}}"
+    "purchaseFailWithReason": "Purchase failed: {{message}}",
+    "goldTab": "Gold",
+    "goldPencils": {
+      "oneTitle": "1 Pencil",
+      "oneDesc": "Refill a pencil instantly with gold.",
+      "fiveTitle": "5 Pencils",
+      "fiveDesc": "A 10% discounted gold bundle."
+    },
+    "goldPencilPurchaseSuccess": "Purchased pencils with gold.",
+    "goldPencilPurchaseFailed": "Failed to purchase pencils.",
+    "dailyFreePencilBadge": "Daily Gift",
+    "dailyFreePencilTitle": "Today's Free Pencil",
+    "dailyFreePencilDesc": "Claim 1 free pencil from the shop once per day.",
+    "dailyFreePencilClaimedDesc": "You already claimed today's gift. Come back tomorrow.",
+    "dailyFreePencilClaimButton": "Claim Free",
+    "dailyFreePencilClaimedButton": "Claimed",
+    "dailyFreePencilClaimSuccess": "You claimed today's free pencil.",
+    "dailyFreePencilAlreadyClaimed": "You already claimed today's free pencil.",
+    "dailyFreePencilClaimFailed": "Failed to claim the free pencil.",
+    "dailyFreeAdClaimButton": "Watch Ad Again",
+    "dailyFreeBaseRequired": "Claim the free gift first.",
+    "dailyFreeGoldBadge": "Daily Gold",
+    "dailyFreeGoldTitle": "Today’s Free Gold",
+    "dailyFreeGoldDesc": "Claim {{count}} free gold from the shop once per day.",
+    "dailyFreeGoldAdDesc": "Watch an ad to claim it one more time today.",
+    "dailyFreeGoldClaimedDesc": "You already claimed today’s gift. Come back tomorrow.",
+    "dailyFreeGoldClaimButton": "Claim Free",
+    "dailyFreeGoldClaimedButton": "Claimed",
+    "dailyFreeGoldClaimSuccess": "You claimed today’s free gold.",
+    "dailyFreeGoldAlreadyClaimed": "You already claimed today’s free gold.",
+    "dailyFreeGoldClaimFailed": "Failed to claim the free gold.",
+    "dailyFreePencilAdDesc": "Watch an ad to claim it one more time today.",
+    "rewardTitle": "Đã nhận"
   },
   "leaderboard": {
     "button": "Bảng xếp hạng",
@@ -212,7 +244,13 @@
     "success": "Nhận thưởng thành công.",
     "noFillTitle": "Hiện không có quảng cáo",
     "noFillDesc": "Vui lòng thử lại sau giây lát.",
-    "noFillRewarded": "Rất tiếc, hiện chưa có quảng cáo để xem. Phần thưởng sẽ được trao ngay."
+    "noFillRewarded": "Rất tiếc, hiện chưa có quảng cáo để xem. Phần thưởng sẽ được trao ngay.",
+    "titleGold": "Get Gold",
+    "watchDescGold": "Watch a short ad to get bonus gold!",
+    "adFreeDescGold": "Ad-free reward. Get bonus gold instantly.",
+    "claimBtnGold": "Get Gold",
+    "gold": "Gold",
+    "goldRewardHeadline": "Gold received!"
   },
   "notifications": {
     "fullTitle": "Bút chì đã đầy",
@@ -386,7 +424,7 @@
     "reconnectingDesc": "Đối thủ đã ngắt kết nối. Tự động thắng sau:",
     "myTime": "Thời gian của tôi",
     "rank": "RANK",
-    "normal": "THƯỜNG",
+    "normal": "VẬT PHẨM",
     "unknownPlayer": "Người chơi không xác định",
     "guest": "Khách",
     "you": "Bạn",
@@ -400,6 +438,7 @@
     "total": "TỔNG",
     "great": "Tuyệt!",
     "tier": "Tier",
+    "opponentUsedItem": "Đối thủ đã dùng {{item}}.",
     "table": {
       "round": "Vòng",
       "myScore": "Điểm của tôi",
@@ -599,7 +638,7 @@
     "scoreLabel": "Bậc"
   },
   "tutorial": {
-    "normal": "🌍 Đấu với người chơi toàn thế giới qua các mini game vui nhộn!",
+    "normal": "🌍 Thưởng thức các trận minigame casual với người chơi toàn cầu bằng vật phẩm!",
     "rank": "🏆 Thi đấu xếp hạng với người chơi có trình độ tương đương!",
     "practice": "💪 Luyện tập bất kỳ game nào bạn muốn!",
     "ranking": "👑 Xem những người chơi thông minh nhất thế giới!",
@@ -607,12 +646,14 @@
     "settings": "⚙️ Đổi âm thanh, ngôn ngữ và các cài đặt khác!",
     "login": "👤 Liên kết tài khoản để chơi an toàn hơn!",
     "profile": "📊 Xem kỹ năng, chỉ số và điểm cao của bạn!",
-    "tryNormalHighlight": "Hãy nhấn chế độ Thường trước để bắt đầu trận đầu tiên!",
-    "startNormalNow": "Bắt đầu Chế độ Thường",
+    "tryNormalHighlight": "Item Mode is a great first match for learning the rules casually. You can also look around the home screen first.",
+    "startNormalNow": "Bắt đầu Chế độ Vật phẩm",
     "next": "Tiếp",
     "done": "Xong",
     "skip": "Bỏ qua",
-    "loginNow": "Đăng nhập ngay"
+    "loginNow": "Đăng nhập ngay",
+    "solo": "🎯 Enjoy 3 random minigames solo and check your skills without competitive pressure!",
+    "browseFirst": "I'll look around first"
   },
   "zero": {
     "title": "Tạo Số Không",
@@ -721,5 +762,100 @@
     "percentileAdClaim": "Xem Top %",
     "percentileRewardLabel": "Top %",
     "percentileRewardHeadline": "Đã mở khóa Top % cho cả 3 trò chơi!"
+  },
+  "items": {
+    "screenBlock": {
+      "name": "Mây đen",
+      "description": "Che màn hình đối thủ trong 2 giây."
+    },
+    "autoSolve": {
+      "name": "Cơ hội nhân đôi",
+      "description": "Nhân đôi số điểm bạn nhận được trong 3 giây."
+    },
+    "emojiBomb": {
+      "name": "Bom emoji",
+      "description": "Rải emoji khắp màn hình đối thủ trong 5 giây."
+    }
+  },
+  "dailyQuests": {
+    "shortTitle": "Quests",
+    "badge": "Daily",
+    "title": "Daily Quests",
+    "subtitle": "Complete today's goals and claim rewards.",
+    "progress": "Progress",
+    "questSection": "Today's Tasks",
+    "rewardSection": "Rewards",
+    "claim": "Claim",
+    "claimed": "Claimed",
+    "claimSuccess": "Reward claimed.",
+    "claimFail": "Failed to claim reward.",
+    "loadFail": "Failed to load daily quests.",
+    "reward": {
+      "milestone": "{{points}} pt reward",
+      "xp": "XP +{{count}}",
+      "gold": "Gold +{{count}}",
+      "pencils": "Pencil +{{count}}",
+      "randomItem": "Random item +{{count}}",
+      "itemWithCode": "Random item +{{count}} ({{itemCode}})",
+      "empty": "Reward",
+      "randomItemShort": "Item"
+    },
+    "quests": {
+      "login": {
+        "title": "Log in",
+        "description": "Open BrainRush today."
+      },
+      "profileView": {
+        "title": "Check profile",
+        "description": "Open your profile."
+      },
+      "shopVisit": {
+        "title": "Visit shop",
+        "description": "Open the shop."
+      },
+      "rankingView": {
+        "title": "Check ranking",
+        "description": "Open the ranking board."
+      },
+      "pencilSpend1": {
+        "title": "Use 1 pencil",
+        "description": "Play one pencil-cost mode."
+      },
+      "pencilSpend3": {
+        "title": "Use 3 pencils",
+        "description": "Play three pencil-cost modes."
+      },
+      "pencilSpend5": {
+        "title": "Use 5 pencils",
+        "description": "Play five pencil-cost modes."
+      },
+      "adWatch1": {
+        "title": "Watch 1 ad",
+        "description": "Watch one reward ad."
+      },
+      "adWatch3": {
+        "title": "Watch 3 ads",
+        "description": "Watch three reward ads."
+      },
+      "goldSpend1": {
+        "title": "Spend gold once",
+        "description": "Buy an item or pencils with gold."
+      }
+    },
+    "completeQuest": "Complete",
+    "questClaimSuccess": "Quest complete!",
+    "questClaimFail": "Failed to complete quest.",
+    "claimAllSuccess": "All rewards claimed.",
+    "claimAvailableRewards": "Claim available rewards",
+    "claimAvailableRewardsHint": "Tap the unlocked chest to claim your rewards.",
+    "rewardProgressHint": "Chests unlock as you complete quest points.",
+    "rewardAlreadyClaimed": "Already claimed.",
+    "rewardReady": "Ready to claim now.",
+    "rewardLockedUntil": "Unlocks at {{points}} points.",
+    "rewardClaimModal": {
+      "title": "Rewards Claimed!",
+      "subtitle": "Total from {{count}} chest(s)",
+      "items": "Items received"
+    }
   }
 }

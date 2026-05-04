@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { X, Mail, MailOpen, Gift, Trash2 } from 'lucide-react';
+import { X, Gift, Trash2 } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 import { useUI } from '../../contexts/UIContext';
 
@@ -441,22 +441,22 @@ const MailboxModal = ({
 
   return (
     <div className="fixed inset-0 z-[130] bg-black/75 backdrop-blur-sm flex items-center justify-center px-4">
-      <div className="w-full max-w-4xl h-[min(78vh,680px)] rounded-3xl border border-cyan-400/30 bg-slate-50 dark:bg-gray-900/95 shadow-2xl overflow-hidden flex flex-col">
-        <div className="px-5 py-4 border-b border-white/10 flex items-center justify-between">
+      <div className="w-full max-w-4xl h-[min(78vh,680px)] rounded-3xl border border-slate-200 bg-slate-50 shadow-2xl overflow-hidden flex flex-col dark:border-cyan-400/30 dark:bg-gray-900/95">
+        <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between dark:border-white/10">
           <div className="flex items-center gap-2">
-            <Mail className="w-5 h-5 text-cyan-300" />
+            <img src="/images/icon/icon_mail.png" alt="" className="h-6 w-6 object-contain" aria-hidden="true" />
             <h2 className="text-lg font-black text-slate-900 dark:text-white">{t('mailbox.title', '우편함')}</h2>
           </div>
           <button
             onClick={onClose}
-            className="rounded-full p-2 text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/10"
+            className="rounded-full p-2 text-slate-500 hover:bg-slate-200 hover:text-slate-900 dark:text-gray-400 dark:hover:bg-white/10 dark:hover:text-white"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-[280px_1fr]">
-          <div className="border-r border-white/10 flex flex-col min-h-0">
+          <div className="border-r border-slate-200 flex flex-col min-h-0 dark:border-white/10">
             <div className="flex-1 overflow-y-auto p-2 space-y-4">
               {loading && (
                 <div className="text-xs text-slate-500 dark:text-gray-400 p-2">{t('common.loading')}</div>
@@ -465,7 +465,7 @@ const MailboxModal = ({
               {!loading && (
                 <>
                   <div>
-                    <div className="px-2 pb-2 text-[11px] font-bold uppercase tracking-wider text-cyan-300">
+                    <div className="px-2 pb-2 text-[11px] font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-300">
                       {t('mailbox.unread', '안읽은 우편')} ({unreadItems.length})
                     </div>
                     {unreadItems.length === 0 ? (
@@ -474,8 +474,8 @@ const MailboxModal = ({
                       <div
                         key={`unread-${item.id}-${item.occurrenceDate}`}
                         className={`w-full rounded-xl border p-2.5 mb-2 transition-colors ${selectedId === item.id
-                          ? 'border-cyan-300 bg-cyan-500/15'
-                          : 'border-white/10 bg-slate-900/40 hover:bg-slate-900/60'
+                          ? 'border-cyan-400 bg-cyan-50 shadow-sm dark:border-cyan-300 dark:bg-cyan-500/15'
+                          : 'border-slate-200 bg-white hover:bg-slate-100 dark:border-white/10 dark:bg-slate-900/40 dark:hover:bg-slate-900/60'
                           }`}
                       >
                         <div className="flex items-center gap-2">
@@ -484,7 +484,7 @@ const MailboxModal = ({
                             className="min-w-0 flex-1 text-left"
                           >
                             <div className="flex items-start gap-2">
-                              <Mail className="w-4 h-4 mt-0.5 text-cyan-300 shrink-0" />
+                              <img src="/images/icon/icon_mail.png" alt="" className="mt-0.5 h-5 w-5 shrink-0 object-contain" aria-hidden="true" />
                               <div className="min-w-0">
                                 <div className="text-sm font-bold text-slate-900 dark:text-white truncate">{item.title || t('mailbox.untitled', '제목 없음')}</div>
                                 <div className="text-[11px] text-slate-500 dark:text-gray-400 mt-1">{formatDate(item.startsAt || item.createdAt)}</div>
@@ -494,7 +494,7 @@ const MailboxModal = ({
                           <button
                             onClick={() => { void handleDeleteUnread(item); }}
                             disabled={deletingUnreadId === item.id || isReadItemClaimable(item)}
-                            className="rounded-lg border border-red-300/30 bg-red-500/15 p-2 text-red-300 hover:bg-red-500/25 disabled:opacity-40 disabled:cursor-not-allowed"
+                            className="rounded-lg border border-red-200 bg-red-50 p-2 text-red-500 hover:bg-red-100 disabled:opacity-40 disabled:cursor-not-allowed dark:border-red-300/30 dark:bg-red-500/15 dark:text-red-300 dark:hover:bg-red-500/25"
                             title={t('mailbox.deleteUnread', '삭제')}
                             aria-label={t('mailbox.deleteUnread', '삭제')}
                           >
@@ -513,7 +513,7 @@ const MailboxModal = ({
                       <button
                         onClick={() => { void handleDeleteAllRead(); }}
                         disabled={deletingReadAll || readItems.length === 0}
-                        className="rounded-lg border border-white/20 bg-slate-900/50 px-2 py-1 text-[11px] font-bold text-slate-700 dark:text-gray-200 hover:bg-slate-800/70 disabled:opacity-40"
+                        className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-40 dark:border-white/20 dark:bg-slate-900/50 dark:text-gray-200 dark:hover:bg-slate-800/70"
                       >
                         {deletingReadAll
                           ? t('common.loading')
@@ -527,12 +527,12 @@ const MailboxModal = ({
                         key={`read-${item.id}-${item.occurrenceDate}`}
                         onClick={() => { void handleSelect(item); }}
                         className={`w-full rounded-xl border p-3 mb-2 text-left transition-colors ${selectedId === item.id
-                          ? 'border-cyan-300 bg-cyan-500/15'
-                          : 'border-white/10 bg-slate-900/40 hover:bg-slate-900/60'
+                          ? 'border-cyan-400 bg-cyan-50 shadow-sm dark:border-cyan-300 dark:bg-cyan-500/15'
+                          : 'border-slate-200 bg-white hover:bg-slate-100 dark:border-white/10 dark:bg-slate-900/40 dark:hover:bg-slate-900/60'
                           }`}
                       >
                         <div className="flex items-start gap-2">
-                          <MailOpen className="w-4 h-4 mt-0.5 text-slate-500 dark:text-gray-400 shrink-0" />
+                          <img src="/images/icon/icon_mail.png" alt="" className="mt-0.5 h-5 w-5 shrink-0 object-contain opacity-45 grayscale" aria-hidden="true" />
                           <div className="min-w-0">
                             <div className="text-sm font-bold text-slate-900 dark:text-white truncate">{item.title || t('mailbox.untitled', '제목 없음')}</div>
                             <div className="text-[11px] text-slate-500 dark:text-gray-400 mt-1">{formatDate(item.startsAt || item.createdAt)}</div>
@@ -557,24 +557,24 @@ const MailboxModal = ({
               <div className="space-y-4">
                 <h3 className="text-xl font-black text-slate-900 dark:text-white">{selected.title || t('mailbox.untitled', '제목 없음')}</h3>
                 <div className="text-xs text-slate-500 dark:text-gray-400">{formatDate(selected.startsAt || selected.createdAt)}</div>
-                <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-4 text-sm leading-relaxed text-slate-700 dark:text-gray-200 whitespace-pre-wrap">
+                <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm leading-relaxed text-slate-700 whitespace-pre-wrap dark:border-white/10 dark:bg-slate-900/40 dark:text-gray-200">
                   {selected.content || t('mailbox.noContent', '내용이 없습니다.')}
                 </div>
 
                 {(selected.rewardPencils > 0 || selected.rewardPracticeNotes > 0) && (
                   <div className="rounded-2xl border border-emerald-400/25 bg-emerald-500/10 p-4">
-                    <div className="flex items-center gap-2 text-emerald-200 font-bold text-sm mb-2">
+                    <div className="flex items-center gap-2 text-emerald-700 font-bold text-sm mb-2 dark:text-emerald-200">
                       <Gift className="w-4 h-4" />
                       {t('mailbox.rewardTitle', '수령 가능한 보상')}
                     </div>
                     <div className="flex flex-wrap gap-2 text-xs">
                       {selected.rewardPencils > 0 && (
-                        <span className="rounded-full px-3 py-1 bg-yellow-500/20 border border-yellow-300/30 text-yellow-200">
+                        <span className="rounded-full px-3 py-1 bg-yellow-100 border border-yellow-300/50 text-yellow-700 dark:bg-yellow-500/20 dark:border-yellow-300/30 dark:text-yellow-200">
                           {t('mailbox.rewardPencils', '연필 +{{count}}', { count: selected.rewardPencils })}
                         </span>
                       )}
                       {selected.rewardPracticeNotes > 0 && (
-                        <span className="rounded-full px-3 py-1 bg-cyan-500/20 border border-cyan-300/30 text-cyan-200">
+                        <span className="rounded-full px-3 py-1 bg-cyan-100 border border-cyan-300/50 text-cyan-700 dark:bg-cyan-500/20 dark:border-cyan-300/30 dark:text-cyan-200">
                           {t('mailbox.rewardPracticeNotes', '연습노트 +{{count}}', { count: selected.rewardPracticeNotes })}
                         </span>
                       )}
@@ -601,7 +601,7 @@ const MailboxModal = ({
                   )}
                   <button
                     onClick={onClose}
-                    className="rounded-xl px-4 py-2 font-semibold border border-gray-600 text-slate-600 dark:text-gray-300 hover:bg-white dark:bg-gray-800"
+                    className="rounded-xl px-4 py-2 font-semibold border border-slate-300 text-slate-600 hover:bg-white dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300"
                   >
                     {t('common.close')}
                   </button>

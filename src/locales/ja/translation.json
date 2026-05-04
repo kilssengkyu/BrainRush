@@ -40,8 +40,8 @@
   },
   "menu": {
     "normal": {
-      "title": "ノーマルモード",
-      "subtitle": "基礎頭脳トレーニング",
+      "title": "アイテムモード",
+      "subtitle": "アイテムを使って楽しむカジュアル対戦",
       "matchRule": "3本勝負（2本先取）"
     },
     "rank": {
@@ -122,7 +122,39 @@
     "billingUnavailable": "この端末では購入に対応していません。",
     "sessionRefreshFailed": "Failed to refresh session: {{message}}",
     "sessionExpired": "Your login session has expired. Please sign in again.",
-    "purchaseFailWithReason": "Purchase failed: {{message}}"
+    "purchaseFailWithReason": "Purchase failed: {{message}}",
+    "goldTab": "ゴールド",
+    "goldPencils": {
+      "oneTitle": "鉛筆 1本",
+      "oneDesc": "ゴールドで鉛筆をすぐに補充します。",
+      "fiveTitle": "鉛筆 5本",
+      "fiveDesc": "10%お得なゴールドパックです。"
+    },
+    "goldPencilPurchaseSuccess": "ゴールドで鉛筆を購入しました。",
+    "goldPencilPurchaseFailed": "鉛筆の購入に失敗しました。",
+    "dailyFreePencilBadge": "今日のギフト",
+    "dailyFreePencilTitle": "今日の無料鉛筆",
+    "dailyFreePencilDesc": "ショップで1日1回、鉛筆を1本受け取れます。",
+    "dailyFreePencilClaimedDesc": "今日はすでに受け取り済みです。明日また受け取りましょう。",
+    "dailyFreePencilClaimButton": "無料で受け取る",
+    "dailyFreePencilClaimedButton": "受け取り済み",
+    "dailyFreePencilClaimSuccess": "今日の無料鉛筆を受け取りました。",
+    "dailyFreePencilAlreadyClaimed": "今日の無料鉛筆はすでに受け取り済みです。",
+    "dailyFreePencilClaimFailed": "無料鉛筆の受け取りに失敗しました。",
+    "dailyFreeAdClaimButton": "広告でもう一度",
+    "dailyFreeBaseRequired": "先に無料ギフトを受け取ってください。",
+    "dailyFreeGoldBadge": "今日のゴールド",
+    "dailyFreeGoldTitle": "今日の無料ゴールド",
+    "dailyFreeGoldDesc": "ショップで1日1回、ゴールド{{count}}枚を受け取れます。",
+    "dailyFreeGoldAdDesc": "広告を見ると、今日もう一度受け取れます。",
+    "dailyFreeGoldClaimedDesc": "今日はすでに受け取り済みです。明日また受け取りましょう。",
+    "dailyFreeGoldClaimButton": "無料で受け取る",
+    "dailyFreeGoldClaimedButton": "受け取り済み",
+    "dailyFreeGoldClaimSuccess": "今日の無料ゴールドを受け取りました。",
+    "dailyFreeGoldAlreadyClaimed": "今日の無料ゴールドはすでに受け取り済みです。",
+    "dailyFreeGoldClaimFailed": "無料ゴールドの受け取りに失敗しました。",
+    "dailyFreePencilAdDesc": "広告を見ると、今日もう一度受け取れます。",
+    "rewardTitle": "獲得"
   },
   "social": {
     "friends": "フレンド",
@@ -208,7 +240,13 @@
     "success": "報酬を獲得しました。",
     "noFillTitle": "現在広告がありません",
     "noFillDesc": "しばらくしてからもう一度お試しください。",
-    "noFillRewarded": "あっ、今は再生できる広告がありません！報酬はすぐにお渡しします。"
+    "noFillRewarded": "あっ、今は再生できる広告がありません！報酬はすぐにお渡しします。",
+    "titleGold": "ゴールドを受け取る",
+    "watchDescGold": "短い広告を見てボーナスゴールドを受け取りましょう！",
+    "adFreeDescGold": "広告なしでボーナスゴールドをすぐに受け取れます。",
+    "claimBtnGold": "ゴールドを受け取る",
+    "gold": "ゴールド",
+    "goldRewardHeadline": "ゴールドを受け取りました！"
   },
   "notifications": {
     "fullTitle": "鉛筆が満タン！",
@@ -318,7 +356,7 @@
     "reconnectingDesc": "相手の接続が切れました。不戦勝まで:",
     "myTime": "タイム",
     "rank": "ランク",
-    "normal": "ノーマル",
+    "normal": "アイテム",
     "unknownPlayer": "不明なプレイヤー",
     "guest": "ゲスト",
     "you": "あなた",
@@ -332,6 +370,7 @@
     "total": "合計",
     "great": "いいね！",
     "tier": "ティア",
+    "opponentUsedItem": "相手が{{item}}を使いました。",
     "table": {
       "round": "ラウンド",
       "myScore": "自分",
@@ -595,7 +634,7 @@
     "scoreLabel": "階段"
   },
   "tutorial": {
-    "normal": "🌍 世界中のプレイヤーとミニゲーム対戦を楽しもう！",
+    "normal": "🌍 アイテムを使って世界中のプレイヤーとカジュアル対戦を楽しもう！",
     "rank": "🏆 同じ実力のプレイヤーとランク戦！",
     "practice": "💪 好きなゲームを自由に練習できます！",
     "ranking": "👑 世界で一番賢いプレイヤーをチェック！",
@@ -603,12 +642,14 @@
     "settings": "⚙️ 音量や言語などの設定を変更できます！",
     "login": "👤 アカウント連携で安全にプレイ！",
     "profile": "📊 実力・能力値・スコアを確認！",
-    "tryNormalHighlight": "まずはノーマルモードを押して、最初の対戦を始めましょう！",
-    "startNormalNow": "ノーマルモード開始",
+    "tryNormalHighlight": "アイテムモードは、気軽にルールを覚える最初の対戦にぴったりです。ホーム画面を先に見て回っても大丈夫です。",
+    "startNormalNow": "アイテムモード開始",
     "next": "次へ",
     "done": "完了",
     "skip": "スキップ",
-    "loginNow": "今すぐログイン"
+    "loginNow": "今すぐログイン",
+    "solo": "🎯 競争のプレッシャーなく、ランダムなミニゲーム3つを一人で遊んで実力を確認しましょう！",
+    "browseFirst": "先に見てみます"
   },
   "zero": {
     "title": "ゼロを作れ",
@@ -721,5 +762,100 @@
     "percentileAdClaim": "上位%を表示",
     "percentileRewardLabel": "上位%",
     "percentileRewardHeadline": "3つのゲームすべての上位%を解放しました！"
+  },
+  "items": {
+    "screenBlock": {
+      "name": "暗雲",
+      "description": "2秒間、相手の画面を覆います。"
+    },
+    "autoSolve": {
+      "name": "ダブルチャンス",
+      "description": "次の3秒間、獲得スコアが2倍になります。"
+    },
+    "emojiBomb": {
+      "name": "絵文字爆弾",
+      "description": "5秒間、相手の画面に絵文字をばらまきます。"
+    }
+  },
+  "dailyQuests": {
+    "shortTitle": "デイリー",
+    "badge": "Daily",
+    "title": "デイリークエスト",
+    "subtitle": "今日の目標を達成して報酬を受け取りましょう。",
+    "progress": "進行度",
+    "questSection": "今日のタスク",
+    "rewardSection": "報酬",
+    "claim": "受取",
+    "claimed": "受取済み",
+    "claimSuccess": "報酬を受け取りました。",
+    "claimFail": "報酬の受け取りに失敗しました。",
+    "loadFail": "デイリークエストを読み込めませんでした。",
+    "reward": {
+      "milestone": "{{points}}pt報酬",
+      "xp": "XP +{{count}}",
+      "gold": "ゴールド +{{count}}",
+      "pencils": "鉛筆 +{{count}}",
+      "randomItem": "ランダムアイテム +{{count}}",
+      "itemWithCode": "ランダムアイテム +{{count}} ({{itemCode}})",
+      "empty": "報酬",
+      "randomItemShort": "アイテム"
+    },
+    "quests": {
+      "login": {
+        "title": "ログインする",
+        "description": "今日BrainRushを開きましょう。"
+      },
+      "profileView": {
+        "title": "プロフィール確認",
+        "description": "自分のプロフィールを開きましょう。"
+      },
+      "shopVisit": {
+        "title": "ショップ訪問",
+        "description": "ショップを開きましょう。"
+      },
+      "rankingView": {
+        "title": "ランキング確認",
+        "description": "ランキングを開きましょう。"
+      },
+      "pencilSpend1": {
+        "title": "鉛筆を1本使う",
+        "description": "鉛筆を使うモードを1回プレイしましょう。"
+      },
+      "pencilSpend3": {
+        "title": "鉛筆を3本使う",
+        "description": "鉛筆を使うモードを3回プレイしましょう。"
+      },
+      "pencilSpend5": {
+        "title": "鉛筆を5本使う",
+        "description": "鉛筆を使うモードを5回プレイしましょう。"
+      },
+      "adWatch1": {
+        "title": "広告を1回見る",
+        "description": "リワード広告を1回見ましょう。"
+      },
+      "adWatch3": {
+        "title": "広告を3回見る",
+        "description": "リワード広告を3回見ましょう。"
+      },
+      "goldSpend1": {
+        "title": "ゴールドを1回使う",
+        "description": "ゴールドでアイテムや鉛筆を購入しましょう。"
+      }
+    },
+    "completeQuest": "完了",
+    "questClaimSuccess": "クエスト完了！",
+    "questClaimFail": "クエストの完了処理に失敗しました。",
+    "claimAllSuccess": "すべての報酬を受け取りました。",
+    "claimAvailableRewards": "受け取れる報酬を受け取る",
+    "claimAvailableRewardsHint": "開いた宝箱をタップして報酬を受け取りましょう。",
+    "rewardProgressHint": "クエスト点数に応じて宝箱が開きます。",
+    "rewardAlreadyClaimed": "受取済みの報酬です。",
+    "rewardReady": "今すぐ受け取れます。",
+    "rewardLockedUntil": "{{points}}点で受け取れます。",
+    "rewardClaimModal": {
+      "title": "報酬を受け取りました！",
+      "subtitle": "{{count}}個の宝箱の合計",
+      "items": "獲得アイテム"
+    }
   }
 }
