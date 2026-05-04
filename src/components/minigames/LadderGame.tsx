@@ -106,6 +106,13 @@ const LadderGame: React.FC<LadderGameProps> = ({ seed, onScore, isPlaying }) => 
         setPanelShownAtMs(Date.now());
     }, [gameState, panelIndex]);
 
+    useEffect(() => {
+        setSelectedEnd(null);
+        setIsAnimating(false);
+        setShakeId(null);
+        setTracePath([]);
+    }, [seed]);
+
     const handleEndClick = (endIndex: number) => {
         if (isAnimating || !gameState || !isPlaying) return;
 
@@ -253,8 +260,15 @@ const LadderGame: React.FC<LadderGameProps> = ({ seed, onScore, isPlaying }) => 
                 <div className="absolute -bottom-14 w-full h-12">
                     {Array.from({ length: gameState.lines }).map((_, i) => (
                         <motion.button
-                            key={`btn-${i}`}
-                            animate={shakeId === i ? { x: [-5, 5, -5, 5, 0], backgroundColor: '#ef4444' } : {}}
+                            key={`${seed ?? 'ladder'}-${panelIndex}-btn-${i}`}
+                            animate={shakeId === i
+                                ? { x: [-5, 5, -5, 5, 0], backgroundColor: '#ef4444' }
+                                : {
+                                    x: 0,
+                                    backgroundColor: selectedEnd === i
+                                        ? '#22c55e'
+                                        : isDark ? '#1f2937' : '#ffffff',
+                                }}
                             className={`absolute w-12 h-12 rounded-full border-4 font-bold text-xl transition-all shadow-lg
                                 ${selectedEnd === i
                                     ? 'bg-green-500 border-green-300'

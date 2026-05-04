@@ -99,6 +99,23 @@ const Profile = () => {
     const NICKNAME_COOLDOWN_MS = 30 * 24 * 60 * 60 * 1000;
     const edgeSwipeStartRef = useRef<{ x: number; y: number } | null>(null);
     const edgeSwipeTriggeredRef = useRef(false);
+    const dailyQuestViewRecordedRef = useRef<string | null>(null);
+
+    useEffect(() => {
+        if (!user?.id || dailyQuestViewRecordedRef.current === user.id) return;
+        dailyQuestViewRecordedRef.current = user.id;
+        supabase.rpc('record_daily_quest_event', {
+            p_event_type: 'PROFILE_VIEW',
+            p_amount: 1,
+        }).then(({ error }) => {
+            if (error) {
+                dailyQuestViewRecordedRef.current = null;
+                console.error('Failed to record profile daily quest:', error);
+            } else {
+                window.dispatchEvent(new CustomEvent('brainrush:daily-quest-updated'));
+            }
+        });
+    }, [user?.id]);
 
     useEffect(() => {
         if (profile?.nickname) {

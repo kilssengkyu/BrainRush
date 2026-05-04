@@ -50,6 +50,7 @@ import { getLevelFromXp, getXpSnapshotStorageKey } from '../utils/levelUtils';
 import TierMMRBadge from '../components/ui/TierMMRBadge';
 import { getTierFromMMR, getTierColor, getTierIcon } from '../utils/rankUtils';
 import ReviewPromptModal from '../components/ui/ReviewPromptModal';
+import { logAnalyticsEvent } from '../lib/analytics';
 // useTheme removed — Game board uses Tailwind dark: variants directly
 
 const IS_DEV = import.meta.env.DEV;
@@ -61,9 +62,22 @@ const BOT_EMOJI_BURST = ['🙂', '😂', '👍'];
 const BOT_EMOJI_MIRROR = ['🙂', '😂', '👍', '❤️'];
 type BotEmojiPattern = 'burst' | 'mirror_count';
 
-const FINAL_ROUND_FINISHED_MS = 2000;
+const FINAL_ROUND_FINISHED_MS = 900;
 const REMATCH_WINDOW_MS = 30000;
 const BOT_EMOJI_FINAL_RESULT_AUTO_STOP_MS = 10000;
+const ITEM_HUD_CODES = ['SCREEN_BLOCK', 'AUTO_SOLVE', 'EMOJI_BOMB'] as const;
+const ITEM_COOLDOWN_FALLBACK_MS = 6000;
+const SCREEN_BLOCK_FALLBACK_MS = 2000;
+const EMOJI_BOMB_FALLBACK_MS = 5000;
+
+type ItemHudCatalogRow = {
+    item_code: string;
+    name_key: string;
+    description_key: string;
+    gold_price: number;
+    is_enabled: boolean;
+    sort_order: number;
+};
 
 const Game: React.FC = () => {
     const { t } = useTranslation();
@@ -94,12 +108,21 @@ const Game: React.FC = () => {
         botGhostScore: number;
         gap: number;
     } | null>(null);
+    const [itemHudCatalog, setItemHudCatalog] = useState<ItemHudCatalogRow[]>([]);
+    const [itemHudInventory, setItemHudInventory] = useState<Record<string, number>>({});
+    const [itemCooldownUntil, setItemCooldownUntil] = useState(0);
+    const [screenBlockUntil, setScreenBlockUntil] = useState(0);
+    const [doubleChanceUntil, setDoubleChanceUntil] = useState(0);
+    const [itemUiNow, setItemUiNow] = useState(() => Date.now());
 
     // --- Realtime Score Sync (Broadcast) ---
     const [realtimeOpScore, setRealtimeOpScore] = useState<number | null>(null);
     const lastBroadcastScore = useRef<number>(0);
     const lastBroadcastTime = useRef<number>(0);
     const botRematchRejectTimeoutRef = useRef<number | null>(null);
+    const processedItemEventIdsRef = useRef<Set<string>>(new Set());
+    const itemEffectTimeoutsRef = useRef<number[]>([]);
+    const doubleChanceUntilRef = useRef(0);
 
     // Game Hook
     const { gameState, incrementScore, serverOffset, isWaitingTimeout, isTimeUp, onlineUsers, connectionStatus } = useGameState(roomId!, myId, opponentId);
@@ -107,7 +130,7 @@ const Game: React.FC = () => {
 
     // BGM Control for timing-focused games
     useEffect(() => {
-        if (gameState.gameType === 'TIMING_BAR' || gameState.gameType === 'COLOR_TIMING') {
+        if (gameState.gameType === 'TIMING_BAR') {
             stopBGM();
         } else if (gameState.gameType) {
             playBGM('bgm_game');
@@ -115,6 +138,11 @@ const Game: React.FC = () => {
     }, [gameState.gameType, playBGM, stopBGM]);
 
     const isOpponentOnline = !opponentId || opponentId.startsWith('practice') || isBotId(opponentId) || onlineUsers.includes(opponentId);
+    const isItemMode = gameState.mode === 'normal';
+    const setDoubleChanceState = useCallback((untilMs: number) => {
+        doubleChanceUntilRef.current = untilMs;
+        setDoubleChanceUntil(untilMs);
+    }, []);
     const canReportOpponent = Boolean(
         opponentId &&
         myId &&
@@ -172,6 +200,7 @@ const Game: React.FC = () => {
         if (!roomId || !user || myId !== user.id || !profile) return;
 
         const xp = Math.max(0, Math.floor(Number(profile.xp ?? 0)));
+        const gold = Math.max(0, Math.floor(Number(profile.gold ?? 0)));
         const level = typeof profile.level === 'number'
             ? Math.max(1, Math.floor(profile.level))
             : getLevelFromXp(xp);
@@ -186,6 +215,7 @@ const Game: React.FC = () => {
                 roomId,
                 beforeXp: xp,
                 beforeLevel: level,
+                beforeGold: gold,
                 capturedAt: Date.now()
             }));
         } catch (error) {
@@ -225,9 +255,23 @@ const Game: React.FC = () => {
     const showEmojiBar = (showRoundFinished || isWaiting) && !showFinalResult;
     const showEmojiOverlay = showEmojiBar || showFinalResult;
     const isGameplayInteractable = isGameplayActive;
+    const handleGameScore = useCallback((amount: number = 100) => {
+        if (amount > 0 && isItemMode && Date.now() < doubleChanceUntilRef.current) {
+            incrementScore(amount * 2);
+            return;
+        }
+
+        incrementScore(amount);
+    }, [incrementScore, isItemMode, setDoubleChanceState]);
     const displayRoundNumber = showRoundFinished
         ? Math.max(1, gameState.currentRound - 1)
         : gameState.currentRound;
+
+    useEffect(() => {
+        if (!isItemMode || !isGameplayActive) {
+            setDoubleChanceState(0);
+        }
+    }, [isGameplayActive, isItemMode, setDoubleChanceState]);
 
 
 
@@ -308,7 +352,7 @@ const Game: React.FC = () => {
         my: requiredWins,
         op: requiredWins
     });
-    const [finishRevealDelayMs, setFinishRevealDelayMs] = useState(460);
+    const [finishRevealDelayMs, setFinishRevealDelayMs] = useState(220);
     const displayedLivesRef = useRef(displayedLives);
     const roundLifeFxRoundRef = useRef<string>('');
 
@@ -468,14 +512,14 @@ const Game: React.FC = () => {
 
     useEffect(() => {
         if (!isFinished) {
-            setFinishRevealDelayMs(460);
+            setFinishRevealDelayMs(220);
             return;
         }
 
         if (terminalRoundFinishedActive) return;
 
         if (gameState.mode === 'practice' || !gameState.winnerId || !myId) {
-            setFinishRevealDelayMs(460);
+            setFinishRevealDelayMs(220);
             return;
         }
 
@@ -483,7 +527,7 @@ const Game: React.FC = () => {
             ? 'op'
             : (gameState.winnerId === opponentId ? 'my' : null);
         if (!losingSide) {
-            setFinishRevealDelayMs(460);
+            setFinishRevealDelayMs(220);
             return;
         }
         const forceSideAllOff = () => {
@@ -499,13 +543,13 @@ const Game: React.FC = () => {
         const timers: number[] = [];
         let maxEnd = 0;
         for (let idx = 0; idx < requiredWins; idx++) {
-            const startAt = idx * 220 + Math.floor(Math.random() * 140);
-            const flickers = 8 + Math.floor(Math.random() * 5);
+            const startAt = idx * 90 + Math.floor(Math.random() * 60);
+            const flickers = 4 + Math.floor(Math.random() * 3);
             let cursor = startAt;
 
             for (let step = 0; step < flickers; step++) {
                 // Accelerate blink cadence for a "power dying" feel.
-                const interval = Math.max(38, 86 - step * 6) + Math.floor(Math.random() * 16);
+                const interval = Math.max(28, 58 - step * 7) + Math.floor(Math.random() * 10);
                 cursor += interval;
                 const at = cursor;
                 maxEnd = Math.max(maxEnd, at);
@@ -518,7 +562,7 @@ const Game: React.FC = () => {
                 }, at));
             }
 
-            const offAt = cursor + 120 + Math.floor(Math.random() * 70);
+            const offAt = cursor + 60 + Math.floor(Math.random() * 30);
             maxEnd = Math.max(maxEnd, offAt);
             timers.push(window.setTimeout(() => {
                 setBackdropHeartOn((prev) => {
@@ -529,7 +573,7 @@ const Game: React.FC = () => {
             }, offAt));
         }
 
-        setFinishRevealDelayMs(Math.max(760, maxEnd + 220));
+        setFinishRevealDelayMs(Math.max(260, maxEnd + 80));
         return () => {
             timers.forEach((timerId) => window.clearTimeout(timerId));
             forceSideAllOff();
@@ -1122,6 +1166,7 @@ const Game: React.FC = () => {
     const [streakBonus, setStreakBonus] = useState<number>(0);
     const [showLosePencilModal, setShowLosePencilModal] = useState(false);
     const [showReviewPrompt, setShowReviewPrompt] = useState(false);
+    const matchEndAnalyticsSentRef = useRef<string | null>(null);
 
     useEffect(() => {
         const handleModalCloseRequest = (event: Event) => {
@@ -1292,6 +1337,27 @@ const Game: React.FC = () => {
         return sum;
     }, [gameState.roundScores, gameState.isPlayer1, gameState.myScore, gameState.opScore]);
 
+    useEffect(() => {
+        if (!showFinalResult || gameState.mode === 'practice') return;
+        const eventKey = `${roomId}:${gameState.winnerId ?? 'draw'}:${gameState.roundScores.length}`;
+        if (matchEndAnalyticsSentRef.current === eventKey) return;
+        matchEndAnalyticsSentRef.current = eventKey;
+
+        const opponentType = isBotId(opponentId) ? 'bot' : 'human';
+        const result = gameState.winnerId
+            ? gameState.winnerId === myId ? 'win' : 'lose'
+            : 'draw';
+        void logAnalyticsEvent('br_match_end', {
+            mode: gameState.mode ?? 'normal',
+            opponent_type: opponentType,
+            result,
+            rounds_played: gameState.roundScores.length,
+            total_rounds: gameState.totalRounds,
+            my_total_score: totalScores.my,
+            op_total_score: totalScores.op,
+        });
+    }, [showFinalResult, roomId, gameState.winnerId, gameState.roundScores.length, gameState.totalRounds, gameState.mode, myId, opponentId, totalScores.my, totalScores.op]);
+
     const maxBackdropScoreDigits = Math.max(
         String(Math.max(0, Math.floor(displayMyScore))).length,
         String(Math.max(0, Math.floor(displayOpScore))).length
@@ -1302,6 +1368,284 @@ const Game: React.FC = () => {
             : maxBackdropScoreDigits === 4
                 ? 'text-[clamp(52px,13vw,150px)]'
                 : 'text-[clamp(72px,20vw,220px)]';
+
+    const itemHudItems = itemHudCatalog.map((item) => ({
+        ...item,
+        quantity: itemHudInventory[item.item_code] ?? 0,
+    }));
+    const itemCooldownRemainingSec = Math.max(0, Math.ceil((itemCooldownUntil - itemUiNow) / 1000));
+    const doubleChanceRemainingSec = Math.max(0, Math.ceil((doubleChanceUntil - itemUiNow) / 1000));
+    const isItemCooldownActive = itemUiNow < itemCooldownUntil;
+    const isScreenBlocked = itemUiNow < screenBlockUntil;
+    const isDoubleChanceActive = itemUiNow < doubleChanceUntil;
+    const shouldRenderEmojiOverlay = showEmojiOverlay || emojiBursts.length > 0;
+
+    const getItemHudIconSrc = (itemCode: string) => {
+        switch (itemCode) {
+            case 'SCREEN_BLOCK':
+                return '/images/icon/icon_bomb_black.png';
+            case 'AUTO_SOLVE':
+                return '/images/icon/Bolt - Yellow (Border).png';
+            case 'EMOJI_BOMB':
+                return '/images/icon/icon_bomb_choco.png';
+            default:
+                return null;
+        }
+    };
+
+    const getItemNameKey = (itemCode: string) => {
+        switch (itemCode) {
+            case 'SCREEN_BLOCK':
+                return 'items.screenBlock.name';
+            case 'AUTO_SOLVE':
+                return 'items.autoSolve.name';
+            case 'EMOJI_BOMB':
+                return 'items.emojiBomb.name';
+            default:
+                return null;
+        }
+    };
+
+    const spawnItemEmojiBomb = useCallback((untilMs: number) => {
+        const now = Date.now();
+        const endMs = Math.max(now, untilMs);
+        const remainingMs = endMs - now;
+        if (remainingMs <= 0) return;
+
+        const intervalMs = 190;
+        const burstCount = Math.max(1, Math.ceil(remainingMs / intervalMs));
+        for (let i = 0; i < burstCount; i += 1) {
+            const timeoutId = window.setTimeout(() => {
+                const emoji = BOT_EMOJI_POOL[Math.floor(Math.random() * BOT_EMOJI_POOL.length)];
+                spawnEmoji(emoji, Math.random() < 0.5 ? 'left' : 'right');
+            }, i * intervalMs);
+            itemEffectTimeoutsRef.current.push(timeoutId);
+        }
+    }, [spawnEmoji]);
+
+    const processIncomingItemEvent = useCallback((event: any) => {
+        const eventId = typeof event?.id === 'string' ? event.id : typeof event?.event_id === 'string' ? event.event_id : null;
+        if (eventId) {
+            if (processedItemEventIdsRef.current.has(eventId)) return;
+            processedItemEventIdsRef.current.add(eventId);
+            if (processedItemEventIdsRef.current.size > 100) {
+                const ids = Array.from(processedItemEventIdsRef.current).slice(-60);
+                processedItemEventIdsRef.current = new Set(ids);
+            }
+        }
+
+        const payload = (event?.payload ?? {}) as any;
+        const itemCode = String(event?.item_code ?? '');
+        const effectType = String(payload?.effect_type ?? '');
+        const targetPlayerId = String(event?.target_player_id ?? '');
+        const usedBy = String(event?.used_by ?? '');
+        const usedAtMs = event?.used_at ? new Date(event.used_at).getTime() : Date.now();
+        const effectEndsAtMs = event?.effect_ends_at ? new Date(event.effect_ends_at).getTime() : 0;
+        const cooldownMs = Math.max(
+            ITEM_COOLDOWN_FALLBACK_MS,
+            Number(payload?.cooldown_seconds ?? 0) * 1000 || ITEM_COOLDOWN_FALLBACK_MS
+        );
+
+        if (usedBy === myId) {
+            setItemCooldownUntil((prev) => Math.max(prev, usedAtMs + cooldownMs));
+        }
+
+        if (targetPlayerId !== myId) return;
+
+        if (usedBy !== myId) {
+            const itemNameKey = getItemNameKey(itemCode);
+            showToast(
+                t('game.opponentUsedItem', '상대가 {{item}}을 사용했습니다.', {
+                    item: itemNameKey ? t(itemNameKey) : t('game.normal', '아이템'),
+                }),
+                'info'
+            );
+        }
+
+        if (effectType === 'screen_block') {
+            const fallbackEnd = usedAtMs + SCREEN_BLOCK_FALLBACK_MS;
+            setScreenBlockUntil((prev) => Math.max(prev, effectEndsAtMs || fallbackEnd, Date.now() + SCREEN_BLOCK_FALLBACK_MS - 200));
+            return;
+        }
+
+        if (effectType === 'auto_solve') {
+            const fallbackEnd = usedAtMs + 3000;
+            setDoubleChanceState(Math.max(doubleChanceUntilRef.current, effectEndsAtMs || fallbackEnd));
+            return;
+        }
+
+        if (effectType === 'emoji_bomb') {
+            const fallbackEnd = usedAtMs + EMOJI_BOMB_FALLBACK_MS;
+            spawnItemEmojiBomb(Math.max(effectEndsAtMs || fallbackEnd, Date.now() + EMOJI_BOMB_FALLBACK_MS - 500));
+        }
+    }, [myId, setDoubleChanceState, showToast, spawnItemEmojiBomb, t]);
+
+    const handleItemHudPress = async (itemCode: string, quantity: number) => {
+        if (quantity < 1) {
+            showToast(t('game.itemNotOwned', '보유한 아이템이 없습니다.'), 'info');
+            return;
+        }
+        if (!roomId || !myId) return;
+        if (!isGameplayInteractable) return;
+        if (isItemCooldownActive) {
+            showToast(t('game.itemCooldownActive', '{{seconds}}초 후 다시 사용할 수 있습니다.', { seconds: itemCooldownRemainingSec }), 'info');
+            return;
+        }
+
+        try {
+            const { data, error } = await supabase.rpc('use_match_item', {
+                p_room_id: roomId,
+                p_item_code: itemCode,
+            });
+
+            if (error) throw error;
+
+            const payload = (data ?? {}) as any;
+            const remainingQuantity = Math.max(0, Number(payload?.remaining_quantity ?? quantity - 1));
+            setItemHudInventory((prev) => ({
+                ...prev,
+                [itemCode]: remainingQuantity,
+            }));
+            void logAnalyticsEvent('br_item_use', {
+                item_code: itemCode,
+                mode: gameState.mode ?? 'normal',
+                target: itemCode === 'AUTO_SOLVE' ? 'self' : 'opponent',
+                remaining_quantity: remainingQuantity,
+            });
+            processIncomingItemEvent(payload);
+        } catch (error: any) {
+            console.error('Failed to use item:', error);
+            const message = String(error?.message ?? '').toLowerCase();
+            if (message.includes('cooldown')) {
+                showToast(t('game.itemCooldownActive', '{{seconds}}초 후 다시 사용할 수 있습니다.', { seconds: itemCooldownRemainingSec || 6 }), 'info');
+            } else if (message.includes('not owned')) {
+                showToast(t('game.itemNotOwned', '보유한 아이템이 없습니다.'), 'error');
+            } else if (message.includes('only be used while playing')) {
+                showToast(t('game.itemUseOnlyPlaying', '플레이 중에만 사용할 수 있습니다.'), 'info');
+            } else {
+                showToast(t('game.itemUseFailed', '아이템 사용에 실패했습니다.'), 'error');
+            }
+        }
+    };
+
+    useEffect(() => {
+        if (!user || !isItemMode) {
+            setItemHudCatalog([]);
+            setItemHudInventory({});
+            return;
+        }
+
+        let active = true;
+
+        const fetchItemHud = async () => {
+            try {
+                const [{ data: catalogData, error: catalogError }, { data: inventoryData, error: inventoryError }] = await Promise.all([
+                    supabase
+                        .from('item_catalog')
+                        .select('item_code, name_key, description_key, gold_price, is_enabled, sort_order')
+                        .in('item_code', [...ITEM_HUD_CODES])
+                        .eq('is_enabled', true)
+                        .order('sort_order', { ascending: true }),
+                    supabase
+                        .from('user_items')
+                        .select('item_code, quantity')
+                        .eq('user_id', user.id)
+                        .in('item_code', [...ITEM_HUD_CODES]),
+                ]);
+
+                if (catalogError) throw catalogError;
+                if (inventoryError) throw inventoryError;
+                if (!active) return;
+
+                setItemHudCatalog((catalogData ?? []) as ItemHudCatalogRow[]);
+                const nextInventory: Record<string, number> = {};
+                for (const row of inventoryData ?? []) {
+                    nextInventory[row.item_code] = Math.max(0, Number(row.quantity ?? 0));
+                }
+                setItemHudInventory(nextInventory);
+            } catch (error) {
+                console.error('Failed to load item HUD data:', error);
+                if (!active) return;
+                setItemHudCatalog([]);
+                setItemHudInventory({});
+            }
+        };
+
+        fetchItemHud();
+        return () => {
+            active = false;
+        };
+    }, [user, isItemMode]);
+
+    useEffect(() => {
+        if (!isItemMode || !roomId || !myId) return;
+
+        let active = true;
+
+        const fetchRecentItemEvents = async () => {
+            const sinceIso = new Date(Date.now() - 10000).toISOString();
+            const { data, error } = await supabase
+                .from('game_session_item_events')
+                .select('id, item_code, target_player_id, used_by, used_at, effect_ends_at, payload')
+                .eq('session_id', roomId)
+                .gte('created_at', sinceIso)
+                .order('created_at', { ascending: true });
+
+            if (error) {
+                console.error('Failed to load recent item events:', error);
+                return;
+            }
+            if (!active) return;
+            for (const event of data ?? []) {
+                processIncomingItemEvent(event);
+            }
+        };
+
+        fetchRecentItemEvents();
+        const pollId = window.setInterval(fetchRecentItemEvents, 800);
+
+        const channel = supabase
+            .channel(`game_item_events_${roomId}`)
+            .on('postgres_changes', {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'game_session_item_events',
+                filter: `session_id=eq.${roomId}`,
+            }, (payload) => {
+                processIncomingItemEvent(payload.new);
+            })
+            .subscribe();
+
+        return () => {
+            active = false;
+            window.clearInterval(pollId);
+            supabase.removeChannel(channel);
+        };
+    }, [isItemMode, roomId, myId, processIncomingItemEvent]);
+
+    useEffect(() => {
+        if (!isItemMode) {
+            setItemCooldownUntil(0);
+            setScreenBlockUntil(0);
+            setDoubleChanceState(0);
+            return;
+        }
+
+        if (itemCooldownUntil <= Date.now() && screenBlockUntil <= Date.now() && doubleChanceUntil <= Date.now()) {
+            setItemUiNow(Date.now());
+            return;
+        }
+
+        const timer = window.setInterval(() => {
+            setItemUiNow(Date.now());
+        }, 150);
+        return () => window.clearInterval(timer);
+    }, [isItemMode, itemCooldownUntil, screenBlockUntil, doubleChanceUntil, setDoubleChanceState]);
+
+    useEffect(() => () => {
+        itemEffectTimeoutsRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
+        itemEffectTimeoutsRef.current = [];
+    }, []);
 
     return (
         <div className={`relative w-full h-[100dvh] overflow-hidden flex flex-col font-sans select-none pt-[env(safe-area-inset-top)] bg-slate-50 dark:bg-gray-900 text-slate-900 dark:text-white`}>
@@ -1340,7 +1684,7 @@ const Game: React.FC = () => {
                                     <Flag code={myProfile?.country} />
                                     <span className="hidden sm:inline truncate">{myProfile?.nickname}</span>
                                 </div>
-                                <AnimatedScore value={displayMyScore} useGrouping={false} className="text-2xl font-black text-blue-400 font-mono" />
+                                <AnimatedScore value={displayMyScore} useGrouping={false} className={`text-2xl font-black font-mono transition-colors duration-200 ${isDoubleChanceActive ? 'text-amber-300' : 'text-blue-400'}`} />
                             </div>
                     </div>
 
@@ -1405,6 +1749,74 @@ const Game: React.FC = () => {
                 </div>
             )}
 
+            {!showFinalResult && isItemMode && itemHudItems.length > 0 && (
+                <div className="absolute bottom-[calc(env(safe-area-inset-bottom)+1rem)] left-3 z-[64] flex max-w-[4.5rem] flex-col items-center gap-2">
+                    <div className="flex flex-col items-center gap-2 rounded-2xl border border-white/15 bg-slate-950/62 px-2 py-2 shadow-xl backdrop-blur-md">
+                        {itemHudItems.map((item) => {
+                            const quantity = item.quantity;
+                            const isDisabled = !isGameplayInteractable || quantity < 1 || isItemCooldownActive;
+                            const isDoubleChanceItem = item.item_code === 'AUTO_SOLVE';
+                            const isArmedItem = isDoubleChanceItem && isDoubleChanceActive;
+                            return (
+                                <button
+                                    key={item.item_code}
+                                    onClick={() => handleItemHudPress(item.item_code, quantity)}
+                                    disabled={isDisabled}
+                                    className={`relative flex h-[3.25rem] w-[3.25rem] flex-col items-center justify-center rounded-xl border text-center transition-all active:scale-95 ${isDisabled
+                                        ? 'cursor-not-allowed border-white/10 bg-white/5 opacity-55'
+                                        : isArmedItem
+                                            ? 'border-amber-300/80 bg-amber-400/18 shadow-[0_0_24px_rgba(251,191,36,0.35)]'
+                                            : 'border-cyan-400/35 bg-cyan-500/10 hover:bg-cyan-500/18'}`}
+                                    title={t(item.name_key)}
+                                >
+                                    {getItemHudIconSrc(item.item_code) ? (
+                                        <img src={getItemHudIconSrc(item.item_code)!} alt="" className="h-7 w-7 object-contain" aria-hidden="true" />
+                                    ) : (
+                                        <span className="text-xl leading-none">🎁</span>
+                                    )}
+                                    <span className="mt-1 text-[10px] font-black text-white/90">{quantity}</span>
+                                    <span className="absolute -right-1.5 -top-1.5 rounded-full border border-slate-900/60 bg-slate-200 px-1.5 py-0.5 text-[9px] font-black leading-none text-slate-900 dark:bg-slate-700 dark:text-white">
+                                        {item.item_code === 'SCREEN_BLOCK' ? '1' : item.item_code === 'AUTO_SOLVE' ? '2' : '3'}
+                                    </span>
+                                    {isArmedItem && (
+                                        <span className="absolute -bottom-1 rounded-full border border-amber-200/60 bg-amber-400 px-1.5 py-0.5 text-[9px] font-black leading-none text-slate-950 shadow-md">
+                                            x2
+                                        </span>
+                                    )}
+                                </button>
+                            );
+                        })}
+                    </div>
+                    {(isItemCooldownActive || isDoubleChanceActive) && (
+                        <div className="rounded-xl border border-white/10 bg-slate-950/70 px-2 py-1 text-center text-[10px] font-black leading-tight text-cyan-200/90 shadow-lg backdrop-blur-md">
+                            {isItemCooldownActive && (
+                                <span>{t('game.itemCooldownShort', '공통 쿨타임 {{seconds}}초', { seconds: itemCooldownRemainingSec })}</span>
+                            )}
+                            {isItemCooldownActive && isDoubleChanceActive && <span className="block text-white/40">•</span>}
+                            {isDoubleChanceActive && (
+                                <span className="block text-amber-200">
+                                    {t('items.autoSolve.name', '더블 찬스')} x2 {doubleChanceRemainingSec}s
+                                </span>
+                            )}
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {isScreenBlocked && (
+                <div className="absolute inset-x-0 top-24 bottom-0 z-[68] flex items-center justify-center bg-slate-950/82 backdrop-blur-sm">
+                    <div className="pointer-events-none relative flex h-full w-full items-center justify-center overflow-hidden">
+                        <span className="absolute left-[12%] top-[18%] text-6xl opacity-80">☁️</span>
+                        <span className="absolute right-[10%] top-[26%] text-5xl opacity-70">☁️</span>
+                        <span className="absolute left-[20%] bottom-[20%] text-7xl opacity-75">☁️</span>
+                        <span className="absolute right-[18%] bottom-[14%] text-6xl opacity-80">☁️</span>
+                        <span className="rounded-full border border-white/15 bg-white/10 px-5 py-3 text-lg font-black tracking-wide text-white shadow-xl">
+                            {t('game.screenBlocked', '먹구름!')}
+                        </span>
+                    </div>
+                </div>
+            )}
+
             {/* Round Finished Overlay (Standalone - shows during transition) */}
             {showRoundFinished && gameState.mode !== 'practice' && (
                 <div className="absolute inset-0 z-[65] pointer-events-none">
@@ -1430,14 +1842,17 @@ const Game: React.FC = () => {
                         <div className="absolute inset-0 pointer-events-none flex opacity-20">
                             {/* Blue Side (My Score) */}
                             <div
-                                className={`relative h-full overflow-hidden transition-[width,background-color] duration-300 ease-out ${isMyBackdropScoreFlashing ? 'bg-blue-400/42' : 'bg-blue-500/22'}`}
+                                className={`relative h-full overflow-hidden transition-[width,background-color] duration-300 ease-out ${isDoubleChanceActive ? (isMyBackdropScoreFlashing ? 'bg-amber-300/42' : 'bg-amber-400/24') : (isMyBackdropScoreFlashing ? 'bg-blue-400/42' : 'bg-blue-500/22')}`}
                                 style={{
                                     width: `${displayMyScore === 0 && displayOpScore === 0 ? 50 : (displayMyScore / (displayMyScore + displayOpScore)) * 100}%`
                                 }}
                             >
                                 <div
-                                    className={`absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-blue-200/35 to-transparent transition-opacity duration-200 ${isMyBackdropScoreFlashing ? 'opacity-100' : 'opacity-0'}`}
+                                    className={`absolute inset-y-0 right-0 w-20 transition-opacity duration-200 ${isDoubleChanceActive ? 'bg-gradient-to-l from-amber-200/45 to-transparent' : 'bg-gradient-to-l from-blue-200/35 to-transparent'} ${isMyBackdropScoreFlashing ? 'opacity-100' : 'opacity-0'}`}
                                 />
+                                {isDoubleChanceActive && (
+                                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_35%_25%,rgba(251,191,36,0.24),transparent_55%)]" />
+                                )}
                             </div>
                             {/* Red Side (Op Score) */}
                             <div
@@ -1455,7 +1870,7 @@ const Game: React.FC = () => {
                         <div className="absolute inset-0 flex items-start justify-between px-4 sm:px-8 pt-32">
                             <div
                                 className={`w-[42%] font-black font-mono tabular-nums tracking-tight leading-none transition-all duration-300 ${backdropScoreSizeClass}
-                                    ${displayMyScore >= displayOpScore ? 'text-blue-400' : 'text-blue-400'}
+                                    ${isDoubleChanceActive ? 'text-amber-300' : 'text-blue-400'}
                                     ${showRoundFinished ? 'opacity-90' : 'opacity-10'}
                                     ${isMyBackdropScoreFlashing ? 'scale-[1.03] opacity-20' : ''}`}
                             >
@@ -1740,40 +2155,43 @@ const Game: React.FC = () => {
                             {isGameplayInteractable && (
                                 <>
                                     {gameState.gameType === 'RPS' && (
-                                        <RockPaperScissors seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
+                                        <RockPaperScissors seed={gameState.seed} onScore={handleGameScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'NUMBER' && (
-                                        <NumberSortGame mode="asc" seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
+                                        <NumberSortGame mode="asc" seed={gameState.seed} onScore={handleGameScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'NUMBER_DESC' && (
-                                        <NumberSortGame mode="desc" seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
+                                        <NumberSortGame mode="desc" seed={gameState.seed} onScore={handleGameScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'MATH' && (
-                                        <MathChallenge seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
+                                        <MathChallenge seed={gameState.seed} onScore={handleGameScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'MATH_OX' && (
-                                        <MathOXGame seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
+                                        <MathOXGame seed={gameState.seed} onScore={handleGameScore} isPlaying={isGameplayInteractable} />
+                                    )}
+                                    {gameState.gameType === 'INFINITE_ADD' && (
+                                        <InfiniteAddition seed={gameState.seed} onScore={handleGameScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'INFINITE_ADD' && (
                                         <InfiniteAddition seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'ONE_STROKE' && (
-                                        <OneStrokePath seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
+                                        <OneStrokePath seed={gameState.seed} onScore={handleGameScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'TEN' && (
-                                        <MakeTen seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
+                                        <MakeTen seed={gameState.seed} onScore={handleGameScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'COLOR' && (
-                                        <ColorMatch seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
+                                        <ColorMatch seed={gameState.seed} onScore={handleGameScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'MEMORY' && (
-                                        <MemoryMatch seed={gameState.seed || ''} onScore={incrementScore} isPlaying={isGameplayInteractable} />
+                                        <MemoryMatch seed={gameState.seed || ''} onScore={handleGameScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'SEQUENCE' && (
                                         <SequenceGame
                                             mode="reverse"
                                             seed={gameState.seed}
-                                            onScore={incrementScore}
+                                            onScore={handleGameScore}
                                             isPlaying={isGameplayInteractable}
                                         />
                                     )}
@@ -1781,79 +2199,79 @@ const Game: React.FC = () => {
                                         <SequenceGame
                                             mode="forward"
                                             seed={gameState.seed}
-                                            onScore={incrementScore}
+                                            onScore={handleGameScore}
                                             isPlaying={isGameplayInteractable}
                                         />
                                     )}
                                     {gameState.gameType === 'LARGEST' && (
-                                        <FindLargest seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
+                                        <FindLargest seed={gameState.seed} onScore={handleGameScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'PAIR' && (
-                                        <FindPair seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
+                                        <FindPair seed={gameState.seed} onScore={handleGameScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'UPDOWN' && (
-                                        <NumberUpDown seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
+                                        <NumberUpDown seed={gameState.seed} onScore={handleGameScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'SLIDER' && (
-                                        <NumberSlider seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
+                                        <NumberSlider seed={gameState.seed} onScore={handleGameScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'ARROW' && (
-                                        <ArrowSlider seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
+                                        <ArrowSlider seed={gameState.seed} onScore={handleGameScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'BLANK' && (
-                                        <FillBlanks seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
+                                        <FillBlanks seed={gameState.seed} onScore={handleGameScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'OPERATOR' && (
-                                        <FindOperator seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
+                                        <FindOperator seed={gameState.seed} onScore={handleGameScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'LADDER' && (
-                                        <LadderGame seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
+                                        <LadderGame seed={gameState.seed} onScore={handleGameScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'TAP_COLOR' && (
-                                        <TapTheColor seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
+                                        <TapTheColor seed={gameState.seed} onScore={handleGameScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'AIM' && (
-                                        <AimingGame seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
+                                        <AimingGame seed={gameState.seed} onScore={handleGameScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'MOST_COLOR' && (
-                                        <FindMostColor seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
+                                        <FindMostColor seed={gameState.seed} onScore={handleGameScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'SORTING' && (
-                                        <SortingGame seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
+                                        <SortingGame seed={gameState.seed} onScore={handleGameScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'SPY' && (
-                                        <FindTheSpy seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
+                                        <FindTheSpy seed={gameState.seed} onScore={handleGameScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'PATH' && (
-                                        <PathRunner seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
+                                        <PathRunner seed={gameState.seed} onScore={handleGameScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'BALLS' && (
-                                        <BallCounter seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
+                                        <BallCounter seed={gameState.seed} onScore={handleGameScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'BLIND_PATH' && (
-                                        <BlindPathRunner seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
+                                        <BlindPathRunner seed={gameState.seed} onScore={handleGameScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'CATCH_COLOR' && (
-                                        <CatchColor seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
+                                        <CatchColor seed={gameState.seed} onScore={handleGameScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'TIMING_BAR' && (
                                         <TimingBar
-                                            onScore={incrementScore}
+                                            onScore={handleGameScore}
                                             isPlaying={isGameplayInteractable}
                                             remainingTime={gameState.remainingTime}
                                         />
                                     )}
                                     {gameState.gameType === 'COLOR_TIMING' && (
                                         <ColorTiming
-                                            onScore={incrementScore}
+                                            onScore={handleGameScore}
                                             isPlaying={isGameplayInteractable}
                                         />
                                     )}
                                     {gameState.gameType === 'STAIRWAY' && (
-                                        <StairwayGame seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
+                                        <StairwayGame seed={gameState.seed} onScore={handleGameScore} isPlaying={isGameplayInteractable} />
                                     )}
                                     {gameState.gameType === 'MAKE_ZERO' && (
-                                        <MakeZero seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
+                                        <MakeZero seed={gameState.seed} onScore={handleGameScore} isPlaying={isGameplayInteractable} />
                                     )}
                                 </>
                             )}
@@ -1890,7 +2308,7 @@ const Game: React.FC = () => {
                                         <motion.button
                                             initial={{ opacity: 0, y: 20 }}
                                             animate={{ opacity: 1, y: 0 }}
-                                            transition={{ delay: 0.5 }}
+                                            transition={{ delay: 0.25 }}
                                             onClick={handleReturnMenu}
                                             className="px-8 py-4 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold text-xl transition-all shadow-lg hover:shadow-green-500/50"
                                         >
@@ -1941,7 +2359,7 @@ const Game: React.FC = () => {
                                             initial={{ scale: 5, opacity: 0, rotate: -10 }}
                                             animate={{ scale: 1, opacity: 1, rotate: 0 }}
                                             transition={{
-                                                delay: 0.2 + (gameState.roundScores.length + 1) * 0.4,
+                                                delay: 0.1,
                                                 type: "spring", stiffness: 200, damping: 15
                                             }}
                                             className="mb-8 w-full grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 md:gap-5"
@@ -2037,7 +2455,7 @@ const Game: React.FC = () => {
                                                         key={idx}
                                                         initial={{ opacity: 0, x: -50 }}
                                                         animate={{ opacity: 1, x: 0 }}
-                                                        transition={{ delay: 0.5 + idx * 0.4 }}
+                                                        transition={{ delay: 0.16 + idx * 0.1 }}
                                                         className="grid grid-cols-3 p-2 md:p-4 border-t border-white/5 items-center font-mono relative overflow-hidden"
                                                     >
                                                         {/* Background Bar */}
@@ -2046,14 +2464,14 @@ const Game: React.FC = () => {
                                                             <motion.div
                                                                 initial={{ width: 0 }}
                                                                 animate={{ width: `${myRatio}%` }}
-                                                                transition={{ delay: 0.5 + idx * 0.4, duration: 0.8, ease: "easeOut" }}
+                                                                transition={{ delay: 0.16 + idx * 0.1, duration: 0.45, ease: "easeOut" }}
                                                                 className="absolute left-0 top-0 h-full bg-blue-500"
                                                             />
                                                             {/* Right (Red) - Anchored Right */}
                                                             <motion.div
                                                                 initial={{ width: 0 }}
                                                                 animate={{ width: `${100 - myRatio}%` }}
-                                                                transition={{ delay: 0.5 + idx * 0.4, duration: 0.8, ease: "easeOut" }}
+                                                                transition={{ delay: 0.16 + idx * 0.1, duration: 0.45, ease: "easeOut" }}
                                                                 className="absolute right-0 top-0 h-full bg-red-500"
                                                             />
                                                         </div>
@@ -2066,9 +2484,9 @@ const Game: React.FC = () => {
                                             })}
                                             {/* TOTAL */}
                                             <motion.div
-                                                initial={{ opacity: 0, y: 20 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                transition={{ delay: 0.5 + gameState.roundScores.length * 0.4 }}
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: 0.22 + gameState.roundScores.length * 0.1 }}
                                                 className="grid grid-cols-3 p-2 md:p-4 bg-white/5 border-t-2 border-white/10 items-center font-mono"
                                             >
                                                 <div className="text-left pl-2 md:pl-4 text-yellow-400 font-black text-sm md:text-base">{t('game.total')}</div>
@@ -2080,9 +2498,9 @@ const Game: React.FC = () => {
                                         {/* Rank Result Animation */}
                                         {gameState.mode === 'rank' && displayMMR !== null && (
                                             <motion.div
-                                                initial={{ opacity: 0, height: 0 }}
-                                                animate={{ opacity: 1, height: 'auto' }}
-                                                transition={{ delay: 0.8 + gameState.roundScores.length * 0.4 }}
+                                            initial={{ opacity: 0, height: 0 }}
+                                            animate={{ opacity: 1, height: 'auto' }}
+                                                transition={{ delay: 0.3 + gameState.roundScores.length * 0.1 }}
                                                 className="mb-8 p-4 bg-white/10 rounded-xl border border-white/20 overflow-hidden"
                                             >
                                                 <div className="flex items-center justify-center gap-4 text-3xl font-black">
@@ -2092,7 +2510,7 @@ const Game: React.FC = () => {
                                                             <motion.div
                                                                 initial={{ opacity: 0, y: 10 }}
                                                                 animate={{ opacity: 1, y: 0 }}
-                                                                transition={{ delay: 0.5 }}
+                                                                transition={{ delay: 0.2 }}
                                                                 className={`text-2xl ${mmrDelta > 0 ? 'text-green-400' : 'text-red-400'}`}
                                                             >
                                                                 {mmrDelta > 0 ? `+${mmrDelta}` : mmrDelta}
@@ -2101,7 +2519,7 @@ const Game: React.FC = () => {
                                                                 <motion.div
                                                                     initial={{ opacity: 0, y: 5 }}
                                                                     animate={{ opacity: 1, y: 0 }}
-                                                                    transition={{ delay: 1.0 }}
+                                                                    transition={{ delay: 0.35 }}
                                                                     className="text-xs text-yellow-400 font-bold flex items-center gap-1"
                                                                 >
                                                                     🔥 {t('streak.bonusIncluded', '연승 보너스 +{{bonus}}', { bonus: streakBonus })}
@@ -2132,7 +2550,7 @@ const Game: React.FC = () => {
                                                 <motion.button
                                                     initial={{ opacity: 0, y: 20 }}
                                                     animate={{ opacity: 1, y: 0 }}
-                                                    transition={{ delay: 1.5 + (gameState.roundScores.length + 1) * 0.4 }}
+                                                    transition={{ delay: 0.38 + gameState.roundScores.length * 0.08 }}
                                                     onClick={handleRequestRematch}
                                                     disabled={!isButtonEnabled || isSubmittingRematch || isReturningToMenu || !!pendingRematchInviteId || isRematchClosed || !hasRematchPencils}
                                                     className={`w-full rounded-xl px-4 py-3 text-slate-900 dark:text-white transition-all ${!isButtonEnabled || isSubmittingRematch || isReturningToMenu || !!pendingRematchInviteId || isRematchClosed
@@ -2176,7 +2594,7 @@ const Game: React.FC = () => {
                                             <motion.button
                                                 initial={{ opacity: 0, y: 20 }}
                                                 animate={{ opacity: 1, y: 0 }}
-                                                transition={{ delay: 1.5 + (gameState.roundScores.length + 1) * 0.4 }}
+                                                transition={{ delay: 0.38 + gameState.roundScores.length * 0.08 }}
                                                 onClick={handleReturnMenu}
                                                 disabled={!isButtonEnabled || isReturningToMenu}
                                                 className={`w-full py-4 font-bold text-xl rounded-xl transition-all ${isButtonEnabled
@@ -2258,7 +2676,7 @@ const Game: React.FC = () => {
                 {/* Review Prompt Modal */}
                 <ReviewPromptModal isOpen={showReviewPrompt} onClose={handleReviewPromptClose} />
 
-                {showEmojiOverlay && (
+                {shouldRenderEmojiOverlay && (
                     <div className="absolute inset-0 z-[70] pointer-events-none">
                         <AnimatePresence>
                             {emojiBursts.map((item) => (

@@ -259,7 +259,11 @@ const MatchHistoryModal = ({ isOpen, onClose, userId, initialMode = 'all' }: Mat
                                         <div className="text-xs text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-0.5 flex items-center gap-1">
                                             {match.game_mode === 'rank' && <Trophy size={10} className="text-purple-400" />}
                                             {match.game_mode === 'normal' && <Zap size={10} className="text-blue-400" />}
-                                            {match.game_mode}
+                                            {String(
+                                                match.game_mode === 'all'
+                                                    ? t('game.all', 'All')
+                                                    : t(`game.${match.game_mode}`, match.game_mode)
+                                            )}
                                         </div>
                                         <div className="text-xs text-slate-500">{formatTime(match.created_at)}</div>
                                     </div>

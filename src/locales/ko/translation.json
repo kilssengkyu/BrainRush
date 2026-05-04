@@ -23,7 +23,9 @@
     },
     "exitAppTitle": "앱 종료",
     "exitAppConfirm": "앱을 종료하시겠습니까?",
-    "open": "열기"
+    "open": "열기",
+    "exit": "나가기",
+    "start": "시작"
   },
   "auth": {
     "loginRequired": "로그인이 필요합니다.",
@@ -92,8 +94,8 @@
   },
   "menu": {
     "normal": {
-      "title": "일반 모드",
-      "subtitle": "기본적인 두뇌 회전 게임",
+      "title": "아이템 모드",
+      "subtitle": "아이템을 사용해 즐기는 캐주얼 대전",
       "matchRule": "3판 2선승"
     },
     "rank": {
@@ -116,7 +118,11 @@
     "login": "로그인",
     "logout": "로그아웃",
     "profile": "프로필",
-    "all": "All"
+    "all": "All",
+    "solo": {
+      "title": "혼자하기",
+      "subtitle": "랜덤 미니게임을 혼자 즐겨보세요"
+    }
   },
   "shop": {
     "title": "상점",
@@ -170,7 +176,39 @@
     "billingUnavailable": "이 기기에서는 결제를 지원하지 않습니다.",
     "sessionRefreshFailed": "세션 갱신 실패: {{message}}",
     "sessionExpired": "로그인 세션이 만료되었습니다. 다시 로그인해 주세요.",
-    "purchaseFailWithReason": "구매 실패: {{message}}"
+    "purchaseFailWithReason": "구매 실패: {{message}}",
+    "goldTab": "골드",
+    "goldPencils": {
+      "oneTitle": "연필 1개",
+      "oneDesc": "골드로 바로 연필을 충전합니다.",
+      "fiveTitle": "연필 5개",
+      "fiveDesc": "10% 할인된 골드 패키지입니다."
+    },
+    "goldPencilPurchaseSuccess": "골드로 연필을 구매했습니다.",
+    "goldPencilPurchaseFailed": "연필 구매에 실패했습니다.",
+    "dailyFreePencilBadge": "오늘 선물",
+    "dailyFreePencilTitle": "오늘의 무료 연필",
+    "dailyFreePencilDesc": "하루에 한 번 상점에서 연필 1개를 받을 수 있어요.",
+    "dailyFreePencilClaimedDesc": "오늘은 이미 받았습니다. 내일 다시 받아보세요.",
+    "dailyFreePencilClaimButton": "무료로 받기",
+    "dailyFreePencilClaimedButton": "수령 완료",
+    "dailyFreePencilClaimSuccess": "오늘의 무료 연필을 받았습니다.",
+    "dailyFreePencilAlreadyClaimed": "오늘의 무료 연필은 이미 받았습니다.",
+    "dailyFreePencilClaimFailed": "무료 연필 수령에 실패했습니다.",
+    "dailyFreeAdClaimButton": "광고로 한 번 더",
+    "dailyFreeBaseRequired": "먼저 무료 선물을 받아주세요.",
+    "dailyFreeGoldBadge": "오늘 골드",
+    "dailyFreeGoldTitle": "오늘의 무료 골드",
+    "dailyFreeGoldDesc": "하루에 한 번 골드 {{count}}개를 받을 수 있어요.",
+    "dailyFreeGoldAdDesc": "광고를 보고 오늘 한 번 더 받을 수 있어요.",
+    "dailyFreeGoldClaimedDesc": "오늘은 이미 받았습니다. 내일 다시 받아보세요.",
+    "dailyFreeGoldClaimButton": "무료로 받기",
+    "dailyFreeGoldClaimedButton": "수령 완료",
+    "dailyFreeGoldClaimSuccess": "오늘의 무료 골드를 받았습니다.",
+    "dailyFreeGoldAlreadyClaimed": "오늘의 무료 골드는 이미 받았습니다.",
+    "dailyFreeGoldClaimFailed": "무료 골드 수령에 실패했습니다.",
+    "dailyFreePencilAdDesc": "광고를 보고 오늘 한 번 더 받을 수 있어요.",
+    "rewardTitle": "획득"
   },
   "leaderboard": {
     "button": "랭킹",
@@ -206,7 +244,13 @@
     "success": "보상을 획득했어요.",
     "noFillTitle": "지금은 광고가 없어요",
     "noFillDesc": "잠시 후 다시 시도해 주세요.",
-    "noFillRewarded": "앗, 지금은 재생할 광고가 없어요! 보상은 바로 드릴게요."
+    "noFillRewarded": "앗, 지금은 재생할 광고가 없어요! 보상은 바로 드릴게요.",
+    "titleGold": "골드 받기",
+    "watchDescGold": "짧은 광고를 보고 보너스 골드를 받아보세요!",
+    "adFreeDescGold": "광고 없이 바로 보너스 골드를 받습니다.",
+    "claimBtnGold": "골드 받기",
+    "gold": "골드",
+    "goldRewardHeadline": "골드를 받았습니다!"
   },
   "notifications": {
     "fullTitle": "연필 가득!",
@@ -380,7 +424,7 @@
     "reconnectingDesc": "상대방 연결이 끊겼습니다. 기권승까지 남은 시간:",
     "myTime": "나의 기록",
     "rank": "랭크",
-    "normal": "일반",
+    "normal": "아이템",
     "unknownPlayer": "알 수 없는 플레이어",
     "guest": "게스트",
     "you": "나",
@@ -406,6 +450,7 @@
     "devGhostPreviewRoundHighscore": "라운드 하이스코어",
     "devGhostPreviewBotGhost": "봇 고스트",
     "devGhostPreviewGap": "차이",
+    "opponentUsedItem": "상대가 {{item}}을 사용했습니다.",
     "table": {
       "round": "라운드",
       "myScore": "내 점수",
@@ -438,7 +483,7 @@
     "levelUp": "레벨 업!",
     "hideAnnouncementToday": "오늘 다시 보지 않기",
     "noPencilTitle": "연필이 부족해요",
-    "noPencilDesc": "일반/랭크 모드를 플레이하려면 연필이 필요합니다.",
+    "noPencilDesc": "일반/랭크/혼자하기 모드를 플레이하려면 연필이 필요합니다.",
     "nextPencilIn": "다음 연필 충전까지 {{time}}",
     "watchAdForPencil": "광고 보기",
     "goToShopForPencil": "상점에서 구매하기",
@@ -609,7 +654,7 @@
     "scoreLabel": "계단"
   },
   "tutorial": {
-    "normal": "🌍 전 세계 사람들과 간단한 미니게임 대결을 즐겨보세요!",
+    "normal": "🌍 아이템을 사용해 전 세계 플레이어와 캐주얼 대전을 즐겨보세요!",
     "rank": "🏆 비슷한 실력의 플레이어들과 랭킹전을 즐기세요!",
     "practice": "💪 원하는 게임을 자유롭게 연습할 수 있어요!",
     "ranking": "👑 세상에서 가장 똑똑한 플레이어들을 확인해보세요!",
@@ -617,15 +662,17 @@
     "settings": "⚙️ 소리, 언어 등 게임 설정을 변경할 수 있어요!",
     "login": "👤 계정을 연동해서 안전하게 게임을 즐기세요!",
     "profile": "📊 나의 실력, 능력치, 게임별 점수를 확인할 수 있어요!",
-    "tryModesAfter": "이제 일반 또는 랭크 버튼을 눌러 첫 대전을 시작해보세요!",
+    "tryModesAfter": "이제 아이템 또는 랭크 버튼을 눌러 첫 대전을 시작해보세요!",
     "tryModesTitle": "첫 대전을 시작해볼까요?",
-    "tryModesDesc": "일반 또는 랭크 중 하나를 눌러 바로 플레이를 시작하세요.",
-    "tryNormalHighlight": "먼저 일반 모드를 눌러 첫 대전을 시작해보세요!",
-    "startNormalNow": "일반모드 시작",
+    "tryModesDesc": "아이템 또는 랭크 중 하나를 눌러 바로 플레이를 시작하세요.",
+    "tryNormalHighlight": "아이템 모드는 부담 없이 규칙을 익히기 좋은 첫 대전이에요. 원하면 홈 화면을 더 둘러본 뒤 시작해도 괜찮아요.",
+    "startNormalNow": "아이템모드 시작",
     "next": "다음",
     "done": "완료",
     "skip": "건너뛰기",
-    "loginNow": "바로 로그인"
+    "loginNow": "바로 로그인",
+    "solo": "🎯 경쟁 부담 없이 랜덤 미니게임 3개를 혼자 즐기고 내 실력을 확인하세요!",
+    "browseFirst": "둘러보고 할게요"
   },
   "zero": {
     "title": "0을 만들어라",
@@ -654,7 +701,8 @@
     "noNotesDesc": "연습모드를 플레이하려면 연습노트가 필요합니다.",
     "watchAdForNotes": "연습노트 광고보기",
     "goToShopForNotes": "상점에서 구매하기",
-    "waitForRecharge": "기다리기"
+    "waitForRecharge": "기다리기",
+    "noEnabledGames": "현재 이용 가능한 연습 게임이 없습니다."
   },
   "update": {
     "title": "업데이트 필요",
@@ -693,5 +741,125 @@
     "claimed": "수령 완료",
     "claimSuccess": "보상을 수령했습니다. (+{{pencils}} 연필, +{{notes}} 연습노트)",
     "claimBlockedPencilsFull": "연필이 5개 이상이면 수령할 수 없습니다. 먼저 연필을 사용해 주세요."
+  },
+  "solo": {
+    "complete": "혼자하기 완료!",
+    "resultTitle": "혼자하기 결과",
+    "gameLabel": "게임",
+    "topPercent": "상위 %",
+    "topPercentValue": "상위 {{percent}}%",
+    "percentileUnlocked": "상위 % 공개 완료",
+    "percentileSaving": "기록 저장 후 확인 가능",
+    "unlockPercentileCta": "광고 보고 상위 % 확인",
+    "percentileHint": "광고 한 번으로 세 게임의 상위 %를 모두 볼 수 있어요.",
+    "percentileUnavailable": "집계 중",
+    "percentileLocked": "잠금",
+    "nextGame": "다음 게임",
+    "saved": "저장 완료",
+    "saving": "저장 중...",
+    "exitConfirmTitle": "혼자하기를 종료할까요?",
+    "exitConfirmMessage": "지금 나가면 이번 혼자하기는 종료되며, 사용한 연필은 반환되지 않습니다.",
+    "newHighscore": "신기록",
+    "percentileAdTitle": "상위 % 해금",
+    "percentileAdDesc": "짧은 광고를 보고 세 게임의 상위 %를 모두 확인하세요.",
+    "percentileAdFreeDesc": "광고 없이 세 게임의 상위 %를 바로 확인합니다.",
+    "percentileAdClaim": "상위 % 확인",
+    "percentileRewardLabel": "상위 %",
+    "percentileRewardHeadline": "세 게임의 상위 %가 공개됐어요!"
+  },
+  "items": {
+    "screenBlock": {
+      "name": "먹구름",
+      "description": "2초 동안 상대 화면을 가립니다."
+    },
+    "autoSolve": {
+      "name": "더블 찬스",
+      "description": "다음 3초 동안 획득 점수가 2배가 됩니다."
+    },
+    "emojiBomb": {
+      "name": "이모지 폭탄",
+      "description": "5초 동안 상대 화면에 이모티콘을 흩뿌립니다."
+    }
+  },
+  "dailyQuests": {
+    "shortTitle": "일퀘",
+    "badge": "Daily",
+    "title": "일일 퀘스트",
+    "subtitle": "오늘의 목표를 채우고 보상을 받아보세요.",
+    "progress": "진행도",
+    "questSection": "오늘의 할 일",
+    "rewardSection": "보상",
+    "claim": "받기",
+    "claimed": "수령 완료",
+    "claimSuccess": "보상을 수령했습니다.",
+    "claimFail": "보상 수령에 실패했습니다.",
+    "loadFail": "일일 퀘스트를 불러오지 못했습니다.",
+    "reward": {
+      "milestone": "{{points}}점 보상",
+      "xp": "XP +{{count}}",
+      "gold": "골드 +{{count}}",
+      "pencils": "연필 +{{count}}",
+      "randomItem": "랜덤 아이템 +{{count}}",
+      "itemWithCode": "랜덤 아이템 +{{count}} ({{itemCode}})",
+      "empty": "보상",
+      "randomItemShort": "아이템"
+    },
+    "quests": {
+      "login": {
+        "title": "로그인하기",
+        "description": "오늘 브레인러시에 접속하세요."
+      },
+      "profileView": {
+        "title": "프로필 확인하기",
+        "description": "내 프로필을 열어보세요."
+      },
+      "shopVisit": {
+        "title": "상점 방문하기",
+        "description": "상점을 열어보세요."
+      },
+      "rankingView": {
+        "title": "랭킹 확인하기",
+        "description": "랭킹 화면을 열어보세요."
+      },
+      "pencilSpend1": {
+        "title": "연필 1개 사용",
+        "description": "연필을 소모하는 모드를 1판 플레이하세요."
+      },
+      "pencilSpend3": {
+        "title": "연필 3개 사용",
+        "description": "연필을 소모하는 모드를 3판 플레이하세요."
+      },
+      "pencilSpend5": {
+        "title": "연필 5개 사용",
+        "description": "연필을 소모하는 모드를 5판 플레이하세요."
+      },
+      "adWatch1": {
+        "title": "광고 1회 보기",
+        "description": "보상형 광고를 1회 시청하세요."
+      },
+      "adWatch3": {
+        "title": "광고 3회 보기",
+        "description": "보상형 광고를 3회 시청하세요."
+      },
+      "goldSpend1": {
+        "title": "골드 1회 사용",
+        "description": "골드로 아이템이나 연필을 구매하세요."
+      }
+    },
+    "completeQuest": "완료",
+    "questClaimSuccess": "퀘스트 완료!",
+    "questClaimFail": "퀘스트 완료 처리에 실패했습니다.",
+    "claimAllSuccess": "보상을 모두 수령했습니다.",
+    "claimAvailableRewards": "받을 수 있는 보상 받기",
+    "claimAvailableRewardsHint": "받을 수 있는 상자를 눌러 보상을 받아보세요.",
+    "rewardProgressHint": "퀘스트 완료 점수에 따라 상자가 열립니다.",
+    "rewardAlreadyClaimed": "이미 받은 보상입니다.",
+    "rewardReady": "지금 받을 수 있어요.",
+    "rewardLockedUntil": "{{points}}점이 되면 받을 수 있어요.",
+    "rewardClaimModal": {
+      "title": "보상을 받았습니다!",
+      "subtitle": "{{count}}개 상자 보상 합계",
+      "items": "획득 아이템"
+    }
   }
 }

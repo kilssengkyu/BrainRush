@@ -10,7 +10,7 @@ const BGMManager = () => {
         const path = location.pathname;
 
         // Game Sessions -> Battle Music
-        if (path.startsWith('/game/')) {
+        if (path.startsWith('/game/') || path === '/solo') {
             playBGM('bgm_game');
         }
         // Menu Routes -> Main Theme
