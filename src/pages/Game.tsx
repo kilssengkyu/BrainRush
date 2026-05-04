@@ -2172,6 +2172,9 @@ const Game: React.FC = () => {
                                     {gameState.gameType === 'INFINITE_ADD' && (
                                         <InfiniteAddition seed={gameState.seed} onScore={handleGameScore} isPlaying={isGameplayInteractable} />
                                     )}
+                                    {gameState.gameType === 'INFINITE_ADD' && (
+                                        <InfiniteAddition seed={gameState.seed} onScore={incrementScore} isPlaying={isGameplayInteractable} />
+                                    )}
                                     {gameState.gameType === 'ONE_STROKE' && (
                                         <OneStrokePath seed={gameState.seed} onScore={handleGameScore} isPlaying={isGameplayInteractable} />
                                     )}
