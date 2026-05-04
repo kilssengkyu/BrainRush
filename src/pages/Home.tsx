@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Settings, User, Trophy, Zap, Loader2, Lock, AlertTriangle, Dumbbell, ShoppingBag, Flame, Mail } from 'lucide-react';
+import { Settings, User, Trophy, Zap, Loader2, Lock, AlertTriangle, Dumbbell, ShoppingBag, Flame, Info, X } from 'lucide-react';
+import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
+import type { PluginListenerHandle } from '@capacitor/core';
 import HexRadar from '../components/ui/HexRadar';
 import { useMatchmaking } from '../hooks/useMatchmaking';
 import { useSound } from '../contexts/SoundContext';
@@ -21,6 +23,8 @@ import { useTutorial } from '../contexts/TutorialContext';
 import SpotlightOverlay from '../components/ui/SpotlightOverlay';
 import TierMMRBadge from '../components/ui/TierMMRBadge';
 import MailboxModal from '../components/ui/MailboxModal';
+import DailyQuestModal from '../components/ui/DailyQuestModal';
+import { logAnalyticsEvent } from '../lib/analytics';
 
 type RadarStats = {
     speed: number;
@@ -38,6 +42,26 @@ type XpAnimationPayload = {
     afterXp: number;
     afterLevel: number;
     xpGain: number;
+    beforeGold: number;
+    afterGold: number;
+    goldGain: number;
+};
+
+type DailyQuestHomeStatus = {
+    hasClaimableQuest: boolean;
+    hasClaimableReward: boolean;
+};
+
+type ItemInventoryCatalogRow = {
+    item_code: string;
+    name_key: string;
+    description_key: string;
+    sort_order: number;
+};
+
+type UserInventoryRow = {
+    item_code: string;
+    quantity: number;
 };
 
 const MAX_PENCILS = 5;
@@ -45,6 +69,13 @@ const PENCIL_RECHARGE_MS = 15 * 60 * 1000;
 const GUEST_LINK_PROMPT_LEVEL = 5;
 const GUEST_LINK_PROMPT_INITIAL_DELAY_MS = 3 * 24 * 60 * 60 * 1000;
 const GUEST_LINK_PROMPT_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
+const ACTIVITY_PING_COOLDOWN_MS = 60 * 1000;
+
+const INVENTORY_VISUALS: Record<string, string> = {
+    SCREEN_BLOCK: '/images/icon/icon_bomb_black.png',
+    AUTO_SOLVE: '/images/icon/Bolt - Yellow (Border).png',
+    EMOJI_BOMB: '/images/icon/icon_bomb_choco.png',
+};
 
 const getLivePencilState = (
     pencils: number | null | undefined,
@@ -78,29 +109,67 @@ const getLivePencilState = (
     };
 };
 
-// Simple Timer Component
-const RechargeTimer = ({ remainingMs }: { remainingMs: number }) => {
-    const [timeLeft, setTimeLeft] = useState<string>('');
+const PencilCostChip = ({ cost = 1 }: { cost?: number }) => (
+    <div className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/15 px-2.5 py-1 text-[11px] font-black text-white/90 backdrop-blur-sm">
+        <img
+            src="/images/icon/icon_pen.png"
+            alt="Pencil"
+            className="h-3.5 w-3.5 object-contain"
+        />
+        <span>x{cost}</span>
+    </div>
+);
 
-    useEffect(() => {
-        const calculateTime = () => {
-            const safeRemaining = Math.max(0, remainingMs);
-            const m = Math.floor(safeRemaining / 60000);
-            const s = Math.floor((safeRemaining % 60000) / 1000);
-            setTimeLeft(`${m}:${s.toString().padStart(2, '0')}`);
-        };
+const HomeModeTitle = ({ children, className = '' }: { children: ReactNode; className?: string }) => (
+    <h3 className={`text-[clamp(1.75rem,4.6vw,2.15rem)] font-bold leading-[1.02] break-keep ${className}`}>
+        {children}
+    </h3>
+);
 
-        calculateTime();
-        const interval = setInterval(calculateTime, 1000);
-        return () => clearInterval(interval);
-    }, [remainingMs]);
-
-    return (
-        <span className="ml-0 text-[10px] text-slate-500 dark:text-gray-400 font-mono">
-            +{timeLeft}
-        </span>
-    );
-};
+const BurningTimeChip = ({
+    windowLabel,
+    isTooltipOpen,
+    onToggle,
+    label,
+    benefit,
+}: {
+    windowLabel: string | null;
+    isTooltipOpen: boolean;
+    onToggle: () => void;
+    label: string;
+    benefit: string;
+}) => (
+    <div className="relative">
+        <div
+            role="button"
+            tabIndex={0}
+            aria-label={`${label} ${windowLabel ? `(${windowLabel})` : ''}`}
+            onClick={(event) => {
+                event.stopPropagation();
+                onToggle();
+            }}
+            onKeyDown={(event) => {
+                if (event.key !== 'Enter' && event.key !== ' ') return;
+                event.preventDefault();
+                event.stopPropagation();
+                onToggle();
+            }}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-amber-200/70 bg-gradient-to-br from-yellow-300 via-orange-500 to-red-600 shadow-[0_0_24px_rgba(251,146,60,0.65)] ring-2 ring-orange-400/25 transition-transform hover:scale-110 active:scale-95"
+        >
+            <Flame className="h-5 w-5 text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.75)]" />
+        </div>
+        {isTooltipOpen && (
+            <div className="absolute right-0 top-12 z-30 w-48 rounded-2xl border border-amber-300/40 bg-slate-950/95 px-3 py-2 text-right shadow-2xl shadow-orange-500/20 backdrop-blur-md">
+                <div className="absolute -top-1.5 right-4 h-3 w-3 rotate-45 border-l border-t border-amber-300/40 bg-slate-950/95" />
+                <p className="text-[11px] font-black uppercase tracking-[0.16em] text-amber-300">{label}</p>
+                {windowLabel && (
+                    <p className="mt-0.5 text-xs font-bold text-white">{windowLabel}</p>
+                )}
+                <p className="mt-1 text-[11px] font-semibold text-orange-100">{benefit}</p>
+            </div>
+        )}
+    </div>
+);
 
 const Home = () => {
     const navigate = useNavigate();
@@ -116,6 +185,7 @@ const Home = () => {
     const lastHandledXpRoomRef = useRef<string | null>(null);
     const xpRefreshRetryRef = useRef(0);
     const [longPressXpExpanded, setLongPressXpExpanded] = useState(false);
+    const [isStartingSolo, setIsStartingSolo] = useState(false);
     const longPressTimerRef = useRef<number | null>(null);
     const longPressCollapseTimerRef = useRef<number | null>(null);
     const longPressTouchRef = useRef(false);
@@ -125,11 +195,14 @@ const Home = () => {
     const [nowMs, setNowMs] = useState(() => Date.now());
     const lastPencilRefreshAttemptRef = useRef(0);
     const dailyActivityRecordedUserRef = useRef<string | null>(null);
+    const lastActivityPingAtRef = useRef(0);
     const syncedTimeZoneRef = useRef<string | null>(null);
     const [rankBurningTimeStatus, setRankBurningTimeStatus] = useState({
         isActive: false,
         windowLabel: null as string | null
     });
+    const [showRankBurningTooltip, setShowRankBurningTooltip] = useState(false);
+    const [showModeGuide, setShowModeGuide] = useState(false);
     const deviceTimeZone = useMemo(() => {
         try {
             return Intl.DateTimeFormat().resolvedOptions().timeZone || null;
@@ -221,6 +294,27 @@ const Home = () => {
         };
     }, [user]);
 
+    const pingActivity = useCallback(async (force = false) => {
+        if (!user) return false;
+
+        const now = Date.now();
+        if (!force && now - lastActivityPingAtRef.current < ACTIVITY_PING_COOLDOWN_MS) {
+            return false;
+        }
+
+        try {
+            const { error } = await (supabase as any).rpc('record_daily_activity');
+            if (error) throw error;
+
+            lastActivityPingAtRef.current = now;
+            dailyActivityRecordedUserRef.current = user.id;
+            return true;
+        } catch (error) {
+            console.error('Failed to record daily activity:', error);
+            return false;
+        }
+    }, [user]);
+
     useEffect(() => {
         if (!user) {
             setRankBurningTimeStatus({ isActive: false, windowLabel: null });
@@ -275,28 +369,54 @@ const Home = () => {
     useEffect(() => {
         if (!user) {
             dailyActivityRecordedUserRef.current = null;
+            lastActivityPingAtRef.current = 0;
             return;
         }
         if (dailyActivityRecordedUserRef.current === user.id) return;
 
         let cancelled = false;
         const recordActivity = async () => {
-            try {
-                const { error } = await (supabase as any).rpc('record_daily_activity');
-                if (error) throw error;
-                if (!cancelled) {
-                    dailyActivityRecordedUserRef.current = user.id;
-                }
-            } catch (error) {
-                console.error('Failed to record daily activity:', error);
-            }
+            const recorded = await pingActivity(true);
+            if (!recorded || cancelled) return;
         };
 
         void recordActivity();
         return () => {
             cancelled = true;
         };
-    }, [user]);
+    }, [pingActivity, user]);
+
+    useEffect(() => {
+        if (!user) return;
+
+        let nativeListener: PluginListenerHandle | null = null;
+        const handleAppResume = () => {
+            void pingActivity();
+        };
+
+        const onVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                handleAppResume();
+            }
+        };
+
+        document.addEventListener('visibilitychange', onVisibilityChange);
+
+        void CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+            if (isActive) {
+                handleAppResume();
+            }
+        }).then((listener) => {
+            nativeListener = listener;
+        }).catch(() => {
+            // Ignore on platforms where the App plugin listener is unavailable.
+        });
+
+        return () => {
+            document.removeEventListener('visibilitychange', onVisibilityChange);
+            nativeListener?.remove();
+        };
+    }, [pingActivity, user]);
 
     // Calculate Level from MMR (Temporary: MMR / 100)
     // const level = profile?.mmr ? Math.floor(profile.mmr / 100) : 1; 
@@ -326,6 +446,7 @@ const Home = () => {
     const displayedPencils = livePencilState.totalPencils;
     const availablePencils = livePencilState.availablePencils;
     const displayedRechargeMs = livePencilState.remainingMs;
+    const displayedGold = Math.max(0, Number(profile?.gold ?? 0));
 
     // Stable ref for refreshProfile to avoid effect dependency issues
     const refreshProfileRef = useRef(refreshProfile);
@@ -352,16 +473,18 @@ const Home = () => {
                 const raw = window.sessionStorage.getItem(storageKey);
                 if (!raw) return;
 
-                const snapshot = JSON.parse(raw) as { roomId?: string; beforeXp?: number; beforeLevel?: number; capturedAt?: number } | null;
+                const snapshot = JSON.parse(raw) as { roomId?: string; beforeXp?: number; beforeLevel?: number; beforeGold?: number; capturedAt?: number } | null;
                 if (!snapshot?.roomId || typeof snapshot.beforeXp !== 'number') return;
                 if (lastHandledXpRoomRef.current === snapshot.roomId) return;
 
                 const afterXp = Math.max(0, Math.floor(Number(profile.xp ?? 0)));
+                const beforeGold = Math.max(0, Math.floor(Number(snapshot.beforeGold ?? 0)));
+                const afterGold = Math.max(0, Math.floor(Number(profile.gold ?? 0)));
                 const afterLevel = typeof profile.level === 'number'
                     ? Math.max(1, Math.floor(profile.level))
                     : getLevelFromXp(afterXp);
 
-                if (afterXp <= snapshot.beforeXp && afterLevel <= (snapshot.beforeLevel ?? 1)) {
+                if (afterXp <= snapshot.beforeXp && afterLevel <= (snapshot.beforeLevel ?? 1) && afterGold <= beforeGold) {
                     const ageMs = Date.now() - Number(snapshot.capturedAt ?? Date.now());
                     // Games last 30-40s+, so allow retries for up to 5 minutes
                     if (ageMs < 300000 && xpRefreshRetryRef.current < 8) {
@@ -387,7 +510,10 @@ const Home = () => {
                     beforeLevel: Math.max(1, Math.floor(snapshot.beforeLevel ?? getLevelFromXp(snapshot.beforeXp))),
                     afterXp,
                     afterLevel,
-                    xpGain: Math.max(0, afterXp - snapshot.beforeXp)
+                    xpGain: Math.max(0, afterXp - snapshot.beforeXp),
+                    beforeGold,
+                    afterGold,
+                    goldGain: Math.max(0, afterGold - beforeGold)
                 });
                 setAnimatedXpValue(snapshot.beforeXp);
             } catch (error) {
@@ -548,6 +674,37 @@ const Home = () => {
             ? AD_DAILY_LIMIT
             : Math.max(0, AD_DAILY_LIMIT - adRewardCount)
         : AD_DAILY_LIMIT;
+    const isShopClaimedToday = useCallback((claimedOnValue: unknown) => {
+        const claimedOn = typeof claimedOnValue === 'string' ? claimedOnValue : '';
+        if (!claimedOn) return false;
+
+        try {
+            const timeZone = typeof profile?.timezone === 'string' && profile.timezone.trim()
+                ? profile.timezone.trim()
+                : Intl.DateTimeFormat().resolvedOptions().timeZone;
+            const todayInUserZone = new Intl.DateTimeFormat('en-CA', {
+                timeZone,
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+            }).format(new Date());
+            return claimedOn === todayInUserZone;
+        } catch {
+            return claimedOn === new Date().toISOString().slice(0, 10);
+        }
+    }, [profile?.timezone]);
+    const hasDailyShopFreeReward = Boolean(user) && (
+        !isShopClaimedToday(profile?.shop_free_pencil_claimed_on)
+        || (
+            isShopClaimedToday(profile?.shop_free_pencil_claimed_on)
+            && !isShopClaimedToday((profile as any)?.shop_free_pencil_ad_claimed_on)
+        )
+        || !isShopClaimedToday((profile as any)?.shop_free_gold_claimed_on)
+        || (
+            isShopClaimedToday((profile as any)?.shop_free_gold_claimed_on)
+            && !isShopClaimedToday((profile as any)?.shop_free_gold_ad_claimed_on)
+        )
+    );
 
     // Track selected mode for navigation callback
     const currentMode = useRef('rank');
@@ -659,18 +816,38 @@ const Home = () => {
     const [showGuestLinkPromptModal, setShowGuestLinkPromptModal] = useState(false);
     const [isGuestLinkPromptLoading, setIsGuestLinkPromptLoading] = useState(false);
     const [showMailboxModal, setShowMailboxModal] = useState(false);
+    const [showDailyQuestModal, setShowDailyQuestModal] = useState(false);
+    const [showInventoryModal, setShowInventoryModal] = useState(false);
+    const [dailyQuestHomeStatus, setDailyQuestHomeStatus] = useState<DailyQuestHomeStatus>({
+        hasClaimableQuest: false,
+        hasClaimableReward: false,
+    });
     const [mailboxUnreadCount, setMailboxUnreadCount] = useState(0);
+    const [inventoryCatalog, setInventoryCatalog] = useState<ItemInventoryCatalogRow[]>([]);
+    const [inventoryQuantities, setInventoryQuantities] = useState<Record<string, number>>({});
+    const [loadingInventory, setLoadingInventory] = useState(false);
     const [showLeaderboard, setShowLeaderboard] = useState(false);
     const [activeSessionPrompt, setActiveSessionPrompt] = useState<{ roomId: string; opponentId: string } | null>(null);
     const [showNicknameModal, setShowNicknameModal] = useState(false);
     const [nicknameInput, setNicknameInput] = useState('');
     const [isSavingNickname, setIsSavingNickname] = useState(false);
     const shouldSuggestNicknameSetup = Boolean(user && profile?.needs_nickname_setup);
-    const mobileMainInsetClass = 'pt-[calc(env(safe-area-inset-top)+15vh)] pb-[calc(env(safe-area-inset-bottom)+7rem)]';
+    const mobileMainInsetClass = 'pt-[calc(env(safe-area-inset-top)+9.75rem)] pb-[calc(env(safe-area-inset-bottom)+7rem)]';
+    const ownedInventoryItems = useMemo(
+        () => inventoryCatalog
+            .map((item) => ({
+                ...item,
+                quantity: Math.max(0, Number(inventoryQuantities[item.item_code] ?? 0)),
+            }))
+            .filter((item) => item.quantity > 0)
+            .sort((a, b) => a.sort_order - b.sort_order || a.item_code.localeCompare(b.item_code)),
+        [inventoryCatalog, inventoryQuantities]
+    );
 
     // Tutorial refs
     const normalModeRef = useRef<HTMLButtonElement>(null);
     const rankModeRef = useRef<HTMLButtonElement>(null);
+    const soloModeRef = useRef<HTMLButtonElement>(null);
     const practiceModeRef = useRef<HTMLButtonElement>(null);
     const rankingBtnRef = useRef<HTMLButtonElement>(null);
     const shopBtnRef = useRef<HTMLButtonElement>(null);
@@ -718,6 +895,104 @@ const Home = () => {
             console.error('Failed to mark home tutorial seen:', error);
         }
     }, [user]);
+
+    const refreshDailyQuestHomeStatus = useCallback(async () => {
+        if (!user) {
+            setDailyQuestHomeStatus({ hasClaimableQuest: false, hasClaimableReward: false });
+            return;
+        }
+
+        try {
+            const { data, error } = await supabase.rpc('get_daily_quest_status');
+            if (error) throw error;
+
+            const root = data && typeof data === 'object' && !Array.isArray(data)
+                ? data as Record<string, unknown>
+                : {};
+            const quests = Array.isArray(root.quests) ? root.quests : [];
+            const rewards = Array.isArray(root.rewards) ? root.rewards : [];
+
+            setDailyQuestHomeStatus({
+                hasClaimableQuest: quests.some((quest) => (
+                    quest && typeof quest === 'object' && Boolean((quest as Record<string, unknown>).can_claim_points)
+                )),
+                hasClaimableReward: rewards.some((reward) => (
+                    reward && typeof reward === 'object' && Boolean((reward as Record<string, unknown>).can_claim)
+                )),
+            });
+        } catch (error) {
+            console.error('Failed to refresh daily quest home status:', error);
+        }
+    }, [user]);
+
+    const loadInventory = useCallback(async () => {
+        if (!user) {
+            setInventoryCatalog([]);
+            setInventoryQuantities({});
+            return;
+        }
+
+        setLoadingInventory(true);
+        try {
+            const [{ data: catalogData, error: catalogError }, { data: inventoryData, error: inventoryError }] = await Promise.all([
+                supabase
+                    .from('item_catalog')
+                    .select('item_code, name_key, description_key, sort_order')
+                    .eq('is_enabled', true)
+                    .order('sort_order', { ascending: true })
+                    .order('item_code', { ascending: true }),
+                supabase
+                    .from('user_items')
+                    .select('item_code, quantity')
+                    .eq('user_id', user.id)
+            ]);
+
+            if (catalogError) throw catalogError;
+            if (inventoryError) throw inventoryError;
+
+            setInventoryCatalog((catalogData ?? []) as ItemInventoryCatalogRow[]);
+            const nextQuantities: Record<string, number> = {};
+            for (const row of (inventoryData ?? []) as UserInventoryRow[]) {
+                nextQuantities[row.item_code] = Math.max(0, Number(row.quantity ?? 0));
+            }
+            setInventoryQuantities(nextQuantities);
+        } catch (error) {
+            console.error('Failed to load inventory:', error);
+            showToast(t('home.inventoryLoadFail', '인벤토리를 불러오지 못했습니다.'), 'error');
+        } finally {
+            setLoadingInventory(false);
+        }
+    }, [showToast, t, user]);
+
+    const handleOpenInventory = async () => {
+        playSound('click');
+        setShowInventoryModal(true);
+        await loadInventory();
+    };
+
+    useEffect(() => {
+        if (!user) {
+            setDailyQuestHomeStatus({ hasClaimableQuest: false, hasClaimableReward: false });
+            return;
+        }
+
+        void refreshDailyQuestHomeStatus();
+        const handleDailyQuestUpdated = () => {
+            void refreshDailyQuestHomeStatus();
+        };
+        window.addEventListener('brainrush:daily-quest-updated', handleDailyQuestUpdated);
+        return () => window.removeEventListener('brainrush:daily-quest-updated', handleDailyQuestUpdated);
+    }, [refreshDailyQuestHomeStatus, user]);
+
+    useEffect(() => {
+        if (!user) {
+            setInventoryCatalog([]);
+            setInventoryQuantities({});
+            return;
+        }
+
+        void loadInventory();
+    }, [loadInventory, user]);
 
     useEffect(() => {
         if (!user) return;
@@ -973,6 +1248,7 @@ const Home = () => {
     const tutorialRefs: Record<string, React.RefObject<HTMLButtonElement | null>> = {
         normal: normalModeRef,
         rank: rankModeRef,
+        solo: soloModeRef,
         practice: practiceModeRef,
         ranking: isMobileLayout ? mobileRankingBtnRef : rankingBtnRef,
         shop: isMobileLayout ? mobileShopBtnRef : shopBtnRef,
@@ -991,6 +1267,7 @@ const Home = () => {
             if (!error) {
                 // Success
                 await refreshProfile();
+                window.dispatchEvent(new CustomEvent('brainrush:daily-quest-updated'));
                 // Don't close modal yet, let AdModal show success state
                 playSound('level_complete');
                 return 'ok';
@@ -1008,10 +1285,43 @@ const Home = () => {
         }
     };
 
+    const recordDailyQuestEvent = useCallback(async (eventType: string) => {
+        if (!user) return;
+        try {
+            await supabase.rpc('record_daily_quest_event', {
+                p_event_type: eventType,
+                p_amount: 1,
+            });
+            window.dispatchEvent(new CustomEvent('brainrush:daily-quest-updated'));
+        } catch (error) {
+            console.error('Failed to record daily quest event:', error);
+        }
+    }, [user]);
+
+    const openLeaderboard = useCallback(() => {
+        playSound('click');
+        setShowLeaderboard(true);
+        void recordDailyQuestEvent('RANKING_VIEW');
+        void logAnalyticsEvent('br_leaderboard_open');
+    }, [playSound, recordDailyQuestEvent]);
+
+    const openShop = useCallback(() => {
+        playSound('click');
+        void logAnalyticsEvent('br_shop_open', { source: 'home' });
+        navigate('/shop');
+    }, [navigate, playSound]);
+
+    const hasDailyQuestAlert = dailyQuestHomeStatus.hasClaimableQuest || dailyQuestHomeStatus.hasClaimableReward;
+
     const handleModeSelect = async (mode: string, options?: { forceBotImmediate?: boolean }) => {
         playSound('click');
         currentMode.current = mode;
         setActiveSessionPrompt(null);
+        void logAnalyticsEvent('br_mode_select', {
+            mode,
+            burning_time: mode === 'rank' ? isRankBurningTime : false,
+            force_bot: Boolean(options?.forceBotImmediate),
+        });
 
         // Normal/Rank require an authenticated session (anonymous guest login allowed).
         if (mode === 'rank' || mode === 'normal') {
@@ -1030,10 +1340,23 @@ const Home = () => {
         }
 
         if (mode === 'rank') {
+            void logAnalyticsEvent('br_match_start', {
+                mode: 'rank',
+                opponent_type: 'pending',
+                burning_time: isRankBurningTime,
+                pencil_spent: !isRankBurningTime,
+            });
             startSearch('rank');
         } else if (mode === 'normal') {
+            void logAnalyticsEvent('br_match_start', {
+                mode: 'normal',
+                opponent_type: options?.forceBotImmediate ? 'bot' : 'pending',
+                burning_time: false,
+                pencil_spent: true,
+            });
             startSearch('normal', options);
         } else if (mode === 'practice') {
+            void logAnalyticsEvent('br_practice_open');
             navigate('/practice');
         } else {
             console.log(`Selected mode: ${mode} `);
@@ -1044,6 +1367,61 @@ const Home = () => {
     const handlePostTutorialNormalStart = async () => {
         setShowPostTutorialNormalSpotlight(false);
         await handleModeSelect('normal', { forceBotImmediate: true });
+    };
+
+    const handlePostTutorialBrowse = () => {
+        playSound('click');
+        setShowPostTutorialNormalSpotlight(false);
+    };
+
+    const handleSoloModeSelect = async () => {
+        playSound('click');
+        if (!user) {
+            showToast(t('common.loading'), 'info');
+            return;
+        }
+
+        if (isStartingSolo) {
+            return;
+        }
+
+        if (displayedPencils < 1) {
+            playSound('error');
+            setShowNoPencilChoiceModal(true);
+            return;
+        }
+
+        setIsStartingSolo(true);
+
+        try {
+            const { data: consumed, error } = await supabase.rpc('consume_match_pencil', {
+                user_id: user.id,
+                p_mode: 'solo'
+            });
+
+            if (error) {
+                throw error;
+            }
+
+            if (!consumed) {
+                playSound('error');
+                setShowNoPencilChoiceModal(true);
+                return;
+            }
+
+            await refreshProfile();
+            void logAnalyticsEvent('br_mode_start', {
+                mode: 'solo',
+                pencil_spent: true,
+                burning_time: false,
+            });
+            navigate('/solo');
+        } catch (error) {
+            console.error('Failed to consume pencil for solo mode:', error);
+            showToast(t('common.error'), 'error');
+        } finally {
+            setIsStartingSolo(false);
+        }
     };
 
     const formatRemainingTime = (remainingMs: number) => {
@@ -1140,6 +1518,18 @@ const Home = () => {
                 return;
             }
 
+            if (showDailyQuestModal) {
+                setShowDailyQuestModal(false);
+                if (customEvent.detail) customEvent.detail.handled = true;
+                return;
+            }
+
+            if (showInventoryModal) {
+                setShowInventoryModal(false);
+                if (customEvent.detail) customEvent.detail.handled = true;
+                return;
+            }
+
             if (showNoPencilChoiceModal) {
                 setShowNoPencilChoiceModal(false);
                 if (customEvent.detail) customEvent.detail.handled = true;
@@ -1156,185 +1546,226 @@ const Home = () => {
         return () => {
             window.removeEventListener('brainrush:request-modal-close', handleModalCloseRequest as EventListener);
         };
-    }, [showNicknameModal, isSavingNickname, showMailboxModal, showNoPencilChoiceModal, activeSessionPrompt, status, showPostTutorialNormalSpotlight, authLoading, user, showGuestLinkPromptModal, isGuestLinkPromptLoading, dismissGuestLinkPrompt]);
+    }, [showNicknameModal, isSavingNickname, showMailboxModal, showDailyQuestModal, showInventoryModal, showNoPencilChoiceModal, activeSessionPrompt, status, showPostTutorialNormalSpotlight, authLoading, user, showGuestLinkPromptModal, isGuestLinkPromptLoading, dismissGuestLinkPrompt]);
 
     return (
-        <div className={`min-h-[100dvh] bg-slate-50 dark:bg-gray-900 text-slate-900 dark:text-white flex flex-col items-center p-4 relative overflow-hidden`}>
+        <div className={`min-h-[100dvh] bg-slate-50 dark:bg-gray-900 text-slate-900 dark:text-white flex flex-col items-center p-4 relative overflow-x-hidden overflow-y-auto overscroll-y-contain`}>
             {/* Background Effects */}
             <div className={`absolute top-0 left-0 w-full h-full pointer-events-none bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white via-slate-100 to-slate-200 dark:from-gray-800 dark:via-gray-900 dark:to-black`} />
 
             {/* Authenticated User Header (Top Left - Profile) */}
             {user && (
                 <>
-                    <motion.div
-                        initial={{ opacity: 0, y: -50 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="absolute top-[calc(env(safe-area-inset-top)+0.5rem+var(--home-top-offset))] left-4 z-50 flex items-center"
-                    >
-                        <motion.div
-                            layout
-                            transition={{ type: 'spring', stiffness: 240, damping: 24 }}
-                            className={`bg-white dark:bg-gray-800/80 backdrop-blur-md border shadow-lg cursor-pointer hover:bg-white dark:hover:bg-gray-800/80 transition-colors select-none ${shouldShowXpPanel
-                                ? 'w-[min(22rem,calc(100vw-2rem))] rounded-[1.75rem] border-blue-400/35 px-4 py-3 shadow-[0_0_28px_rgba(59,130,246,0.22)]'
-                                : 'rounded-full border-gray-700 p-2 pr-6'
-                                }`}
-                            onClick={handleProfileClick}
-                            onPointerDown={handleProfilePressStart}
-                            onPointerUp={handleProfilePressEnd}
-                            onPointerCancel={handleProfilePressEnd}
-                            onPointerLeave={handleProfilePressEnd}
-                            onContextMenu={(event) => event.preventDefault()}
-                        >
-                            <div className="flex items-center gap-4">
-                                <div className="relative w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 p-[2px]">
-                                    <div className="w-full h-full rounded-full bg-slate-50 dark:bg-gray-900 flex items-center justify-center overflow-hidden">
-                                        {avatarUrl ? (
-                                            <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-                                        ) : (
-                                            <User className="w-6 h-6 md:w-7 md:h-7 text-slate-500 dark:text-gray-400" />
-                                        )}
-                                    </div>
-                                    <motion.div
-                                        animate={levelUpPulse ? { scale: [1, 1.24, 1], rotate: [0, -8, 8, 0] } : { scale: 1, rotate: 0 }}
-                                        transition={{ duration: 0.7, ease: 'easeOut' }}
-                                        className="absolute -bottom-1 -right-1"
-                                    >
-                                        <LevelBadge level={shouldShowXpPanel ? displayedLevel : level} size="sm" className="ring-2 ring-gray-900" />
-                                    </motion.div>
-                                    {hasSocialNotifications && (
-                                        <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-gray-900" aria-hidden="true"></span>
-                                    )}
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                    <div className="font-bold text-slate-900 dark:text-white text-base md:text-lg leading-none flex items-center gap-2">
-                                        <Flag code={countryCode} />
-                                        <span className="truncate">{nickname}</span>
-                                        {shouldSuggestNicknameSetup && (
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    playSound('click');
-                                                    handleOpenNicknameModal();
-                                                }}
-                                                className="relative w-4 h-4 rounded-full bg-red-500 ring-2 ring-gray-900 animate-pulse hover:scale-110 transition-transform"
-                                                aria-label={t('profile.nicknameSetupTitle', '닉네임 설정')}
+                    <div className="absolute top-[calc(env(safe-area-inset-top)+0.5rem+var(--home-top-offset))] left-4 right-4 z-50 flex flex-col gap-2 md:left-1/2 md:right-auto md:w-[min(calc(100%-2rem),28rem)] md:-translate-x-1/2">
+                        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
+                            <motion.div
+                                initial={{ opacity: 0, y: -50 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="min-w-0"
+                            >
+                                <motion.div
+                                    layout
+                                    transition={{ type: 'spring', stiffness: 240, damping: 24 }}
+                                    className={`bg-white dark:bg-gray-800/80 backdrop-blur-md border shadow-lg cursor-pointer hover:bg-white dark:hover:bg-gray-800/80 transition-colors select-none ${shouldShowXpPanel
+                                        ? 'w-full rounded-[1.75rem] border-blue-400/35 px-4 py-3 shadow-[0_0_28px_rgba(59,130,246,0.22)]'
+                                        : 'rounded-full border-gray-700 p-2 pr-6'
+                                        }`}
+                                    onClick={handleProfileClick}
+                                    onPointerDown={handleProfilePressStart}
+                                    onPointerUp={handleProfilePressEnd}
+                                    onPointerCancel={handleProfilePressEnd}
+                                    onPointerLeave={handleProfilePressEnd}
+                                    onContextMenu={(event) => event.preventDefault()}
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <div className="relative h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 p-[2px] md:h-14 md:w-14">
+                                            <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-slate-50 dark:bg-gray-900">
+                                                {avatarUrl ? (
+                                                    <img src={avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
+                                                ) : (
+                                                    <User className="h-6 w-6 text-slate-500 dark:text-gray-400 md:h-7 md:w-7" />
+                                                )}
+                                            </div>
+                                            <motion.div
+                                                animate={levelUpPulse ? { scale: [1, 1.24, 1], rotate: [0, -8, 8, 0] } : { scale: 1, rotate: 0 }}
+                                                transition={{ duration: 0.7, ease: 'easeOut' }}
+                                                className="absolute -bottom-1 -right-1"
                                             >
-                                                <span className="absolute inset-0 rounded-full bg-red-400/60 animate-ping" />
-                                            </button>
-                                        )}
-                                    </div>
-                                    {showRankSummary && (
-                                        <div className="mt-1.5 flex gap-3 items-center">
-                                            <div className={`px-2 py-0.5 md:px-2.5 md:py-1 rounded-lg text-xs md:text-sm font-black bg-gradient-to-r ${tierColor} text-black flex items-center gap-1 shadow-md transform hover:scale-105 transition-transform`}>
-                                                <TierIcon className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                                                <span>{tier}</span>
-                                                <span className="opacity-60">|</span>
-                                                <span className="font-mono">{rank}</span>
-                                            </div>
+                                                <LevelBadge level={shouldShowXpPanel ? displayedLevel : level} size="sm" className="ring-2 ring-gray-900" />
+                                            </motion.div>
+                                            {hasSocialNotifications && (
+                                                <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-gray-900" aria-hidden="true"></span>
+                                            )}
                                         </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            <AnimatePresence initial={false}>
-                                {shouldShowXpPanel && (
-                                    <motion.div
-                                        key="xp-feedback"
-                                        initial={{ opacity: 0, y: -8, height: 0 }}
-                                        animate={{ opacity: 1, y: 0, height: 'auto' }}
-                                        exit={{ opacity: 0, y: -8, height: 0 }}
-                                        transition={{ duration: 0.28, ease: 'easeOut' }}
-                                        className="overflow-hidden"
-                                    >
-                                        <div className="mt-3 border-t border-white/10 pt-3">
-                                            <div className="mb-2 flex items-center justify-between gap-3">
-                                                <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.22em] text-blue-200/80">
-                                                    <span>XP</span>
-                                                    <span className="text-slate-900 dark:text-white/70 normal-case tracking-normal">
-                                                        {t('home.levelProgressLevel', 'Lv. {{level}}', { level: xpAnimation ? displayedLevel : staticLevel })}
-                                                    </span>
-                                                </div>
-                                                {xpAnimation && (
-                                                    <div className="text-sm font-black text-emerald-300">
-                                                        +{xpAnimation.xpGain} XP
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <div className="h-3 overflow-hidden rounded-full bg-slate-300/70 dark:bg-white/10">
-                                                <motion.div
-                                                    className={`h-full rounded-full ${didLevelUpInAnimation ? 'bg-gradient-to-r from-emerald-300 via-blue-400 to-violet-400' : 'bg-gradient-to-r from-blue-400 to-cyan-300'}`}
-                                                    animate={{ width: `${Math.max(6, (xpAnimation ? displayedXpProgress.ratio : staticXpProgress.ratio) * 100)}%` }}
-                                                    transition={{ duration: 0.18, ease: 'easeOut' }}
-                                                />
-                                            </div>
-                                            <div className="mt-2 flex items-center justify-between text-[11px] font-mono text-slate-600 dark:text-gray-300">
-                                                <span>{(xpAnimation ? displayedXpProgress : staticXpProgress).progressXp} / {(xpAnimation ? displayedXpProgress : staticXpProgress).requiredXp}</span>
-                                                <span>{xpAnimation ? displayedXp : staticXp}</span>
-                                            </div>
-                                            <AnimatePresence>
-                                                {levelUpPulse && (
-                                                    <motion.div
-                                                        initial={{ opacity: 0, y: 6, scale: 0.96 }}
-                                                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                                                        exit={{ opacity: 0, y: -6, scale: 0.96 }}
-                                                        transition={{ duration: 0.3, ease: 'easeOut' }}
-                                                        className="mt-3 inline-flex items-center rounded-full border border-yellow-300/40 bg-yellow-300/15 px-3 py-1 text-xs font-black uppercase tracking-[0.24em] text-yellow-200 shadow-[0_0_18px_rgba(250,204,21,0.2)]"
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex items-center gap-2 text-base font-bold leading-none text-slate-900 dark:text-white md:text-lg">
+                                                <Flag code={countryCode} />
+                                                <span className="truncate">{nickname}</span>
+                                                {shouldSuggestNicknameSetup && (
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            playSound('click');
+                                                            handleOpenNicknameModal();
+                                                        }}
+                                                        className="relative h-4 w-4 rounded-full bg-red-500 ring-2 ring-gray-900 transition-transform hover:scale-110 animate-pulse"
+                                                        aria-label={t('profile.nicknameSetupTitle', '닉네임 설정')}
                                                     >
-                                                        {t('home.levelUp', 'LEVEL UP!')}
-                                                    </motion.div>
+                                                        <span className="absolute inset-0 rounded-full bg-red-400/60 animate-ping" />
+                                                    </button>
                                                 )}
-                                            </AnimatePresence>
+                                            </div>
+                                            {showRankSummary && (
+                                                <div className="mt-1.5 flex items-center gap-3">
+                                                    <div className={`flex items-center gap-1 rounded-lg bg-gradient-to-r px-2 py-0.5 text-xs font-black text-black shadow-md transition-transform hover:scale-105 md:px-2.5 md:py-1 md:text-sm ${tierColor}`}>
+                                                        <TierIcon className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                                                        <span>{tier}</span>
+                                                        <span className="opacity-60">|</span>
+                                                        <span className="font-mono">{rank}</span>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </motion.div>
-                    </motion.div>
+                                    </div>
 
-                    {/* Pencil Display (Top Right) */}
-                    <div className="absolute top-[calc(env(safe-area-inset-top)+0.5rem+var(--home-top-offset))] right-4 z-50">
-                        <button
-                            onClick={() => setShowAdModal(true)}
-                            className="bg-white dark:bg-gray-800/80 backdrop-blur-md border border-gray-700 rounded-full py-2 px-3 md:px-5 flex items-center gap-2 md:gap-3 hover:bg-slate-100 dark:bg-gray-700 transition-all shadow-lg active:scale-95"
-                        >
-                            <div className="flex flex-col items-end leading-none">
-                                <div className="flex items-center gap-1.5">
-                                    <span className={`text-lg md:text-xl font-black ${displayedPencils < 1 ? "text-red-400" : "text-yellow-400"}`}>
+                                    <AnimatePresence initial={false}>
+                                        {shouldShowXpPanel && (
+                                            <motion.div
+                                                key="xp-feedback"
+                                                initial={{ opacity: 0, y: -8, height: 0 }}
+                                                animate={{ opacity: 1, y: 0, height: 'auto' }}
+                                                exit={{ opacity: 0, y: -8, height: 0 }}
+                                                transition={{ duration: 0.28, ease: 'easeOut' }}
+                                                className="overflow-hidden"
+                                            >
+                                                <div className="mt-3 border-t border-white/10 pt-3">
+                                                    <div className="mb-2 flex items-center justify-between gap-3">
+                                                        <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.22em] text-blue-200/80">
+                                                            <span>XP</span>
+                                                            <span className="normal-case tracking-normal text-slate-900 dark:text-white/70">
+                                                                {t('home.levelProgressLevel', 'Lv. {{level}}', { level: xpAnimation ? displayedLevel : staticLevel })}
+                                                            </span>
+                                                        </div>
+                                                        {xpAnimation && (
+                                                            <div className="text-sm font-black text-emerald-300">
+                                                                +{xpAnimation.xpGain} XP
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="h-3 overflow-hidden rounded-full bg-slate-300/70 dark:bg-white/10">
+                                                        <motion.div
+                                                            className={`h-full rounded-full ${didLevelUpInAnimation ? 'bg-gradient-to-r from-emerald-300 via-blue-400 to-violet-400' : 'bg-gradient-to-r from-blue-400 to-cyan-300'}`}
+                                                            animate={{ width: `${Math.max(6, (xpAnimation ? displayedXpProgress.ratio : staticXpProgress.ratio) * 100)}%` }}
+                                                            transition={{ duration: 0.18, ease: 'easeOut' }}
+                                                        />
+                                                    </div>
+                                                    <div className="mt-2 flex items-center justify-between text-[11px] font-mono text-slate-600 dark:text-gray-300">
+                                                        <span>{(xpAnimation ? displayedXpProgress : staticXpProgress).progressXp} / {(xpAnimation ? displayedXpProgress : staticXpProgress).requiredXp}</span>
+                                                        <span>{xpAnimation ? displayedXp : staticXp}</span>
+                                                    </div>
+                                                    <AnimatePresence>
+                                                        {levelUpPulse && (
+                                                            <motion.div
+                                                                initial={{ opacity: 0, y: 6, scale: 0.96 }}
+                                                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                                exit={{ opacity: 0, y: -6, scale: 0.96 }}
+                                                                transition={{ duration: 0.3, ease: 'easeOut' }}
+                                                                className="mt-3 inline-flex items-center rounded-full border border-yellow-300/40 bg-yellow-300/15 px-3 py-1 text-xs font-black uppercase tracking-[0.24em] text-yellow-200 shadow-[0_0_18px_rgba(250,204,21,0.2)]"
+                                                            >
+                                                                {t('home.levelUp', 'LEVEL UP!')}
+                                                            </motion.div>
+                                                        )}
+                                                    </AnimatePresence>
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </motion.div>
+                            </motion.div>
+
+                            <div className="flex w-[6.75rem] shrink-0 flex-col gap-1.5">
+                                <button
+                                    onClick={openShop}
+                                    className="relative flex min-h-10 items-center justify-center gap-1.5 rounded-full border border-gray-700 bg-white px-2.5 py-1.5 shadow-lg backdrop-blur-md transition-all hover:bg-slate-100 active:scale-95 dark:bg-gray-800/80 dark:bg-gray-700"
+                                >
+                                    <img src="/images/icon/icon_coin.png" alt="" className="h-5 w-5 shrink-0 object-contain" aria-hidden="true" />
+                                    <span className="min-w-0 truncate text-sm font-black leading-none text-yellow-400 font-mono">
+                                        {displayedGold}
+                                    </span>
+                                    <AnimatePresence>
+                                        {xpAnimation && xpAnimation.goldGain > 0 && (
+                                            <motion.div
+                                                key={`gold-gain-${xpAnimation.roomId}`}
+                                                initial={{ opacity: 0, y: 8, scale: 0.82 }}
+                                                animate={{ opacity: 1, y: -24, scale: 1 }}
+                                                exit={{ opacity: 0, y: -38, scale: 0.92 }}
+                                                transition={{ duration: 0.7, ease: 'easeOut' }}
+                                                className="pointer-events-none absolute -top-1 right-1 z-20 rounded-full border border-yellow-200/70 bg-yellow-300 px-2 py-0.5 text-xs font-black text-slate-950 shadow-[0_0_18px_rgba(250,204,21,0.55)]"
+                                            >
+                                                +{xpAnimation.goldGain}
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </button>
+                                <button
+                                    onClick={() => setShowAdModal(true)}
+                                    className="flex min-h-10 items-center justify-center gap-1.5 rounded-full border border-gray-700 bg-white px-2.5 py-1.5 shadow-lg backdrop-blur-md transition-all hover:bg-slate-100 active:scale-95 dark:bg-gray-800/80 dark:bg-gray-700"
+                                >
+                                    <span className={`text-sm font-black leading-none ${displayedPencils < 1 ? "text-red-400" : "text-yellow-400"}`}>
                                         {displayedPencils}
                                     </span>
-                                    <span className="text-gray-500 text-sm font-bold">/ 5</span>
-                                </div>
-                                {availablePencils < MAX_PENCILS && (
-                                    <div className="text-xs text-slate-500 dark:text-gray-400 font-mono flex items-center gap-1.5 mt-0.5">
-                                        <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                                        <RechargeTimer remainingMs={displayedRechargeMs} />
-                                    </div>
-                                )}
+                                    <span className="text-xs font-bold leading-none text-gray-500">/ 5</span>
+                                    <img
+                                        src="/images/icon/icon_pen.png"
+                                        alt="Pencil"
+                                        className="h-5 w-5 shrink-0 object-contain"
+                                    />
+                                </button>
                             </div>
-                            <img
-                                src="/images/icon/icon_pen.png"
-                                alt="Pencil"
-                                className="w-5 h-5 md:w-6 md:h-6 object-contain"
-                            />
-                        </button>
-                    </div>
+                        </div>
 
-                    <div className="absolute top-[calc(env(safe-area-inset-top)+4.65rem+var(--home-top-offset))] right-4 z-50">
-                        <button
-                            onClick={() => {
-                                playSound('click');
-                                setShowMailboxModal(true);
-                            }}
-                            className="relative bg-white dark:bg-gray-800/80 backdrop-blur-md border border-gray-700 rounded-full py-2 px-4 flex items-center gap-2 hover:bg-slate-100 dark:bg-gray-700 transition-all shadow-lg active:scale-95"
-                        >
-                            <Mail className="w-4 h-4 text-cyan-300" />
-                            <span className="text-xs font-bold text-slate-600 dark:text-gray-200">{t('mailbox.title', '우편함')}</span>
-                            {mailboxUnreadCount > 0 && (
-                                <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-red-500 text-[10px] leading-4 text-white text-center font-black">
-                                    {mailboxUnreadCount > 9 ? '9+' : mailboxUnreadCount}
-                                </span>
-                            )}
-                        </button>
+                        <div className="flex items-center justify-between gap-2">
+                            <button
+                                onClick={() => {
+                                    playSound('click');
+                                    setShowDailyQuestModal(true);
+                                }}
+                                className="relative flex h-11 w-11 items-center justify-center rounded-full border border-gray-700 bg-white shadow-lg backdrop-blur-md transition-all hover:bg-slate-100 active:scale-95 dark:bg-gray-800/80 dark:bg-gray-700"
+                                aria-label={t('dailyQuests.title', '일일 퀘스트')}
+                            >
+                                {hasDailyQuestAlert && (
+                                    <span className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-red-500 ring-2 ring-white dark:ring-slate-950">
+                                        <span className="absolute inset-0 rounded-full bg-red-400/70 animate-ping" />
+                                    </span>
+                                )}
+                                <img src="/images/icon/icon_question.png" alt="" className="h-6 w-6 object-contain" aria-hidden="true" />
+                            </button>
+
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => {
+                                        playSound('click');
+                                        setShowMailboxModal(true);
+                                    }}
+                                    className="relative flex h-11 w-11 items-center justify-center rounded-full border border-gray-700 bg-white shadow-lg backdrop-blur-md transition-all hover:bg-slate-100 active:scale-95 dark:bg-gray-800/80 dark:bg-gray-700"
+                                    aria-label={t('mailbox.title', '우편함')}
+                                >
+                                    <img src="/images/icon/icon_mail.png" alt="" className="h-6 w-6 object-contain" aria-hidden="true" />
+                                    {mailboxUnreadCount > 0 && (
+                                        <span className="absolute -right-1 -top-1 min-w-4 h-4 rounded-full bg-red-500 px-1 text-center text-[10px] font-black leading-4 text-white">
+                                            {mailboxUnreadCount > 9 ? '9+' : mailboxUnreadCount}
+                                        </span>
+                                    )}
+                                </button>
+                                <button
+                                    onClick={() => { void handleOpenInventory(); }}
+                                    className="relative flex h-11 w-11 items-center justify-center rounded-full border border-gray-700 bg-white shadow-lg backdrop-blur-md transition-all hover:bg-slate-100 active:scale-95 dark:bg-gray-800/80 dark:bg-gray-700"
+                                    aria-label={t('home.inventoryTitle', '인벤토리')}
+                                >
+                                    <img src="/images/icon/icon_bag.png" alt="" className="h-6 w-6 object-contain" aria-hidden="true" />
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </>
             )}
@@ -1508,6 +1939,96 @@ const Home = () => {
                 </div>
             )}
 
+            {showInventoryModal && (
+                <div
+                    className="fixed inset-0 z-[122] flex items-center justify-center bg-black/75 px-4 backdrop-blur-sm"
+                    onClick={() => setShowInventoryModal(false)}
+                >
+                    <div
+                        className="flex max-h-[78vh] w-full max-w-md flex-col overflow-hidden rounded-3xl border border-cyan-400/20 bg-slate-50 shadow-2xl dark:bg-gray-900/95"
+                        onClick={(event) => event.stopPropagation()}
+                    >
+                        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4 dark:border-white/10">
+                            <div className="flex items-center gap-2">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-cyan-400/10">
+                                    <img src="/images/icon/icon_bag.png" alt="" className="h-4 w-4 object-contain" aria-hidden="true" />
+                                </div>
+                                <h2 className="text-lg font-black text-slate-900 dark:text-white">
+                                    {t('home.inventoryTitle', '인벤토리')}
+                                </h2>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setShowInventoryModal(false)}
+                                className="rounded-full p-2 text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-900 dark:text-gray-400 dark:hover:bg-white/10 dark:hover:text-white"
+                                aria-label={t('common.close')}
+                            >
+                                <X className="h-5 w-5" />
+                            </button>
+                        </div>
+
+                        <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-5 scrollbar-hide">
+                            {loadingInventory ? (
+                                <div className="flex min-h-40 items-center justify-center">
+                                    <Loader2 className="h-7 w-7 animate-spin text-cyan-300" />
+                                </div>
+                            ) : ownedInventoryItems.length > 0 ? (
+                                ownedInventoryItems.map((item) => (
+                                    <div
+                                        key={item.item_code}
+                                        className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/80 px-4 py-3 shadow-sm dark:bg-white/[0.04]"
+                                    >
+                                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-2xl dark:bg-slate-800">
+                                            {INVENTORY_VISUALS[item.item_code] ? (
+                                                <img src={INVENTORY_VISUALS[item.item_code]} alt="" className="h-9 w-9 object-contain" aria-hidden="true" />
+                                            ) : (
+                                                <span aria-hidden="true">🎒</span>
+                                            )}
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="truncate text-sm font-black text-slate-900 dark:text-white">
+                                                {t(item.name_key, item.item_code)}
+                                            </p>
+                                            <p className="mt-0.5 text-xs font-semibold text-slate-500 dark:text-gray-400">
+                                                {t(item.description_key, '')}
+                                            </p>
+                                        </div>
+                                        <div className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-sm font-black text-cyan-300">
+                                            x{item.quantity}
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="rounded-2xl border border-dashed border-white/10 bg-white/70 px-5 py-10 text-center dark:bg-white/[0.03]">
+                                    <img src="/images/icon/icon_bag.png" alt="" className="mx-auto h-10 w-10 object-contain opacity-55" aria-hidden="true" />
+                                    <p className="mt-3 text-sm font-bold text-slate-600 dark:text-gray-300">
+                                        {t('home.inventoryEmpty', '보유한 아이템이 없습니다.')}
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 border-t border-slate-200 p-5 dark:border-white/10">
+                            <button
+                                onClick={() => setShowInventoryModal(false)}
+                                className="rounded-xl border border-gray-300 bg-white py-3 font-black text-slate-900 transition-colors hover:bg-gray-100 dark:border-white/10 dark:bg-white dark:text-slate-950 dark:hover:bg-gray-200"
+                            >
+                                {t('common.ok', '확인')}
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setShowInventoryModal(false);
+                                    openShop();
+                                }}
+                                className="rounded-xl bg-cyan-500 py-3 font-black text-slate-950 transition-colors hover:bg-cyan-400"
+                            >
+                                {t('home.goToShop', '상점으로')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {activeSessionPrompt && status === 'idle' && (
                 <div className="fixed inset-0 z-[125] bg-black/75 backdrop-blur-sm flex items-center justify-center px-4">
                     <div className="w-full max-w-md rounded-3xl border border-yellow-400/30 bg-slate-50 dark:bg-gray-900/95 p-6 shadow-2xl">
@@ -1558,6 +2079,12 @@ const Home = () => {
                 onUnreadCountChange={setMailboxUnreadCount}
             />
 
+            <DailyQuestModal
+                isOpen={showDailyQuestModal}
+                onClose={() => setShowDailyQuestModal(false)}
+                onRewardClaimed={refreshProfile}
+            />
+
             {showNoPencilChoiceModal && (
                 <div className="fixed inset-0 z-[126] bg-black/75 backdrop-blur-sm flex items-center justify-center px-4">
                     <div className="w-full max-w-md rounded-3xl border border-yellow-400/30 bg-slate-50 dark:bg-gray-900/95 p-6 shadow-2xl">
@@ -1590,7 +2117,7 @@ const Home = () => {
                                 onClick={() => {
                                     playSound('click');
                                     setShowNoPencilChoiceModal(false);
-                                    navigate('/shop');
+                                    openShop();
                                 }}
                                 className="rounded-xl border border-cyan-500/40 bg-cyan-500/15 py-3 font-semibold text-cyan-300 transition-colors hover:bg-cyan-500/25"
                             >
@@ -1841,7 +2368,7 @@ const Home = () => {
             {/* Main Content */}
             <div className={`z-10 w-full flex-1 ${mobileMainInsetClass} md:pt-[calc(env(safe-area-inset-top)+1rem)] md:pb-8`}>
                 <motion.div
-                    className="mx-auto h-full w-full max-w-md flex flex-col items-center justify-center gap-6"
+                    className="mx-auto h-full w-full max-w-md flex flex-col items-center justify-start md:justify-center gap-4 md:gap-5"
                     variants={containerVariants}
                     initial="hidden"
                     animate="visible"
@@ -1855,24 +2382,26 @@ const Home = () => {
                     </motion.div>
 
                     {/* Game Modes */}
-                    <motion.div variants={itemVariants} className="w-full flex flex-col gap-4">
+                    <motion.div variants={itemVariants} className="grid w-full grid-cols-2 gap-2.5 md:gap-3">
 
                         {/* Normal Mode */}
                         <button
                             ref={normalModeRef}
                             onMouseEnter={() => playSound('hover')}
                             onClick={() => handleModeSelect('normal')}
-                            className="group relative w-full p-6 bg-white dark:bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-200 hover:border-blue-500 hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] active:scale-[0.98] active:border-blue-300 active:bg-blue-400/20 active:shadow-[0_0_28px_rgba(59,130,246,0.5)] active:brightness-125 active:saturate-150 cursor-pointer flex items-center gap-4 text-left"
+                            className="group relative min-h-[148px] w-full overflow-hidden rounded-2xl border border-gray-700 bg-white p-3.5 text-left backdrop-blur-md transition-all duration-200 hover:border-blue-500 hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] active:scale-[0.98] active:border-blue-300 active:bg-blue-400/20 active:shadow-[0_0_28px_rgba(59,130,246,0.5)] active:brightness-125 active:saturate-150 dark:bg-gray-800/50 md:min-h-[164px] md:p-4"
                         >
-                            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-300" />
-                            <div className="p-3 rounded-full bg-blue-500/20 group-hover:bg-blue-500/30 group-active:bg-blue-500/40 transition-colors">
-                                <Zap className="w-8 h-8 text-blue-400 group-active:text-blue-200 transition-colors" />
+                            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/14 via-blue-500/6 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-active:opacity-100" />
+                            <div className="absolute right-4 top-4 z-10">
+                                <PencilCostChip />
                             </div>
-                            <div>
-                                <h3 className="text-2xl font-bold group-hover:text-blue-400 group-active:text-blue-200 transition-colors">{t('menu.normal.title')}</h3>
-                                <p className="text-gray-500 text-sm mt-1">
-                                    {t('menu.normal.subtitle')} · {t('menu.normal.matchRule', '3판 2선승')}
-                                </p>
+                            <div className="relative flex h-full flex-col items-start gap-3">
+                                <div className="rounded-full bg-blue-500/20 p-2.5 transition-colors group-hover:bg-blue-500/30 group-active:bg-blue-500/40">
+                                    <Zap className="h-6 w-6 text-blue-400 transition-colors group-active:text-blue-200" />
+                                </div>
+                                <div className="w-full pr-12">
+                                    <HomeModeTitle className="transition-colors group-hover:text-blue-400 group-active:text-blue-200">{t('menu.normal.title')}</HomeModeTitle>
+                                </div>
                             </div>
                         </button>
 
@@ -1881,47 +2410,59 @@ const Home = () => {
                             ref={rankModeRef}
                             onMouseEnter={() => playSound('hover')}
                             onClick={() => handleModeSelect('rank')}
-                            className={`group relative w-full p-6 bg-white dark:bg-gray-800/50 backdrop-blur-md border rounded-2xl overflow-hidden transition-all duration-200 ${canPlayRank ? 'border-purple-400/55 hover:border-purple-300 hover:shadow-[0_0_18px_rgba(168,85,247,0.22)] active:scale-[0.98] active:border-purple-200 active:bg-purple-400/20 active:shadow-[0_0_24px_rgba(168,85,247,0.28)] active:brightness-125 active:saturate-150 cursor-pointer' : 'border-purple-400/30 opacity-50 grayscale cursor-not-allowed'} ${shouldHighlightRankButton ? 'rank-cta-highlight border-purple-300/90' : ''} flex items-center gap-4 text-left`}
+                            className={`group relative min-h-[148px] w-full overflow-hidden rounded-2xl border bg-white p-3.5 text-left backdrop-blur-md transition-all duration-200 dark:bg-gray-800/50 md:min-h-[164px] md:p-4 ${canPlayRank ? 'border-purple-400/55 hover:border-purple-300 hover:shadow-[0_0_18px_rgba(168,85,247,0.22)] active:scale-[0.98] active:border-purple-200 active:bg-purple-400/20 active:shadow-[0_0_24px_rgba(168,85,247,0.28)] active:brightness-125 active:saturate-150 cursor-pointer' : 'border-purple-400/30 opacity-50 grayscale cursor-not-allowed'} ${shouldHighlightRankButton ? 'rank-cta-highlight border-purple-300/90' : ''} ${isRankBurningTime ? 'border-orange-300/80 shadow-[0_0_28px_rgba(249,115,22,0.24)] hover:border-amber-200 hover:shadow-[0_0_34px_rgba(251,146,60,0.36)]' : ''}`}
                         >
                             {shouldHighlightRankButton && (
                                 <div className="rank-cta-sheen absolute inset-0 z-0 pointer-events-none" />
                             )}
-                            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-300" />
-                            <div className="relative z-10 p-3 rounded-full bg-purple-500/20 group-hover:bg-purple-500/30 group-active:bg-purple-500/40 transition-colors">
-                                {showRankSummary ? (
-                                    <TierIcon className="w-8 h-8 object-contain text-purple-400 group-active:text-purple-200 transition-colors" />
+                            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/14 via-purple-500/6 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-active:opacity-100" />
+                            {isRankBurningTime && (
+                                <>
+                                    <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_80%_10%,rgba(251,191,36,0.36),transparent_26%),radial-gradient(circle_at_20%_100%,rgba(239,68,68,0.28),transparent_34%),linear-gradient(135deg,rgba(126,34,206,0.18),rgba(249,115,22,0.16))] opacity-90" />
+                                    <div className="pointer-events-none absolute -bottom-10 left-0 right-0 z-0 h-24 bg-gradient-to-t from-red-500/28 via-orange-400/12 to-transparent blur-sm" />
+                                </>
+                            )}
+                            <div className="absolute right-4 top-4 z-20">
+                                {isRankBurningTime ? (
+                                    <BurningTimeChip
+                                        windowLabel={rankBurningTimeWindow}
+                                        isTooltipOpen={showRankBurningTooltip}
+                                        onToggle={() => setShowRankBurningTooltip((prev) => !prev)}
+                                        label={t('menu.rank.burningTime', 'Burning Time')}
+                                        benefit={t('menu.rank.burningTimeBenefit', 'No pencil cost')}
+                                    />
                                 ) : (
-                                    <Trophy className="w-8 h-8 text-purple-400 group-active:text-purple-200 transition-colors" />
+                                    <PencilCostChip />
                                 )}
                             </div>
-                            <div className="relative z-10">
-                                <h3 className="text-2xl font-bold group-hover:text-purple-400 group-active:text-purple-200 transition-colors">{t('menu.rank.title')}</h3>
-                                <p className="text-gray-500 text-sm mt-1">
-                                    {t('menu.rank.subtitle')} · {t('menu.rank.matchRule', '5판 3선승')}
-                                </p>
-                                {isRankBurningTime && (
-                                    <p className="text-amber-300 text-xs font-black mt-1">
-                                        {t('menu.rank.burningTime', 'Burning Time')} ({rankBurningTimeWindow}) · {t('menu.rank.burningTimeBenefit', 'No pencil cost')}
-                                    </p>
-                                )}
+                            <div className="relative z-10 flex h-full flex-col items-start gap-3">
+                                <div className={`rounded-full p-2.5 transition-colors ${isRankBurningTime ? 'bg-orange-500/18 shadow-[0_0_18px_rgba(251,146,60,0.28)] group-hover:bg-orange-500/24 dark:bg-orange-500/25 dark:shadow-[0_0_18px_rgba(251,146,60,0.35)] dark:group-hover:bg-orange-500/35' : 'bg-purple-500/20 group-hover:bg-purple-500/30 group-active:bg-purple-500/40'}`}>
+                                    {showRankSummary ? (
+                                        <TierIcon className={`h-6 w-6 object-contain transition-colors group-active:text-purple-200 ${isRankBurningTime ? 'text-orange-700 dark:text-amber-300' : 'text-purple-400'}`} />
+                                    ) : (
+                                        <Trophy className={`h-6 w-6 transition-colors group-active:text-purple-200 ${isRankBurningTime ? 'text-orange-700 dark:text-amber-300' : 'text-purple-400'}`} />
+                                    )}
+                                </div>
+                                <div className="w-full pr-12">
+                                    <HomeModeTitle className={`transition-colors group-active:text-purple-200 ${isRankBurningTime ? 'text-orange-800 group-hover:text-orange-700 dark:text-amber-200 dark:group-hover:text-yellow-200' : 'group-hover:text-purple-400'}`}>{t('menu.rank.title')}</HomeModeTitle>
+                                </div>
                             </div>
 
                             {!user && (
-                                <div className="absolute inset-0 flex items-center justify-center bg-black/60 z-10">
-                                    <Lock className="w-8 h-8 text-slate-900 dark:text-white/80" />
+                                <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/60">
+                                    <Lock className="h-8 w-8 text-slate-900 dark:text-white/80" />
                                 </div>
                             )}
 
-                            {/* Win Streak Badge */}
                             {streakActive && user && (
-                                <div className="absolute top-2 right-2 z-20 flex flex-col items-end gap-0.5">
-                                    <div className="flex items-center gap-1.5 bg-gradient-to-r from-orange-600/90 to-red-600/90 backdrop-blur-sm rounded-full px-2.5 py-1 shadow-lg border border-orange-400/40 animate-pulse">
-                                        <Flame className="w-4 h-4 text-yellow-300" />
+                                <div className={`absolute right-2 z-20 flex flex-col items-end gap-0.5 ${isRankBurningTime ? 'top-14' : 'top-2'}`}>
+                                    <div className="flex items-center gap-1.5 rounded-full border border-orange-400/40 bg-gradient-to-r from-orange-600/90 to-red-600/90 px-2.5 py-1 shadow-lg backdrop-blur-sm animate-pulse">
+                                        <Flame className="h-4 w-4 text-yellow-300" />
                                         <span className="text-xs font-black text-slate-900 dark:text-white">{streakCount}</span>
-                                        <span className="text-[10px] text-orange-200 font-mono">{streakMinutes}:{String(streakSeconds).padStart(2, '0')}</span>
+                                        <span className="font-mono text-[10px] text-orange-200">{streakMinutes}:{String(streakSeconds).padStart(2, '0')}</span>
                                     </div>
                                     {nextMilestone > 0 && (
-                                        <div className="bg-yellow-500/90 backdrop-blur-sm rounded-full px-2 py-0.5 shadow border border-yellow-400/50">
+                                        <div className="rounded-full border border-yellow-400/50 bg-yellow-500/90 px-2 py-0.5 shadow backdrop-blur-sm">
                                             <span className="text-[10px] font-bold text-black">{nextMilestone}{t('streak.nextBonus', '연승 시 +{{bonus}}', { bonus: nextBonusMMR })}</span>
                                         </div>
                                     )}
@@ -1929,20 +2470,47 @@ const Home = () => {
                             )}
                         </button>
 
+                        {/* Solo Mode */}
+                        <button
+                            ref={soloModeRef}
+                            onMouseEnter={() => playSound('hover')}
+                            onClick={handleSoloModeSelect}
+                            disabled={isStartingSolo}
+                            className={`group relative min-h-[148px] w-full overflow-hidden rounded-2xl border border-orange-400/45 bg-white p-3.5 text-left backdrop-blur-md transition-all duration-200 dark:bg-gray-800/50 md:min-h-[164px] md:p-4 ${isStartingSolo ? 'cursor-wait opacity-80' : 'hover:border-orange-300 hover:shadow-[0_0_18px_rgba(251,146,60,0.26)] active:scale-[0.98] active:border-orange-200 active:bg-orange-400/20 active:shadow-[0_0_24px_rgba(251,146,60,0.3)] active:brightness-125 active:saturate-150'}`}
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/14 via-orange-500/6 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-active:opacity-100" />
+                            <div className="absolute right-4 top-4 z-10">
+                                <PencilCostChip />
+                            </div>
+                            <div className="relative flex h-full flex-col items-start gap-3">
+                                <div className="rounded-full bg-orange-500/20 p-2.5 transition-colors group-hover:bg-orange-500/30 group-active:bg-orange-500/40">
+                                    {isStartingSolo ? (
+                                        <Loader2 className="h-6 w-6 animate-spin text-orange-400 transition-colors group-active:text-orange-200" />
+                                    ) : (
+                                        <User className="h-6 w-6 text-orange-400 transition-colors group-active:text-orange-200" />
+                                    )}
+                                </div>
+                                <div className="w-full pr-12">
+                                    <HomeModeTitle className="transition-colors group-hover:text-orange-400 group-active:text-orange-200">{t('menu.solo.title', '혼자하기')}</HomeModeTitle>
+                                </div>
+                            </div>
+                        </button>
+
                         {/* Practice Mode */}
                         <button
                             ref={practiceModeRef}
                             onMouseEnter={() => playSound('hover')}
                             onClick={() => handleModeSelect('practice')}
-                            className="group relative w-full p-6 bg-white dark:bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl overflow-hidden transition-all duration-200 hover:border-green-500 hover:shadow-[0_0_20px_rgba(34,197,94,0.5)] active:scale-[0.98] active:border-green-300 active:bg-green-400/20 active:shadow-[0_0_28px_rgba(34,197,94,0.5)] active:brightness-125 active:saturate-150 cursor-pointer flex items-center gap-4 text-left"
+                            className="group relative min-h-[148px] w-full overflow-hidden rounded-2xl border border-green-500/45 bg-white p-3.5 text-left backdrop-blur-md transition-all duration-200 hover:border-green-400 hover:shadow-[0_0_20px_rgba(34,197,94,0.5)] active:scale-[0.98] active:border-green-300 active:bg-green-400/20 active:shadow-[0_0_28px_rgba(34,197,94,0.5)] active:brightness-125 active:saturate-150 dark:bg-gray-800/50 md:min-h-[164px] md:p-4"
                         >
-                            <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-transparent opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-300" />
-                            <div className="p-3 rounded-full bg-green-500/20 group-hover:bg-green-500/30 group-active:bg-green-500/40 transition-colors">
-                                <Dumbbell className="w-8 h-8 text-green-400 group-active:text-green-200 transition-colors" />
-                            </div>
-                            <div>
-                                <h3 className="text-2xl font-bold group-hover:text-green-400 group-active:text-green-200 transition-colors">{t('menu.practice.title')}</h3>
-                                <p className="text-gray-500 text-sm mt-1">{t('menu.practice.subtitle')}</p>
+                            <div className="absolute inset-0 bg-gradient-to-br from-green-500/14 via-green-500/6 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-active:opacity-100" />
+                            <div className="relative flex h-full flex-col items-start gap-3">
+                                <div className="rounded-full bg-green-500/20 p-2.5 transition-colors group-hover:bg-green-500/30 group-active:bg-green-500/40">
+                                    <Dumbbell className="h-6 w-6 text-green-400 transition-colors group-active:text-green-200" />
+                                </div>
+                                <div className="w-full">
+                                    <HomeModeTitle className="transition-colors group-hover:text-green-400 group-active:text-green-200">{t('menu.practice.title')}</HomeModeTitle>
+                                </div>
                             </div>
                         </button>
                     </motion.div>
@@ -1952,7 +2520,7 @@ const Home = () => {
                         <button
                             ref={rankingBtnRef}
                             onMouseEnter={() => playSound('hover')}
-                            onClick={() => { playSound('click'); setShowLeaderboard(true); }}
+                            onClick={openLeaderboard}
                             className="p-4 bg-white dark:bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-slate-100 dark:bg-gray-700 active:bg-yellow-400/20 active:border-yellow-300 active:shadow-[0_0_22px_rgba(234,179,8,0.45)] active:brightness-125 active:saturate-150 active:scale-[0.98] transition-all duration-150 flex items-center justify-center gap-2 group cursor-pointer"
                         >
                             <Trophy className="w-5 h-5 text-yellow-500 group-hover:text-yellow-400 group-active:text-yellow-300 transition-colors" />
@@ -1961,9 +2529,12 @@ const Home = () => {
                         <button
                             ref={shopBtnRef}
                             onMouseEnter={() => playSound('hover')}
-                            onClick={() => { playSound('click'); navigate('/shop'); }}
-                            className="p-4 bg-white dark:bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-slate-100 dark:bg-gray-700 active:bg-cyan-400/20 active:border-cyan-300 active:shadow-[0_0_22px_rgba(34,211,238,0.45)] active:brightness-125 active:saturate-150 active:scale-[0.98] transition-all duration-150 flex items-center justify-center gap-2 group cursor-pointer"
+                            onClick={openShop}
+                            className="relative p-4 bg-white dark:bg-gray-800/30 rounded-xl border border-gray-700 hover:bg-slate-100 dark:bg-gray-700 active:bg-cyan-400/20 active:border-cyan-300 active:shadow-[0_0_22px_rgba(34,211,238,0.45)] active:brightness-125 active:saturate-150 active:scale-[0.98] transition-all duration-150 flex items-center justify-center gap-2 group cursor-pointer"
                         >
+                            {hasDailyShopFreeReward && (
+                                <span className="absolute right-3 top-3 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white dark:ring-gray-800" aria-hidden="true" />
+                            )}
                             <ShoppingBag className="w-5 h-5 text-cyan-400 group-hover:text-slate-900 dark:text-white group-active:text-cyan-200 transition-colors" />
                             <span className="text-slate-600 dark:text-gray-300 group-hover:text-slate-900 dark:text-white group-active:text-cyan-100 transition-colors">{t('menu.shop', 'Shop')}</span>
                         </button>
@@ -2010,7 +2581,7 @@ const Home = () => {
                 <div className="mx-auto grid w-full max-w-md grid-cols-4 gap-2">
                     <button
                         ref={mobileRankingBtnRef}
-                        onClick={() => { playSound('click'); setShowLeaderboard(true); }}
+                        onClick={openLeaderboard}
                         className="group rounded-xl bg-white dark:bg-gray-800/70 py-2.5 flex flex-col items-center justify-center gap-1.5 text-slate-700 dark:text-gray-200 hover:bg-slate-100 dark:bg-gray-700 active:bg-yellow-400/20 active:border active:border-yellow-300 active:shadow-[0_0_18px_rgba(234,179,8,0.45)] active:brightness-125 active:saturate-150 active:scale-[0.98] transition-all duration-150"
                     >
                         <Trophy className="w-5 h-5 text-yellow-400 group-active:text-yellow-300 transition-colors" />
@@ -2018,9 +2589,12 @@ const Home = () => {
                     </button>
                     <button
                         ref={mobileShopBtnRef}
-                        onClick={() => { playSound('click'); navigate('/shop'); }}
-                        className="group rounded-xl bg-white dark:bg-gray-800/70 py-2.5 flex flex-col items-center justify-center gap-1.5 text-slate-700 dark:text-gray-200 hover:bg-slate-100 dark:bg-gray-700 active:bg-cyan-400/20 active:border active:border-cyan-300 active:shadow-[0_0_18px_rgba(34,211,238,0.45)] active:brightness-125 active:saturate-150 active:scale-[0.98] transition-all duration-150"
+                        onClick={openShop}
+                        className="group relative rounded-xl bg-white dark:bg-gray-800/70 py-2.5 flex flex-col items-center justify-center gap-1.5 text-slate-700 dark:text-gray-200 hover:bg-slate-100 dark:bg-gray-700 active:bg-cyan-400/20 active:border active:border-cyan-300 active:shadow-[0_0_18px_rgba(34,211,238,0.45)] active:brightness-125 active:saturate-150 active:scale-[0.98] transition-all duration-150"
                     >
+                        {hasDailyShopFreeReward && (
+                            <span className="absolute right-5 top-2 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white dark:ring-gray-800" aria-hidden="true" />
+                        )}
                         <ShoppingBag className="w-5 h-5 text-cyan-400 group-active:text-cyan-200 transition-colors" />
                         <span className="text-[11px] font-semibold leading-none group-active:text-cyan-100 transition-colors">{t('menu.shop', 'Shop')}</span>
                     </button>
@@ -2066,11 +2640,69 @@ const Home = () => {
                 <SpotlightOverlay
                     targetRef={normalModeRef}
                     message={t('tutorial.tryNormalHighlight', '먼저 일반 모드를 눌러 첫 대전을 시작해보세요!')}
-                    onNext={() => void handlePostTutorialNormalStart()}
+                    onNext={handlePostTutorialBrowse}
+                    onAction={() => void handlePostTutorialNormalStart()}
                     isLast
-                    nextLabel={t('tutorial.startNormalNow', '일반모드 시작')}
+                    actionLabel={t('tutorial.startNormalNow', '일반모드 시작')}
+                    nextLabel={t('tutorial.browseFirst', '둘러보고 할게요')}
                 />
             )}
+
+            <AnimatePresence>
+                {showModeGuide && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[160] flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm"
+                        onClick={() => setShowModeGuide(false)}
+                    >
+                        <motion.div
+                            initial={{ opacity: 0, y: 12, scale: 0.97 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 12, scale: 0.97 }}
+                            transition={{ duration: 0.18, ease: 'easeOut' }}
+                            className="w-full max-w-sm rounded-3xl border border-white/10 bg-slate-950/95 p-5 shadow-2xl backdrop-blur-md"
+                            onClick={(event) => event.stopPropagation()}
+                        >
+                            <div className="flex items-center justify-between gap-3">
+                                <div className="flex items-center gap-2">
+                                    <Info className="h-4 w-4 text-cyan-400" />
+                                    <h3 className="text-base font-black text-white">{t('home.modeGuide', '모드 설명')}</h3>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowModeGuide(false)}
+                                    className="rounded-full border border-white/10 px-3 py-1 text-xs font-bold text-slate-300 transition-colors hover:bg-white/5"
+                                >
+                                    {t('common.close', '닫기')}
+                                </button>
+                            </div>
+
+                            <div className="mt-4 space-y-4">
+                                <div>
+                                    <p className="text-sm font-black text-blue-300">{t('menu.normal.title')}</p>
+                                    <p className="mt-1 text-xs leading-relaxed text-slate-200">{t('menu.normal.subtitle')}</p>
+                                    <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.14em] text-blue-200/80">{t('menu.normal.matchRule', '3판 2선승')}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm font-black text-amber-300">{t('menu.rank.title')}</p>
+                                    <p className="mt-1 text-xs leading-relaxed text-slate-200">{t('menu.rank.subtitle')}</p>
+                                    <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.14em] text-orange-200/80">{t('menu.rank.matchRule', '5판 3선승')}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm font-black text-orange-300">{t('menu.solo.title', '혼자하기')}</p>
+                                    <p className="mt-1 text-xs leading-relaxed text-slate-200">{t('menu.solo.subtitle', '랜덤 미니게임을 혼자 즐겨보세요')}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm font-black text-green-300">{t('menu.practice.title')}</p>
+                                    <p className="mt-1 text-xs leading-relaxed text-slate-200">{t('menu.practice.subtitle')}</p>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
         </div >
     );

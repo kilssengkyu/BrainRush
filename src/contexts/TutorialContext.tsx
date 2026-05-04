@@ -33,6 +33,7 @@ interface TutorialContextType {
 const HOME_TUTORIAL_STEPS: TutorialStep[] = [
     { id: 'normal', messageKey: 'tutorial.normal' },
     { id: 'rank', messageKey: 'tutorial.rank' },
+    { id: 'solo', messageKey: 'tutorial.solo' },
     { id: 'practice', messageKey: 'tutorial.practice' },
     { id: 'ranking', messageKey: 'tutorial.ranking' },
     { id: 'shop', messageKey: 'tutorial.shop' },

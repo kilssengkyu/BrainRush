@@ -19,7 +19,9 @@
     },
     "exitAppTitle": "退出应用",
     "exitAppConfirm": "要退出应用吗？",
-    "open": "打开"
+    "open": "打开",
+    "exit": "退出",
+    "start": "开始"
   },
   "auth": {
     "loginRequired": "需要登录。",
@@ -38,8 +40,8 @@
   },
   "menu": {
     "normal": {
-      "title": "普通模式",
-      "subtitle": "基础脑力训练",
+      "title": "道具模式",
+      "subtitle": "使用道具进行轻松对战",
       "matchRule": "三局两胜"
     },
     "rank": {
@@ -62,7 +64,11 @@
     "login": "登录",
     "logout": "登出",
     "profile": "个人资料",
-    "all": "All"
+    "all": "All",
+    "solo": {
+      "title": "单人模式",
+      "subtitle": "独自游玩随机迷你游戏"
+    }
   },
   "shop": {
     "title": "商店",
@@ -116,7 +122,39 @@
     "billingUnavailable": "此设备不支持购买。",
     "sessionRefreshFailed": "Failed to refresh session: {{message}}",
     "sessionExpired": "Your login session has expired. Please sign in again.",
-    "purchaseFailWithReason": "Purchase failed: {{message}}"
+    "purchaseFailWithReason": "Purchase failed: {{message}}",
+    "goldTab": "金币",
+    "goldPencils": {
+      "oneTitle": "1 支铅笔",
+      "oneDesc": "使用金币立即补充铅笔。",
+      "fiveTitle": "5 支铅笔",
+      "fiveDesc": "享受 10% 优惠的金币礼包。"
+    },
+    "goldPencilPurchaseSuccess": "已使用金币购买铅笔。",
+    "goldPencilPurchaseFailed": "铅笔购买失败。",
+    "dailyFreePencilBadge": "每日礼物",
+    "dailyFreePencilTitle": "今日免费铅笔",
+    "dailyFreePencilDesc": "每天可在商店领取 1 支免费铅笔。",
+    "dailyFreePencilClaimedDesc": "今天已经领取过了。明天再来吧。",
+    "dailyFreePencilClaimButton": "免费领取",
+    "dailyFreePencilClaimedButton": "已领取",
+    "dailyFreePencilClaimSuccess": "已领取今日免费铅笔。",
+    "dailyFreePencilAlreadyClaimed": "今日免费铅笔已经领取过了。",
+    "dailyFreePencilClaimFailed": "免费铅笔领取失败。",
+    "dailyFreeAdClaimButton": "看广告再领一次",
+    "dailyFreeBaseRequired": "请先领取免费礼物。",
+    "dailyFreeGoldBadge": "今日金币",
+    "dailyFreeGoldTitle": "今日免费金币",
+    "dailyFreeGoldDesc": "每天可在商店领取 {{count}} 枚免费金币。",
+    "dailyFreeGoldAdDesc": "观看广告后，今天还可再领取一次。",
+    "dailyFreeGoldClaimedDesc": "今天已经领取过了。明天再来吧。",
+    "dailyFreeGoldClaimButton": "免费领取",
+    "dailyFreeGoldClaimedButton": "已领取",
+    "dailyFreeGoldClaimSuccess": "已领取今日免费金币。",
+    "dailyFreeGoldAlreadyClaimed": "今日免费金币已经领取过了。",
+    "dailyFreeGoldClaimFailed": "免费金币领取失败。",
+    "dailyFreePencilAdDesc": "观看广告后，今天还可再领取一次。",
+    "rewardTitle": "已获得"
   },
   "social": {
     "friends": "好友",
@@ -202,7 +240,13 @@
     "success": "奖励领取成功。",
     "noFillTitle": "暂时没有广告",
     "noFillDesc": "请稍后再试。",
-    "noFillRewarded": "哎呀，现在没有可播放的广告！奖励将立即发放给您。"
+    "noFillRewarded": "哎呀，现在没有可播放的广告！奖励将立即发放给您。",
+    "titleGold": "领取金币",
+    "watchDescGold": "观看短广告即可获得奖励金币！",
+    "adFreeDescGold": "免广告奖励。立即获得奖励金币。",
+    "claimBtnGold": "领取金币",
+    "gold": "金币",
+    "goldRewardHeadline": "已获得金币！"
   },
   "notifications": {
     "fullTitle": "铅笔已满",
@@ -312,7 +356,7 @@
     "reconnectingDesc": "对手断开连接。自动获胜倒计时:",
     "myTime": "我的记录",
     "rank": "排位",
-    "normal": "普通",
+    "normal": "道具",
     "unknownPlayer": "未知玩家",
     "guest": "游客",
     "you": "你",
@@ -326,6 +370,7 @@
     "total": "总分",
     "great": "太棒了!",
     "tier": "段位",
+    "opponentUsedItem": "对手使用了{{item}}。",
     "table": {
       "round": "回合",
       "myScore": "我的分数",
@@ -589,7 +634,7 @@
     "scoreLabel": "阶梯"
   },
   "tutorial": {
-    "normal": "🌍 和全球玩家一起玩迷你游戏对战！",
+    "normal": "🌍 使用道具，与全球玩家轻松进行迷你游戏对战吧！",
     "rank": "🏆 与实力相近的玩家进行排位赛！",
     "practice": "💪 随时练习你喜欢的游戏！",
     "ranking": "👑 查看世界上最聪明的玩家！",
@@ -597,12 +642,14 @@
     "settings": "⚙️ 修改声音、语言等设置！",
     "login": "👤 绑定账号，安全游玩！",
     "profile": "📊 查看实力、能力值和高分记录！",
-    "tryNormalHighlight": "请先点击普通模式，开始你的第一场对战！",
-    "startNormalNow": "开始普通模式",
+    "tryNormalHighlight": "道具模式很适合作为第一场对战，轻松熟悉规则。你也可以先看看主页再开始。",
+    "startNormalNow": "开始道具模式",
     "next": "下一步",
     "done": "完成",
     "skip": "跳过",
-    "loginNow": "立即登录"
+    "loginNow": "立即登录",
+    "solo": "🎯 无需竞争压力，独自挑战 3 个随机小游戏并查看实力！",
+    "browseFirst": "我先看看"
   },
   "zero": {
     "title": "凑成零",
@@ -631,7 +678,8 @@
     "noNotesDesc": "游玩练习模式需要练习笔记。",
     "watchAdForNotes": "观看广告获取练习笔记",
     "goToShopForNotes": "前往商店购买",
-    "waitForRecharge": "等待"
+    "waitForRecharge": "等待",
+    "noEnabledGames": "当前没有可用的练习游戏。"
   },
   "update": {
     "title": "需要更新",
@@ -649,7 +697,7 @@
     "levelUp": "LEVEL UP!",
     "hideAnnouncementToday": "今日不再显示",
     "noPencilTitle": "铅笔不足",
-    "noPencilDesc": "游玩普通/排位模式需要铅笔。",
+    "noPencilDesc": "游玩普通/排位/单人模式需要铅笔。",
     "nextPencilIn": "下一支铅笔充能还需 {{time}}",
     "watchAdForPencil": "观看广告",
     "goToShopForPencil": "前往商店购买",
@@ -689,5 +737,125 @@
     "claimed": "已领取",
     "claimSuccess": "奖励已领取。(+{{pencils}} 铅笔, +{{notes}} 练习笔记)",
     "claimBlockedPencilsFull": "当铅笔达到5支或以上时无法领取。请先使用铅笔。"
+  },
+  "solo": {
+    "complete": "单人模式完成！",
+    "resultTitle": "单人结果",
+    "gameLabel": "游戏",
+    "topPercent": "前 %",
+    "topPercentValue": "前 {{percent}}%",
+    "percentileUnlocked": "前 % 已公开",
+    "percentileSaving": "保存记录后可查看",
+    "unlockPercentileCta": "观看广告查看前 %",
+    "percentileHint": "观看一次广告即可查看三款游戏的前 %。",
+    "percentileUnavailable": "统计中",
+    "percentileLocked": "已锁定",
+    "nextGame": "下一游戏",
+    "saved": "已保存",
+    "saving": "保存中...",
+    "exitConfirmTitle": "要结束单人模式吗？",
+    "exitConfirmMessage": "如果现在退出，本次单人模式将结束，已消耗的铅笔不会返还。",
+    "newHighscore": "新纪录",
+    "percentileAdTitle": "解锁前%排名",
+    "percentileAdDesc": "观看一段短广告，查看全部 3 个游戏的前%排名。",
+    "percentileAdFreeDesc": "免广告奖励。立即查看全部 3 个游戏的前%排名。",
+    "percentileAdClaim": "查看前%排名",
+    "percentileRewardLabel": "前%排名",
+    "percentileRewardHeadline": "已解锁全部 3 个游戏的前%排名！"
+  },
+  "items": {
+    "screenBlock": {
+      "name": "乌云",
+      "description": "遮挡对手屏幕 2 秒。"
+    },
+    "autoSolve": {
+      "name": "双倍机会",
+      "description": "使你在接下来的 3 秒内获得双倍分数。"
+    },
+    "emojiBomb": {
+      "name": "表情炸弹",
+      "description": "在对手屏幕上撒满表情 5 秒。"
+    }
+  },
+  "dailyQuests": {
+    "shortTitle": "每日",
+    "badge": "Daily",
+    "title": "每日任务",
+    "subtitle": "完成今天的目标并领取奖励。",
+    "progress": "进度",
+    "questSection": "今日任务",
+    "rewardSection": "奖励",
+    "claim": "领取",
+    "claimed": "已领取",
+    "claimSuccess": "奖励已领取。",
+    "claimFail": "领取奖励失败。",
+    "loadFail": "无法加载每日任务。",
+    "reward": {
+      "milestone": "{{points}}点奖励",
+      "xp": "经验 +{{count}}",
+      "gold": "金币 +{{count}}",
+      "pencils": "铅笔 +{{count}}",
+      "randomItem": "随机道具 +{{count}}",
+      "itemWithCode": "随机道具 +{{count}} ({{itemCode}})",
+      "empty": "奖励",
+      "randomItemShort": "道具"
+    },
+    "quests": {
+      "login": {
+        "title": "登录",
+        "description": "今天打开 BrainRush。"
+      },
+      "profileView": {
+        "title": "查看资料",
+        "description": "打开你的个人资料。"
+      },
+      "shopVisit": {
+        "title": "访问商店",
+        "description": "打开商店。"
+      },
+      "rankingView": {
+        "title": "查看排行榜",
+        "description": "打开排行榜。"
+      },
+      "pencilSpend1": {
+        "title": "使用1支铅笔",
+        "description": "游玩1局消耗铅笔的模式。"
+      },
+      "pencilSpend3": {
+        "title": "使用3支铅笔",
+        "description": "游玩3局消耗铅笔的模式。"
+      },
+      "pencilSpend5": {
+        "title": "使用5支铅笔",
+        "description": "游玩5局消耗铅笔的模式。"
+      },
+      "adWatch1": {
+        "title": "观看1次广告",
+        "description": "观看1次激励广告。"
+      },
+      "adWatch3": {
+        "title": "观看3次广告",
+        "description": "观看3次激励广告。"
+      },
+      "goldSpend1": {
+        "title": "使用 1 次金币",
+        "description": "使用金币购买道具或铅笔。"
+      }
+    },
+    "completeQuest": "完成",
+    "questClaimSuccess": "任务完成！",
+    "questClaimFail": "完成任务失败。",
+    "claimAllSuccess": "已领取所有奖励。",
+    "claimAvailableRewards": "领取可用奖励",
+    "claimAvailableRewardsHint": "点击已解锁的宝箱领取奖励。",
+    "rewardProgressHint": "完成任务获得点数后会解锁宝箱。",
+    "rewardAlreadyClaimed": "已领取。",
+    "rewardReady": "现在可以领取。",
+    "rewardLockedUntil": "达到{{points}}点后可领取。",
+    "rewardClaimModal": {
+      "title": "奖励已领取！",
+      "subtitle": "{{count}}个宝箱奖励合计",
+      "items": "获得道具"
+    }
   }
 }

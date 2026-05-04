@@ -154,10 +154,6 @@ const MemoryMatch: React.FC<MemoryMatchProps> = ({ seed, onScore, isPlaying }) =
 
     return (
         <div className="w-full h-full flex flex-col items-center p-4">
-            <h2 className="text-3xl font-black text-slate-900 dark:text-white mb-4 drop-shadow-lg">
-                MEMORY MATCH (Lv. {stage})
-            </h2>
-
             <div className="mb-2 min-h-[28px]">
                 {gameState === 'MEMORIZING' && (
                     <div className="text-yellow-300 font-bold text-xl animate-bounce">

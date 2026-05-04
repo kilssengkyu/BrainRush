@@ -113,6 +113,7 @@ import { TutorialProvider } from './contexts/TutorialContext';
 import Login from './pages/Login';
 import Profile from './pages/Profile';
 import PracticeMode from './pages/PracticeMode';
+import SoloGame from './pages/SoloGame';
 import Shop from './pages/Shop';
 import Privacy from './pages/Privacy';
 import Support from './pages/Support';
@@ -249,6 +250,7 @@ function App() {
                     <Route path="/login" element={<Login />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/practice" element={<PracticeMode />} />
+                    <Route path="/solo" element={<SoloGame />} />
                     <Route path="/shop" element={<Shop />} />
                     <Route path="/privacy" element={<Privacy />} />
                     <Route path="/support" element={<Support />} />

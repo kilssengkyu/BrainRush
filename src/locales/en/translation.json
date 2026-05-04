@@ -23,7 +23,9 @@
     },
     "exitAppTitle": "Exit App",
     "exitAppConfirm": "Do you want to exit the app?",
-    "open": "Open"
+    "open": "Open",
+    "exit": "Exit",
+    "start": "Start"
   },
   "auth": {
     "loginRequired": "Login required.",
@@ -92,8 +94,8 @@
   },
   "menu": {
     "normal": {
-      "title": "Normal Mode",
-      "subtitle": "Basic Brain Training",
+      "title": "Item Mode",
+      "subtitle": "Casual battles with items",
       "matchRule": "Best of 3 (First to 2)"
     },
     "rank": {
@@ -116,7 +118,11 @@
     "settings": "Settings",
     "login": "Login",
     "logout": "Logout",
-    "profile": "Profile"
+    "profile": "Profile",
+    "solo": {
+      "title": "Solo Mode",
+      "subtitle": "Play a random set of minigames on your own"
+    }
   },
   "shop": {
     "title": "Shop",
@@ -170,7 +176,39 @@
     "billingUnavailable": "Billing not supported on this device.",
     "sessionRefreshFailed": "Failed to refresh session: {{message}}",
     "sessionExpired": "Your login session has expired. Please sign in again.",
-    "purchaseFailWithReason": "Purchase failed: {{message}}"
+    "purchaseFailWithReason": "Purchase failed: {{message}}",
+    "goldTab": "Gold",
+    "goldPencils": {
+      "oneTitle": "1 Pencil",
+      "oneDesc": "Refill a pencil instantly with gold.",
+      "fiveTitle": "5 Pencils",
+      "fiveDesc": "A 10% discounted gold bundle."
+    },
+    "goldPencilPurchaseSuccess": "Purchased pencils with gold.",
+    "goldPencilPurchaseFailed": "Failed to purchase pencils.",
+    "dailyFreePencilBadge": "Daily Gift",
+    "dailyFreePencilTitle": "Today's Free Pencil",
+    "dailyFreePencilDesc": "Claim 1 free pencil from the shop once per day.",
+    "dailyFreePencilClaimedDesc": "You already claimed today's gift. Come back tomorrow.",
+    "dailyFreePencilClaimButton": "Claim Free",
+    "dailyFreePencilClaimedButton": "Claimed",
+    "dailyFreePencilClaimSuccess": "You claimed today's free pencil.",
+    "dailyFreePencilAlreadyClaimed": "You already claimed today's free pencil.",
+    "dailyFreePencilClaimFailed": "Failed to claim the free pencil.",
+    "dailyFreeAdClaimButton": "Watch Ad Again",
+    "dailyFreeBaseRequired": "Claim the free gift first.",
+    "dailyFreeGoldBadge": "Daily Gold",
+    "dailyFreeGoldTitle": "Today’s Free Gold",
+    "dailyFreeGoldDesc": "Claim {{count}} free gold from the shop once per day.",
+    "dailyFreeGoldAdDesc": "Watch an ad to claim it one more time today.",
+    "dailyFreeGoldClaimedDesc": "You already claimed today’s gift. Come back tomorrow.",
+    "dailyFreeGoldClaimButton": "Claim Free",
+    "dailyFreeGoldClaimedButton": "Claimed",
+    "dailyFreeGoldClaimSuccess": "You claimed today’s free gold.",
+    "dailyFreeGoldAlreadyClaimed": "You already claimed today’s free gold.",
+    "dailyFreeGoldClaimFailed": "Failed to claim the free gold.",
+    "dailyFreePencilAdDesc": "Watch an ad to claim it one more time today.",
+    "rewardTitle": "Acquired"
   },
   "leaderboard": {
     "button": "Ranking",
@@ -206,7 +244,13 @@
     "success": "Reward earned successfully.",
     "noFillTitle": "No ads available right now",
     "noFillDesc": "Please try again in a moment.",
-    "noFillRewarded": "Oops, there is no ad to play right now! We'll give you the reward right away."
+    "noFillRewarded": "Oops, there is no ad to play right now! We'll give you the reward right away.",
+    "titleGold": "Get Gold",
+    "watchDescGold": "Watch a short ad to get bonus gold!",
+    "adFreeDescGold": "Ad-free reward. Get bonus gold instantly.",
+    "claimBtnGold": "Get Gold",
+    "gold": "Gold",
+    "goldRewardHeadline": "Gold received!"
   },
   "notifications": {
     "fullTitle": "Pencils full",
@@ -380,7 +424,7 @@
     "reconnectingDesc": "Opponent disconnected. Winning by default in:",
     "myTime": "My Time",
     "rank": "RANK",
-    "normal": "NORMAL",
+    "normal": "ITEM",
     "unknownPlayer": "Unknown Player",
     "guest": "Guest",
     "you": "You",
@@ -406,6 +450,7 @@
     "devGhostPreviewRoundHighscore": "Round Highscore",
     "devGhostPreviewBotGhost": "Bot Ghost",
     "devGhostPreviewGap": "Gap",
+    "opponentUsedItem": "Your opponent used {{item}}.",
     "table": {
       "round": "Round",
       "myScore": "My Score",
@@ -438,7 +483,7 @@
     "levelUp": "LEVEL UP!",
     "hideAnnouncementToday": "Don't show again today",
     "noPencilTitle": "You're out of pencils",
-    "noPencilDesc": "You need pencils to play Normal/Rank mode.",
+    "noPencilDesc": "You need pencils to play Normal/Rank/Solo mode.",
     "nextPencilIn": "Next pencil in {{time}}",
     "watchAdForPencil": "Watch Ad",
     "goToShopForPencil": "Buy in Shop",
@@ -609,7 +654,7 @@
     "scoreLabel": "Steps"
   },
   "tutorial": {
-    "normal": "🌍 Battle players worldwide in fun minigames!",
+    "normal": "🌍 Enjoy casual minigame battles with players worldwide using items!",
     "rank": "🏆 Compete with players of similar skill in ranked matches!",
     "practice": "💪 Practice any game you want!",
     "ranking": "👑 Check out the smartest players in the world!",
@@ -617,15 +662,17 @@
     "settings": "⚙️ Change sound, language and other settings!",
     "login": "👤 Link your account for safe play!",
     "profile": "📊 Check your skills, stats and high scores!",
-    "tryModesAfter": "Now tap Normal or Rank to start your first match!",
+    "tryModesAfter": "Now tap Item or Rank to start your first match!",
     "tryModesTitle": "Ready for your first match?",
-    "tryModesDesc": "Tap Normal or Rank to start playing now.",
-    "tryNormalHighlight": "Tap Normal mode first to start your first match!",
-    "startNormalNow": "Start Normal Mode",
+    "tryModesDesc": "Tap Item or Rank to start playing now.",
+    "tryNormalHighlight": "Item Mode is a great first match for learning the rules casually. You can also look around the home screen first.",
+    "startNormalNow": "Start Item Mode",
     "next": "Next",
     "done": "Done",
     "skip": "Skip",
-    "loginNow": "Login Now"
+    "loginNow": "Login Now",
+    "solo": "🎯 Enjoy 3 random minigames solo and check your skills without competitive pressure!",
+    "browseFirst": "I'll look around first"
   },
   "zero": {
     "title": "Make Zero",
@@ -654,7 +701,8 @@
     "noNotesDesc": "You need Practice Notes to play Practice mode.",
     "watchAdForNotes": "Watch Ad for Practice Notes",
     "goToShopForNotes": "Buy in Shop",
-    "waitForRecharge": "Wait"
+    "waitForRecharge": "Wait",
+    "noEnabledGames": "No practice games are available right now."
   },
   "update": {
     "title": "Update Required",
@@ -693,5 +741,125 @@
     "claimed": "Claimed",
     "claimSuccess": "Reward claimed. (+{{pencils}} pencils, +{{notes}} practice notes)",
     "claimBlockedPencilsFull": "You can't claim this while you have 5 or more pencils. Please use pencils first."
+  },
+  "solo": {
+    "complete": "Solo Complete!",
+    "resultTitle": "Solo Results",
+    "gameLabel": "Game",
+    "topPercent": "Top %",
+    "topPercentValue": "Top {{percent}}%",
+    "percentileUnlocked": "Top % revealed",
+    "percentileSaving": "Available after save",
+    "unlockPercentileCta": "Watch ad to reveal Top %",
+    "percentileHint": "Watch one ad to reveal the Top % for all three games.",
+    "percentileUnavailable": "Calculating",
+    "percentileLocked": "Locked",
+    "nextGame": "Next Game",
+    "saved": "Saved",
+    "saving": "Saving...",
+    "exitConfirmTitle": "Leave Solo Mode?",
+    "exitConfirmMessage": "If you leave now, this solo run will end and the pencil you used will not be refunded.",
+    "newHighscore": "New Record",
+    "percentileAdTitle": "Unlock Top %",
+    "percentileAdDesc": "Watch a short ad to reveal the Top % for all 3 games.",
+    "percentileAdFreeDesc": "Ad-free reward. Reveal the Top % for all 3 games instantly.",
+    "percentileAdClaim": "Reveal Top %",
+    "percentileRewardLabel": "Top %",
+    "percentileRewardHeadline": "Top % unlocked for all 3 games!"
+  },
+  "items": {
+    "screenBlock": {
+      "name": "Dark Cloud",
+      "description": "Covers your opponent's screen for 2 seconds."
+    },
+    "autoSolve": {
+      "name": "Double Chance",
+      "description": "Doubles the score you earn for 3 seconds."
+    },
+    "emojiBomb": {
+      "name": "Emoji Bomb",
+      "description": "Scatters emojis across your opponent's screen for 5 seconds."
+    }
+  },
+  "dailyQuests": {
+    "shortTitle": "Quests",
+    "badge": "Daily",
+    "title": "Daily Quests",
+    "subtitle": "Complete today's goals and claim rewards.",
+    "progress": "Progress",
+    "questSection": "Today's Tasks",
+    "rewardSection": "Rewards",
+    "claim": "Claim",
+    "claimed": "Claimed",
+    "claimSuccess": "Reward claimed.",
+    "claimFail": "Failed to claim reward.",
+    "loadFail": "Failed to load daily quests.",
+    "reward": {
+      "milestone": "{{points}} pt reward",
+      "xp": "XP +{{count}}",
+      "gold": "Gold +{{count}}",
+      "pencils": "Pencil +{{count}}",
+      "randomItem": "Random item +{{count}}",
+      "itemWithCode": "Random item +{{count}} ({{itemCode}})",
+      "empty": "Reward",
+      "randomItemShort": "Item"
+    },
+    "quests": {
+      "login": {
+        "title": "Log in",
+        "description": "Open BrainRush today."
+      },
+      "profileView": {
+        "title": "Check profile",
+        "description": "Open your profile."
+      },
+      "shopVisit": {
+        "title": "Visit shop",
+        "description": "Open the shop."
+      },
+      "rankingView": {
+        "title": "Check ranking",
+        "description": "Open the ranking board."
+      },
+      "pencilSpend1": {
+        "title": "Use 1 pencil",
+        "description": "Play one pencil-cost mode."
+      },
+      "pencilSpend3": {
+        "title": "Use 3 pencils",
+        "description": "Play three pencil-cost modes."
+      },
+      "pencilSpend5": {
+        "title": "Use 5 pencils",
+        "description": "Play five pencil-cost modes."
+      },
+      "adWatch1": {
+        "title": "Watch 1 ad",
+        "description": "Watch one reward ad."
+      },
+      "adWatch3": {
+        "title": "Watch 3 ads",
+        "description": "Watch three reward ads."
+      },
+      "goldSpend1": {
+        "title": "Spend gold once",
+        "description": "Buy an item or pencils with gold."
+      }
+    },
+    "completeQuest": "Complete",
+    "questClaimSuccess": "Quest complete!",
+    "questClaimFail": "Failed to complete quest.",
+    "claimAllSuccess": "All rewards claimed.",
+    "claimAvailableRewards": "Claim available rewards",
+    "claimAvailableRewardsHint": "Tap the unlocked chest to claim your rewards.",
+    "rewardProgressHint": "Chests unlock as you complete quest points.",
+    "rewardAlreadyClaimed": "Already claimed.",
+    "rewardReady": "Ready to claim now.",
+    "rewardLockedUntil": "Unlocks at {{points}} points.",
+    "rewardClaimModal": {
+      "title": "Rewards Claimed!",
+      "subtitle": "Total from {{count}} chest(s)",
+      "items": "Items received"
+    }
   }
 }
