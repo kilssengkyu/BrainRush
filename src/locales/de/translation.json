@@ -321,7 +321,13 @@
     "adminDesc": "Zur Admin-Seite wechseln.",
     "goToAdmin": "Admin-Bereich öffnen",
     "guestModeWarningTitle": "Hinweis zum Gastkonto",
-    "guestModeWarningDesc": "Gastkonten können beim Abmelden, Löschen der App oder Gerätewechsel Daten verlieren. Verknüpfe ein Konto, um deinen Fortschritt zu sichern."
+    "guestModeWarningDesc": "Gastkonten können beim Abmelden, Löschen der App oder Gerätewechsel Daten verlieren. Verknüpfe ein Konto, um deinen Fortschritt zu sichern.",
+    "loginExistingAccount": "Mit bestehendem Konto anmelden",
+    "loginExistingAccountConfirm": "Du verlässt diese Gastsitzung und meldest dich dann mit einem bestehenden Konto an. Fortfahren?",
+    "loginDifferentAccount": "Mit anderem Konto anmelden",
+    "loginDifferentAccountConfirm": "Du verlässt diese Sitzung und meldest dich dann mit einem anderen Konto an. Fortfahren?",
+    "accountSectionDesc": "Verwalte die Anmeldung mit einem anderen Konto oder das Löschen deines Kontos.",
+    "accountSectionGuestDesc": "Wenn du bereits ein Konto hast, kannst du dich wieder anmelden."
   },
   "report": {
     "button": "Melden",
@@ -439,6 +445,7 @@
     "great": "Super!",
     "tier": "Tier",
     "opponentUsedItem": "Dein Gegner hat {{item}} eingesetzt.",
+    "itemHitSuccess": "{{item}} getroffen!",
     "table": {
       "round": "Runde",
       "myScore": "Meine Punkte",
@@ -705,6 +712,10 @@
     "nextPencilIn": "Nächster Stift in {{time}}",
     "watchAdForPencil": "Werbung ansehen",
     "goToShopForPencil": "Im Shop kaufen",
+    "noItemTitle": "Keine Items verfügbar",
+    "noItemDesc": "Du hast keine Items, daher startet diese Runde ohne Items.",
+    "playWithoutItems": "Trotzdem spielen",
+    "goToShop": "Zum Shop",
     "waitForRecharge": "Warten"
   },
   "login": {

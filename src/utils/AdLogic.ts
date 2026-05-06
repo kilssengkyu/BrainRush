@@ -6,6 +6,7 @@ const AD_FREQUENCY = 2;
 const AD_LAST_OUTCOME_KEY = 'brainrush_ad_last_outcome';
 const AD_STREAK_COUNT_KEY = 'brainrush_ad_streak_count';
 const AD_LOSE_SKIP_ONCE_KEY = 'brainrush_ad_lose_skip_once';
+const FORCE_DISABLE_INTERSTITIAL_ADS = true;
 
 // Production Ad Unit IDs
 const ADS = {
@@ -30,6 +31,12 @@ const TEST_ADS = {
 export const AdLogic = {
     // Increment game counter and check if ad should be shown
     checkAndShowInterstitial: async (outcome?: 'win' | 'lose' | 'draw') => {
+        if (FORCE_DISABLE_INTERSTITIAL_ADS) {
+            localStorage.setItem(AD_COUNTER_KEY, '0');
+            console.log('[AdLogic] Interstitial skipped for this release.');
+            return;
+        }
+
         if (!Capacitor.isNativePlatform()) return;
 
         let count = parseInt(localStorage.getItem(AD_COUNTER_KEY) || '0');
@@ -88,6 +95,11 @@ export const AdLogic = {
 
     // Show Interstitial Ad (with retry on NoFill)
     showInterstitial: async () => {
+        if (FORCE_DISABLE_INTERSTITIAL_ADS) {
+            console.log('[AdLogic] Interstitial skipped for this release.');
+            return true;
+        }
+
         const platform = Capacitor.getPlatform();
         const adsMode = String(import.meta.env.VITE_ADS_MODE ?? import.meta.env.VITE_APP_ENV ?? '').toLowerCase();
         const isProd = adsMode === 'prod' || adsMode === 'production';

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Heart, User, MoreHorizontal } from 'lucide-react';
 import { AnimatedScore } from '../components/ui/AnimatedScore';
-import { useGameState } from '../hooks/useGameState';
+import { useGameState, type BotScoreEffect } from '../hooks/useGameState';
 import { useSound } from '../contexts/SoundContext';
 import { supabase } from '../lib/supabaseClient';
 import RockPaperScissors from '../components/minigames/RockPaperScissors';
@@ -69,6 +69,11 @@ const ITEM_HUD_CODES = ['SCREEN_BLOCK', 'AUTO_SOLVE', 'EMOJI_BOMB'] as const;
 const ITEM_COOLDOWN_FALLBACK_MS = 6000;
 const SCREEN_BLOCK_FALLBACK_MS = 2000;
 const EMOJI_BOMB_FALLBACK_MS = 5000;
+const ITEM_HIT_FEEDBACK_MS = 900;
+const ITEM_PROJECTILE_MS = 620;
+const BOT_ITEM_USE_MIN_DELAY_MS = 3000;
+const BOT_ITEM_USE_MAX_DELAY_MS = 10000;
+const BOT_ITEM_USE_CHANCE = 0.65;
 
 type ItemHudCatalogRow = {
     item_code: string;
@@ -77,6 +82,19 @@ type ItemHudCatalogRow = {
     gold_price: number;
     is_enabled: boolean;
     sort_order: number;
+};
+
+type ItemUseFeedback = {
+    id: string;
+    itemCode: string;
+    itemName: string;
+};
+
+type ItemProjectile = ItemUseFeedback & {
+    startX: number;
+    startY: number;
+    endX: number;
+    endY: number;
 };
 
 const Game: React.FC = () => {
@@ -114,6 +132,9 @@ const Game: React.FC = () => {
     const [screenBlockUntil, setScreenBlockUntil] = useState(0);
     const [doubleChanceUntil, setDoubleChanceUntil] = useState(0);
     const [itemUiNow, setItemUiNow] = useState(() => Date.now());
+    const [opponentItemHit, setOpponentItemHit] = useState<ItemUseFeedback | null>(null);
+    const [itemProjectiles, setItemProjectiles] = useState<ItemProjectile[]>([]);
+    const [botScoreEffects, setBotScoreEffects] = useState<BotScoreEffect[]>([]);
 
     // --- Realtime Score Sync (Broadcast) ---
     const [realtimeOpScore, setRealtimeOpScore] = useState<number | null>(null);
@@ -123,10 +144,11 @@ const Game: React.FC = () => {
     const processedItemEventIdsRef = useRef<Set<string>>(new Set());
     const itemEffectTimeoutsRef = useRef<number[]>([]);
     const doubleChanceUntilRef = useRef(0);
+    const botItemScheduledRoundRef = useRef<string | null>(null);
 
     // Game Hook
-    const { gameState, incrementScore, serverOffset, isWaitingTimeout, isTimeUp, onlineUsers, connectionStatus } = useGameState(roomId!, myId, opponentId);
-    const { playBGM, stopBGM } = useSound();
+    const { gameState, incrementScore, serverOffset, isWaitingTimeout, isTimeUp, onlineUsers, connectionStatus } = useGameState(roomId!, myId, opponentId, botScoreEffects);
+    const { playBGM, stopBGM, playSound, triggerVibration } = useSound();
 
     // BGM Control for timing-focused games
     useEffect(() => {
@@ -781,7 +803,7 @@ const Game: React.FC = () => {
         const schedule = () => {
             if (cancelled) return;
             const pattern = botEmojiPatternRef.current;
-            const delay = pattern === 'burst' ? 650 + Math.random() * 950 : 700 + Math.random() * 1000;
+            const delay = pattern === 'burst' ? 1700 + Math.random() * 1800 : 700 + Math.random() * 1000;
             timeoutId = window.setTimeout(() => {
                 if (!showEmojiOverlayRef.current) {
                     schedule();
@@ -1376,6 +1398,9 @@ const Game: React.FC = () => {
     const itemCooldownRemainingSec = Math.max(0, Math.ceil((itemCooldownUntil - itemUiNow) / 1000));
     const doubleChanceRemainingSec = Math.max(0, Math.ceil((doubleChanceUntil - itemUiNow) / 1000));
     const isItemCooldownActive = itemUiNow < itemCooldownUntil;
+    const itemCooldownProgress = isItemCooldownActive
+        ? Math.max(0, Math.min(1, (ITEM_COOLDOWN_FALLBACK_MS - Math.max(0, itemCooldownUntil - itemUiNow)) / ITEM_COOLDOWN_FALLBACK_MS))
+        : 1;
     const isScreenBlocked = itemUiNow < screenBlockUntil;
     const isDoubleChanceActive = itemUiNow < doubleChanceUntil;
     const shouldRenderEmojiOverlay = showEmojiOverlay || emojiBursts.length > 0;
@@ -1423,6 +1448,47 @@ const Game: React.FC = () => {
         }
     }, [spawnEmoji]);
 
+    const triggerOpponentItemFeedback = useCallback((itemCode: string, sourceId?: string | null) => {
+        const itemNameKey = getItemNameKey(itemCode);
+        const itemName = itemNameKey ? t(itemNameKey) : t('game.normal', '아이템');
+        const id = `${sourceId || itemCode}:${Date.now()}`;
+        const feedback = { id, itemCode, itemName };
+
+        playSound('correct');
+        triggerVibration('impact_light');
+        setOpponentItemHit(feedback);
+        const timeoutId = window.setTimeout(() => {
+            setOpponentItemHit((current) => current?.id === id ? null : current);
+        }, ITEM_HIT_FEEDBACK_MS);
+        itemEffectTimeoutsRef.current.push(timeoutId);
+    }, [playSound, t, triggerVibration]);
+
+    const launchItemProjectile = useCallback((itemCode: string, sourceId?: string | null) => {
+        if (typeof window === 'undefined') return;
+
+        const itemNameKey = getItemNameKey(itemCode);
+        const itemName = itemNameKey ? t(itemNameKey) : t('game.normal', '아이템');
+        const id = `${sourceId || itemCode}:projectile:${Date.now()}`;
+        const projectile: ItemProjectile = {
+            id,
+            itemCode,
+            itemName,
+            startX: 44,
+            startY: Math.max(96, window.innerHeight - 92),
+            endX: Math.max(80, window.innerWidth - 58),
+            endY: 62,
+        };
+
+        setItemProjectiles((prev) => [...prev.slice(-2), projectile]);
+        const removeTimeoutId = window.setTimeout(() => {
+            setItemProjectiles((prev) => prev.filter((item) => item.id !== id));
+        }, ITEM_PROJECTILE_MS + 180);
+        const hitTimeoutId = window.setTimeout(() => {
+            triggerOpponentItemFeedback(itemCode, sourceId);
+        }, Math.max(120, ITEM_PROJECTILE_MS - 120));
+        itemEffectTimeoutsRef.current.push(removeTimeoutId, hitTimeoutId);
+    }, [t, triggerOpponentItemFeedback]);
+
     const processIncomingItemEvent = useCallback((event: any) => {
         const eventId = typeof event?.id === 'string' ? event.id : typeof event?.event_id === 'string' ? event.event_id : null;
         if (eventId) {
@@ -1435,11 +1501,17 @@ const Game: React.FC = () => {
         }
 
         const payload = (event?.payload ?? {}) as any;
+        const eventRoundNumber = Number(event?.round_number ?? 0);
+        if (eventRoundNumber > 0 && eventRoundNumber !== gameState.currentRound) return;
+
         const itemCode = String(event?.item_code ?? '');
         const effectType = String(payload?.effect_type ?? '');
         const targetPlayerId = String(event?.target_player_id ?? '');
         const usedBy = String(event?.used_by ?? '');
         const usedAtMs = event?.used_at ? new Date(event.used_at).getTime() : Date.now();
+        const roundStartMs = gameState.startAt ? new Date(gameState.startAt).getTime() : 0;
+        if (roundStartMs > 0 && usedAtMs < roundStartMs - 500) return;
+
         const effectEndsAtMs = event?.effect_ends_at ? new Date(event.effect_ends_at).getTime() : 0;
         const cooldownMs = Math.max(
             ITEM_COOLDOWN_FALLBACK_MS,
@@ -1448,6 +1520,48 @@ const Game: React.FC = () => {
 
         if (usedBy === myId) {
             setItemCooldownUntil((prev) => Math.max(prev, usedAtMs + cooldownMs));
+        }
+
+        if (usedBy === myId && targetPlayerId && targetPlayerId !== myId) {
+            launchItemProjectile(itemCode, eventId);
+        }
+
+        const isBotTarget = targetPlayerId && isBotId(targetPlayerId);
+        const isBotSelfDouble = isBotId(usedBy) && targetPlayerId === usedBy && effectType === 'auto_solve';
+        if (isBotTarget || isBotSelfDouble) {
+            const fallbackDurationMs = effectType === 'emoji_bomb'
+                ? EMOJI_BOMB_FALLBACK_MS
+                : effectType === 'screen_block'
+                    ? SCREEN_BLOCK_FALLBACK_MS
+                    : 3000;
+            const endMs = Math.max(usedAtMs, effectEndsAtMs || usedAtMs + fallbackDurationMs);
+            const botEffectType: BotScoreEffect['type'] | null = effectType === 'auto_solve'
+                ? 'double'
+                : effectType === 'screen_block' || effectType === 'emoji_bomb'
+                    ? 'freeze'
+                    : null;
+            if (botEffectType && endMs > usedAtMs) {
+                const id = eventId || `${usedBy}:${targetPlayerId}:${itemCode}:${usedAtMs}`;
+                setBotScoreEffects((prev) => {
+                    if (prev.some((effect) => effect.id === id)) return prev;
+                    return [...prev.filter((effect) => effect.endMs > Date.now() - 1000), {
+                        id,
+                        type: botEffectType,
+                        startMs: usedAtMs,
+                        endMs,
+                    }];
+                });
+            }
+        }
+
+        if (isBotSelfDouble && usedBy !== myId) {
+            const itemNameKey = getItemNameKey(itemCode);
+            showToast(
+                t('game.opponentUsedItem', '상대가 {{item}}을 사용했습니다.', {
+                    item: itemNameKey ? t(itemNameKey) : t('game.normal', '아이템'),
+                }),
+                'info'
+            );
         }
 
         if (targetPlayerId !== myId) return;
@@ -1478,7 +1592,52 @@ const Game: React.FC = () => {
             const fallbackEnd = usedAtMs + EMOJI_BOMB_FALLBACK_MS;
             spawnItemEmojiBomb(Math.max(effectEndsAtMs || fallbackEnd, Date.now() + EMOJI_BOMB_FALLBACK_MS - 500));
         }
-    }, [myId, setDoubleChanceState, showToast, spawnItemEmojiBomb, t]);
+    }, [gameState.currentRound, gameState.startAt, launchItemProjectile, myId, setDoubleChanceState, showToast, spawnItemEmojiBomb, t]);
+
+    useEffect(() => {
+        if (!isItemMode || !isBotId(opponentId) || !roomId || !myId) return;
+        if (gameState.status !== 'playing' || !gameState.startAt) return;
+
+        const roundKey = `${roomId}:${gameState.currentRound}:${gameState.startAt}`;
+        if (botItemScheduledRoundRef.current === roundKey) return;
+        botItemScheduledRoundRef.current = roundKey;
+        setBotScoreEffects([]);
+
+        if (Math.random() > BOT_ITEM_USE_CHANCE) return;
+
+        const startAtMs = new Date(gameState.startAt).getTime();
+        const endAtMs = gameState.endAt ? new Date(gameState.endAt).getTime() : startAtMs + 30000;
+        const useAtMs = startAtMs + BOT_ITEM_USE_MIN_DELAY_MS + Math.random() * (BOT_ITEM_USE_MAX_DELAY_MS - BOT_ITEM_USE_MIN_DELAY_MS);
+        const delayMs = useAtMs - (Date.now() + serverOffset);
+        if (delayMs < 0 || useAtMs >= endAtMs - 700) return;
+
+        const itemCode = ITEM_HUD_CODES[Math.floor(Math.random() * ITEM_HUD_CODES.length)];
+        const timeoutId = window.setTimeout(() => {
+            void supabase.rpc('record_bot_item_event' as any, {
+                p_room_id: roomId,
+                p_item_code: itemCode,
+            }).then(({ data, error }) => {
+                if (error) {
+                    console.error('Failed to record bot item event:', error);
+                    return;
+                }
+                if (data) processIncomingItemEvent(data);
+            });
+        }, delayMs);
+
+        return () => window.clearTimeout(timeoutId);
+    }, [
+        gameState.currentRound,
+        gameState.endAt,
+        gameState.startAt,
+        gameState.status,
+        isItemMode,
+        myId,
+        opponentId,
+        processIncomingItemEvent,
+        roomId,
+        serverOffset,
+    ]);
 
     const handleItemHudPress = async (itemCode: string, quantity: number) => {
         if (quantity < 1) {
@@ -1586,8 +1745,9 @@ const Game: React.FC = () => {
             const sinceIso = new Date(Date.now() - 10000).toISOString();
             const { data, error } = await supabase
                 .from('game_session_item_events')
-                .select('id, item_code, target_player_id, used_by, used_at, effect_ends_at, payload')
+                .select('id, round_number, item_code, target_player_id, used_by, used_at, effect_ends_at, payload')
                 .eq('session_id', roomId)
+                .eq('round_number', gameState.currentRound)
                 .gte('created_at', sinceIso)
                 .order('created_at', { ascending: true });
 
@@ -1707,7 +1867,11 @@ const Game: React.FC = () => {
                     </div>
 
                     {/* Opponent Profile - Hide in Solo Practice */}
-                    <div className="flex items-center justify-end gap-2 flex-1 min-w-0 text-right pt-2 relative">
+                    <motion.div
+                        className={`flex items-center justify-end gap-2 flex-1 min-w-0 text-right pt-2 relative rounded-2xl px-1.5 py-1 transition-colors ${opponentItemHit ? 'bg-red-500/10 ring-2 ring-red-400/45 shadow-[0_0_24px_rgba(248,113,113,0.25)]' : ''}`}
+                        animate={opponentItemHit ? { x: [0, -5, 6, -3, 0], scale: [1, 1.035, 1] } : { x: 0, scale: 1 }}
+                        transition={{ duration: 0.42, ease: 'easeOut' }}
+                    >
                         {opponentProfile && (
                             <>
                                 <div className="min-w-0">
@@ -1731,6 +1895,25 @@ const Game: React.FC = () => {
                                         </div>
                                     )}
                                 </div>
+                                <AnimatePresence>
+                                    {opponentItemHit && (
+                                        <motion.div
+                                            key={opponentItemHit.id}
+                                            initial={{ opacity: 0, y: 8, scale: 0.78 }}
+                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                            exit={{ opacity: 0, y: -8, scale: 0.88 }}
+                                            transition={{ duration: 0.18 }}
+                                            className="absolute -bottom-7 right-0 z-[90] inline-flex items-center gap-1.5 rounded-full border border-red-300/70 bg-red-500 px-2.5 py-1 text-[10px] font-black text-white shadow-xl shadow-red-500/30"
+                                        >
+                                            {getItemHudIconSrc(opponentItemHit.itemCode) ? (
+                                                <img src={getItemHudIconSrc(opponentItemHit.itemCode)!} alt="" className="h-4 w-4 object-contain" aria-hidden="true" />
+                                            ) : (
+                                                <span aria-hidden="true">!</span>
+                                            )}
+                                            <span>{t('game.itemHitSuccess', '{{item}} 적중!', { item: opponentItemHit.itemName })}</span>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
                             </>
                         )}
                         {!opponentProfile && gameState.mode === 'practice' && (
@@ -1738,9 +1921,45 @@ const Game: React.FC = () => {
                                 Practice
                             </div>
                         )}
-                    </div>
+                    </motion.div>
                 </header>
             )}
+
+            <AnimatePresence>
+                {itemProjectiles.map((projectile) => (
+                    <motion.div
+                        key={projectile.id}
+                        className="fixed left-0 top-0 z-[89] pointer-events-none"
+                        initial={{
+                            opacity: 0,
+                            x: projectile.startX,
+                            y: projectile.startY,
+                            scale: 0.65,
+                            rotate: -18,
+                        }}
+                        animate={{
+                            opacity: [0, 1, 1, 0],
+                            x: [projectile.startX, (projectile.startX + projectile.endX) / 2, projectile.endX],
+                            y: [projectile.startY, Math.min(projectile.startY, projectile.endY) - 70, projectile.endY],
+                            scale: [0.65, 1.12, 0.86],
+                            rotate: [-18, 12, 28],
+                        }}
+                        exit={{ opacity: 0, scale: 0.55 }}
+                        transition={{ duration: ITEM_PROJECTILE_MS / 1000, ease: 'easeOut' }}
+                    >
+                        <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-200/60 bg-slate-950/85 shadow-[0_0_28px_rgba(34,211,238,0.45)] backdrop-blur-md">
+                            {getItemHudIconSrc(projectile.itemCode) ? (
+                                <img src={getItemHudIconSrc(projectile.itemCode)!} alt="" className="h-10 w-10 object-contain drop-shadow-lg" aria-hidden="true" />
+                            ) : (
+                                <span className="text-2xl" aria-hidden="true">🎁</span>
+                            )}
+                            <span className="absolute -right-1 -top-1 rounded-full bg-red-500 px-1.5 py-0.5 text-[9px] font-black text-white shadow-md">
+                                HIT
+                            </span>
+                        </div>
+                    </motion.div>
+                ))}
+            </AnimatePresence>
 
             {isConnectionUnstable && (
                 <div className="absolute top-24 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 bg-yellow-100 dark:bg-yellow-500/20 border border-yellow-400/40 text-yellow-800 dark:text-yellow-100 text-xs font-bold px-3 py-1.5 rounded-full backdrop-blur-md shadow-md dark:shadow-none">
@@ -1757,6 +1976,7 @@ const Game: React.FC = () => {
                             const isDisabled = !isGameplayInteractable || quantity < 1 || isItemCooldownActive;
                             const isDoubleChanceItem = item.item_code === 'AUTO_SOLVE';
                             const isArmedItem = isDoubleChanceItem && isDoubleChanceActive;
+                            const cooldownDash = 100 - (itemCooldownProgress * 100);
                             return (
                                 <button
                                     key={item.item_code}
@@ -1769,6 +1989,31 @@ const Game: React.FC = () => {
                                             : 'border-cyan-400/35 bg-cyan-500/10 hover:bg-cyan-500/18'}`}
                                     title={t(item.name_key)}
                                 >
+                                    {isItemCooldownActive && (
+                                        <svg className="pointer-events-none absolute inset-[-3px] h-[calc(100%+6px)] w-[calc(100%+6px)] -rotate-90" viewBox="0 0 44 44" aria-hidden="true">
+                                            <circle
+                                                cx="22"
+                                                cy="22"
+                                                r="20"
+                                                fill="none"
+                                                stroke="rgba(255,255,255,0.16)"
+                                                strokeWidth="3"
+                                            />
+                                            <circle
+                                                cx="22"
+                                                cy="22"
+                                                r="20"
+                                                fill="none"
+                                                stroke="rgb(103,232,249)"
+                                                strokeWidth="3"
+                                                strokeLinecap="round"
+                                                pathLength="100"
+                                                strokeDasharray="100"
+                                                strokeDashoffset={cooldownDash}
+                                                className="drop-shadow-[0_0_6px_rgba(34,211,238,0.75)] transition-[stroke-dashoffset] duration-150 ease-linear"
+                                            />
+                                        </svg>
+                                    )}
                                     {getItemHudIconSrc(item.item_code) ? (
                                         <img src={getItemHudIconSrc(item.item_code)!} alt="" className="h-7 w-7 object-contain" aria-hidden="true" />
                                     ) : (
@@ -1780,31 +2025,18 @@ const Game: React.FC = () => {
                                     </span>
                                     {isArmedItem && (
                                         <span className="absolute -bottom-1 rounded-full border border-amber-200/60 bg-amber-400 px-1.5 py-0.5 text-[9px] font-black leading-none text-slate-950 shadow-md">
-                                            x2
+                                            x2 {doubleChanceRemainingSec}s
                                         </span>
                                     )}
                                 </button>
                             );
                         })}
                     </div>
-                    {(isItemCooldownActive || isDoubleChanceActive) && (
-                        <div className="rounded-xl border border-white/10 bg-slate-950/70 px-2 py-1 text-center text-[10px] font-black leading-tight text-cyan-200/90 shadow-lg backdrop-blur-md">
-                            {isItemCooldownActive && (
-                                <span>{t('game.itemCooldownShort', '공통 쿨타임 {{seconds}}초', { seconds: itemCooldownRemainingSec })}</span>
-                            )}
-                            {isItemCooldownActive && isDoubleChanceActive && <span className="block text-white/40">•</span>}
-                            {isDoubleChanceActive && (
-                                <span className="block text-amber-200">
-                                    {t('items.autoSolve.name', '더블 찬스')} x2 {doubleChanceRemainingSec}s
-                                </span>
-                            )}
-                        </div>
-                    )}
                 </div>
             )}
 
             {isScreenBlocked && (
-                <div className="absolute inset-x-0 top-24 bottom-0 z-[68] flex items-center justify-center bg-slate-950/82 backdrop-blur-sm">
+                <div className="pointer-events-none absolute inset-x-0 top-24 bottom-0 z-[68] flex items-center justify-center bg-slate-950/82 backdrop-blur-sm">
                     <div className="pointer-events-none relative flex h-full w-full items-center justify-center overflow-hidden">
                         <span className="absolute left-[12%] top-[18%] text-6xl opacity-80">☁️</span>
                         <span className="absolute right-[10%] top-[26%] text-5xl opacity-70">☁️</span>

@@ -321,7 +321,13 @@
     "adminDesc": "Accéder aux pages réservées aux administrateurs.",
     "goToAdmin": "Ouvrir l'admin",
     "guestModeWarningTitle": "Info compte invité",
-    "guestModeWarningDesc": "Les comptes invités peuvent perdre des données en cas de déconnexion, suppression de l'app ou changement d'appareil. Liez un compte pour conserver votre progression."
+    "guestModeWarningDesc": "Les comptes invités peuvent perdre des données en cas de déconnexion, suppression de l'app ou changement d'appareil. Liez un compte pour conserver votre progression.",
+    "loginExistingAccount": "Se connecter à un compte existant",
+    "loginExistingAccountConfirm": "Vous allez quitter cette session invitée, puis vous connecter à un compte existant. Continuer ?",
+    "loginDifferentAccount": "Se connecter à un autre compte",
+    "loginDifferentAccountConfirm": "Vous allez quitter cette session, puis vous connecter à un autre compte. Continuer ?",
+    "accountSectionDesc": "Gérez la connexion à un autre compte ou la suppression de votre compte.",
+    "accountSectionGuestDesc": "Si vous avez déjà un compte, vous pouvez vous reconnecter."
   },
   "report": {
     "button": "Signaler",
@@ -439,6 +445,7 @@
     "great": "Super !",
     "tier": "Tier",
     "opponentUsedItem": "Votre adversaire a utilisé {{item}}.",
+    "itemHitSuccess": "{{item}} a touché !",
     "table": {
       "round": "Manche",
       "myScore": "Mon score",
@@ -705,6 +712,10 @@
     "nextPencilIn": "Prochain crayon dans {{time}}",
     "watchAdForPencil": "Regarder une pub",
     "goToShopForPencil": "Acheter dans la boutique",
+    "noItemTitle": "Aucun objet disponible",
+    "noItemDesc": "Vous n'avez aucun objet, cette partie commencera donc sans objets.",
+    "playWithoutItems": "Jouer quand même",
+    "goToShop": "Aller à la boutique",
     "waitForRecharge": "Attendre"
   },
   "login": {

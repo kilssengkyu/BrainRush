@@ -321,7 +321,13 @@
     "adminDesc": "Buka halaman khusus admin.",
     "goToAdmin": "Buka halaman admin",
     "guestModeWarningTitle": "Peringatan akun tamu",
-    "guestModeWarningDesc": "Akun tamu dapat kehilangan data saat keluar, menghapus aplikasi, atau ganti perangkat. Tautkan akun untuk menyimpan progres."
+    "guestModeWarningDesc": "Akun tamu dapat kehilangan data saat keluar, menghapus aplikasi, atau ganti perangkat. Tautkan akun untuk menyimpan progres.",
+    "loginExistingAccount": "Masuk ke akun yang ada",
+    "loginExistingAccountConfirm": "Kamu akan mengakhiri sesi tamu ini, lalu masuk ke akun yang sudah ada. Lanjutkan?",
+    "loginDifferentAccount": "Masuk dengan akun lain",
+    "loginDifferentAccountConfirm": "Kamu akan mengakhiri sesi ini, lalu masuk dengan akun lain. Lanjutkan?",
+    "accountSectionDesc": "Kelola masuk dengan akun lain atau menghapus akunmu.",
+    "accountSectionGuestDesc": "Jika sudah punya akun, kamu bisa masuk lagi."
   },
   "report": {
     "button": "Laporkan",
@@ -439,6 +445,7 @@
     "great": "Bagus!",
     "tier": "Tier",
     "opponentUsedItem": "Lawan menggunakan {{item}}.",
+    "itemHitSuccess": "{{item}} mengenai sasaran!",
     "table": {
       "round": "Ronde",
       "myScore": "Skor saya",
@@ -705,6 +712,10 @@
     "nextPencilIn": "Pensil berikutnya dalam {{time}}",
     "watchAdForPencil": "Tonton iklan",
     "goToShopForPencil": "Beli di toko",
+    "noItemTitle": "Tidak ada item",
+    "noItemDesc": "Kamu tidak punya item, jadi pertandingan ini akan dimulai tanpa item.",
+    "playWithoutItems": "Tetap main",
+    "goToShop": "Ke toko",
     "waitForRecharge": "Tunggu"
   },
   "login": {

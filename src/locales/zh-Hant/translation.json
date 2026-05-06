@@ -313,7 +313,13 @@
     "adminDesc": "前往管理員專用頁面。",
     "goToAdmin": "進入管理頁面",
     "guestModeWarningTitle": "訪客帳號提示",
-    "guestModeWarningDesc": "訪客帳號在登出、卸載或更換裝置時可能遺失資料。請綁定帳號以保留進度。"
+    "guestModeWarningDesc": "訪客帳號在登出、卸載或更換裝置時可能遺失資料。請綁定帳號以保留進度。",
+    "loginExistingAccount": "登入既有帳號",
+    "loginExistingAccountConfirm": "你將結束目前的訪客工作階段，並登入既有帳號。要繼續嗎？",
+    "loginDifferentAccount": "登入其他帳號",
+    "loginDifferentAccountConfirm": "你將結束目前的工作階段，並登入其他帳號。要繼續嗎？",
+    "accountSectionDesc": "管理登入其他帳號或刪除帳號。",
+    "accountSectionGuestDesc": "如果你已有帳號，可以重新登入。"
   },
   "report": {
     "button": "舉報",
@@ -371,6 +377,7 @@
     "great": "太棒了!",
     "tier": "段位",
     "opponentUsedItem": "對手使用了{{item}}。",
+    "itemHitSuccess": "{{item}}命中！",
     "table": {
       "round": "回合",
       "myScore": "我的分數",
@@ -701,6 +708,10 @@
     "nextPencilIn": "下一支鉛筆充能還需 {{time}}",
     "watchAdForPencil": "觀看廣告",
     "goToShopForPencil": "前往商店購買",
+    "noItemTitle": "沒有道具",
+    "noItemDesc": "你沒有任何道具，本局將以無道具狀態開始。",
+    "playWithoutItems": "直接遊玩",
+    "goToShop": "前往商店",
     "waitForRecharge": "等待"
   },
   "login": {

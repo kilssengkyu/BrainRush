@@ -24,7 +24,57 @@ export interface GameState {
     opWins: number;
 }
 
-export const useGameState = (roomId: string, myId: string, opponentId: string) => {
+export type BotScoreEffect = {
+    id: string;
+    type: 'freeze' | 'double';
+    startMs: number;
+    endMs: number;
+};
+
+const getPausedSecondsUntil = (effects: BotScoreEffect[], untilMs: number) => {
+    let totalMs = 0;
+    for (const effect of effects) {
+        if (effect.type !== 'freeze' || effect.startMs >= untilMs) continue;
+        totalMs += Math.max(0, Math.min(effect.endMs, untilMs) - effect.startMs);
+    }
+    return totalMs / 1000;
+};
+
+const getRealMsForTimelineSecond = (effects: BotScoreEffect[], timelineSecond: number, startAtMs: number) => {
+    let realMs = startAtMs + (timelineSecond * 1000);
+    for (let i = 0; i < 4; i += 1) {
+        realMs = startAtMs + (timelineSecond * 1000) + (getPausedSecondsUntil(effects, realMs) * 1000);
+    }
+    return realMs;
+};
+
+const isInDoubleWindow = (effects: BotScoreEffect[], timelineSecond: number, startAtMs: number) => {
+    const eventMs = getRealMsForTimelineSecond(effects, timelineSecond, startAtMs);
+    return effects.some((effect) => effect.type === 'double' && eventMs >= effect.startMs && eventMs <= effect.endMs);
+};
+
+const calculateGhostScore = (
+    timeline: [number, number][],
+    elapsedSeconds: number,
+    startAtMs: number,
+    effects: BotScoreEffect[]
+) => {
+    const nowMs = startAtMs + (elapsedSeconds * 1000);
+    const effectiveElapsed = Math.max(0, elapsedSeconds - getPausedSecondsUntil(effects, nowMs));
+    let total = 0;
+
+    for (const [t, delta] of timeline) {
+        if (t <= effectiveElapsed) {
+            total += isInDoubleWindow(effects, t, startAtMs) ? delta * 2 : delta;
+        } else {
+            break;
+        }
+    }
+
+    return Math.max(0, total);
+};
+
+export const useGameState = (roomId: string, myId: string, opponentId: string, botScoreEffects: BotScoreEffect[] = []) => {
     const [gameState, setGameState] = useState<GameState>({
         status: 'waiting',
         gameType: null,
@@ -348,7 +398,7 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
                         const currentGameType = gameState.gameType;
                         const timeline = [...scoreTimelineRef.current];
                         const finalScore = scoreRef.current;
-                        if (currentGameType && finalScore > 0 && timeline.length > 0) {
+                        if (gameState.mode === 'rank' && currentGameType && finalScore > 0 && timeline.length > 0) {
                             supabase.rpc('save_ghost_score', {
                                 p_room_id: roomId,
                                 p_game_type: currentGameType,
@@ -451,13 +501,7 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
             const elapsed = ((Date.now() + serverOffset) - startAtMs) / 1000;
             if (elapsed < 0) return;
 
-            // Sum all ghost deltas where event time <= elapsed
-            let total = 0;
-            for (const [t, delta] of timeline) {
-                if (t <= elapsed) total += delta;
-                else break; // timeline is sorted by time, so we can break early
-            }
-            total = Math.max(0, total);
+            const total = calculateGhostScore(timeline, elapsed, startAtMs, botScoreEffects);
 
             if (total !== ghostScoreRef.current) {
                 ghostScoreRef.current = total;
@@ -466,7 +510,7 @@ export const useGameState = (roomId: string, myId: string, opponentId: string) =
         }, 100);
 
         return () => clearInterval(interval);
-    }, [gameState.status, gameState.startAt, serverOffset]);
+    }, [botScoreEffects, gameState.status, gameState.startAt, serverOffset]);
 
 
     // --- Actions ---

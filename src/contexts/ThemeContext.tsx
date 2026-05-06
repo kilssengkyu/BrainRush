@@ -17,12 +17,12 @@ const getSystemThemeMode = (): ThemeMode => {
 };
 
 const getInitialThemePreference = (): ThemePreference => {
-    if (typeof window === 'undefined') return 'system';
+    if (typeof window === 'undefined') return 'dark';
 
     const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
     if (stored === 'dark' || stored === 'light' || stored === 'system') return stored;
 
-    return 'system';
+    return 'dark';
 };
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Globe, Volume2, VolumeX, RefreshCcw, BookOpen, Shield, X, Bell, MessageCircleQuestion, Moon, Sun, MonitorSmartphone, Sparkles, LogOut, UserX } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Globe, Volume2, VolumeX, RefreshCcw, BookOpen, Shield, X, Bell, MessageCircleQuestion, Moon, Sun, MonitorSmartphone, Sparkles, UserX, LogIn } from 'lucide-react';
 import { useSound } from '../contexts/SoundContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useUI } from '../contexts/UIContext';
@@ -261,18 +261,16 @@ const Settings = () => {
         navigate('/');
     };
 
-    const handleLogout = async () => {
+    const handleLoginDifferentAccount = async () => {
         const confirmed = await confirm(
-            t('menu.logout'),
-            isGuest
-                ? t('profile.guestLogoutConfirm', '게스트는 로그아웃하면 데이터가 사라질 수 있습니다. 로그아웃하시겠습니까?')
-                : t('settings.logoutConfirm')
+            t('settings.loginDifferentAccount', '다른 계정으로 로그인'),
+            t('settings.loginDifferentAccountConfirm', '현재 세션을 종료하고 다른 계정으로 로그인합니다. 계속할까요?')
         );
         if (!confirmed) return;
 
         playSound('click');
         await signOut();
-        navigate('/');
+        navigate('/login');
     };
 
     const handleDeleteAccount = async () => {
@@ -635,19 +633,24 @@ const Settings = () => {
                     {user && (
                         <section className="space-y-4">
                             <div className="flex items-center gap-3 text-rose-400 mb-2">
-                                <LogOut size={24} />
+                                <LogIn size={24} />
                                 <h2 className="text-xl font-semibold">{t('settings.accountSectionTitle', '계정')}</h2>
                             </div>
                             <div className="bg-white dark:bg-white/5 p-6 rounded-xl border border-slate-200 dark:border-white/10 space-y-3 backdrop-blur-md shadow-sm dark:shadow-none">
                                 <p className="text-sm text-slate-500 dark:text-gray-400">
-                                    {t('settings.accountSectionDesc', '로그아웃 또는 계정 삭제를 관리합니다.')}
+                                    {isGuest
+                                        ? t('settings.accountSectionGuestDesc', '기존 계정이 있다면 다시 로그인할 수 있습니다.')
+                                        : t('settings.accountSectionDesc', '다른 계정 로그인 또는 계정 삭제를 관리합니다.')}
                                 </p>
                                 <button
-                                    onClick={() => { void handleLogout(); }}
+                                    onClick={() => { void handleLoginDifferentAccount(); }}
                                     disabled={isDeletingAccount}
-                                    className="w-full px-5 py-3 rounded-xl bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 text-slate-700 dark:text-white font-bold transition-colors disabled:opacity-60"
+                                    className="w-full px-5 py-3 rounded-xl bg-blue-100 dark:bg-blue-500/20 hover:bg-blue-200 dark:hover:bg-blue-500/30 text-blue-700 dark:text-blue-100 font-bold transition-colors disabled:opacity-60 inline-flex items-center justify-center gap-2"
                                 >
-                                    {t('menu.logout')}
+                                    <LogIn size={18} />
+                                    {isGuest
+                                        ? t('settings.loginExistingAccount', '기존 계정으로 로그인')
+                                        : t('settings.loginDifferentAccount', '다른 계정으로 로그인')}
                                 </button>
                                 {!isGuest && (
                                     <button

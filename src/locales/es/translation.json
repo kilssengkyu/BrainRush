@@ -321,7 +321,13 @@
     "adminDesc": "Ir a la página solo para administradores.",
     "goToAdmin": "Abrir panel de admin",
     "guestModeWarningTitle": "Aviso de cuenta de invitado",
-    "guestModeWarningDesc": "Las cuentas de invitado pueden perder datos al cerrar sesión, desinstalar la app o cambiar de dispositivo. Vincula una cuenta para conservar tu progreso."
+    "guestModeWarningDesc": "Las cuentas de invitado pueden perder datos al cerrar sesión, desinstalar la app o cambiar de dispositivo. Vincula una cuenta para conservar tu progreso.",
+    "loginExistingAccount": "Iniciar sesión en cuenta existente",
+    "loginExistingAccountConfirm": "Saldrás de esta sesión de invitado y luego iniciarás sesión en una cuenta existente. ¿Continuar?",
+    "loginDifferentAccount": "Iniciar sesión con otra cuenta",
+    "loginDifferentAccountConfirm": "Saldrás de esta sesión y luego iniciarás sesión con otra cuenta. ¿Continuar?",
+    "accountSectionDesc": "Gestiona el inicio de sesión con otra cuenta o la eliminación de tu cuenta.",
+    "accountSectionGuestDesc": "Si ya tienes una cuenta, puedes volver a iniciar sesión."
   },
   "report": {
     "button": "Reportar",
@@ -439,6 +445,7 @@
     "great": "¡Genial!",
     "tier": "Tier",
     "opponentUsedItem": "Tu oponente usó {{item}}.",
+    "itemHitSuccess": "¡{{item}} acertó!",
     "table": {
       "round": "Ronda",
       "myScore": "Mi puntaje",
@@ -705,6 +712,10 @@
     "nextPencilIn": "Próximo lápiz en {{time}}",
     "watchAdForPencil": "Ver anuncio",
     "goToShopForPencil": "Comprar en la tienda",
+    "noItemTitle": "No tienes objetos",
+    "noItemDesc": "No tienes objetos, así que esta partida empezará sin objetos.",
+    "playWithoutItems": "Jugar igual",
+    "goToShop": "Ir a la tienda",
     "waitForRecharge": "Esperar"
   },
   "login": {

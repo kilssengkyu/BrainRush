@@ -313,7 +313,13 @@
     "adminDesc": "前往管理员专用页面。",
     "goToAdmin": "进入管理页面",
     "guestModeWarningTitle": "游客账号提示",
-    "guestModeWarningDesc": "游客账号在登出、卸载或更换设备时可能丢失数据。请绑定账号以保留进度。"
+    "guestModeWarningDesc": "游客账号在登出、卸载或更换设备时可能丢失数据。请绑定账号以保留进度。",
+    "loginExistingAccount": "登录已有账号",
+    "loginExistingAccountConfirm": "你将结束当前游客会话，然后登录已有账号。要继续吗？",
+    "loginDifferentAccount": "登录其他账号",
+    "loginDifferentAccountConfirm": "你将结束当前会话，然后登录其他账号。要继续吗？",
+    "accountSectionDesc": "管理登录其他账号或删除账号。",
+    "accountSectionGuestDesc": "如果你已有账号，可以重新登录。"
   },
   "report": {
     "button": "举报",
@@ -371,6 +377,7 @@
     "great": "太棒了!",
     "tier": "段位",
     "opponentUsedItem": "对手使用了{{item}}。",
+    "itemHitSuccess": "{{item}}命中！",
     "table": {
       "round": "回合",
       "myScore": "我的分数",
@@ -701,6 +708,10 @@
     "nextPencilIn": "下一支铅笔充能还需 {{time}}",
     "watchAdForPencil": "观看广告",
     "goToShopForPencil": "前往商店购买",
+    "noItemTitle": "没有道具",
+    "noItemDesc": "你没有任何道具，本局将以无道具状态开始。",
+    "playWithoutItems": "直接游玩",
+    "goToShop": "前往商店",
     "waitForRecharge": "等待"
   },
   "login": {

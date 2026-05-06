@@ -46,6 +46,8 @@ const STORAGE_KEYS = {
     PROFILE_TUTORIAL: 'brainrush_profile_tutorial_seen',
 };
 
+const FORCE_DISABLE_BUTTON_TUTORIAL = true;
+
 const TutorialContext = createContext<TutorialContextType | undefined>(undefined);
 
 export const useTutorial = () => {
@@ -64,6 +66,8 @@ export const TutorialProvider = ({ children }: { children: React.ReactNode }) =>
 
     // Check localStorage on mount
     useEffect(() => {
+        if (FORCE_DISABLE_BUTTON_TUTORIAL) return;
+
         const hasSeenHome = localStorage.getItem(STORAGE_KEYS.HOME_TUTORIAL) === 'true';
         if (!hasSeenHome) {
             // Small delay to let the UI render first
@@ -77,14 +81,17 @@ export const TutorialProvider = ({ children }: { children: React.ReactNode }) =>
     }, []);
 
     const hasSeenHomeTutorial = useCallback(() => {
+        if (FORCE_DISABLE_BUTTON_TUTORIAL) return true;
         return localStorage.getItem(STORAGE_KEYS.HOME_TUTORIAL) === 'true';
     }, []);
 
     const hasSeenProfileTutorial = useCallback(() => {
+        if (FORCE_DISABLE_BUTTON_TUTORIAL) return true;
         return localStorage.getItem(STORAGE_KEYS.PROFILE_TUTORIAL) === 'true';
     }, []);
 
     const startHomeTutorial = useCallback(() => {
+        if (FORCE_DISABLE_BUTTON_TUTORIAL) return;
         setIsHomeTutorialReplay(true);
         setIsHomeTutorialActive(true);
         setHomeTutorialStep(0);
@@ -114,6 +121,7 @@ export const TutorialProvider = ({ children }: { children: React.ReactNode }) =>
     }, []);
 
     const resetHomeTutorial = useCallback(() => {
+        if (FORCE_DISABLE_BUTTON_TUTORIAL) return;
         localStorage.removeItem(STORAGE_KEYS.HOME_TUTORIAL);
         setIsHomeTutorialReplay(true);
         setHomeTutorialStep(0);
@@ -121,6 +129,7 @@ export const TutorialProvider = ({ children }: { children: React.ReactNode }) =>
     }, []);
 
     const startProfileTutorial = useCallback(() => {
+        if (FORCE_DISABLE_BUTTON_TUTORIAL) return;
         const hasSeen = localStorage.getItem(STORAGE_KEYS.PROFILE_TUTORIAL) === 'true';
         if (!hasSeen) {
             setIsProfileTutorialActive(true);

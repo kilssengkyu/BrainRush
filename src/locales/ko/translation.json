@@ -321,7 +321,13 @@
     "adminDesc": "관리자 전용 페이지로 이동합니다.",
     "goToAdmin": "관리자 화면 가기",
     "guestModeWarningTitle": "게스트 계정 안내",
-    "guestModeWarningDesc": "게스트 계정은 로그아웃/앱 삭제/기기 변경 시 데이터가 사라질 수 있습니다. 계정 연동으로 진행 상황을 보호하세요."
+    "guestModeWarningDesc": "게스트 계정은 로그아웃/앱 삭제/기기 변경 시 데이터가 사라질 수 있습니다. 계정 연동으로 진행 상황을 보호하세요.",
+    "loginExistingAccount": "기존 계정으로 로그인",
+    "loginExistingAccountConfirm": "현재 게스트 세션을 종료하고 기존 계정으로 로그인합니다. 계속할까요?",
+    "loginDifferentAccount": "다른 계정으로 로그인",
+    "loginDifferentAccountConfirm": "현재 세션을 종료하고 다른 계정으로 로그인합니다. 계속할까요?",
+    "accountSectionDesc": "다른 계정 로그인 또는 계정 삭제를 관리합니다.",
+    "accountSectionGuestDesc": "기존 계정이 있다면 다시 로그인할 수 있습니다."
   },
   "report": {
     "button": "신고",
@@ -451,6 +457,7 @@
     "devGhostPreviewBotGhost": "봇 고스트",
     "devGhostPreviewGap": "차이",
     "opponentUsedItem": "상대가 {{item}}을 사용했습니다.",
+    "itemHitSuccess": "{{item}} 적중!",
     "table": {
       "round": "라운드",
       "myScore": "내 점수",
@@ -487,6 +494,10 @@
     "nextPencilIn": "다음 연필 충전까지 {{time}}",
     "watchAdForPencil": "광고 보기",
     "goToShopForPencil": "상점에서 구매하기",
+    "noItemTitle": "아이템이 없어요",
+    "noItemDesc": "보유한 아이템이 없어 이번 판에서는 아이템 없이 시작합니다.",
+    "playWithoutItems": "그냥 하기",
+    "goToShop": "상점으로",
     "waitForRecharge": "기다리기"
   },
   "rps": {

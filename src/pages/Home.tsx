@@ -64,12 +64,18 @@ type UserInventoryRow = {
     quantity: number;
 };
 
+type ModeSelectOptions = {
+    forceBotImmediate?: boolean;
+    skipEmptyItemCheck?: boolean;
+};
+
 const MAX_PENCILS = 5;
 const PENCIL_RECHARGE_MS = 15 * 60 * 1000;
 const GUEST_LINK_PROMPT_LEVEL = 5;
 const GUEST_LINK_PROMPT_INITIAL_DELAY_MS = 3 * 24 * 60 * 60 * 1000;
 const GUEST_LINK_PROMPT_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
 const ACTIVITY_PING_COOLDOWN_MS = 60 * 1000;
+const FORCE_AUTO_GUEST_LOGIN = true;
 
 const INVENTORY_VISUALS: Record<string, string> = {
     SCREEN_BLOCK: '/images/icon/icon_bomb_black.png',
@@ -197,6 +203,7 @@ const Home = () => {
     const dailyActivityRecordedUserRef = useRef<string | null>(null);
     const lastActivityPingAtRef = useRef(0);
     const syncedTimeZoneRef = useRef<string | null>(null);
+    const autoGuestLoginAttemptedRef = useRef(false);
     const [rankBurningTimeStatus, setRankBurningTimeStatus] = useState({
         isActive: false,
         windowLabel: null as string | null
@@ -811,6 +818,8 @@ const Home = () => {
 
     const [showAdModal, setShowAdModal] = useState(false);
     const [showNoPencilChoiceModal, setShowNoPencilChoiceModal] = useState(false);
+    const [showNoItemChoiceModal, setShowNoItemChoiceModal] = useState(false);
+    const [pendingNoItemModeOptions, setPendingNoItemModeOptions] = useState<ModeSelectOptions | null>(null);
     const [isLoginModalLoading, setIsLoginModalLoading] = useState(false);
     const [showPostTutorialNormalSpotlight, setShowPostTutorialNormalSpotlight] = useState(false);
     const [showGuestLinkPromptModal, setShowGuestLinkPromptModal] = useState(false);
@@ -842,6 +851,10 @@ const Home = () => {
             .filter((item) => item.quantity > 0)
             .sort((a, b) => a.sort_order - b.sort_order || a.item_code.localeCompare(b.item_code)),
         [inventoryCatalog, inventoryQuantities]
+    );
+    const totalInventoryQuantity = useMemo(
+        () => Object.values(inventoryQuantities).reduce((sum, quantity) => sum + Math.max(0, Number(quantity ?? 0)), 0),
+        [inventoryQuantities]
     );
 
     // Tutorial refs
@@ -1088,6 +1101,22 @@ const Home = () => {
         }
     };
 
+    useEffect(() => {
+        if (!FORCE_AUTO_GUEST_LOGIN) return;
+        if (authLoading || user || autoGuestLoginAttemptedRef.current) return;
+
+        autoGuestLoginAttemptedRef.current = true;
+        setIsLoginModalLoading(true);
+        void signInAnonymously()
+            .catch((error) => {
+                console.error('Auto guest login failed:', error);
+                showToast((error as any)?.message || t('common.error'), 'error');
+            })
+            .finally(() => {
+                setIsLoginModalLoading(false);
+            });
+    }, [authLoading, showToast, signInAnonymously, t, user]);
+
 
     const dismissGuestLinkPrompt = useCallback(() => {
         const nextPromptKey = getGuestLinkPromptStorageKey('next_at');
@@ -1313,7 +1342,7 @@ const Home = () => {
 
     const hasDailyQuestAlert = dailyQuestHomeStatus.hasClaimableQuest || dailyQuestHomeStatus.hasClaimableReward;
 
-    const handleModeSelect = async (mode: string, options?: { forceBotImmediate?: boolean }) => {
+    const handleModeSelect = async (mode: string, options?: ModeSelectOptions) => {
         playSound('click');
         currentMode.current = mode;
         setActiveSessionPrompt(null);
@@ -1335,6 +1364,17 @@ const Home = () => {
             if (needsPencil && pencils < 1) {
                 playSound('error');
                 setShowNoPencilChoiceModal(true);
+                return;
+            }
+
+            if (
+                mode === 'normal'
+                && !options?.skipEmptyItemCheck
+                && !loadingInventory
+                && totalInventoryQuantity < 1
+            ) {
+                setPendingNoItemModeOptions(options ?? {});
+                setShowNoItemChoiceModal(true);
                 return;
             }
         }
@@ -1536,6 +1576,13 @@ const Home = () => {
                 return;
             }
 
+            if (showNoItemChoiceModal) {
+                setShowNoItemChoiceModal(false);
+                setPendingNoItemModeOptions(null);
+                if (customEvent.detail) customEvent.detail.handled = true;
+                return;
+            }
+
             if (activeSessionPrompt && status === 'idle') {
                 dismissedActiveRoomRef.current = activeSessionPrompt.roomId;
                 setActiveSessionPrompt(null);
@@ -1546,7 +1593,7 @@ const Home = () => {
         return () => {
             window.removeEventListener('brainrush:request-modal-close', handleModalCloseRequest as EventListener);
         };
-    }, [showNicknameModal, isSavingNickname, showMailboxModal, showDailyQuestModal, showInventoryModal, showNoPencilChoiceModal, activeSessionPrompt, status, showPostTutorialNormalSpotlight, authLoading, user, showGuestLinkPromptModal, isGuestLinkPromptLoading, dismissGuestLinkPrompt]);
+    }, [showNicknameModal, isSavingNickname, showMailboxModal, showDailyQuestModal, showInventoryModal, showNoPencilChoiceModal, showNoItemChoiceModal, activeSessionPrompt, status, showPostTutorialNormalSpotlight, authLoading, user, showGuestLinkPromptModal, isGuestLinkPromptLoading, dismissGuestLinkPrompt]);
 
     return (
         <div className={`min-h-[100dvh] bg-slate-50 dark:bg-gray-900 text-slate-900 dark:text-white flex flex-col items-center p-4 relative overflow-x-hidden overflow-y-auto overscroll-y-contain`}>
@@ -1781,7 +1828,7 @@ const Home = () => {
             )}
 
             {/* Login Modal — shown when there is no user session */}
-            {!authLoading && !user && (
+            {!FORCE_AUTO_GUEST_LOGIN && !authLoading && !user && (
                 <div className="fixed inset-0 z-[140] bg-black/80 backdrop-blur-sm flex items-center justify-center px-4">
                     <div className="w-full max-w-md bg-white dark:bg-gray-800/95 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl">
                         <div className="text-center mb-8 mt-1">
@@ -2084,6 +2131,55 @@ const Home = () => {
                 onClose={() => setShowDailyQuestModal(false)}
                 onRewardClaimed={refreshProfile}
             />
+
+            {showNoItemChoiceModal && (
+                <div className="fixed inset-0 z-[126] bg-black/75 backdrop-blur-sm flex items-center justify-center px-4">
+                    <div className="w-full max-w-md rounded-3xl border border-cyan-400/30 bg-slate-50 dark:bg-gray-900/95 p-6 shadow-2xl">
+                        <div className="mb-4 flex items-center gap-3">
+                            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-cyan-500/15">
+                                <ShoppingBag className="h-6 w-6 text-cyan-300" />
+                            </div>
+                            <div>
+                                <h2 className="text-xl font-black text-slate-900 dark:text-white">
+                                    {t('home.noItemTitle', '아이템이 없어요')}
+                                </h2>
+                                <p className="mt-1 text-xs font-bold uppercase tracking-[0.16em] text-cyan-300/80">
+                                    {t('menu.normal.title')}
+                                </p>
+                            </div>
+                        </div>
+                        <p className="text-sm leading-relaxed text-slate-600 dark:text-gray-300 mb-5">
+                            {t('home.noItemDesc', '보유한 아이템이 없어 이번 판에서는 아이템 없이 시작합니다.')}
+                        </p>
+
+                        <div className="grid grid-cols-2 gap-2">
+                            <button
+                                onClick={() => {
+                                    const nextOptions = pendingNoItemModeOptions ?? {};
+                                    playSound('click');
+                                    setShowNoItemChoiceModal(false);
+                                    setPendingNoItemModeOptions(null);
+                                    void handleModeSelect('normal', { ...nextOptions, skipEmptyItemCheck: true });
+                                }}
+                                className="rounded-xl border border-gray-600 bg-transparent py-3 font-semibold text-slate-600 transition-colors hover:bg-white dark:text-gray-300 dark:hover:bg-gray-800"
+                            >
+                                {t('home.playWithoutItems', '그냥 하기')}
+                            </button>
+                            <button
+                                onClick={() => {
+                                    playSound('click');
+                                    setShowNoItemChoiceModal(false);
+                                    setPendingNoItemModeOptions(null);
+                                    openShop();
+                                }}
+                                className="rounded-xl bg-cyan-500 py-3 font-black text-slate-950 transition-colors hover:bg-cyan-400"
+                            >
+                                {t('home.goToShop', '상점으로')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {showNoPencilChoiceModal && (
                 <div className="fixed inset-0 z-[126] bg-black/75 backdrop-blur-sm flex items-center justify-center px-4">

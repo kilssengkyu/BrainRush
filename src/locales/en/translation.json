@@ -321,7 +321,13 @@
     "adminDesc": "Go to admin-only pages.",
     "goToAdmin": "Open Admin Panel",
     "guestModeWarningTitle": "Guest Account Notice",
-    "guestModeWarningDesc": "Guest accounts may lose data when signing out, uninstalling, or changing devices. Link an account to keep your progress."
+    "guestModeWarningDesc": "Guest accounts may lose data when signing out, uninstalling, or changing devices. Link an account to keep your progress.",
+    "loginExistingAccount": "Log In to Existing Account",
+    "loginExistingAccountConfirm": "You will leave this guest session, then log in to an existing account. Continue?",
+    "loginDifferentAccount": "Log In to Another Account",
+    "loginDifferentAccountConfirm": "You will leave this session, then log in to another account. Continue?",
+    "accountSectionDesc": "Manage logging in to another account or deleting your account.",
+    "accountSectionGuestDesc": "If you already have an account, you can log in again."
   },
   "report": {
     "button": "Report",
@@ -451,6 +457,7 @@
     "devGhostPreviewBotGhost": "Bot Ghost",
     "devGhostPreviewGap": "Gap",
     "opponentUsedItem": "Your opponent used {{item}}.",
+    "itemHitSuccess": "{{item}} hit!",
     "table": {
       "round": "Round",
       "myScore": "My Score",
@@ -487,6 +494,10 @@
     "nextPencilIn": "Next pencil in {{time}}",
     "watchAdForPencil": "Watch Ad",
     "goToShopForPencil": "Buy in Shop",
+    "noItemTitle": "No items available",
+    "noItemDesc": "You do not have any items, so this match will start without items.",
+    "playWithoutItems": "Play Anyway",
+    "goToShop": "Go to Shop",
     "waitForRecharge": "Wait"
   },
   "rps": {

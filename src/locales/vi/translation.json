@@ -321,7 +321,13 @@
     "adminDesc": "Đi tới trang chỉ dành cho quản trị viên.",
     "goToAdmin": "Mở trang quản trị",
     "guestModeWarningTitle": "Lưu ý tài khoản khách",
-    "guestModeWarningDesc": "Tài khoản khách có thể mất dữ liệu khi đăng xuất, gỡ ứng dụng hoặc đổi thiết bị. Hãy liên kết tài khoản để giữ tiến trình."
+    "guestModeWarningDesc": "Tài khoản khách có thể mất dữ liệu khi đăng xuất, gỡ ứng dụng hoặc đổi thiết bị. Hãy liên kết tài khoản để giữ tiến trình.",
+    "loginExistingAccount": "Đăng nhập tài khoản hiện có",
+    "loginExistingAccountConfirm": "Bạn sẽ kết thúc phiên khách này, rồi đăng nhập vào tài khoản hiện có. Tiếp tục?",
+    "loginDifferentAccount": "Đăng nhập bằng tài khoản khác",
+    "loginDifferentAccountConfirm": "Bạn sẽ kết thúc phiên này, rồi đăng nhập bằng tài khoản khác. Tiếp tục?",
+    "accountSectionDesc": "Quản lý đăng nhập bằng tài khoản khác hoặc xóa tài khoản của bạn.",
+    "accountSectionGuestDesc": "Nếu đã có tài khoản, bạn có thể đăng nhập lại."
   },
   "report": {
     "button": "Báo cáo",
@@ -439,6 +445,7 @@
     "great": "Tuyệt!",
     "tier": "Tier",
     "opponentUsedItem": "Đối thủ đã dùng {{item}}.",
+    "itemHitSuccess": "{{item}} trúng đích!",
     "table": {
       "round": "Vòng",
       "myScore": "Điểm của tôi",
@@ -705,6 +712,10 @@
     "nextPencilIn": "Bút chì tiếp theo sau {{time}}",
     "watchAdForPencil": "Xem quảng cáo",
     "goToShopForPencil": "Mua tại cửa hàng",
+    "noItemTitle": "Không có vật phẩm",
+    "noItemDesc": "Bạn không có vật phẩm nào, nên trận này sẽ bắt đầu mà không có vật phẩm.",
+    "playWithoutItems": "Vẫn chơi",
+    "goToShop": "Đến cửa hàng",
     "waitForRecharge": "Chờ"
   },
   "login": {

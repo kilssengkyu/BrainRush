@@ -321,7 +321,13 @@
     "adminDesc": "Ir para páginas exclusivas de admin.",
     "goToAdmin": "Abrir painel admin",
     "guestModeWarningTitle": "Aviso de conta visitante",
-    "guestModeWarningDesc": "Contas de visitante podem perder dados ao sair, desinstalar o app ou trocar de aparelho. Vincule uma conta para manter seu progresso."
+    "guestModeWarningDesc": "Contas de visitante podem perder dados ao sair, desinstalar o app ou trocar de aparelho. Vincule uma conta para manter seu progresso.",
+    "loginExistingAccount": "Entrar em conta existente",
+    "loginExistingAccountConfirm": "Você encerrará esta sessão de convidado e entrará em uma conta existente. Continuar?",
+    "loginDifferentAccount": "Entrar com outra conta",
+    "loginDifferentAccountConfirm": "Você encerrará esta sessão e entrará com outra conta. Continuar?",
+    "accountSectionDesc": "Gerencie entrar com outra conta ou excluir sua conta.",
+    "accountSectionGuestDesc": "Se você já tem uma conta, pode entrar novamente."
   },
   "report": {
     "button": "Denunciar",
@@ -439,6 +445,7 @@
     "great": "Ótimo!",
     "tier": "Tier",
     "opponentUsedItem": "Seu oponente usou {{item}}.",
+    "itemHitSuccess": "{{item}} acertou!",
     "table": {
       "round": "Rodada",
       "myScore": "Minha pontuação",
@@ -705,6 +712,10 @@
     "nextPencilIn": "Próximo lápis em {{time}}",
     "watchAdForPencil": "Ver anúncio",
     "goToShopForPencil": "Comprar na loja",
+    "noItemTitle": "Sem itens disponíveis",
+    "noItemDesc": "Você não tem itens, então esta partida começará sem itens.",
+    "playWithoutItems": "Jogar mesmo assim",
+    "goToShop": "Ir para a loja",
     "waitForRecharge": "Aguardar"
   },
   "login": {

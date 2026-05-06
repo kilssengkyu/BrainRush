@@ -313,7 +313,13 @@
     "adminDesc": "管理者専用ページへ移動します。",
     "goToAdmin": "管理者ページへ",
     "guestModeWarningTitle": "ゲストアカウントのご案内",
-    "guestModeWarningDesc": "ゲストアカウントは、ログアウト・アプリ削除・端末変更時にデータが失われる可能性があります。アカウント連携で進行状況を保護してください。"
+    "guestModeWarningDesc": "ゲストアカウントは、ログアウト・アプリ削除・端末変更時にデータが失われる可能性があります。アカウント連携で進行状況を保護してください。",
+    "loginExistingAccount": "既存アカウントでログイン",
+    "loginExistingAccountConfirm": "現在のゲストセッションを終了し、既存アカウントでログインします。続行しますか？",
+    "loginDifferentAccount": "別のアカウントでログイン",
+    "loginDifferentAccountConfirm": "現在のセッションを終了し、別のアカウントでログインします。続行しますか？",
+    "accountSectionDesc": "別のアカウントでのログインまたはアカウント削除を管理します。",
+    "accountSectionGuestDesc": "既存アカウントがある場合は、もう一度ログインできます。"
   },
   "report": {
     "button": "通報",
@@ -371,6 +377,7 @@
     "great": "いいね！",
     "tier": "ティア",
     "opponentUsedItem": "相手が{{item}}を使いました。",
+    "itemHitSuccess": "{{item}}命中！",
     "table": {
       "round": "ラウンド",
       "myScore": "自分",
@@ -701,6 +708,10 @@
     "nextPencilIn": "次の鉛筆まで {{time}}",
     "watchAdForPencil": "広告を見る",
     "goToShopForPencil": "ショップで購入",
+    "noItemTitle": "アイテムがありません",
+    "noItemDesc": "所持アイテムがないため、この試合はアイテムなしで開始します。",
+    "playWithoutItems": "そのまま遊ぶ",
+    "goToShop": "ショップへ",
     "waitForRecharge": "待つ"
   },
   "login": {
