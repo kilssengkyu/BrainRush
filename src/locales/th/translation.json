@@ -3,6 +3,14 @@
     "title": "BrainRush",
     "subtitle": "ความเร็วและสติปัญญา"
   },
+  "themeUpdate": {
+    "kicker": "ธีมใหม่",
+    "title": "BrainRush เพิ่มธีมใหม่แล้ว!",
+    "description": "ขอบคุณที่เล่น BrainRush มาอย่างต่อเนื่อง! คุณสามารถเลือกธีมใหม่หรือธีมคลาสสิกได้ทุกเมื่อในการตั้งค่า",
+    "confirm": "เริ่มด้วยธีมใหม่",
+    "useClassic": "กลับไปใช้ธีมคลาสสิก",
+    "openSettings": "เลือกในการตั้งค่า"
+  },
   "common": {
     "cancel": "ยกเลิก",
     "confirm": "ยืนยัน",
@@ -298,6 +306,12 @@
     "notificationNativeHint": "ปุ่มสลับการแจ้งเตือนถูกปิดใช้งานบนเว็บ",
     "recommended": "แนะนำ",
     "theme": "ธีม",
+    "visualStyle": "รูปแบบ UI",
+    "visualStyleDesc": "เลือกรูปลักษณ์ของเมนูและหน้าจอเกม",
+    "playfulTheme": "Brain Arcade",
+    "playfulThemeDesc": "สดใสและสนุกแบบเกม",
+    "classicTheme": "คลาสสิก",
+    "classicThemeDesc": "รูปลักษณ์เดิมที่คุ้นเคย",
     "themeMode": "โหมดการแสดงผล",
     "systemThemeDesc": "ใช้การตั้งค่าของอุปกรณ์",
     "darkMode": "โหมดมืด",

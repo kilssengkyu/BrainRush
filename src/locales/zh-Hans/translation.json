@@ -1,4 +1,12 @@
 {
+  "themeUpdate": {
+    "kicker": "新主题",
+    "title": "BrainRush新增了一个主题！",
+    "description": "感谢你一直以来支持BrainRush！你可以随时在设置中选择新主题或经典主题。",
+    "confirm": "使用新主题",
+    "useClassic": "返回经典主题",
+    "openSettings": "前往设置选择"
+  },
   "common": {
     "cancel": "取消",
     "confirm": "确认",
@@ -290,6 +298,12 @@
     "notificationNativeHint": "网页端通知开关不可用。",
     "recommended": "推荐",
     "theme": "主题",
+    "visualStyle": "界面风格",
+    "visualStyleDesc": "选择菜单和游戏画面的外观。",
+    "playfulTheme": "脑力街机",
+    "playfulThemeDesc": "活泼有趣，更具游戏感",
+    "classicTheme": "经典",
+    "classicThemeDesc": "熟悉的原版界面",
     "themeMode": "显示模式",
     "systemThemeDesc": "跟随设备设置。",
     "darkMode": "深色模式",

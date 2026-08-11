@@ -1,4 +1,12 @@
 {
+  "themeUpdate": {
+    "kicker": "新テーマ",
+    "title": "BrainRushに新しいテーマが追加されました！",
+    "description": "いつもBrainRushをプレイしていただき、ありがとうございます！新しいテーマと従来のテーマは、設定からいつでも選べます。",
+    "confirm": "新テーマで始める",
+    "useClassic": "元のテーマに戻す",
+    "openSettings": "設定で選ぶ"
+  },
   "common": {
     "cancel": "キャンセル",
     "confirm": "確認",
@@ -290,6 +298,12 @@
     "notificationNativeHint": "Web版では通知トグルは無効です。",
     "recommended": "おすすめ",
     "theme": "テーマ",
+    "visualStyle": "UIスタイル",
+    "visualStyleDesc": "メニューやゲーム画面の見た目を選べます。",
+    "playfulTheme": "ブレインアーケード",
+    "playfulThemeDesc": "ゲームらしく楽しいデザイン",
+    "classicTheme": "クラシック",
+    "classicThemeDesc": "親しみのある従来の画面",
     "themeMode": "表示モード",
     "systemThemeDesc": "端末の設定に従います。",
     "darkMode": "ダークモード",

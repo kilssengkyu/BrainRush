@@ -63,11 +63,11 @@ const ThemeUpdateNotice = () => {
                     >
                         <div className="theme-update-confetti" aria-hidden="true"><span /><span /><span /></div>
                         <div className="theme-update-icon" aria-hidden="true"><Gamepad2 /><Sparkles /></div>
-                        <div className="theme-update-kicker"><Palette size={14} />{t('themeUpdate.kicker', 'NEW LOOK')}</div>
-                        <h2 id="theme-update-title">{t('themeUpdate.title', 'BrainRush has a playful new look!')}</h2>
-                        <p>{t('themeUpdate.description', 'The new Brain Arcade theme is now the default. You can switch back to the familiar classic theme at any time.')}</p>
+                        <div className="theme-update-kicker"><Palette size={14} />{t('themeUpdate.kicker', 'NEW THEME')}</div>
+                        <h2 id="theme-update-title">{t('themeUpdate.title', 'A new theme has arrived in BrainRush!')}</h2>
+                        <p>{t('themeUpdate.description', 'Thank you for continuing to play BrainRush! You can switch between the new and classic themes anytime in Settings.')}</p>
                         <div className="theme-update-actions">
-                            <button type="button" className="theme-update-primary" onClick={dismiss}><Sparkles size={18} />{t('themeUpdate.confirm', 'Start with the new theme')}</button>
+                            <button type="button" className="theme-update-primary" onClick={dismiss}><Sparkles size={18} />{t('themeUpdate.confirm', 'Try the new theme')}</button>
                             <button type="button" className="theme-update-classic" onClick={useClassic}><RotateCcw size={17} />{t('themeUpdate.useClassic', 'Return to classic theme')}</button>
                             <button type="button" className="theme-update-settings" onClick={openSettings}>{t('themeUpdate.openSettings', 'Choose in Settings')}</button>
                         </div>

@@ -3,6 +3,14 @@
     "title": "BrainRush",
     "subtitle": "Velocidad e Inteligencia"
   },
+  "themeUpdate": {
+    "kicker": "NUEVO TEMA",
+    "title": "¡BrainRush tiene un nuevo tema!",
+    "description": "¡Gracias por seguir jugando a BrainRush! Puedes elegir entre el tema nuevo y el clásico cuando quieras desde Ajustes.",
+    "confirm": "Probar el nuevo tema",
+    "useClassic": "Volver al tema clásico",
+    "openSettings": "Elegir en Ajustes"
+  },
   "common": {
     "cancel": "Cancelar",
     "confirm": "Confirmar",
@@ -298,6 +306,12 @@
     "notificationNativeHint": "El interruptor de notificaciones está deshabilitado en la web.",
     "recommended": "Recomendado",
     "theme": "Tema",
+    "visualStyle": "Estilo de la interfaz",
+    "visualStyleDesc": "Elige el aspecto de los menús y las pantallas de juego.",
+    "playfulTheme": "Brain Arcade",
+    "playfulThemeDesc": "Divertido y con estilo de juego",
+    "classicTheme": "Clásico",
+    "classicThemeDesc": "El aspecto original de siempre",
     "themeMode": "Apariencia",
     "systemThemeDesc": "Sigue la configuración del dispositivo.",
     "darkMode": "Modo oscuro",

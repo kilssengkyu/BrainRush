@@ -3,6 +3,14 @@
     "title": "BrainRush",
     "subtitle": "Tốc độ & Trí tuệ"
   },
+  "themeUpdate": {
+    "kicker": "GIAO DIỆN MỚI",
+    "title": "BrainRush đã có thêm giao diện mới!",
+    "description": "Cảm ơn bạn đã luôn đồng hành cùng BrainRush! Bạn có thể chọn giao diện mới hoặc cổ điển bất cứ lúc nào trong phần Cài đặt.",
+    "confirm": "Bắt đầu với giao diện mới",
+    "useClassic": "Quay lại giao diện cổ điển",
+    "openSettings": "Chọn trong Cài đặt"
+  },
   "common": {
     "cancel": "Hủy",
     "confirm": "Xác nhận",
@@ -298,6 +306,12 @@
     "notificationNativeHint": "Nút bật/tắt thông báo bị vô hiệu hóa trên web.",
     "recommended": "Đề xuất",
     "theme": "Giao diện",
+    "visualStyle": "Phong cách giao diện",
+    "visualStyleDesc": "Chọn diện mạo của menu và màn hình trò chơi.",
+    "playfulTheme": "Brain Arcade",
+    "playfulThemeDesc": "Vui nhộn và đậm chất trò chơi",
+    "classicTheme": "Cổ điển",
+    "classicThemeDesc": "Giao diện nguyên bản quen thuộc",
     "themeMode": "Chế độ hiển thị",
     "systemThemeDesc": "Theo cài đặt của thiết bị.",
     "darkMode": "Chế độ tối",

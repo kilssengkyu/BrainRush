@@ -1,4 +1,12 @@
 {
+  "themeUpdate": {
+    "kicker": "新主題",
+    "title": "BrainRush 新增了一個主題！",
+    "description": "感謝你一直以來支持 BrainRush！你可以隨時在設定中選擇新主題或經典主題。",
+    "confirm": "使用新主題",
+    "useClassic": "返回經典主題",
+    "openSettings": "前往設定選擇"
+  },
   "common": {
     "cancel": "取消",
     "confirm": "確認",
@@ -290,6 +298,12 @@
     "notificationNativeHint": "網頁版無法切換通知開關。",
     "recommended": "推薦",
     "theme": "主題",
+    "visualStyle": "介面風格",
+    "visualStyleDesc": "選擇選單與遊戲畫面的外觀。",
+    "playfulTheme": "腦力街機",
+    "playfulThemeDesc": "活潑可愛，更有遊戲感",
+    "classicTheme": "經典",
+    "classicThemeDesc": "熟悉的原版介面",
     "themeMode": "顯示模式",
     "systemThemeDesc": "跟隨設備設定。",
     "darkMode": "深色模式",

@@ -3,6 +3,14 @@
     "title": "BrainRush",
     "subtitle": "Kecepatan & Kecerdasan"
   },
+  "themeUpdate": {
+    "kicker": "TEMA BARU",
+    "title": "Tema baru telah hadir di BrainRush!",
+    "description": "Terima kasih telah terus bermain BrainRush! Kamu bisa memilih tema baru atau klasik kapan saja di Pengaturan.",
+    "confirm": "Coba tema baru",
+    "useClassic": "Kembali ke tema klasik",
+    "openSettings": "Pilih di Pengaturan"
+  },
   "common": {
     "cancel": "Batal",
     "confirm": "Konfirmasi",
@@ -298,6 +306,12 @@
     "notificationNativeHint": "Tombol notifikasi dinonaktifkan di web.",
     "recommended": "Rekomendasi",
     "theme": "Tema",
+    "visualStyle": "Gaya UI",
+    "visualStyleDesc": "Pilih tampilan menu dan layar permainan.",
+    "playfulTheme": "Brain Arcade",
+    "playfulThemeDesc": "Ceria dan terasa seperti game",
+    "classicTheme": "Klasik",
+    "classicThemeDesc": "Tampilan asli yang familier",
     "themeMode": "Tampilan",
     "systemThemeDesc": "Mengikuti pengaturan perangkat.",
     "darkMode": "Mode gelap",

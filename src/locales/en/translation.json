@@ -4,10 +4,10 @@
     "subtitle": "Speed & Intelligence"
   },
   "themeUpdate": {
-    "kicker": "NEW LOOK",
-    "title": "BrainRush has a playful new look!",
-    "description": "The new Brain Arcade theme is now the default. You can switch back to the familiar classic theme at any time.",
-    "confirm": "Start with the new theme",
+    "kicker": "NEW THEME",
+    "title": "A new theme has arrived in BrainRush!",
+    "description": "Thank you for continuing to play BrainRush! You can switch between the new and classic themes anytime in Settings.",
+    "confirm": "Try the new theme",
     "useClassic": "Return to classic theme",
     "openSettings": "Choose in Settings"
   },
