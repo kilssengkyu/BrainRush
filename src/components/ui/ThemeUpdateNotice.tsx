@@ -1,0 +1,81 @@
+import { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Gamepad2, Palette, RotateCcw, Sparkles } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { useTheme } from '../../contexts/ThemeContext';
+
+const NOTICE_STORAGE_KEY = 'brainrush_visual_theme_notice_v1';
+
+const ThemeUpdateNotice = () => {
+    const { t } = useTranslation();
+    const location = useLocation();
+    const navigate = useNavigate();
+    const { setVisualTheme } = useTheme();
+    const [isOpen, setIsOpen] = useState(false);
+
+    useEffect(() => {
+        if (location.pathname !== '/') return;
+        try {
+            setIsOpen(window.localStorage.getItem(NOTICE_STORAGE_KEY) !== 'seen');
+        } catch {
+            setIsOpen(true);
+        }
+    }, [location.pathname]);
+
+    const dismiss = () => {
+        try {
+            window.localStorage.setItem(NOTICE_STORAGE_KEY, 'seen');
+        } catch {
+            // Storage can be unavailable in privacy-restricted webviews.
+        }
+        setIsOpen(false);
+    };
+
+    const useClassic = () => {
+        setVisualTheme('classic');
+        dismiss();
+    };
+
+    const openSettings = () => {
+        dismiss();
+        navigate('/settings');
+    };
+
+    return (
+        <AnimatePresence>
+            {isOpen && (
+                <motion.div
+                    className="theme-update-overlay"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="theme-update-title"
+                >
+                    <motion.div
+                        className="theme-update-card"
+                        initial={{ y: 28, scale: 0.94, opacity: 0 }}
+                        animate={{ y: 0, scale: 1, opacity: 1 }}
+                        exit={{ y: 18, scale: 0.96, opacity: 0 }}
+                        transition={{ type: 'spring', stiffness: 320, damping: 25 }}
+                    >
+                        <div className="theme-update-confetti" aria-hidden="true"><span /><span /><span /></div>
+                        <div className="theme-update-icon" aria-hidden="true"><Gamepad2 /><Sparkles /></div>
+                        <div className="theme-update-kicker"><Palette size={14} />{t('themeUpdate.kicker', 'NEW LOOK')}</div>
+                        <h2 id="theme-update-title">{t('themeUpdate.title', 'BrainRush has a playful new look!')}</h2>
+                        <p>{t('themeUpdate.description', 'The new Brain Arcade theme is now the default. You can switch back to the familiar classic theme at any time.')}</p>
+                        <div className="theme-update-actions">
+                            <button type="button" className="theme-update-primary" onClick={dismiss}><Sparkles size={18} />{t('themeUpdate.confirm', 'Start with the new theme')}</button>
+                            <button type="button" className="theme-update-classic" onClick={useClassic}><RotateCcw size={17} />{t('themeUpdate.useClassic', 'Return to classic theme')}</button>
+                            <button type="button" className="theme-update-settings" onClick={openSettings}>{t('themeUpdate.openSettings', 'Choose in Settings')}</button>
+                        </div>
+                    </motion.div>
+                </motion.div>
+            )}
+        </AnimatePresence>
+    );
+};
+
+export default ThemeUpdateNotice;

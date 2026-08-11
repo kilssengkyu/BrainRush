@@ -1249,7 +1249,7 @@ const Shop = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-sm px-6"
+                        className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/35 dark:bg-black/70 backdrop-blur-sm px-6"
                         onClick={() => setPurchaseReward(null)}
                     >
                         <motion.div
@@ -1257,7 +1257,7 @@ const Shop = () => {
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.8, opacity: 0 }}
                             transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-                            className="bg-gradient-to-b from-gray-800 to-gray-900 rounded-3xl p-8 max-w-sm w-full border border-gray-600/50 shadow-2xl text-center"
+                            className="bg-gradient-to-b from-white to-violet-50 dark:from-gray-800 dark:to-gray-900 rounded-3xl p-8 max-w-sm w-full border border-violet-200 dark:border-gray-600/50 shadow-2xl text-center"
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="mb-4 flex justify-center">
@@ -1273,7 +1273,7 @@ const Shop = () => {
                                     />
                                 )}
                             </div>
-                            <h3 className="text-xl font-black text-white mb-3">
+                            <h3 className="text-xl font-black text-slate-900 dark:text-white mb-3">
                                 {t('shop.rewardTitle', '획득')}
                             </h3>
                             {purchaseReward.amount !== null && (
@@ -1289,14 +1289,14 @@ const Shop = () => {
                                             className="h-12 w-12 object-contain"
                                         />
                                     )}
-                                    <span className="text-3xl font-black text-yellow-300">
+                                    <span className="text-3xl font-black text-amber-600 dark:text-yellow-300">
                                         +{purchaseReward.amount}
                                     </span>
                                 </div>
                             )}
                             <button
                                 onClick={() => setPurchaseReward(null)}
-                                className="w-full py-3 bg-white text-black font-bold rounded-xl hover:bg-gray-200 transition active:scale-95"
+                                className="w-full py-3 bg-violet-600 hover:bg-violet-700 text-white dark:bg-white dark:hover:bg-gray-200 dark:text-black font-bold rounded-xl transition active:scale-95"
                             >
                                 {t('common.ok', '확인')}
                             </button>

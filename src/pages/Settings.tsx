@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Globe, Volume2, VolumeX, RefreshCcw, BookOpen, Shield, X, Bell, MessageCircleQuestion, Moon, Sun, MonitorSmartphone, Sparkles, UserX, LogIn } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Globe, Volume2, VolumeX, RefreshCcw, BookOpen, Shield, X, Bell, MessageCircleQuestion, Moon, Sun, MonitorSmartphone, Sparkles, UserX, LogIn, Gamepad2, LayoutTemplate } from 'lucide-react';
 import { useSound } from '../contexts/SoundContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useUI } from '../contexts/UIContext';
@@ -25,7 +25,7 @@ const Settings = () => {
     const { user, profile, signOut, refreshProfile } = useAuth();
     const { showToast, confirm } = useUI();
     const { resetHomeTutorial } = useTutorial();
-    const { themeMode, themePreference, setThemePreference } = useTheme();
+    const { themeMode, themePreference, setThemePreference, visualTheme, setVisualTheme } = useTheme();
     const [isRestoring, setIsRestoring] = useState(false);
     const [isDeletingAccount, setIsDeletingAccount] = useState(false);
     const [isLanguageModalOpen, setIsLanguageModalOpen] = useState(false);
@@ -316,7 +316,7 @@ const Settings = () => {
 
     return (
         <div
-            className={`h-[100dvh] relative overflow-hidden flex flex-col items-center bg-slate-50 dark:bg-gray-900 text-slate-900 dark:text-white`}
+            className={`settings-screen h-[100dvh] relative overflow-hidden flex flex-col items-center bg-slate-50 dark:bg-gray-900 text-slate-900 dark:text-white`}
             onTouchStart={handleEdgeSwipeStart}
             onTouchMove={handleEdgeSwipeMove}
             onTouchEnd={handleEdgeSwipeEnd}
@@ -327,7 +327,7 @@ const Settings = () => {
             <div className={`absolute bottom-[-20%] right-[-20%] w-[80%] h-[80%] rounded-full blur-3xl animate-pulse pointer-events-none bg-rose-400/20 dark:bg-purple-600/20`} />
 
             {/* Header - Fixed to top */}
-            <header className={`w-full flex-none flex items-center justify-between z-20 p-6 pt-[calc(env(safe-area-inset-top)+1.5rem)] pb-4 backdrop-blur-sm sticky top-0 bg-slate-50/70 dark:bg-gray-900/50`}>
+            <header className={`settings-header w-full flex-none flex items-center justify-between z-20 p-6 pt-[calc(env(safe-area-inset-top)+1.5rem)] pb-4 backdrop-blur-sm sticky top-0 bg-slate-50/70 dark:bg-gray-900/50`}>
                 <button
                     onClick={() => { playSound('click'); navigate(-1); }}
                     className="p-3 bg-white shadow-sm dark:shadow-none dark:bg-white/10 rounded-full backdrop-blur-md active:scale-90 transition-transform"
@@ -379,6 +379,33 @@ const Settings = () => {
                                     ? <Moon size={24} />
                                     : <Sun size={24} />}
                             <h2 className="text-xl font-semibold">{t('settings.theme')}</h2>
+                        </div>
+
+                        <div className="visual-theme-picker">
+                            <div className="mb-3">
+                                <div className="text-lg font-bold">{t('settings.visualStyle', 'UI style')}</div>
+                                <p className="mt-1 text-sm text-slate-500 dark:text-gray-400">{t('settings.visualStyleDesc', 'Choose the look of menus and game screens.')}</p>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => { setVisualTheme('playful'); playSound('click'); }}
+                                    className={`visual-theme-option visual-theme-option--playful ${visualTheme === 'playful' ? 'is-selected' : ''}`}
+                                >
+                                    <span className="visual-theme-option__icon"><Gamepad2 size={24} /></span>
+                                    <span className="font-black">{t('settings.playfulTheme', 'Brain Arcade')}</span>
+                                    <small>{t('settings.playfulThemeDesc', 'Playful and game-like')}</small>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => { setVisualTheme('classic'); playSound('click'); }}
+                                    className={`visual-theme-option visual-theme-option--classic ${visualTheme === 'classic' ? 'is-selected' : ''}`}
+                                >
+                                    <span className="visual-theme-option__icon"><LayoutTemplate size={24} /></span>
+                                    <span className="font-black">{t('settings.classicTheme', 'Classic')}</span>
+                                    <small>{t('settings.classicThemeDesc', 'The familiar original look')}</small>
+                                </button>
+                            </div>
                         </div>
 
                         <div className="bg-white dark:bg-white/5 p-6 rounded-xl border border-slate-200 dark:border-white/10 backdrop-blur-md shadow-sm dark:shadow-none">

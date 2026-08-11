@@ -1,7 +1,7 @@
 {
   "name": "temp-app",
   "private": true,
-  "version": "1.9.16",
+  "version": "1.9.17",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -32,6 +32,7 @@
     "firebase": "^11.10.0",
     "flag-icons": "^7.5.0",
     "framer-motion": "^12.25.0",
+    "gameanalytics": "^4.4.7",
     "howler": "^2.2.4",
     "i18next": "^25.7.4",
     "i18next-browser-languagedetector": "^8.2.0",

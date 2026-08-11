@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import com.getcapacitor.BridgeActivity;
+import com.facebook.appevents.AppEventsLogger;
 
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -25,6 +26,7 @@ public class MainActivity extends BridgeActivity {
         hideNavigationBar();
 
         Log.e("BrainRush", ">>> MainActivity onCreate called <<<");
+        AppEventsLogger.activateApp(getApplication());
         if (getIntent() != null) {
             Log.e("BrainRush", ">>> Initial Intent Data: " + getIntent().getDataString());
         } else {

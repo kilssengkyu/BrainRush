@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Settings, User, Trophy, Zap, Loader2, Lock, AlertTriangle, Dumbbell, ShoppingBag, Flame, Info, X } from 'lucide-react';
+import { Settings, User, Trophy, Zap, Loader2, Lock, AlertTriangle, Dumbbell, ShoppingBag, Flame, Info, X, Brain, Sparkles } from 'lucide-react';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import type { PluginListenerHandle } from '@capacitor/core';
@@ -841,7 +841,7 @@ const Home = () => {
     const [nicknameInput, setNicknameInput] = useState('');
     const [isSavingNickname, setIsSavingNickname] = useState(false);
     const shouldSuggestNicknameSetup = Boolean(user && profile?.needs_nickname_setup);
-    const mobileMainInsetClass = 'pt-[calc(env(safe-area-inset-top)+9.75rem)] pb-[calc(env(safe-area-inset-bottom)+7rem)]';
+    const mobileMainInsetClass = 'pt-[calc(env(safe-area-inset-top)+clamp(7rem,22dvh,9.75rem))] pb-[calc(env(safe-area-inset-bottom)+5.75rem)]';
     const ownedInventoryItems = useMemo(
         () => inventoryCatalog
             .map((item) => ({
@@ -1596,9 +1596,10 @@ const Home = () => {
     }, [showNicknameModal, isSavingNickname, showMailboxModal, showDailyQuestModal, showInventoryModal, showNoPencilChoiceModal, showNoItemChoiceModal, activeSessionPrompt, status, showPostTutorialNormalSpotlight, authLoading, user, showGuestLinkPromptModal, isGuestLinkPromptLoading, dismissGuestLinkPrompt]);
 
     return (
-        <div className={`min-h-[100dvh] bg-slate-50 dark:bg-gray-900 text-slate-900 dark:text-white flex flex-col items-center p-4 relative overflow-x-hidden overflow-y-auto overscroll-y-contain`}>
+        <div className={`brainrush-home h-[100dvh] bg-slate-50 dark:bg-gray-900 text-slate-900 dark:text-white flex flex-col items-center p-4 relative overflow-hidden`}>
             {/* Background Effects */}
-            <div className={`absolute top-0 left-0 w-full h-full pointer-events-none bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white via-slate-100 to-slate-200 dark:from-gray-800 dark:via-gray-900 dark:to-black`} />
+            <div className={`home-ambient absolute top-0 left-0 w-full h-full pointer-events-none bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white via-slate-100 to-slate-200 dark:from-gray-800 dark:via-gray-900 dark:to-black`} />
+            <div className="home-playful-decor" aria-hidden="true"><span /><span /><span /><span /></div>
 
             {/* Authenticated User Header (Top Left - Profile) */}
             {user && (
@@ -2254,15 +2255,16 @@ const Home = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 bg-slate-50 dark:bg-gray-900 flex flex-col items-center pointer-events-auto"
+                        className="matchmaking-screen fixed inset-0 z-50 bg-slate-50 dark:bg-gray-900 flex flex-col items-center pointer-events-auto"
                     >
+                        <div className="matchmaking-decor" aria-hidden="true"><span /><span /><span /><span /></div>
                         {status === 'timeout' ? (
                             /* Timeout Screen - same as before */
                             <div className="flex-1 flex flex-col items-center justify-center">
                                 <motion.div
                                     initial={{ scale: 0.8 }}
                                     animate={{ scale: 1 }}
-                                    className="bg-white dark:bg-gray-800 p-8 rounded-3xl border border-red-500/50 flex flex-col items-center text-center shadow-2xl min-w-[300px]"
+                                    className="matchmaking-timeout-card bg-white dark:bg-gray-800 p-8 rounded-3xl border border-red-500/50 flex flex-col items-center text-center shadow-2xl min-w-[300px]"
                                 >
                                     <AlertTriangle className="w-16 h-16 text-red-500 mb-6" />
                                     <h2 className="text-2xl font-bold mb-2 text-slate-900 dark:text-white">{t('matchmaking.timeout')}</h2>
@@ -2276,7 +2278,7 @@ const Home = () => {
                                         </button>
                                         <button
                                             onClick={() => { playSound('click'); cancelSearch(); handleModeSelect(currentMode.current); }}
-                                            className="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold transition-colors"
+                                            className="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold transition-colors"
                                         >
                                             {t('common.retry')}
                                         </button>
@@ -2287,12 +2289,13 @@ const Home = () => {
                             /* Searching / Matched Screen - Profile Based */
                             <>
                                 {/* Background gradients */}
-                                <div className={`absolute inset-0 bg-gradient-to-br from-blue-900/40 via-purple-900/20 to-red-900/40 ${currentMode.current === 'normal' ? 'animate-bg-flow' : currentMode.current === 'rank' ? 'animate-bg-pulse-tense' : ''} pointer-events-none`} />
+                                <div className={`matchmaking-ambient absolute inset-0 bg-gradient-to-br from-blue-900/40 via-purple-900/20 to-red-900/40 ${currentMode.current === 'normal' ? 'animate-bg-flow' : currentMode.current === 'rank' ? 'animate-bg-pulse-tense' : ''} pointer-events-none`} />
                                 {currentMode.current === 'rank' && (
                                     <div className="absolute inset-0 bg-white mix-blend-overlay animate-lightning pointer-events-none" />
                                 )}
 
-                                <div className="relative z-10 flex flex-col items-center w-full h-full pt-[calc(env(safe-area-inset-top)+1.25rem)] pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+                                <div className="matchmaking-stage relative z-10 flex flex-col items-center w-full h-full pt-[calc(env(safe-area-inset-top)+1.25rem)] pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+                                    <div className="matchmaking-arena-kicker"><Brain size={15} /><span>BRAIN ARENA</span></div>
                                     {/* My Profile - Top */}
                                     <motion.div
                                         initial={{ y: -30, opacity: 0 }}
@@ -2300,7 +2303,7 @@ const Home = () => {
                                         transition={{ delay: 0.1 }}
                                         className="mt-4 flex flex-col items-center"
                                     >
-                                        <div className={`relative overflow-hidden bg-gradient-to-br ${tierColor} border border-white/35 rounded-2xl px-5 py-4 shadow-xl backdrop-blur-sm min-w-[260px]`}>
+                                        <div className={`matchmaking-player-card matchmaking-player-card--me relative overflow-hidden bg-gradient-to-br ${tierColor} border border-white/35 rounded-2xl px-5 py-4 shadow-xl backdrop-blur-sm min-w-[260px]`}>
                                             <div className="absolute inset-0 pointer-events-none bg-black/10 dark:bg-black/20" />
                                             <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(120deg,rgba(255,255,255,0.42)_0%,rgba(255,255,255,0.1)_36%,rgba(0,0,0,0.14)_100%)]" />
                                             {isMyShinyTier && (
@@ -2338,12 +2341,12 @@ const Home = () => {
                                     </motion.div>
 
                                     {/* Timer */}
-                                    <div className="flex flex-col items-center justify-center mt-5 min-h-[52px]">
+                                    <div className="matchmaking-timer flex flex-col items-center justify-center mt-5 min-h-[52px]">
                                         {status === 'searching' && (
                                             <motion.p
                                                 initial={{ opacity: 0, y: 10 }}
                                                 animate={{ opacity: 1, y: 0 }}
-                                                className="text-4xl font-black font-mono tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300 drop-shadow-lg"
+                                                className="text-4xl font-black font-mono tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-violet-700 to-slate-700 dark:from-white dark:to-gray-300 drop-shadow-lg"
                                             >
                                                 {Math.floor(elapsedTime / 60)}:{(elapsedTime % 60).toString().padStart(2, '0')}
                                             </motion.p>
@@ -2352,7 +2355,7 @@ const Home = () => {
                                             <motion.p
                                                 initial={{ opacity: 0, scale: 0.8 }}
                                                 animate={{ opacity: 1, scale: 1 }}
-                                                className="text-2xl font-black text-yellow-400 drop-shadow-lg animate-pulse"
+                                                className="text-2xl font-black text-amber-600 dark:text-yellow-400 drop-shadow-lg animate-pulse"
                                             >
                                                 {t('matchmaking.found')}
                                             </motion.p>
@@ -2365,7 +2368,7 @@ const Home = () => {
                                             initial={{ scale: 0.8, opacity: 0 }}
                                             animate={{ scale: 1, opacity: 1 }}
                                             transition={{ delay: 0.2 }}
-                                            className="relative bg-slate-50 dark:bg-gray-900/60 border border-white/10 rounded-3xl p-3 shadow-2xl backdrop-blur-sm"
+                                            className="matchmaking-radar relative bg-slate-50 dark:bg-gray-900/60 border border-white/10 rounded-3xl p-3 shadow-2xl backdrop-blur-sm"
                                         >
                                             <HexRadar
                                                 values={myRadarStats}
@@ -2392,7 +2395,7 @@ const Home = () => {
                                                 <motion.div
                                                     initial={{ scale: 0.9, opacity: 0 }}
                                                     animate={{ scale: 1, opacity: 1 }}
-                                                    className={`relative overflow-hidden bg-gradient-to-br ${matchedTierColor} border border-white/35 rounded-2xl px-5 py-4 shadow-xl backdrop-blur-sm min-w-[260px]`}
+                                                    className={`matchmaking-player-card matchmaking-player-card--opponent relative overflow-hidden bg-gradient-to-br ${matchedTierColor} border border-white/35 rounded-2xl px-5 py-4 shadow-xl backdrop-blur-sm min-w-[260px]`}
                                                 >
                                                     <div className="absolute inset-0 pointer-events-none bg-black/10 dark:bg-black/20" />
                                                     <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(120deg,rgba(255,255,255,0.42)_0%,rgba(255,255,255,0.1)_36%,rgba(0,0,0,0.14)_100%)]" />
@@ -2430,7 +2433,7 @@ const Home = () => {
                                         ) : (
                                             /* Searching - Show skeleton */
                                             <>
-                                                <div className="bg-slate-50 dark:bg-gray-900/75 border border-red-400/20 rounded-2xl px-5 py-4 shadow-xl backdrop-blur-sm min-w-[260px]">
+                                                <div className="matchmaking-player-card matchmaking-player-card--skeleton bg-slate-50 dark:bg-gray-900/75 border border-red-400/20 rounded-2xl px-5 py-4 shadow-xl backdrop-blur-sm min-w-[260px]">
                                                     <div className="flex items-center justify-between gap-3">
                                                         <div className="w-11 h-11 rounded-full border-2 border-red-500/40 bg-white dark:bg-gray-800 flex items-center justify-center animate-pulse shrink-0">
                                                             <User size={20} className="text-red-500/40" />
@@ -2448,7 +2451,7 @@ const Home = () => {
                                         {status === 'searching' && (
                                             <button
                                                 onClick={() => { playSound('click'); cancelSearch(); }}
-                                                className="px-10 py-3.5 rounded-2xl bg-white dark:bg-gray-800/60 backdrop-blur-md border border-gray-700 font-bold text-slate-600 dark:text-gray-300 transition-all duration-200 hover:border-red-500/50 hover:bg-white dark:bg-gray-800 hover:text-slate-900 dark:text-white hover:shadow-[0_0_15px_rgba(239,68,68,0.3)] active:scale-[0.98]"
+                                                className="matchmaking-cancel px-10 py-3.5 rounded-2xl bg-white dark:bg-gray-800/60 backdrop-blur-md border border-gray-700 font-bold text-slate-600 dark:text-gray-300 transition-all duration-200 hover:border-red-500/50 hover:bg-white dark:bg-gray-800 hover:text-slate-900 dark:text-white hover:shadow-[0_0_15px_rgba(239,68,68,0.3)] active:scale-[0.98]"
                                             >
                                                 {t('common.cancel')}
                                             </button>
@@ -2462,51 +2465,31 @@ const Home = () => {
             </AnimatePresence>
 
             {/* Main Content */}
-            <div className={`z-10 w-full flex-1 ${mobileMainInsetClass} md:pt-[calc(env(safe-area-inset-top)+1rem)] md:pb-8`}>
+            <div className={`z-10 w-full flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain scrollbar-hide ${mobileMainInsetClass} md:pt-[calc(env(safe-area-inset-top)+1rem)] md:pb-8`}>
                 <motion.div
-                    className="mx-auto h-full w-full max-w-md flex flex-col items-center justify-start md:justify-center gap-4 md:gap-5"
+                    className="mx-auto min-h-full w-full max-w-md flex flex-col items-center justify-start md:justify-center gap-[clamp(0.55rem,1.6dvh,1rem)] md:gap-5"
                     variants={containerVariants}
                     initial="hidden"
                     animate="visible"
                 >
                     {/* Title */}
-                    <motion.div variants={itemVariants} className="text-center">
-                        <h1 className="text-5xl md:text-6xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 drop-shadow-lg">
+                    <motion.div variants={itemVariants} className="home-brand-title text-center">
+                        <div className="home-brand-mascot" aria-hidden="true"><Brain /><Sparkles /></div>
+                        <span className="home-brand-kicker">BRAIN ARCADE</span>
+                        <h1 className="home-brand-wordmark text-[clamp(2.35rem,8.5dvh,3rem)] md:text-6xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 drop-shadow-lg">
                             {t('app.title')}
                         </h1>
-                        <p className="text-slate-500 dark:text-gray-400 mt-2 text-sm uppercase tracking-widest">{t('app.subtitle')}</p>
+                        <p className="text-slate-500 dark:text-gray-400 mt-1 text-[clamp(0.62rem,1.6dvh,0.875rem)] uppercase tracking-widest">{t('app.subtitle')}</p>
                     </motion.div>
 
                     {/* Game Modes */}
-                    <motion.div variants={itemVariants} className="grid w-full grid-cols-2 gap-2.5 md:gap-3">
-
-                        {/* Normal Mode */}
-                        <button
-                            ref={normalModeRef}
-                            onMouseEnter={() => playSound('hover')}
-                            onClick={() => handleModeSelect('normal')}
-                            className="group relative min-h-[148px] w-full overflow-hidden rounded-2xl border border-gray-700 bg-white p-3.5 text-left backdrop-blur-md transition-all duration-200 hover:border-blue-500 hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] active:scale-[0.98] active:border-blue-300 active:bg-blue-400/20 active:shadow-[0_0_28px_rgba(59,130,246,0.5)] active:brightness-125 active:saturate-150 dark:bg-gray-800/50 md:min-h-[164px] md:p-4"
-                        >
-                            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/14 via-blue-500/6 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-active:opacity-100" />
-                            <div className="absolute right-4 top-4 z-10">
-                                <PencilCostChip />
-                            </div>
-                            <div className="relative flex h-full flex-col items-start gap-3">
-                                <div className="rounded-full bg-blue-500/20 p-2.5 transition-colors group-hover:bg-blue-500/30 group-active:bg-blue-500/40">
-                                    <Zap className="h-6 w-6 text-blue-400 transition-colors group-active:text-blue-200" />
-                                </div>
-                                <div className="w-full pr-12">
-                                    <HomeModeTitle className="transition-colors group-hover:text-blue-400 group-active:text-blue-200">{t('menu.normal.title')}</HomeModeTitle>
-                                </div>
-                            </div>
-                        </button>
-
+                    <motion.div variants={itemVariants} className="home-mode-grid grid w-full grid-cols-2 gap-2.5 md:gap-3">
                         {/* Rank Mode */}
                         <button
                             ref={rankModeRef}
                             onMouseEnter={() => playSound('hover')}
                             onClick={() => handleModeSelect('rank')}
-                            className={`group relative min-h-[148px] w-full overflow-hidden rounded-2xl border bg-white p-3.5 text-left backdrop-blur-md transition-all duration-200 dark:bg-gray-800/50 md:min-h-[164px] md:p-4 ${canPlayRank ? 'border-purple-400/55 hover:border-purple-300 hover:shadow-[0_0_18px_rgba(168,85,247,0.22)] active:scale-[0.98] active:border-purple-200 active:bg-purple-400/20 active:shadow-[0_0_24px_rgba(168,85,247,0.28)] active:brightness-125 active:saturate-150 cursor-pointer' : 'border-purple-400/30 opacity-50 grayscale cursor-not-allowed'} ${shouldHighlightRankButton ? 'rank-cta-highlight border-purple-300/90' : ''} ${isRankBurningTime ? 'border-orange-300/80 shadow-[0_0_28px_rgba(249,115,22,0.24)] hover:border-amber-200 hover:shadow-[0_0_34px_rgba(251,146,60,0.36)]' : ''}`}
+                            className={`home-mode-card home-mode-card--rank group relative min-h-[clamp(7rem,20dvh,9.25rem)] w-full overflow-hidden rounded-2xl border bg-white p-[clamp(0.8rem,2dvh,1rem)] text-left backdrop-blur-md transition-all duration-200 dark:bg-gray-800/50 md:min-h-[164px] md:p-4 ${canPlayRank ? 'border-purple-400/65 hover:border-purple-300 hover:shadow-[0_0_18px_rgba(168,85,247,0.22)] active:scale-[0.98] active:border-purple-200 active:bg-purple-400/20 active:shadow-[0_0_24px_rgba(168,85,247,0.28)] active:brightness-125 active:saturate-150 cursor-pointer' : 'border-purple-400/30 opacity-50 grayscale cursor-not-allowed'} ${shouldHighlightRankButton ? 'rank-cta-highlight border-purple-300/90' : ''} ${isRankBurningTime ? 'border-orange-300/80 shadow-[0_0_28px_rgba(249,115,22,0.24)] hover:border-amber-200 hover:shadow-[0_0_34px_rgba(251,146,60,0.36)]' : ''}`}
                         >
                             {shouldHighlightRankButton && (
                                 <div className="rank-cta-sheen absolute inset-0 z-0 pointer-events-none" />
@@ -2531,12 +2514,12 @@ const Home = () => {
                                     <PencilCostChip />
                                 )}
                             </div>
-                            <div className="relative z-10 flex h-full flex-col items-start gap-3">
-                                <div className={`rounded-full p-2.5 transition-colors ${isRankBurningTime ? 'bg-orange-500/18 shadow-[0_0_18px_rgba(251,146,60,0.28)] group-hover:bg-orange-500/24 dark:bg-orange-500/25 dark:shadow-[0_0_18px_rgba(251,146,60,0.35)] dark:group-hover:bg-orange-500/35' : 'bg-purple-500/20 group-hover:bg-purple-500/30 group-active:bg-purple-500/40'}`}>
+                            <div className="relative z-10 flex h-full flex-col items-start gap-[clamp(0.55rem,1.6dvh,0.75rem)]">
+                                <div className={`home-mode-icon rounded-2xl p-[clamp(0.55rem,1.6dvh,0.75rem)] transition-colors ${isRankBurningTime ? 'bg-orange-500/18 shadow-[0_0_18px_rgba(251,146,60,0.28)] group-hover:bg-orange-500/24 dark:bg-orange-500/25 dark:shadow-[0_0_18px_rgba(251,146,60,0.35)] dark:group-hover:bg-orange-500/35' : 'bg-purple-500/20 group-hover:bg-purple-500/30 group-active:bg-purple-500/40'}`}>
                                     {showRankSummary ? (
-                                        <TierIcon className={`h-6 w-6 object-contain transition-colors group-active:text-purple-200 ${isRankBurningTime ? 'text-orange-700 dark:text-amber-300' : 'text-purple-400'}`} />
+                                        <TierIcon className={`h-[clamp(1.35rem,3.6dvh,1.5rem)] w-[clamp(1.35rem,3.6dvh,1.5rem)] object-contain transition-colors group-active:text-purple-200 ${isRankBurningTime ? 'text-orange-700 dark:text-amber-300' : 'text-purple-400'}`} />
                                     ) : (
-                                        <Trophy className={`h-6 w-6 transition-colors group-active:text-purple-200 ${isRankBurningTime ? 'text-orange-700 dark:text-amber-300' : 'text-purple-400'}`} />
+                                        <Trophy className={`h-[clamp(1.35rem,3.6dvh,1.5rem)] w-[clamp(1.35rem,3.6dvh,1.5rem)] transition-colors group-active:text-purple-200 ${isRankBurningTime ? 'text-orange-700 dark:text-amber-300' : 'text-purple-400'}`} />
                                     )}
                                 </div>
                                 <div className="w-full pr-12">
@@ -2566,24 +2549,45 @@ const Home = () => {
                             )}
                         </button>
 
+                        {/* Normal Mode */}
+                        <button
+                            ref={normalModeRef}
+                            onMouseEnter={() => playSound('hover')}
+                            onClick={() => handleModeSelect('normal')}
+                            className="home-mode-card home-mode-card--normal group relative min-h-[clamp(7rem,20dvh,9.25rem)] w-full overflow-hidden rounded-2xl border border-gray-700 bg-white p-[clamp(0.8rem,2dvh,1rem)] text-left backdrop-blur-md transition-all duration-200 hover:border-blue-500 hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] active:scale-[0.98] active:border-blue-300 active:bg-blue-400/20 active:shadow-[0_0_28px_rgba(59,130,246,0.5)] active:brightness-125 active:saturate-150 dark:bg-gray-800/50 md:min-h-[164px] md:p-4"
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/14 via-blue-500/6 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-active:opacity-100" />
+                            <div className="absolute right-4 top-4 z-10">
+                                <PencilCostChip />
+                            </div>
+                            <div className="relative flex h-full flex-col items-start gap-[clamp(0.55rem,1.6dvh,0.75rem)]">
+                                <div className="home-mode-icon rounded-2xl bg-blue-500/20 p-[clamp(0.55rem,1.6dvh,0.75rem)] transition-colors group-hover:bg-blue-500/30 group-active:bg-blue-500/40">
+                                    <Zap className="h-[clamp(1.35rem,3.6dvh,1.5rem)] w-[clamp(1.35rem,3.6dvh,1.5rem)] text-blue-400 transition-colors group-active:text-blue-200" />
+                                </div>
+                                <div className="w-full pr-12">
+                                    <HomeModeTitle className="transition-colors group-hover:text-blue-400 group-active:text-blue-200">{t('menu.normal.title')}</HomeModeTitle>
+                                </div>
+                            </div>
+                        </button>
+
                         {/* Solo Mode */}
                         <button
                             ref={soloModeRef}
                             onMouseEnter={() => playSound('hover')}
                             onClick={handleSoloModeSelect}
                             disabled={isStartingSolo}
-                            className={`group relative min-h-[148px] w-full overflow-hidden rounded-2xl border border-orange-400/45 bg-white p-3.5 text-left backdrop-blur-md transition-all duration-200 dark:bg-gray-800/50 md:min-h-[164px] md:p-4 ${isStartingSolo ? 'cursor-wait opacity-80' : 'hover:border-orange-300 hover:shadow-[0_0_18px_rgba(251,146,60,0.26)] active:scale-[0.98] active:border-orange-200 active:bg-orange-400/20 active:shadow-[0_0_24px_rgba(251,146,60,0.3)] active:brightness-125 active:saturate-150'}`}
+                            className={`home-mode-card home-mode-card--solo group relative min-h-[clamp(7rem,20dvh,9.25rem)] w-full overflow-hidden rounded-2xl border border-orange-400/45 bg-white p-[clamp(0.8rem,2dvh,1rem)] text-left backdrop-blur-md transition-all duration-200 dark:bg-gray-800/50 md:min-h-[164px] md:p-4 ${isStartingSolo ? 'cursor-wait opacity-80' : 'hover:border-orange-300 hover:shadow-[0_0_18px_rgba(251,146,60,0.26)] active:scale-[0.98] active:border-orange-200 active:bg-orange-400/20 active:shadow-[0_0_24px_rgba(251,146,60,0.3)] active:brightness-125 active:saturate-150'}`}
                         >
                             <div className="absolute inset-0 bg-gradient-to-br from-orange-500/14 via-orange-500/6 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-active:opacity-100" />
                             <div className="absolute right-4 top-4 z-10">
                                 <PencilCostChip />
                             </div>
-                            <div className="relative flex h-full flex-col items-start gap-3">
-                                <div className="rounded-full bg-orange-500/20 p-2.5 transition-colors group-hover:bg-orange-500/30 group-active:bg-orange-500/40">
+                            <div className="relative flex h-full flex-col items-start gap-[clamp(0.45rem,1.4dvh,0.625rem)]">
+                                <div className="home-mode-icon rounded-full bg-orange-500/20 p-[clamp(0.55rem,1.6dvh,0.625rem)] transition-colors group-hover:bg-orange-500/30 group-active:bg-orange-500/40">
                                     {isStartingSolo ? (
-                                        <Loader2 className="h-6 w-6 animate-spin text-orange-400 transition-colors group-active:text-orange-200" />
+                                        <Loader2 className="h-[clamp(1.35rem,3.6dvh,1.5rem)] w-[clamp(1.35rem,3.6dvh,1.5rem)] animate-spin text-orange-400 transition-colors group-active:text-orange-200" />
                                     ) : (
-                                        <User className="h-6 w-6 text-orange-400 transition-colors group-active:text-orange-200" />
+                                        <User className="h-[clamp(1.35rem,3.6dvh,1.5rem)] w-[clamp(1.35rem,3.6dvh,1.5rem)] text-orange-400 transition-colors group-active:text-orange-200" />
                                     )}
                                 </div>
                                 <div className="w-full pr-12">
@@ -2597,12 +2601,12 @@ const Home = () => {
                             ref={practiceModeRef}
                             onMouseEnter={() => playSound('hover')}
                             onClick={() => handleModeSelect('practice')}
-                            className="group relative min-h-[148px] w-full overflow-hidden rounded-2xl border border-green-500/45 bg-white p-3.5 text-left backdrop-blur-md transition-all duration-200 hover:border-green-400 hover:shadow-[0_0_20px_rgba(34,197,94,0.5)] active:scale-[0.98] active:border-green-300 active:bg-green-400/20 active:shadow-[0_0_28px_rgba(34,197,94,0.5)] active:brightness-125 active:saturate-150 dark:bg-gray-800/50 md:min-h-[164px] md:p-4"
+                            className="home-mode-card home-mode-card--practice group relative min-h-[clamp(7rem,20dvh,9.25rem)] w-full overflow-hidden rounded-2xl border border-green-500/45 bg-white p-[clamp(0.8rem,2dvh,1rem)] text-left backdrop-blur-md transition-all duration-200 hover:border-green-400 hover:shadow-[0_0_20px_rgba(34,197,94,0.5)] active:scale-[0.98] active:border-green-300 active:bg-green-400/20 active:shadow-[0_0_28px_rgba(34,197,94,0.5)] active:brightness-125 active:saturate-150 dark:bg-gray-800/50 md:min-h-[164px] md:p-4"
                         >
                             <div className="absolute inset-0 bg-gradient-to-br from-green-500/14 via-green-500/6 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-active:opacity-100" />
-                            <div className="relative flex h-full flex-col items-start gap-3">
-                                <div className="rounded-full bg-green-500/20 p-2.5 transition-colors group-hover:bg-green-500/30 group-active:bg-green-500/40">
-                                    <Dumbbell className="h-6 w-6 text-green-400 transition-colors group-active:text-green-200" />
+                            <div className="relative flex h-full flex-col items-start gap-[clamp(0.45rem,1.4dvh,0.625rem)]">
+                                <div className="home-mode-icon rounded-full bg-green-500/20 p-[clamp(0.55rem,1.6dvh,0.625rem)] transition-colors group-hover:bg-green-500/30 group-active:bg-green-500/40">
+                                    <Dumbbell className="h-[clamp(1.35rem,3.6dvh,1.5rem)] w-[clamp(1.35rem,3.6dvh,1.5rem)] text-green-400 transition-colors group-active:text-green-200" />
                                 </div>
                                 <div className="w-full">
                                     <HomeModeTitle className="transition-colors group-hover:text-green-400 group-active:text-green-200">{t('menu.practice.title')}</HomeModeTitle>
@@ -2612,7 +2616,7 @@ const Home = () => {
                     </motion.div>
 
                     {/* Footer Buttons */}
-                    <motion.div variants={itemVariants} className="hidden md:grid grid-cols-2 gap-4 w-full mt-4">
+                    <motion.div variants={itemVariants} className="home-desktop-nav hidden md:grid grid-cols-2 gap-4 w-full mt-4">
                         <button
                             ref={rankingBtnRef}
                             onMouseEnter={() => playSound('hover')}
@@ -2673,7 +2677,7 @@ const Home = () => {
                 </motion.div>
             </div>
 
-            <div className="fixed md:hidden bottom-0 inset-x-0 z-20 border-t border-white/10 bg-slate-50 dark:bg-gray-900/90 backdrop-blur-xl px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-2">
+            <div className="home-mobile-nav fixed md:hidden bottom-0 inset-x-0 z-20 border-t border-white/10 bg-slate-50 dark:bg-gray-900/90 backdrop-blur-xl px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-2">
                 <div className="mx-auto grid w-full max-w-md grid-cols-4 gap-2">
                     <button
                         ref={mobileRankingBtnRef}

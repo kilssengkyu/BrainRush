@@ -1,6 +1,3 @@
--- For high-score users (>1500), pick bot ghost from the lowest 5 scores (random).
--- Otherwise, keep the existing nearest-3 random behavior.
-
 CREATE OR REPLACE FUNCTION public.pick_ghost_timeline(p_player_id text, p_game_type text)
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -24,26 +21,45 @@ BEGIN
     END IF;
 
     IF v_target_score > 1500 THEN
-        WITH bottom_ghosts AS (
+        -- 내 점수보다 낮은 점수 중 "가장 가까운 아래 3개"에서 랜덤
+        WITH lower_ghosts AS (
             SELECT gs.score_timeline
             FROM ghost_scores gs
             WHERE gs.game_type = p_game_type
               AND gs.final_score > 0
-            ORDER BY gs.final_score ASC, random()
+              AND gs.final_score < v_target_score
+            ORDER BY gs.final_score DESC, random()
             LIMIT 3
         )
-        SELECT bg.score_timeline
+        SELECT lg.score_timeline
         INTO v_timeline
-        FROM bottom_ghosts bg
+        FROM lower_ghosts lg
         ORDER BY random()
         LIMIT 1;
+
+        -- 아래 점수가 부족하면 기존 nearest-3으로 fallback
+        IF v_timeline IS NULL THEN
+            WITH nearest_ghosts AS (
+                SELECT gs.score_timeline
+                FROM ghost_scores gs
+                WHERE gs.game_type = p_game_type
+                  AND gs.final_score > 0
+                ORDER BY ABS(gs.final_score - v_target_score), random()
+                LIMIT 3
+            )
+            SELECT ng.score_timeline
+            INTO v_timeline
+            FROM nearest_ghosts ng
+            ORDER BY random()
+            LIMIT 1;
+        END IF;
     ELSE
         WITH nearest_ghosts AS (
             SELECT gs.score_timeline
             FROM ghost_scores gs
             WHERE gs.game_type = p_game_type
               AND gs.final_score > 0
-            ORDER BY ABS(gs.final_score - COALESCE(v_target_score, 0)), random()
+            ORDER BY ABS(gs.final_score - v_target_score), random()
             LIMIT 3
         )
         SELECT ng.score_timeline

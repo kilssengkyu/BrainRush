@@ -25,7 +25,8 @@
     "exitAppConfirm": "Möchtest du die App beenden?",
     "open": "Öffnen",
     "exit": "Beenden",
-    "start": "Start"
+    "start": "Start",
+    "ok": "OK"
   },
   "auth": {
     "loginRequired": "Anmeldung erforderlich.",
@@ -100,8 +101,8 @@
     },
     "rank": {
       "title": "Rangmodus",
-      "subtitle": "Weltweit konkurrieren",
-      "matchRule": "Best of 5 (3 Siege)",
+      "subtitle": "Best of 3 gegen ähnlich starke Gegner",
+      "matchRule": "Best of 3 (2 Siege)",
       "burningTime": "Brennzeit",
       "burningTimeBenefit": "Kein Stiftverbrauch"
     },
@@ -208,7 +209,8 @@
     "dailyFreeGoldAlreadyClaimed": "You already claimed today’s free gold.",
     "dailyFreeGoldClaimFailed": "Failed to claim the free gold.",
     "dailyFreePencilAdDesc": "Watch an ad to claim it one more time today.",
-    "rewardTitle": "Erhalten"
+    "rewardTitle": "Erhalten",
+    "premiumTab": "Premium"
   },
   "leaderboard": {
     "button": "Rangliste",
@@ -716,7 +718,10 @@
     "noItemDesc": "Du hast keine Items, daher startet diese Runde ohne Items.",
     "playWithoutItems": "Trotzdem spielen",
     "goToShop": "Zum Shop",
-    "waitForRecharge": "Warten"
+    "waitForRecharge": "Warten",
+    "inventoryTitle": "Inventar",
+    "inventoryEmpty": "Du hast keine Items.",
+    "inventoryLoadFail": "Inventar konnte nicht geladen werden."
   },
   "login": {
     "bannedTitle": "Account Suspended",
@@ -747,7 +752,16 @@
     "claim": "Claim",
     "claimed": "Claimed",
     "claimSuccess": "Reward claimed. (+{{pencils}} pencils, +{{notes}} practice notes)",
-    "claimBlockedPencilsFull": "Du kannst dies nicht einlösen, solange du 5 oder mehr Stifte hast. Bitte verbrauche zuerst Stifte."
+    "claimBlockedPencilsFull": "Du kannst dies nicht einlösen, solange du 5 oder mehr Stifte hast. Bitte verbrauche zuerst Stifte.",
+    "emptyUnread": "Keine ungelesenen Nachrichten.",
+    "emptyRead": "Keine gelesenen Nachrichten.",
+    "deleteUnread": "Loeschen",
+    "deleteUnreadSuccess": "Ungelesene Nachricht geloescht.",
+    "deleteReadAll": "Alle gelesenen loeschen",
+    "deleting": "Wird geloescht...",
+    "deleteReadAllBlockedByClaimable": "Gelesene Nachrichten mit abholbaren Belohnungen koennen nicht geloescht werden.",
+    "deleteReadAllSuccess": "{{count}} gelesene Nachrichten geloescht.",
+    "deleteReadAllSkippedClaimable": "{{count}} Nachrichten mit abholbaren Belohnungen bleiben erhalten."
   },
   "solo": {
     "complete": "Solo abgeschlossen!",

@@ -21,7 +21,8 @@
     "exitAppConfirm": "アプリを終了しますか？",
     "open": "開く",
     "exit": "終了",
-    "start": "スタート"
+    "start": "スタート",
+    "ok": "OK"
   },
   "auth": {
     "loginRequired": "ログインが必要です。",
@@ -45,9 +46,9 @@
       "matchRule": "3本勝負（2本先取）"
     },
     "rank": {
-      "title": "ランク戦",
-      "subtitle": "世界中のプレイヤーと競争",
-      "matchRule": "5本勝負（3本先取）",
+      "title": "ランクモード",
+      "subtitle": "近い実力の相手と3本勝負",
+      "matchRule": "3本勝負（2本先取）",
       "burningTime": "バーニングタイム",
       "burningTimeBenefit": "鉛筆消費なし"
     },
@@ -154,7 +155,8 @@
     "dailyFreeGoldAlreadyClaimed": "今日の無料ゴールドはすでに受け取り済みです。",
     "dailyFreeGoldClaimFailed": "無料ゴールドの受け取りに失敗しました。",
     "dailyFreePencilAdDesc": "広告を見ると、今日もう一度受け取れます。",
-    "rewardTitle": "獲得"
+    "rewardTitle": "獲得",
+    "premiumTab": "プレミアム"
   },
   "social": {
     "friends": "フレンド",
@@ -712,7 +714,10 @@
     "noItemDesc": "所持アイテムがないため、この試合はアイテムなしで開始します。",
     "playWithoutItems": "そのまま遊ぶ",
     "goToShop": "ショップへ",
-    "waitForRecharge": "待つ"
+    "waitForRecharge": "待つ",
+    "inventoryTitle": "インベントリ",
+    "inventoryEmpty": "所持アイテムがありません。",
+    "inventoryLoadFail": "インベントリを読み込めませんでした。"
   },
   "login": {
     "bannedTitle": "Account Suspended",
@@ -747,7 +752,16 @@
     "claim": "受け取る",
     "claimed": "受け取り済み",
     "claimSuccess": "報酬を受け取りました。(+{{pencils}} 鉛筆, +{{notes}} 練習ノート)",
-    "claimBlockedPencilsFull": "鉛筆が5本以上ある間は受け取れません。先に鉛筆を使ってください。"
+    "claimBlockedPencilsFull": "鉛筆が5本以上ある間は受け取れません。先に鉛筆を使ってください。",
+    "emptyUnread": "未読メールはありません。",
+    "emptyRead": "既読メールはありません。",
+    "deleteUnread": "削除",
+    "deleteUnreadSuccess": "未読メールを削除しました。",
+    "deleteReadAll": "既読メールをすべて削除",
+    "deleting": "削除中...",
+    "deleteReadAllBlockedByClaimable": "受け取れる報酬がある既読メールは削除できません。",
+    "deleteReadAllSuccess": "既読メール{{count}}件を削除しました。",
+    "deleteReadAllSkippedClaimable": "受け取れる報酬がある{{count}}件のメールは残ります。"
   },
   "solo": {
     "complete": "ひとりプレイ完了！",

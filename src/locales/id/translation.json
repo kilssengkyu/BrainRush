@@ -25,7 +25,8 @@
     "exitAppConfirm": "Apakah Anda ingin keluar dari aplikasi?",
     "open": "Buka",
     "exit": "Keluar",
-    "start": "Mulai"
+    "start": "Mulai",
+    "ok": "OK"
   },
   "auth": {
     "loginRequired": "Login diperlukan.",
@@ -100,8 +101,8 @@
     },
     "rank": {
       "title": "Mode Rank",
-      "subtitle": "Bersaing secara global",
-      "matchRule": "Best of 5 (menang 3)",
+      "subtitle": "Best of 3 melawan rival seimbang",
+      "matchRule": "Best of 3 (menang 2)",
       "burningTime": "Waktu Burning",
       "burningTimeBenefit": "Tidak memakai pensil"
     },
@@ -208,7 +209,8 @@
     "dailyFreeGoldAlreadyClaimed": "You already claimed today’s free gold.",
     "dailyFreeGoldClaimFailed": "Failed to claim the free gold.",
     "dailyFreePencilAdDesc": "Watch an ad to claim it one more time today.",
-    "rewardTitle": "Diperoleh"
+    "rewardTitle": "Diperoleh",
+    "premiumTab": "Premium"
   },
   "leaderboard": {
     "button": "Peringkat",
@@ -716,7 +718,10 @@
     "noItemDesc": "Kamu tidak punya item, jadi pertandingan ini akan dimulai tanpa item.",
     "playWithoutItems": "Tetap main",
     "goToShop": "Ke toko",
-    "waitForRecharge": "Tunggu"
+    "waitForRecharge": "Tunggu",
+    "inventoryTitle": "Inventaris",
+    "inventoryEmpty": "Kamu tidak memiliki item.",
+    "inventoryLoadFail": "Gagal memuat inventaris."
   },
   "login": {
     "bannedTitle": "Account Suspended",
@@ -747,7 +752,16 @@
     "claim": "Claim",
     "claimed": "Claimed",
     "claimSuccess": "Reward claimed. (+{{pencils}} pencils, +{{notes}} practice notes)",
-    "claimBlockedPencilsFull": "Kamu tidak dapat mengklaim ini saat memiliki 5 atau lebih pensil. Gunakan pensil terlebih dahulu."
+    "claimBlockedPencilsFull": "Kamu tidak dapat mengklaim ini saat memiliki 5 atau lebih pensil. Gunakan pensil terlebih dahulu.",
+    "emptyUnread": "Tidak ada surat belum dibaca.",
+    "emptyRead": "Tidak ada surat yang sudah dibaca.",
+    "deleteUnread": "Hapus",
+    "deleteUnreadSuccess": "Surat belum dibaca dihapus.",
+    "deleteReadAll": "Hapus semua surat terbaca",
+    "deleting": "Menghapus...",
+    "deleteReadAllBlockedByClaimable": "Surat terbaca dengan hadiah yang bisa diklaim tidak dapat dihapus.",
+    "deleteReadAllSuccess": "{{count}} surat terbaca dihapus.",
+    "deleteReadAllSkippedClaimable": "{{count}} surat dengan hadiah yang bisa diklaim akan tetap disimpan."
   },
   "solo": {
     "complete": "Solo selesai!",

@@ -25,7 +25,8 @@
     "exitAppConfirm": "Voulez-vous quitter l'application ?",
     "open": "Ouvrir",
     "exit": "Quitter",
-    "start": "Commencer"
+    "start": "Commencer",
+    "ok": "OK"
   },
   "auth": {
     "loginRequired": "Connexion requise.",
@@ -99,9 +100,9 @@
       "matchRule": "BO3 (2 manches gagnantes)"
     },
     "rank": {
-      "title": "Mode classé",
-      "subtitle": "Compétition mondiale",
-      "matchRule": "BO5 (3 manches gagnantes)",
+      "title": "Mode classe",
+      "subtitle": "BO3 contre un rival de niveau proche",
+      "matchRule": "BO3 (2 manches gagnantes)",
       "burningTime": "Heure bonus",
       "burningTimeBenefit": "Aucun crayon consommé"
     },
@@ -208,7 +209,8 @@
     "dailyFreeGoldAlreadyClaimed": "You already claimed today’s free gold.",
     "dailyFreeGoldClaimFailed": "Failed to claim the free gold.",
     "dailyFreePencilAdDesc": "Watch an ad to claim it one more time today.",
-    "rewardTitle": "Obtenu"
+    "rewardTitle": "Obtenu",
+    "premiumTab": "Premium"
   },
   "leaderboard": {
     "button": "Classement",
@@ -716,7 +718,10 @@
     "noItemDesc": "Vous n'avez aucun objet, cette partie commencera donc sans objets.",
     "playWithoutItems": "Jouer quand même",
     "goToShop": "Aller à la boutique",
-    "waitForRecharge": "Attendre"
+    "waitForRecharge": "Attendre",
+    "inventoryTitle": "Inventaire",
+    "inventoryEmpty": "Vous n’avez aucun objet.",
+    "inventoryLoadFail": "Impossible de charger l’inventaire."
   },
   "login": {
     "bannedTitle": "Account Suspended",
@@ -747,7 +752,16 @@
     "claim": "Claim",
     "claimed": "Claimed",
     "claimSuccess": "Reward claimed. (+{{pencils}} pencils, +{{notes}} practice notes)",
-    "claimBlockedPencilsFull": "Vous ne pouvez pas recuperer ceci tant que vous avez 5 crayons ou plus. Utilisez d'abord des crayons."
+    "claimBlockedPencilsFull": "Vous ne pouvez pas recuperer ceci tant que vous avez 5 crayons ou plus. Utilisez d'abord des crayons.",
+    "emptyUnread": "Aucun courrier non lu.",
+    "emptyRead": "Aucun courrier lu.",
+    "deleteUnread": "Supprimer",
+    "deleteUnreadSuccess": "Courrier non lu supprime.",
+    "deleteReadAll": "Supprimer tous les courriers lus",
+    "deleting": "Suppression...",
+    "deleteReadAllBlockedByClaimable": "Les courriers lus avec des recompenses a recuperer ne peuvent pas etre supprimes.",
+    "deleteReadAllSuccess": "{{count}} courriers lus supprimes.",
+    "deleteReadAllSkippedClaimable": "{{count}} courriers avec recompenses a recuperer seront conserves."
   },
   "solo": {
     "complete": "Mode Solo terminé !",

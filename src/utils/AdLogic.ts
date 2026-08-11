@@ -2,11 +2,11 @@ import { AdMob } from '@capacitor-community/admob';
 import { Capacitor } from '@capacitor/core';
 
 const AD_COUNTER_KEY = 'brainrush_ad_counter';
-const AD_FREQUENCY = 2;
+const AD_FREQUENCY = 3;
 const AD_LAST_OUTCOME_KEY = 'brainrush_ad_last_outcome';
 const AD_STREAK_COUNT_KEY = 'brainrush_ad_streak_count';
 const AD_LOSE_SKIP_ONCE_KEY = 'brainrush_ad_lose_skip_once';
-const FORCE_DISABLE_INTERSTITIAL_ADS = true;
+const FORCE_DISABLE_INTERSTITIAL_ADS = false;
 
 // Production Ad Unit IDs
 const ADS = {

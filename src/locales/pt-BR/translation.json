@@ -25,7 +25,8 @@
     "exitAppConfirm": "Deseja sair do app?",
     "open": "Abrir",
     "exit": "Sair",
-    "start": "Começar"
+    "start": "Começar",
+    "ok": "OK"
   },
   "auth": {
     "loginRequired": "Login obrigatório.",
@@ -99,9 +100,9 @@
       "matchRule": "Melhor de 3 (vence 2)"
     },
     "rank": {
-      "title": "Modo Ranqueado",
-      "subtitle": "Compita globalmente",
-      "matchRule": "Melhor de 5 (vence 3)",
+      "title": "Modo ranqueado",
+      "subtitle": "Melhor de 3 contra rival parecido",
+      "matchRule": "Melhor de 3 (vence 2)",
       "burningTime": "Horário bônus",
       "burningTimeBenefit": "Sem custo de lápis"
     },
@@ -208,7 +209,8 @@
     "dailyFreeGoldAlreadyClaimed": "You already claimed today’s free gold.",
     "dailyFreeGoldClaimFailed": "Failed to claim the free gold.",
     "dailyFreePencilAdDesc": "Watch an ad to claim it one more time today.",
-    "rewardTitle": "Recebido"
+    "rewardTitle": "Recebido",
+    "premiumTab": "Premium"
   },
   "leaderboard": {
     "button": "Ranking",
@@ -716,7 +718,10 @@
     "noItemDesc": "Você não tem itens, então esta partida começará sem itens.",
     "playWithoutItems": "Jogar mesmo assim",
     "goToShop": "Ir para a loja",
-    "waitForRecharge": "Aguardar"
+    "waitForRecharge": "Aguardar",
+    "inventoryTitle": "Inventario",
+    "inventoryEmpty": "Voce nao tem itens.",
+    "inventoryLoadFail": "Falha ao carregar o inventario."
   },
   "login": {
     "bannedTitle": "Account Suspended",
@@ -747,7 +752,16 @@
     "claim": "Claim",
     "claimed": "Claimed",
     "claimSuccess": "Reward claimed. (+{{pencils}} pencils, +{{notes}} practice notes)",
-    "claimBlockedPencilsFull": "Voce nao pode resgatar isso enquanto tiver 5 ou mais lapis. Use lapis primeiro."
+    "claimBlockedPencilsFull": "Voce nao pode resgatar isso enquanto tiver 5 ou mais lapis. Use lapis primeiro.",
+    "emptyUnread": "Nao ha correio nao lido.",
+    "emptyRead": "Nao ha correio lido.",
+    "deleteUnread": "Excluir",
+    "deleteUnreadSuccess": "Correio nao lido excluido.",
+    "deleteReadAll": "Excluir todos os lidos",
+    "deleting": "Excluindo...",
+    "deleteReadAllBlockedByClaimable": "Correios lidos com recompensas para resgatar nao podem ser excluidos.",
+    "deleteReadAllSuccess": "{{count}} correios lidos excluidos.",
+    "deleteReadAllSkippedClaimable": "{{count}} correios com recompensas para resgatar serao mantidos."
   },
   "solo": {
     "complete": "Modo Solo concluído!",

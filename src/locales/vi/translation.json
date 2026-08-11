@@ -25,7 +25,8 @@
     "exitAppConfirm": "Bạn có muốn thoát ứng dụng không?",
     "open": "Mở",
     "exit": "Thoát",
-    "start": "Bắt đầu"
+    "start": "Bắt đầu",
+    "ok": "OK"
   },
   "auth": {
     "loginRequired": "Yêu cầu đăng nhập.",
@@ -99,9 +100,9 @@
       "matchRule": "Thắng 2 trong 3 ván"
     },
     "rank": {
-      "title": "Chế độ Xếp hạng",
-      "subtitle": "Thi đấu toàn cầu",
-      "matchRule": "Thắng 3 trong 5 ván",
+      "title": "Chế độ xếp hạng",
+      "subtitle": "Thắng 2 trong 3 ván với đối thủ ngang tầm",
+      "matchRule": "Thắng 2 trong 3 ván",
       "burningTime": "Giờ bùng nổ",
       "burningTimeBenefit": "Không tốn bút chì"
     },
@@ -208,7 +209,8 @@
     "dailyFreeGoldAlreadyClaimed": "You already claimed today’s free gold.",
     "dailyFreeGoldClaimFailed": "Failed to claim the free gold.",
     "dailyFreePencilAdDesc": "Watch an ad to claim it one more time today.",
-    "rewardTitle": "Đã nhận"
+    "rewardTitle": "Đã nhận",
+    "premiumTab": "Cao cấp"
   },
   "leaderboard": {
     "button": "Bảng xếp hạng",
@@ -716,7 +718,10 @@
     "noItemDesc": "Bạn không có vật phẩm nào, nên trận này sẽ bắt đầu mà không có vật phẩm.",
     "playWithoutItems": "Vẫn chơi",
     "goToShop": "Đến cửa hàng",
-    "waitForRecharge": "Chờ"
+    "waitForRecharge": "Chờ",
+    "inventoryTitle": "Túi đồ",
+    "inventoryEmpty": "Bạn không có vật phẩm nào.",
+    "inventoryLoadFail": "Không thể tải túi đồ."
   },
   "login": {
     "bannedTitle": "Account Suspended",
@@ -747,7 +752,16 @@
     "claim": "Claim",
     "claimed": "Claimed",
     "claimSuccess": "Reward claimed. (+{{pencils}} pencils, +{{notes}} practice notes)",
-    "claimBlockedPencilsFull": "Ban khong the nhan khi co tu 5 but chi tro len. Hay dung but chi truoc."
+    "claimBlockedPencilsFull": "Ban khong the nhan khi co tu 5 but chi tro len. Hay dung but chi truoc.",
+    "emptyUnread": "Không có thư chưa đọc.",
+    "emptyRead": "Không có thư đã đọc.",
+    "deleteUnread": "Xóa",
+    "deleteUnreadSuccess": "Đã xóa thư chưa đọc.",
+    "deleteReadAll": "Xóa tất cả thư đã đọc",
+    "deleting": "Đang xóa...",
+    "deleteReadAllBlockedByClaimable": "Không thể xóa thư đã đọc có phần thưởng có thể nhận.",
+    "deleteReadAllSuccess": "Đã xóa {{count}} thư đã đọc.",
+    "deleteReadAllSkippedClaimable": "{{count}} thư có phần thưởng có thể nhận sẽ được giữ lại."
   },
   "solo": {
     "complete": "Hoàn thành chơi một mình!",

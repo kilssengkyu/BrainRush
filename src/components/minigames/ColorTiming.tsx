@@ -334,7 +334,7 @@ const ColorTiming: React.FC<ColorTimingProps> = ({ onScore, isPlaying }) => {
 
     return (
         <div
-            className="w-full h-full relative overflow-hidden rounded-3xl bg-gradient-to-b from-gray-900/70 to-black/60 border border-white/10 select-none"
+            className="w-full h-full relative overflow-hidden rounded-3xl bg-gradient-to-b from-sky-100/95 to-violet-100/90 dark:from-gray-900/70 dark:to-black/60 border border-slate-300 dark:border-white/10 select-none"
             onPointerDown={handleAreaPointerDown}
             onTouchStart={handleAreaTouchStart}
         >
@@ -348,21 +348,21 @@ const ColorTiming: React.FC<ColorTimingProps> = ({ onScore, isPlaying }) => {
                     laneFlash.right === 'good' ? 'bg-green-500/16' : laneFlash.right === 'bad' ? 'bg-red-500/16' : 'bg-transparent'
                 }`}
             />
-            <div className="absolute inset-y-0 left-1/2 w-px bg-white/10" />
+            <div className="absolute inset-y-0 left-1/2 w-px bg-slate-300 dark:bg-white/10" />
             {renderTarget('left')}
             {renderTarget('right')}
             {showTouchHint && (
                 <>
                     <div className="absolute inset-y-0 left-0 w-1/2 bg-blue-500/22 animate-pulse pointer-events-none">
                         <div className="absolute inset-0 flex items-center justify-center">
-                            <span className="text-blue-100 text-4xl font-black tracking-widest drop-shadow-[0_0_10px_rgba(59,130,246,0.9)]">
+                            <span className="text-blue-700 dark:text-blue-100 text-4xl font-black tracking-widest drop-shadow-[0_0_10px_rgba(59,130,246,0.55)]">
                                 TOUCH
                             </span>
                         </div>
                     </div>
                     <div className="absolute inset-y-0 right-0 w-1/2 bg-red-500/22 animate-pulse pointer-events-none">
                         <div className="absolute inset-0 flex items-center justify-center">
-                            <span className="text-red-100 text-4xl font-black tracking-widest drop-shadow-[0_0_10px_rgba(248,113,113,0.9)]">
+                            <span className="text-red-700 dark:text-red-100 text-4xl font-black tracking-widest drop-shadow-[0_0_10px_rgba(248,113,113,0.55)]">
                                 TOUCH
                             </span>
                         </div>
@@ -374,7 +374,7 @@ const ColorTiming: React.FC<ColorTimingProps> = ({ onScore, isPlaying }) => {
             {feedback && (
                 <div
                     className={`absolute top-[18%] ${feedback.lane === 'left' ? 'left-1/4 -translate-x-1/2' : 'left-3/4 -translate-x-1/2'} text-xl font-black ${
-                        feedback.tone === 'perfect' ? 'text-yellow-300' : feedback.tone === 'good' ? 'text-green-300' : 'text-red-300'
+                        feedback.tone === 'perfect' ? 'text-amber-600 dark:text-yellow-300' : feedback.tone === 'good' ? 'text-green-600 dark:text-green-300' : 'text-red-600 dark:text-red-300'
                     } drop-shadow-lg`}
                 >
                     {feedback.text}

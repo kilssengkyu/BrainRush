@@ -26,7 +26,7 @@ VALUES
     ('bot_du3l9s6u2', '민트라떼', NULL, 'KR', 1270),
     ('bot_dv7m4t1v6', 'blipblop', NULL, 'NL', 1300),
     ('bot_dw2n8u5w3', 'chai00', NULL, 'IN', 1330),
-    ('bot_dx6p3v9x7', '대충누름', NULL, 'KR', 1360),
+    ('bot_dx6p3v9x7', 'dsfsdf', NULL, 'KR', 1360),
     ('bot_dy1q7w4y2', 'nyaaaan', NULL, 'JP', 1390),
     ('bot_dz5r2x8z6', 'coffeez', NULL, 'US', 1420),
     ('bot_ea9s6y3a1', 'kkkkk', NULL, 'KR', 1450),
@@ -39,7 +39,7 @@ VALUES
     ('bot_eh1z7f4h2', 'tktk22', NULL, 'TH', 1680),
     ('bot_ei5a2g8j6', 'ねむたい', NULL, 'JP', 1720),
     ('bot_ej9b6h3k1', 'notabot', NULL, 'CA', 1760),
-    ('bot_ek4c1j7l5', '홍만두', NULL, 'KR', 1800),
+    ('bot_ek4c1j7l5', 'ㅂㅂㅈ', NULL, 'KR', 1800),
     ('bot_el8d5k2m9', 'v_vvv', NULL, 'DE', 1840),
     ('bot_em3e9l6n4', 'すいか', NULL, 'JP', 1880),
     ('bot_en7f4m1p8', '누가더빠름', NULL, 'KR', 1920)

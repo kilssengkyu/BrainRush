@@ -3,6 +3,14 @@
     "title": "BrainRush",
     "subtitle": "Speed & Intelligence"
   },
+  "themeUpdate": {
+    "kicker": "새로운 모습",
+    "title": "브레인러시가 더 게임답게 바뀌었어요!",
+    "description": "새로운 두뇌 아케이드 테마를 기본으로 적용했어요. 익숙한 기존 테마도 언제든 다시 선택할 수 있어요.",
+    "confirm": "새 테마로 시작",
+    "useClassic": "원래 테마로 돌아가기",
+    "openSettings": "설정에서 직접 고르기"
+  },
   "common": {
     "cancel": "취소",
     "confirm": "확인",
@@ -25,7 +33,8 @@
     "exitAppConfirm": "앱을 종료하시겠습니까?",
     "open": "열기",
     "exit": "나가기",
-    "start": "시작"
+    "start": "시작",
+    "ok": "확인"
   },
   "auth": {
     "loginRequired": "로그인이 필요합니다.",
@@ -99,9 +108,9 @@
       "matchRule": "3판 2선승"
     },
     "rank": {
-      "title": "랭크 모드",
-      "subtitle": "전 세계 플레이어와 경쟁",
-      "matchRule": "5판 3선승",
+      "title": "랭크모드",
+      "subtitle": "비슷한 상대와 3판 승부",
+      "matchRule": "3판 2선승",
       "burningTime": "버닝타임",
       "burningTimeBenefit": "연필 소모 없음"
     },
@@ -208,7 +217,8 @@
     "dailyFreeGoldAlreadyClaimed": "오늘의 무료 골드는 이미 받았습니다.",
     "dailyFreeGoldClaimFailed": "무료 골드 수령에 실패했습니다.",
     "dailyFreePencilAdDesc": "광고를 보고 오늘 한 번 더 받을 수 있어요.",
-    "rewardTitle": "획득"
+    "rewardTitle": "획득",
+    "premiumTab": "프리미엄"
   },
   "leaderboard": {
     "button": "랭킹",
@@ -296,6 +306,12 @@
     "notificationNativeHint": "웹에서는 알림 토글이 비활성화됩니다.",
     "recommended": "추천",
     "theme": "테마",
+    "visualStyle": "UI 스타일",
+    "visualStyleDesc": "메뉴와 게임 화면의 분위기를 선택하세요.",
+    "playfulTheme": "두뇌 아케이드",
+    "playfulThemeDesc": "게임답고 아기자기하게",
+    "classicTheme": "클래식",
+    "classicThemeDesc": "기존의 익숙한 화면",
     "themeMode": "표시 모드",
     "systemThemeDesc": "기기 설정을 따릅니다.",
     "darkMode": "다크 모드",
@@ -498,7 +514,10 @@
     "noItemDesc": "보유한 아이템이 없어 이번 판에서는 아이템 없이 시작합니다.",
     "playWithoutItems": "그냥 하기",
     "goToShop": "상점으로",
-    "waitForRecharge": "기다리기"
+    "waitForRecharge": "기다리기",
+    "inventoryTitle": "인벤토리",
+    "inventoryEmpty": "보유한 아이템이 없습니다.",
+    "inventoryLoadFail": "인벤토리를 불러오지 못했습니다."
   },
   "rps": {
     "ready": "준비...",
@@ -751,7 +770,16 @@
     "claim": "수령",
     "claimed": "수령 완료",
     "claimSuccess": "보상을 수령했습니다. (+{{pencils}} 연필, +{{notes}} 연습노트)",
-    "claimBlockedPencilsFull": "연필이 5개 이상이면 수령할 수 없습니다. 먼저 연필을 사용해 주세요."
+    "claimBlockedPencilsFull": "연필이 5개 이상이면 수령할 수 없습니다. 먼저 연필을 사용해 주세요.",
+    "emptyUnread": "안읽은 우편이 없습니다.",
+    "emptyRead": "읽은 우편이 없습니다.",
+    "deleteUnread": "삭제",
+    "deleteUnreadSuccess": "안읽은 우편을 삭제했습니다.",
+    "deleteReadAll": "읽은 우편 전체 삭제",
+    "deleting": "삭제 중...",
+    "deleteReadAllBlockedByClaimable": "수령 가능한 보상이 있는 읽은 우편은 삭제할 수 없습니다.",
+    "deleteReadAllSuccess": "읽은 우편 {{count}}개를 삭제했습니다.",
+    "deleteReadAllSkippedClaimable": "수령 가능한 보상이 있는 {{count}}개 우편은 유지됩니다."
   },
   "solo": {
     "complete": "혼자하기 완료!",

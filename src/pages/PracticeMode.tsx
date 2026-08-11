@@ -384,7 +384,7 @@ const PracticeMode = () => {
 
     return (
         <div
-            className={`h-[100dvh] flex flex-col p-4 pt-[calc(env(safe-area-inset-top)+1rem)] pb-[calc(env(safe-area-inset-bottom)+1rem)] relative overflow-hidden bg-slate-50 dark:bg-gray-900 text-slate-900 dark:text-white`}
+            className={`practice-screen h-[100dvh] flex flex-col p-4 pt-[calc(env(safe-area-inset-top)+1rem)] pb-[calc(env(safe-area-inset-bottom)+1rem)] relative overflow-hidden bg-slate-50 dark:bg-gray-900 text-slate-900 dark:text-white`}
             onTouchStart={handleEdgeSwipeStart}
             onTouchMove={handleEdgeSwipeMove}
             onTouchEnd={handleEdgeSwipeEnd}
@@ -394,7 +394,7 @@ const PracticeMode = () => {
             <div className={`absolute top-0 left-0 w-full h-full pointer-events-none bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white via-slate-100 to-slate-200 dark:from-gray-800 dark:via-gray-900 dark:to-black`} />
 
             {/* Header */}
-            <div className="w-full max-w-5xl mx-auto flex items-center justify-between z-10 mb-8 pt-4">
+            <div className="practice-header w-full max-w-5xl mx-auto flex items-center justify-between z-10 mb-8 pt-4">
                 <button onClick={handleBack} className="p-2 rounded-full hover:bg-white/10 transition-colors">
                     <ArrowLeft className="w-8 h-8" />
                 </button>
@@ -457,7 +457,7 @@ const PracticeMode = () => {
                     variants={containerVariants}
                     initial="hidden"
                     animate="visible"
-                    className={viewMode === 'grid' ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4' : 'space-y-3'}
+                    className={`practice-game-list ${viewMode === 'grid' ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4' : 'space-y-3'}`}
                 >
                     {practiceGames.map((game) => {
                         const guide = PRACTICE_GUIDES[game.id];
@@ -471,8 +471,8 @@ const PracticeMode = () => {
                                 key={game.id}
                                 variants={itemVariants}
                                 className={viewMode === 'grid'
-                                    ? 'group relative bg-white dark:bg-gray-800/50 backdrop-blur-sm border border-gray-700 hover:border-green-500 hover:bg-slate-100 dark:hover:bg-gray-700/80 rounded-2xl p-0 flex flex-col items-center justify-between transition-all overflow-hidden'
-                                    : 'group relative'}
+                                    ? 'practice-game-card group relative bg-white dark:bg-gray-800/50 backdrop-blur-sm border border-gray-700 hover:border-green-500 hover:bg-slate-100 dark:hover:bg-gray-700/80 rounded-2xl p-0 flex flex-col items-center justify-between transition-all overflow-hidden'
+                                    : 'practice-game-card practice-game-card--list group relative'}
                             >
                                 {viewMode === 'grid' ? (
                                     <button
@@ -510,7 +510,7 @@ const PracticeMode = () => {
                                         onPointerCancel={() => { cardPointerDownRef.current = null; }}
                                         onMouseEnter={playHoverIfDesktop}
                                         disabled={loading}
-                                        className="w-full rounded-2xl border border-gray-700 bg-white dark:bg-gray-800/60 px-4 py-4 text-left transition-all hover:bg-slate-100 dark:hover:bg-gray-700/90 hover:border-green-500 active:scale-[0.995] disabled:opacity-70 touch-manipulation"
+                                        className="practice-game-list-button w-full rounded-2xl border border-gray-700 bg-white dark:bg-gray-800/60 px-4 py-4 text-left transition-all hover:bg-slate-100 dark:hover:bg-gray-700/90 hover:border-green-500 active:scale-[0.995] disabled:opacity-70 touch-manipulation"
                                     >
                                         <div className="pr-12">
                                             <div className="text-base md:text-lg font-black text-slate-900 dark:text-white">

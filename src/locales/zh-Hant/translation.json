@@ -21,7 +21,8 @@
     "exitAppConfirm": "要退出應用嗎？",
     "open": "開啟",
     "exit": "離開",
-    "start": "開始"
+    "start": "開始",
+    "ok": "確定"
   },
   "auth": {
     "loginRequired": "需要登入。",
@@ -46,8 +47,8 @@
     },
     "rank": {
       "title": "排位模式",
-      "subtitle": "全球玩家競技",
-      "matchRule": "五局三勝",
+      "subtitle": "與實力相近的對手三局兩勝",
+      "matchRule": "三局兩勝",
       "burningTime": "燃燒時間",
       "burningTimeBenefit": "不消耗鉛筆"
     },
@@ -154,7 +155,8 @@
     "dailyFreeGoldAlreadyClaimed": "今日免費金幣已經領取過了。",
     "dailyFreeGoldClaimFailed": "免費金幣領取失敗。",
     "dailyFreePencilAdDesc": "觀看廣告後，今天還可再領取一次。",
-    "rewardTitle": "已獲得"
+    "rewardTitle": "已獲得",
+    "premiumTab": "高級"
   },
   "social": {
     "friends": "好友",
@@ -712,7 +714,10 @@
     "noItemDesc": "你沒有任何道具，本局將以無道具狀態開始。",
     "playWithoutItems": "直接遊玩",
     "goToShop": "前往商店",
-    "waitForRecharge": "等待"
+    "waitForRecharge": "等待",
+    "inventoryTitle": "背包",
+    "inventoryEmpty": "你沒有持有道具。",
+    "inventoryLoadFail": "無法載入背包。"
   },
   "login": {
     "bannedTitle": "帳號已停權",
@@ -747,7 +752,16 @@
     "claim": "領取",
     "claimed": "已領取",
     "claimSuccess": "獎勵已領取。(+{{pencils}} 鉛筆, +{{notes}} 練習筆記)",
-    "claimBlockedPencilsFull": "當鉛筆達到5支或以上時無法領取。請先使用鉛筆。"
+    "claimBlockedPencilsFull": "當鉛筆達到5支或以上時無法領取。請先使用鉛筆。",
+    "emptyUnread": "沒有未讀郵件。",
+    "emptyRead": "沒有已讀郵件。",
+    "deleteUnread": "刪除",
+    "deleteUnreadSuccess": "已刪除未讀郵件。",
+    "deleteReadAll": "刪除所有已讀郵件",
+    "deleting": "刪除中...",
+    "deleteReadAllBlockedByClaimable": "包含可領取獎勵的已讀郵件無法刪除。",
+    "deleteReadAllSuccess": "已刪除 {{count}} 封已讀郵件。",
+    "deleteReadAllSkippedClaimable": "包含可領取獎勵的 {{count}} 封郵件將保留。"
   },
   "solo": {
     "complete": "單人模式完成！",

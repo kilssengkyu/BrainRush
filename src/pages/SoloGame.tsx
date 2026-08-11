@@ -318,6 +318,7 @@ const SoloGame: React.FC = () => {
     const roundAdvanceLockRef = useRef(false);
     const phaseRef = useRef<SoloPhase>('loading');
     const runStartedAtRef = useRef<string>(new Date().toISOString());
+    const autoPercentileUnlockAttemptedRef = useRef(false);
     const scoreTimelineRef = useRef<[number, number][]>([]);
     const roundStartedAtMsRef = useRef<number | null>(null);
 
@@ -570,6 +571,18 @@ const SoloGame: React.FC = () => {
         }
     }, [fetchPercentiles, isSaving, rounds, soloRunId]);
 
+    useEffect(() => {
+        if (phase !== 'final') return;
+        if (!profile?.ads_removed || percentilesUnlocked || isSaving || autoPercentileUnlockAttemptedRef.current) return;
+
+        autoPercentileUnlockAttemptedRef.current = true;
+        void handleUnlockPercentiles().then((result) => {
+            if (result !== 'ok') {
+                autoPercentileUnlockAttemptedRef.current = false;
+            }
+        });
+    }, [handleUnlockPercentiles, isSaving, percentilesUnlocked, phase, profile?.ads_removed]);
+
     const finishCurrentRound = useCallback(() => {
         if (!currentRound || finishLockRef.current) return;
         finishLockRef.current = true;
@@ -689,10 +702,10 @@ const SoloGame: React.FC = () => {
         playSound('click');
         setIsReturningToMenu(true);
 
-        if (!percentilesUnlocked) {
+        if (!percentilesUnlocked && !profile?.ads_removed) {
             try {
                 const { AdLogic } = await import('../utils/AdLogic');
-                await AdLogic.showInterstitial();
+                await AdLogic.checkAndShowInterstitial();
             } catch (error) {
                 console.error('Failed to show solo interstitial:', error);
             }
@@ -711,6 +724,7 @@ const SoloGame: React.FC = () => {
     const showWarmupOverlay = phase === 'intro';
     const showRoundFinished = phase === 'roundResult';
     const showFinalResult = phase === 'final';
+    const adsRemoved = Boolean(profile?.ads_removed);
     const displayMyScore = Math.max(0, Math.floor(currentScore));
     const displayOpScore = 0;
     const maxBackdropScoreDigits = String(displayMyScore).length;
@@ -723,29 +737,30 @@ const SoloGame: React.FC = () => {
 
     if (!currentRound) {
         return (
-            <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white flex items-center justify-center">
                 <div className="text-lg font-semibold">{t('common.loading', '로딩 중...')}</div>
             </div>
         );
     }
 
     return (
-        <div className="relative w-full h-[100dvh] overflow-hidden flex flex-col font-sans select-none pt-[env(safe-area-inset-top)] bg-slate-50 dark:bg-gray-900 text-slate-900 dark:text-white">
+        <div className="game-screen solo-game-screen relative w-full h-[100dvh] overflow-hidden flex flex-col font-sans select-none pt-[env(safe-area-inset-top)] bg-slate-50 dark:bg-gray-900 text-slate-900 dark:text-white">
             <AdModal
                 isOpen={showPercentileAdModal}
                 onClose={() => setShowPercentileAdModal(false)}
                 onReward={handleUnlockPercentiles}
                 variant="solo_percentile"
+                adsRemoved={adsRemoved}
             />
             {!showFinalResult && (
-                <header className="h-24 w-full bg-white dark:bg-gray-800/80 backdrop-blur-md flex items-center justify-between px-4 shadow-lg z-50 relative">
+                <header className="game-hud h-24 w-full bg-white dark:bg-gray-800/80 backdrop-blur-md flex items-center justify-between px-4 shadow-lg z-50 relative">
                     <div className="absolute bottom-0 left-0 w-full px-0">
                         <div className="w-full h-1.5 bg-slate-50 dark:bg-gray-900/50 overflow-hidden backdrop-blur-sm">
                             <ScoreProgressBar myScore={displayMyScore} opScore={displayOpScore} />
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2 flex-1 min-w-0 pt-2">
+                    <div className="game-hud-player game-hud-player--me flex items-center gap-2 flex-1 min-w-0 pt-2">
                         <div className="relative flex-shrink-0">
                             {profile?.avatar_url ? (
                                 <img src={profile.avatar_url} className="w-11 h-11 rounded-full border-2 border-blue-500 object-cover" />
@@ -760,11 +775,11 @@ const SoloGame: React.FC = () => {
                                 <Flag code={profile?.country} />
                                 <span className="hidden sm:inline truncate">{profile?.nickname || t('game.unknownPlayer', 'Player')}</span>
                             </div>
-                            <AnimatedScore value={displayMyScore} useGrouping={false} className="text-2xl font-black text-blue-400 font-mono" />
+                            <AnimatedScore value={displayMyScore} useGrouping={false} className="game-hud-score text-2xl font-black text-blue-400 font-mono" />
                         </div>
                     </div>
 
-                    <div className="flex flex-col items-center flex-shrink-0 px-2 pt-2">
+                    <div className="game-hud-timer flex flex-col items-center flex-shrink-0 px-2 pt-2">
                         <div className="flex flex-col items-center mb-0.5">
                             <div className="text-xs font-bold text-blue-500 dark:text-blue-300 tracking-wider uppercase whitespace-nowrap">
                                 {t('game.table.round', 'Round')} {currentRoundIndex + 1}/{rounds.length}
@@ -792,7 +807,7 @@ const SoloGame: React.FC = () => {
                 </header>
             )}
 
-            <main className="flex-1 relative flex items-center justify-center bg-gradient-to-br from-slate-100 via-slate-200 to-slate-300 dark:from-gray-900 dark:via-gray-800 dark:to-black">
+            <main className="game-playfield flex-1 relative flex items-center justify-center bg-gradient-to-br from-slate-100 via-slate-200 to-slate-300 dark:from-gray-900 dark:via-gray-800 dark:to-black">
                 {(isPlaying || showRoundFinished) && (
                     <div className="absolute inset-0 pointer-events-none z-0 select-none overflow-hidden">
                         <div className="absolute inset-0 pointer-events-none opacity-20">
@@ -819,14 +834,15 @@ const SoloGame: React.FC = () => {
                                 initial={{ opacity: 0, y: 16 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -16 }}
-                                className="absolute inset-0 bg-white/95 dark:bg-black/90 z-50 flex flex-col items-center justify-center p-8 text-center backdrop-blur-sm"
+                                className="game-warmup-overlay absolute inset-0 bg-white/95 dark:bg-black/90 z-50 flex flex-col items-center justify-center p-8 text-center backdrop-blur-sm"
                             >
                                 <motion.div
                                     initial={{ scale: 0.5, opacity: 0 }}
                                     animate={{ scale: 1, opacity: 1 }}
                                     exit={{ scale: 2, opacity: 0 }}
-                                    className="flex flex-col items-center"
+                                    className="game-warmup-card flex flex-col items-center"
                                 >
+                                    <div className="game-warmup-badge"><Sparkles size={15} /><span>MINI GAME</span></div>
                                     <h2 className="w-full max-w-[94vw] font-black text-amber-500 dark:text-yellow-400 mb-6 drop-shadow-lg flex flex-col items-center">
                                         <span className="text-3xl text-slate-900 dark:text-white mb-2">{t('game.table.round', 'Round')} {currentRoundIndex + 1}</span>
                                         <span className="block w-full text-center whitespace-nowrap text-[clamp(1.4rem,8vw,3.75rem)] leading-none px-3">
@@ -854,7 +870,7 @@ const SoloGame: React.FC = () => {
                                 initial={{ opacity: 0, scale: 0.9 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 1.02 }}
-                                className="w-full h-full p-4 relative"
+                                className="game-round-shell w-full h-full p-4 relative"
                             >
                                 <div className="w-full h-full select-none minigame-area">
                                     {renderSoloMinigame(currentRound.gameType, currentRound.seed, handleScore, true)}
@@ -901,7 +917,7 @@ const SoloGame: React.FC = () => {
                                         className="relative p-8 rounded-3xl border-4 shadow-2xl text-center max-w-2xl w-full overflow-hidden bg-white dark:bg-[radial-gradient(circle_at_top,_rgba(148,163,184,0.18),_transparent_42%),linear-gradient(180deg,_rgba(31,41,55,0.94),_rgba(15,23,42,0.96))] border-green-300 dark:border-white/10"
                                     >
                                         <div className="text-center">
-                                            <div className="inline-flex items-center gap-2 rounded-full border border-green-400/20 bg-green-500/10 px-4 py-1 text-xs font-black uppercase tracking-[0.24em] text-green-300 mb-4">
+                                            <div className="inline-flex items-center gap-2 rounded-full border border-green-400/30 bg-green-500/10 px-4 py-1 text-xs font-black uppercase tracking-[0.24em] text-green-700 dark:text-green-300 mb-4">
                                                 <Trophy className="h-4 w-4" />
                                                 {t('solo.complete', '혼자하기 완료')}
                                             </div>
@@ -917,23 +933,34 @@ const SoloGame: React.FC = () => {
                                             </div>
 
                                             <div className="mb-6 flex flex-col items-center gap-3">
-                                                <button
-                                                    onClick={() => setShowPercentileAdModal(true)}
-                                                    disabled={isSaving || percentilesUnlocked}
-                                                    className={`px-5 py-3 rounded-xl font-bold transition-all ${isSaving || percentilesUnlocked
-                                                        ? 'bg-slate-300 dark:bg-gray-700 text-slate-500 dark:text-gray-400 cursor-not-allowed'
-                                                        : 'bg-amber-400 hover:bg-amber-300 text-slate-950 shadow-lg hover:shadow-amber-400/30'
-                                                        }`}
-                                                >
-                                                    {percentilesUnlocked
-                                                        ? t('solo.percentileUnlocked', '상위 % 공개 완료')
-                                                        : isSaving
-                                                            ? t('solo.percentileSaving', '기록 저장 후 확인 가능')
-                                                            : t('solo.unlockPercentileCta', '광고 보고 상위 % 확인')}
-                                                </button>
-                                                {!percentilesUnlocked && !isSaving && (
+                                                {!adsRemoved && (
+                                                    <>
+                                                        <button
+                                                            onClick={() => setShowPercentileAdModal(true)}
+                                                            disabled={isSaving || percentilesUnlocked}
+                                                            className={`px-5 py-3 rounded-xl font-bold transition-all ${isSaving || percentilesUnlocked
+                                                                ? 'bg-slate-300 dark:bg-gray-700 text-slate-500 dark:text-gray-400 cursor-not-allowed'
+                                                                : 'bg-amber-400 hover:bg-amber-300 text-slate-950 shadow-lg hover:shadow-amber-400/30'
+                                                                }`}
+                                                        >
+                                                            {percentilesUnlocked
+                                                                ? t('solo.percentileUnlocked', '상위 % 공개 완료')
+                                                                : isSaving
+                                                                    ? t('solo.percentileSaving', '기록 저장 후 확인 가능')
+                                                                    : t('solo.unlockPercentileCta', '광고 보고 상위 % 확인')}
+                                                        </button>
+                                                        {!percentilesUnlocked && !isSaving && (
+                                                            <p className="text-xs font-semibold text-slate-500 dark:text-gray-400">
+                                                                {t('solo.percentileHint', '광고 한 번으로 세 게임의 상위 %를 모두 볼 수 있어요.')}
+                                                            </p>
+                                                        )}
+                                                    </>
+                                                )}
+                                                {adsRemoved && !percentilesUnlocked && (
                                                     <p className="text-xs font-semibold text-slate-500 dark:text-gray-400">
-                                                        {t('solo.percentileHint', '광고 한 번으로 세 게임의 상위 %를 모두 볼 수 있어요.')}
+                                                        {isSaving
+                                                            ? t('solo.percentileSaving', '기록 저장 후 확인 가능')
+                                                            : t('common.loading', '로딩 중...')}
                                                     </p>
                                                 )}
                                             </div>

@@ -43,7 +43,7 @@ const ReviewPromptModal: React.FC<ReviewPromptModalProps> = ({ isOpen, onClose }
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-sm px-6"
+                    className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/35 dark:bg-black/70 backdrop-blur-sm px-6"
                     onClick={onClose}
                 >
                     <motion.div
@@ -51,23 +51,23 @@ const ReviewPromptModal: React.FC<ReviewPromptModalProps> = ({ isOpen, onClose }
                         animate={{ scale: 1, opacity: 1, y: 0 }}
                         exit={{ scale: 0.8, opacity: 0 }}
                         transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-                        className="bg-gradient-to-b from-gray-800 to-gray-900 rounded-3xl p-8 max-w-sm w-full border border-gray-600/50 shadow-2xl text-center"
+                        className="bg-gradient-to-b from-white to-violet-50 dark:from-gray-800 dark:to-gray-900 rounded-3xl p-8 max-w-sm w-full border border-violet-200 dark:border-gray-600/50 shadow-2xl text-center"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="mb-5 text-6xl">🎮</div>
 
-                        <h3 className="text-xl font-black text-white mb-2">
+                        <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2">
                             {t('review.enjoyTitle', '게임 재밌으셨나요?')}
                         </h3>
 
-                        <p className="text-gray-400 text-sm mb-8">
+                        <p className="text-slate-600 dark:text-gray-400 text-sm mb-8">
                             {t('review.enjoySubtitle', '리뷰 한 줄이 큰 힘이 됩니다!')}
                         </p>
 
                         <div className="flex gap-3">
                             <button
                                 onClick={handleEnjoyNo}
-                                className="flex-1 py-3.5 bg-gray-700 hover:bg-gray-600 text-gray-300 font-bold rounded-xl transition active:scale-95"
+                                className="flex-1 py-3.5 bg-slate-200 hover:bg-slate-300 text-slate-700 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-300 font-bold rounded-xl transition active:scale-95"
                             >
                                 {t('review.enjoyNo', '별로요 😐')}
                             </button>

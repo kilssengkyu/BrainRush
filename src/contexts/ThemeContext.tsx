@@ -2,14 +2,18 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 
 export type ThemeMode = 'dark' | 'light';
 export type ThemePreference = ThemeMode | 'system';
+export type VisualTheme = 'playful' | 'classic';
 
 interface ThemeContextType {
     themeMode: ThemeMode;
     themePreference: ThemePreference;
     setThemePreference: (preference: ThemePreference) => void;
+    visualTheme: VisualTheme;
+    setVisualTheme: (theme: VisualTheme) => void;
 }
 
 const THEME_STORAGE_KEY = 'brainrush_theme_preference';
+const VISUAL_THEME_STORAGE_KEY = 'brainrush_visual_theme';
 
 const getSystemThemeMode = (): ThemeMode => {
     if (typeof window === 'undefined') return 'dark';
@@ -30,6 +34,10 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     const [themePreference, setThemePreference] = useState<ThemePreference>(getInitialThemePreference);
     const [systemThemeMode, setSystemThemeMode] = useState<ThemeMode>(getSystemThemeMode);
+    const [visualTheme, setVisualTheme] = useState<VisualTheme>(() => {
+        if (typeof window === 'undefined') return 'playful';
+        return window.localStorage.getItem(VISUAL_THEME_STORAGE_KEY) === 'classic' ? 'classic' : 'playful';
+    });
 
     useEffect(() => {
         if (typeof window === 'undefined') return;
@@ -53,13 +61,20 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
         window.localStorage.setItem(THEME_STORAGE_KEY, themePreference);
     }, [themeMode, themePreference]);
 
+    useEffect(() => {
+        document.documentElement.dataset.visualTheme = visualTheme;
+        window.localStorage.setItem(VISUAL_THEME_STORAGE_KEY, visualTheme);
+    }, [visualTheme]);
+
     const value = useMemo(
         () => ({
             themeMode,
             themePreference,
             setThemePreference,
+            visualTheme,
+            setVisualTheme,
         }),
-        [themeMode, themePreference]
+        [themeMode, themePreference, visualTheme]
     );
 
     return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;

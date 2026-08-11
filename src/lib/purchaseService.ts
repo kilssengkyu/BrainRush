@@ -43,19 +43,27 @@ const ensureReady = async () => {
 export const loadProducts = async (productIds: ShopProductId[]) => {
     const ready = await ensureReady();
     if (!ready) return [] as Product[];
-    try {
-        const { products } = await withTimeout(
-            NativePurchases.getProducts({
-                productIdentifiers: productIds,
-                productType: PURCHASE_TYPE.INAPP,
-            }),
-            8000
-        );
-        return products ?? [];
-    } catch (err) {
-        console.error('NativePurchases.getProducts failed:', err);
-        return [];
+    let lastError: unknown;
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+        try {
+            const { products } = await withTimeout(
+                NativePurchases.getProducts({
+                    productIdentifiers: productIds,
+                    productType: PURCHASE_TYPE.INAPP,
+                }),
+                12000
+            );
+            if (products?.length) return products;
+            lastError = new Error('Google Play returned no active products');
+        } catch (err) {
+            lastError = err;
+        }
+        if (attempt < 3) {
+            await new Promise((resolve) => setTimeout(resolve, attempt * 750));
+        }
     }
+    console.error('NativePurchases.getProducts failed after retries:', lastError);
+    return [];
 };
 
 export const purchaseProduct = async (productId: ShopProductId) => {

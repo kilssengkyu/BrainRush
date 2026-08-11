@@ -253,7 +253,7 @@ const Login = () => {
                                 }}
                                 className="flex-1 rounded-xl border border-white/20 px-4 py-2.5 text-sm font-semibold text-slate-900 dark:text-white/85 hover:bg-white/5"
                             >
-                                확인
+                                {t('common.ok', '확인')}
                             </button>
                         </div>
                     </div>

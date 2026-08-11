@@ -747,6 +747,17 @@ const Profile = () => {
     const hasSocialNotifications = pendingRequestsCount > 0 || unreadChatCount > 0;
     const needsNicknameSetup = Boolean(profile?.needs_nickname_setup);
     const isGuest = Boolean(user?.is_anonymous || user?.app_metadata?.provider === 'anonymous');
+    const handleLoginExistingAccount = async () => {
+        const confirmed = await confirm(
+            t('settings.loginExistingAccount', '기존 계정으로 로그인'),
+            t('settings.loginExistingAccountConfirm', '현재 게스트 세션을 종료하고 기존 계정으로 로그인합니다. 계속할까요?')
+        );
+        if (!confirmed) return;
+
+        playSound('click');
+        await signOut();
+        navigate('/login');
+    };
     const nicknameChangeTickets = Math.max(0, Number(profile?.nickname_change_tickets ?? 0));
     const nicknameSetAtMs = profile?.nickname_set_at ? Date.parse(profile.nickname_set_at) : NaN;
     const nextFreeNicknameChangeMs = Number.isFinite(nicknameSetAtMs) ? nicknameSetAtMs + NICKNAME_COOLDOWN_MS : null;
@@ -817,14 +828,39 @@ const Profile = () => {
                                     <div className="mt-1 text-xs text-amber-700 dark:text-amber-100/80">
                                         {t(isIOS ? 'profile.guestDescIOS' : 'profile.guestDesc')}
                                     </div>
-                                    <div className="mt-3 flex items-center justify-center gap-2">
-                                        {isIOS && (
+                                    <div className="mt-3 space-y-2">
+                                        <div className="flex items-center justify-center gap-2">
+                                            {isIOS && (
+                                                <button
+                                                    onClick={async () => {
+                                                        try {
+                                                            await linkWithApple();
+                                                        } catch (err: any) {
+                                                            console.error('Failed to link apple:', err);
+                                                            if (err?.message?.includes('이미 가입된')) {
+                                                                const isConfirmed = await confirm(
+                                                                    t('profile.accountConflictTitle', '기존 계정 발견!'),
+                                                                    t('profile.accountExistsLoginHint', '이미 존재하는 계정입니다. 로그아웃 후 해당 계정으로 로그인해 주세요.')
+                                                                );
+                                                                if (isConfirmed) {
+                                                                    await signOut();
+                                                                }
+                                                            } else {
+                                                                showToast(err?.message || t('common.error'), 'error');
+                                                            }
+                                                        }
+                                                    }}
+                                                    className="inline-flex items-center justify-center rounded-full border border-amber-300 bg-amber-100 px-4 py-2 text-xs font-bold text-amber-900 hover:bg-amber-200 transition-colors dark:border-white/10 dark:bg-white/10 dark:text-amber-100 dark:hover:bg-white/20"
+                                                >
+                                                    {t('profile.linkApple')}
+                                                </button>
+                                            )}
                                             <button
                                                 onClick={async () => {
                                                     try {
-                                                        await linkWithApple();
+                                                        await linkWithGoogle();
                                                     } catch (err: any) {
-                                                        console.error('Failed to link apple:', err);
+                                                        console.error('Failed to link google:', err);
                                                         if (err?.message?.includes('이미 가입된')) {
                                                             const isConfirmed = await confirm(
                                                                 t('profile.accountConflictTitle', '기존 계정 발견!'),
@@ -840,31 +876,14 @@ const Profile = () => {
                                                 }}
                                                 className="inline-flex items-center justify-center rounded-full border border-amber-300 bg-amber-100 px-4 py-2 text-xs font-bold text-amber-900 hover:bg-amber-200 transition-colors dark:border-white/10 dark:bg-white/10 dark:text-amber-100 dark:hover:bg-white/20"
                                             >
-                                                {t('profile.linkApple')}
+                                                {t('profile.linkGoogle')}
                                             </button>
-                                        )}
+                                        </div>
                                         <button
-                                            onClick={async () => {
-                                                try {
-                                                    await linkWithGoogle();
-                                                } catch (err: any) {
-                                                    console.error('Failed to link google:', err);
-                                                    if (err?.message?.includes('이미 가입된')) {
-                                                        const isConfirmed = await confirm(
-                                                            t('profile.accountConflictTitle', '기존 계정 발견!'),
-                                                            t('profile.accountExistsLoginHint', '이미 존재하는 계정입니다. 로그아웃 후 해당 계정으로 로그인해 주세요.')
-                                                        );
-                                                        if (isConfirmed) {
-                                                            await signOut();
-                                                        }
-                                                    } else {
-                                                        showToast(err?.message || t('common.error'), 'error');
-                                                    }
-                                                }
-                                            }}
-                                            className="inline-flex items-center justify-center rounded-full border border-amber-300 bg-amber-100 px-4 py-2 text-xs font-bold text-amber-900 hover:bg-amber-200 transition-colors dark:border-white/10 dark:bg-white/10 dark:text-amber-100 dark:hover:bg-white/20"
+                                            onClick={() => { void handleLoginExistingAccount(); }}
+                                            className="inline-flex w-full items-center justify-center rounded-full border border-amber-300 bg-white px-4 py-2 text-xs font-bold text-amber-900 transition-colors hover:bg-amber-100 dark:border-amber-300/30 dark:bg-white/5 dark:text-amber-100 dark:hover:bg-white/10"
                                         >
-                                            {t('profile.linkGoogle')}
+                                            {t('settings.loginExistingAccount', '기존 계정으로 로그인')}
                                         </button>
                                     </div>
                                 </div>

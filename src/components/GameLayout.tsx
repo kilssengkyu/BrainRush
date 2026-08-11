@@ -26,7 +26,7 @@ const PlayerSection = ({ player }: { player: PlayerProfile }) => {
     const winRate = totalGames > 0 ? Math.round(((player.wins || 0) / totalGames) * 100) : 0;
 
     return (
-        <div className={`flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-gray-800/50 backdrop-blur-md border border-gray-700 w-full max-w-md ${player.isOpponent ? 'flex-row-reverse text-right' : 'text-left'}`}>
+        <div className={`game-player-card flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-gray-800/50 backdrop-blur-md border border-gray-700 w-full max-w-md ${player.isOpponent ? 'flex-row-reverse text-right' : 'text-left'}`}>
             <div className="relative">
                 <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center overflow-hidden border-2 border-white/20 shadow-lg">
                     {player.avatar ? (
@@ -77,7 +77,7 @@ const PlayerSection = ({ player }: { player: PlayerProfile }) => {
 
 const GameLayout: React.FC<GameLayoutProps> = ({ opponent, me, children }) => {
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-gray-900 text-slate-900 dark:text-white flex flex-col items-center justify-between p-4 relative overflow-hidden">
+        <div className="game-layout min-h-screen bg-slate-50 dark:bg-gray-900 text-slate-900 dark:text-white flex flex-col items-center justify-between p-4 relative overflow-hidden">
             {/* Background Effects */}
             <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-800 via-gray-900 to-black pointer-events-none -z-10" />
 

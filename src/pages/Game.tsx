@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Heart, User, MoreHorizontal } from 'lucide-react';
+import { Heart, User, MoreHorizontal, Sparkles, Swords } from 'lucide-react';
 import { AnimatedScore } from '../components/ui/AnimatedScore';
 import { useGameState, type BotScoreEffect } from '../hooks/useGameState';
 import { useSound } from '../contexts/SoundContext';
@@ -145,6 +145,9 @@ const Game: React.FC = () => {
     const itemEffectTimeoutsRef = useRef<number[]>([]);
     const doubleChanceUntilRef = useRef(0);
     const botItemScheduledRoundRef = useRef<string | null>(null);
+    // 봇 게임에서 ghost timer가 마지막으로 표시한 상대 점수를 보관.
+    // 라운드 결과 화면에서 서버 최종값으로 튀지 않도록 이 값을 우선 사용.
+    const lastBotOpScoreRef = useRef<number>(0);
 
     // Game Hook
     const { gameState, incrementScore, serverOffset, isWaitingTimeout, isTimeUp, onlineUsers, connectionStatus } = useGameState(roomId!, myId, opponentId, botScoreEffects);
@@ -323,13 +326,23 @@ const Game: React.FC = () => {
     const lastRoundSnapshot = showRoundFinished && gameState.roundScores.length > 0
         ? gameState.roundScores[gameState.roundScores.length - 1]
         : null;
+
+    // 봇 게임에서 ghost timer가 활성 중일 때 마지막 표시값을 저장 (렌더 중 인라인 업데이트).
+    // showRoundFinished 시 서버 최종값(lastRoundSnapshot)으로 튀지 않도록 이 값을 우선 사용.
+    if (isBotId(opponentId) && isGameplayActive && gameState.opScore > 0) {
+        lastBotOpScoreRef.current = gameState.opScore;
+    }
+
     const displayMyScore = lastRoundSnapshot
         ? (gameState.isPlayer1 ? lastRoundSnapshot.p1_score : lastRoundSnapshot.p2_score)
         : showWarmupOverlay
             ? 0
         : gameState.myScore;
     const displayOpScore = lastRoundSnapshot
-        ? (gameState.isPlayer1 ? lastRoundSnapshot.p2_score : lastRoundSnapshot.p1_score)
+        // 봇 게임: 서버 최종값 대신 ghost timer 마지막값을 사용해 점수 튐 방지
+        ? (isBotId(opponentId) && lastBotOpScoreRef.current > 0
+            ? lastBotOpScoreRef.current
+            : (gameState.isPlayer1 ? lastRoundSnapshot.p2_score : lastRoundSnapshot.p1_score))
         : showWarmupOverlay
             ? 0
             : realtimeOpScore !== null
@@ -1602,6 +1615,7 @@ const Game: React.FC = () => {
         if (botItemScheduledRoundRef.current === roundKey) return;
         botItemScheduledRoundRef.current = roundKey;
         setBotScoreEffects([]);
+        lastBotOpScoreRef.current = 0; // 새 라운드 시작 시 이전 라운드 ghost 점수 초기화
 
         if (Math.random() > BOT_ITEM_USE_CHANCE) return;
 
@@ -1808,13 +1822,13 @@ const Game: React.FC = () => {
     }, []);
 
     return (
-        <div className={`relative w-full h-[100dvh] overflow-hidden flex flex-col font-sans select-none pt-[env(safe-area-inset-top)] bg-slate-50 dark:bg-gray-900 text-slate-900 dark:text-white`}>
+        <div className={`game-screen relative w-full h-[100dvh] overflow-hidden flex flex-col font-sans select-none pt-[env(safe-area-inset-top)] bg-slate-50 dark:bg-gray-900 text-slate-900 dark:text-white`}>
 
             {isUrgentRound && <div className="round-urgent-frame z-[70]" aria-hidden="true" />}
 
             {/* Top Info Bar (Timer & Scores) */}
             {!showFinalResult && (
-                <header className="h-24 w-full bg-white dark:bg-gray-800/80 backdrop-blur-md flex items-center justify-between px-4 shadow-lg z-50 relative">
+                <header className="game-hud h-24 w-full bg-white dark:bg-gray-800/80 backdrop-blur-md flex items-center justify-between px-4 shadow-lg z-50 relative">
 
                     {/* Score Progress Bar - Hide in Practice */}
                     {gameState.mode !== 'practice' && (
@@ -1826,7 +1840,7 @@ const Game: React.FC = () => {
                     )}
 
                     {/* My Profile */}
-                    <div className="flex items-center gap-2 flex-1 min-w-0 pt-2">
+                    <div className="game-hud-player game-hud-player--me flex items-center gap-2 flex-1 min-w-0 pt-2">
                         <div className="relative flex-shrink-0">
                             {myProfile?.avatar_url ? (
                                 <img src={myProfile.avatar_url} className="w-11 h-11 rounded-full border-2 border-blue-500 object-cover" />
@@ -1844,12 +1858,12 @@ const Game: React.FC = () => {
                                     <Flag code={myProfile?.country} />
                                     <span className="hidden sm:inline truncate">{myProfile?.nickname}</span>
                                 </div>
-                                <AnimatedScore value={displayMyScore} useGrouping={false} className={`text-2xl font-black font-mono transition-colors duration-200 ${isDoubleChanceActive ? 'text-amber-300' : 'text-blue-400'}`} />
+                                <AnimatedScore value={displayMyScore} useGrouping={false} className={`game-hud-score text-2xl font-black font-mono transition-colors duration-200 ${isDoubleChanceActive ? 'text-amber-300' : 'text-blue-400'}`} />
                             </div>
                     </div>
 
                     {/* Center Timer */}
-                    <div className="flex flex-col items-center flex-shrink-0 px-2 pt-2">
+                    <div className="game-hud-timer flex flex-col items-center flex-shrink-0 px-2 pt-2">
                         {gameState.mode !== 'practice' && (
                             <div className="flex flex-col items-center mb-0.5">
                                 <div className="text-xs font-bold text-blue-500 dark:text-blue-300 tracking-wider uppercase whitespace-nowrap">
@@ -1868,7 +1882,7 @@ const Game: React.FC = () => {
 
                     {/* Opponent Profile - Hide in Solo Practice */}
                     <motion.div
-                        className={`flex items-center justify-end gap-2 flex-1 min-w-0 text-right pt-2 relative rounded-2xl px-1.5 py-1 transition-colors ${opponentItemHit ? 'bg-red-500/10 ring-2 ring-red-400/45 shadow-[0_0_24px_rgba(248,113,113,0.25)]' : ''}`}
+                        className={`game-hud-player game-hud-player--opponent flex items-center justify-end gap-2 flex-1 min-w-0 text-right pt-2 relative rounded-2xl px-1.5 py-1 transition-colors ${opponentItemHit ? 'bg-red-500/10 ring-2 ring-red-400/45 shadow-[0_0_24px_rgba(248,113,113,0.25)]' : ''}`}
                         animate={opponentItemHit ? { x: [0, -5, 6, -3, 0], scale: [1, 1.035, 1] } : { x: 0, scale: 1 }}
                         transition={{ duration: 0.42, ease: 'easeOut' }}
                     >
@@ -1879,7 +1893,7 @@ const Game: React.FC = () => {
                                         <span className="hidden sm:inline truncate">{opponentProfile?.nickname}</span>
                                         <Flag code={opponentProfile?.country} />
                                     </div>
-                                    <AnimatedScore value={displayOpScore} useGrouping={false} className="text-2xl font-black text-red-400 font-mono" />
+                                    <AnimatedScore value={displayOpScore} useGrouping={false} className="game-hud-score text-2xl font-black text-red-400 font-mono" />
                                 </div>
                                 <div className="relative flex-shrink-0">
                                     {opponentProfile?.avatar_url ? (
@@ -2066,7 +2080,7 @@ const Game: React.FC = () => {
             )}
 
             {/* Main Game Area */}
-            <main className="flex-1 relative flex items-center justify-center bg-gradient-to-br from-slate-100 via-slate-200 to-slate-300 dark:from-gray-900 dark:via-gray-800 dark:to-black">
+            <main className="game-playfield flex-1 relative flex items-center justify-center bg-gradient-to-br from-slate-100 via-slate-200 to-slate-300 dark:from-gray-900 dark:via-gray-800 dark:to-black">
                 {/* Background Scoreboard (play tension UI) */}
                 {(isPlaying || showRoundFinished) && (
                     <div className="absolute inset-0 pointer-events-none z-0 select-none overflow-hidden">
@@ -2158,17 +2172,18 @@ const Game: React.FC = () => {
 
                 {/* Waiting Screen */}
                 {isWaiting && (
-                    <div className="absolute inset-0 flex flex-col items-center pb-44">
+                    <div className="game-waiting-screen absolute inset-0 flex flex-col items-center pb-44">
                         {/* Background gradients */}
                         <div className="absolute inset-0 bg-gradient-to-b from-blue-500/10 via-transparent to-red-500/10 dark:from-blue-900/30 dark:via-transparent dark:to-red-900/30 pointer-events-none" />
 
                         {/* My Profile - Top */}
+                        <div className="game-waiting-kicker"><Swords size={15} /><span>READY ROOM</span></div>
                         <div className="mt-4 flex flex-col items-center">
                             <motion.div
                                 initial={{ y: -30, opacity: 0 }}
                                 animate={{ y: 0, opacity: 1 }}
                                 transition={{ delay: 0.1 }}
-                                className={`relative overflow-hidden bg-gradient-to-br ${waitingMyTierColor} border border-white/35 rounded-2xl px-5 py-4 shadow-xl backdrop-blur-sm min-w-[260px]`}
+                                className={`game-waiting-player game-waiting-player--me relative overflow-hidden bg-gradient-to-br ${waitingMyTierColor} border border-white/35 rounded-2xl px-5 py-4 shadow-xl backdrop-blur-sm min-w-[260px]`}
                             >
                                 <div className="absolute inset-0 pointer-events-none bg-black/10 dark:bg-black/20" />
                                 <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(120deg,rgba(255,255,255,0.42)_0%,rgba(255,255,255,0.1)_36%,rgba(0,0,0,0.14)_100%)]" />
@@ -2206,7 +2221,7 @@ const Game: React.FC = () => {
 
                         {/* Hex Radar - Center with Labels */}
                         <div className="flex-1 flex items-center justify-center">
-                            <div className="relative bg-slate-50 dark:bg-gray-900/60 border border-white/10 rounded-3xl p-3 shadow-2xl backdrop-blur-sm">
+                            <div className="game-waiting-radar relative bg-slate-50 dark:bg-gray-900/60 border border-white/10 rounded-3xl p-3 shadow-2xl backdrop-blur-sm">
                                 <HexRadar
                                     values={myRadarStats}
                                     compareValues={opRadarStats}
@@ -2225,7 +2240,7 @@ const Game: React.FC = () => {
                                 initial={{ y: 30, opacity: 0 }}
                                 animate={{ y: 0, opacity: 1 }}
                                 transition={{ delay: 0.15 }}
-                                className={`relative overflow-hidden bg-gradient-to-br ${waitingOpTierColor} border border-white/35 rounded-2xl px-5 py-4 shadow-xl backdrop-blur-sm min-w-[260px]`}
+                                className={`game-waiting-player game-waiting-player--opponent relative overflow-hidden bg-gradient-to-br ${waitingOpTierColor} border border-white/35 rounded-2xl px-5 py-4 shadow-xl backdrop-blur-sm min-w-[260px]`}
                             >
                                 <div className="absolute inset-0 pointer-events-none bg-black/10 dark:bg-black/20" />
                                 <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(120deg,rgba(255,255,255,0.42)_0%,rgba(255,255,255,0.1)_36%,rgba(0,0,0,0.14)_100%)]" />
@@ -2269,11 +2284,11 @@ const Game: React.FC = () => {
                         key="gameContainer"
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="w-full h-full p-4 relative"
+                        className="game-round-shell w-full h-full p-4 relative"
                     >
                         {/* WARM UP OVERLAY */}
                         {showWarmupOverlay && (
-                            <div className="absolute inset-0 bg-white/95 dark:bg-black/90 z-50 flex flex-col items-center justify-center p-8 text-center backdrop-blur-sm">
+                            <div className="game-warmup-overlay absolute inset-0 bg-white/95 dark:bg-black/90 z-50 flex flex-col items-center justify-center p-8 text-center backdrop-blur-sm">
                                 {IS_DEV && isBotId(opponentId) && botRoundDebugPreview && (
                                     <div className="absolute top-4 left-1/2 -translate-x-1/2 w-[min(92vw,28rem)] rounded-2xl border border-amber-400/30 bg-black/55 px-4 py-3 text-xs font-mono text-amber-100 shadow-lg backdrop-blur-sm">
                                         <div className="mb-1 text-[10px] font-black uppercase tracking-[0.24em] text-amber-300/80">
@@ -2303,8 +2318,9 @@ const Game: React.FC = () => {
                                     initial={{ scale: 0.5, opacity: 0 }}
                                     animate={{ scale: 1, opacity: 1 }}
                                     exit={{ scale: 2, opacity: 0 }}
-                                    className="flex flex-col items-center"
+                                    className="game-warmup-card flex flex-col items-center"
                                 >
+                                    <div className="game-warmup-badge"><Sparkles size={15} /><span>MINI GAME</span></div>
                                     {/* Previous round result removed */}
                                     <h2 className="w-full max-w-[94vw] font-black text-amber-500 dark:text-yellow-400 mb-6 drop-shadow-lg flex flex-col items-center">
                                         <span className="text-3xl text-slate-900 dark:text-white mb-2">{t('game.table.round')} {gameState.currentRound}</span>
@@ -2522,10 +2538,10 @@ const Game: React.FC = () => {
                                 className={`relative p-8 rounded-3xl border-4 shadow-2xl text-center max-w-2xl w-full overflow-hidden ${gameState.mode === 'practice'
                                     ? 'bg-white dark:bg-[radial-gradient(circle_at_top,_rgba(148,163,184,0.18),_transparent_42%),linear-gradient(180deg,_rgba(31,41,55,0.94),_rgba(15,23,42,0.96))] border-green-300 dark:border-white/10'
                                     : isMatchWin
-                                        ? 'bg-[radial-gradient(circle_at_top,_rgba(96,165,250,0.32),_transparent_42%),linear-gradient(180deg,_rgba(30,58,138,0.92),_rgba(15,23,42,0.96))] border-blue-300/25'
+                                        ? 'game-result-card game-result-card--win'
                                         : isMatchLoss
-                                            ? 'bg-[radial-gradient(circle_at_top,_rgba(248,113,113,0.28),_transparent_42%),linear-gradient(180deg,_rgba(127,29,29,0.92),_rgba(24,24,27,0.96))] border-red-300/20'
-                                            : 'bg-[radial-gradient(circle_at_top,_rgba(148,163,184,0.18),_transparent_42%),linear-gradient(180deg,_rgba(31,41,55,0.94),_rgba(15,23,42,0.96))] border-white/10'
+                                            ? 'game-result-card game-result-card--loss'
+                                            : 'game-result-card game-result-card--draw'
                                     }`}
                             >
                                 {gameState.mode === 'practice' ? (
@@ -2554,7 +2570,7 @@ const Game: React.FC = () => {
                                             <div className="absolute top-4 right-4 z-20">
                                                 <button
                                                     onClick={() => setIsResultActionsOpen((prev) => !prev)}
-                                                    className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-slate-700 dark:text-gray-200 transition-colors"
+                                                    className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-gray-200 transition-colors"
                                                     title={t('common.more', '더보기')}
                                                 >
                                                     <MoreHorizontal className="w-5 h-5" />
@@ -2564,7 +2580,7 @@ const Game: React.FC = () => {
                                                         {canAddFriendOpponent && (
                                                             <button
                                                                 onClick={handleAddFriend}
-                                                                className="w-full px-3 py-2 rounded-lg text-sm text-green-300 hover:bg-green-600/20 transition-colors"
+                                                                className="w-full px-3 py-2 rounded-lg text-sm text-green-700 dark:text-green-300 hover:bg-green-600/20 transition-colors"
                                                             >
                                                                 {t('social.addFriend')}
                                                             </button>
@@ -2575,7 +2591,7 @@ const Game: React.FC = () => {
                                                                     setIsResultActionsOpen(false);
                                                                     setIsReportModalOpen(true);
                                                                 }}
-                                                                className="w-full px-3 py-2 rounded-lg text-sm text-red-300 hover:bg-red-600/20 transition-colors"
+                                                                className="w-full px-3 py-2 rounded-lg text-sm text-red-700 dark:text-red-300 hover:bg-red-600/20 transition-colors"
                                                             >
                                                                 {t('report.button', '신고')}
                                                             </button>
@@ -2627,10 +2643,10 @@ const Game: React.FC = () => {
 
                                             <div className="flex flex-col items-center px-2">
                                                 <h3 className={`text-4xl md:text-6xl font-black tracking-[0.08em] drop-shadow-2xl ${isMatchWin
-                                                    ? 'text-blue-300'
+                                                    ? 'text-blue-600 dark:text-blue-300'
                                                     : isMatchLoss
-                                                        ? 'text-red-300'
-                                                        : 'text-slate-200'
+                                                        ? 'text-red-600 dark:text-red-300'
+                                                        : 'text-slate-600 dark:text-slate-200'
                                                     }`}>
                                                     {myWinsForLives} : {opWinsForLives}
                                                 </h3>
@@ -2670,7 +2686,7 @@ const Game: React.FC = () => {
                                         </motion.div>
 
                                         {/* Scoreboard Table */}
-                                        <div className="w-full bg-slate-50 dark:bg-gray-900/50 rounded-xl overflow-hidden mb-4 md:mb-8 border border-white/5">
+                                        <div className="w-full bg-slate-50 dark:bg-gray-900/50 rounded-xl overflow-hidden mb-4 md:mb-8 border border-slate-200 dark:border-white/5">
                                             <div className="grid grid-cols-3 bg-white dark:bg-gray-800 p-2 md:p-3 text-[10px] md:text-xs font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest">
                                                 <div className="text-left pl-4">{t('game.table.round')}</div>
                                                 <div>{t('game.table.myScore')}</div>
@@ -2688,7 +2704,7 @@ const Game: React.FC = () => {
                                                         initial={{ opacity: 0, x: -50 }}
                                                         animate={{ opacity: 1, x: 0 }}
                                                         transition={{ delay: 0.16 + idx * 0.1 }}
-                                                        className="grid grid-cols-3 p-2 md:p-4 border-t border-white/5 items-center font-mono relative overflow-hidden"
+                                                        className="grid grid-cols-3 p-2 md:p-4 border-t border-slate-200 dark:border-white/5 items-center font-mono relative overflow-hidden"
                                                     >
                                                         {/* Background Bar */}
                                                         <div className="absolute inset-0 z-0 opacity-10">
@@ -2719,9 +2735,9 @@ const Game: React.FC = () => {
                                             initial={{ opacity: 0, y: 20 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: 0.22 + gameState.roundScores.length * 0.1 }}
-                                                className="grid grid-cols-3 p-2 md:p-4 bg-white/5 border-t-2 border-white/10 items-center font-mono"
+                                                className="grid grid-cols-3 p-2 md:p-4 bg-slate-100/80 dark:bg-white/5 border-t-2 border-slate-200 dark:border-white/10 items-center font-mono"
                                             >
-                                                <div className="text-left pl-2 md:pl-4 text-yellow-400 font-black text-sm md:text-base">{t('game.total')}</div>
+                                                <div className="text-left pl-2 md:pl-4 text-amber-600 dark:text-yellow-400 font-black text-sm md:text-base">{t('game.total')}</div>
                                                 <div className="text-blue-400 font-black text-base md:text-xl">{totalScores.my}</div>
                                                 <div className="text-red-400 font-black text-base md:text-xl">{totalScores.op}</div>
                                             </motion.div>
@@ -2733,7 +2749,7 @@ const Game: React.FC = () => {
                                             initial={{ opacity: 0, height: 0 }}
                                             animate={{ opacity: 1, height: 'auto' }}
                                                 transition={{ delay: 0.3 + gameState.roundScores.length * 0.1 }}
-                                                className="mb-8 p-4 bg-white/10 rounded-xl border border-white/20 overflow-hidden"
+                                                className="mb-8 p-4 bg-white/70 dark:bg-white/10 rounded-xl border border-slate-200 dark:border-white/20 overflow-hidden"
                                             >
                                                 <div className="flex items-center justify-center gap-4 text-3xl font-black">
                                                     <div className="text-slate-900 dark:text-white">{displayMMR}</div>
@@ -2830,7 +2846,7 @@ const Game: React.FC = () => {
                                                 onClick={handleReturnMenu}
                                                 disabled={!isButtonEnabled || isReturningToMenu}
                                                 className={`w-full py-4 font-bold text-xl rounded-xl transition-all ${isButtonEnabled
-                                                    ? 'bg-white text-black hover:bg-gray-200'
+                                                    ? 'bg-violet-600 text-white hover:bg-violet-700 dark:bg-white dark:text-black dark:hover:bg-gray-200'
                                                     : 'bg-gray-700 text-gray-500 cursor-not-allowed opacity-50'
                                                     }`}
                                             >
@@ -2859,7 +2875,7 @@ const Game: React.FC = () => {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-sm px-6"
+                            className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/35 dark:bg-black/70 backdrop-blur-sm px-6"
                             onClick={() => setShowLosePencilModal(false)}
                         >
                             <motion.div
@@ -2867,7 +2883,7 @@ const Game: React.FC = () => {
                                 animate={{ scale: 1, opacity: 1, y: 0 }}
                                 exit={{ scale: 0.8, opacity: 0 }}
                                 transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-                                className="bg-gradient-to-b from-gray-800 to-gray-900 rounded-3xl p-8 max-w-sm w-full border border-gray-600/50 shadow-2xl text-center"
+                                className="bg-gradient-to-b from-white to-violet-50 dark:from-gray-800 dark:to-gray-900 rounded-3xl p-8 max-w-sm w-full border border-violet-200 dark:border-gray-600/50 shadow-2xl text-center"
                                 onClick={(e) => e.stopPropagation()}
                             >
                                 <div className="mb-4 flex justify-center">
@@ -2896,7 +2912,7 @@ const Game: React.FC = () => {
                                 </div>
                                 <button
                                     onClick={() => setShowLosePencilModal(false)}
-                                    className="w-full py-3 bg-white text-black font-bold rounded-xl hover:bg-gray-200 transition active:scale-95"
+                                    className="w-full py-3 bg-violet-600 hover:bg-violet-700 text-white dark:bg-white dark:hover:bg-gray-200 dark:text-black font-bold rounded-xl transition active:scale-95"
                                 >
                                     {t('common.ok', '확인')}
                                 </button>

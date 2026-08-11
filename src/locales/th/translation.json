@@ -25,7 +25,8 @@
     "exitAppConfirm": "ต้องการออกจากแอปหรือไม่?",
     "open": "เปิด",
     "exit": "ออก",
-    "start": "เริ่ม"
+    "start": "เริ่ม",
+    "ok": "ตกลง"
   },
   "auth": {
     "loginRequired": "ต้องเข้าสู่ระบบ",
@@ -100,8 +101,8 @@
     },
     "rank": {
       "title": "โหมดแรงก์",
-      "subtitle": "แข่งขันระดับโลก",
-      "matchRule": "ชนะ 3 ใน 5 เกม",
+      "subtitle": "ชนะ 2 ใน 3 เกมกับคู่แข่งใกล้เคียง",
+      "matchRule": "ชนะ 2 ใน 3 เกม",
       "burningTime": "ช่วงเวลาเบิร์นนิง",
       "burningTimeBenefit": "ไม่ใช้ดินสอ"
     },
@@ -208,7 +209,8 @@
     "dailyFreeGoldAlreadyClaimed": "You already claimed today’s free gold.",
     "dailyFreeGoldClaimFailed": "Failed to claim the free gold.",
     "dailyFreePencilAdDesc": "Watch an ad to claim it one more time today.",
-    "rewardTitle": "ได้รับแล้ว"
+    "rewardTitle": "ได้รับแล้ว",
+    "premiumTab": "พรีเมียม"
   },
   "leaderboard": {
     "button": "อันดับ",
@@ -716,7 +718,10 @@
     "noItemDesc": "คุณไม่มีไอเทม ดังนั้นรอบนี้จะเริ่มโดยไม่มีไอเทม",
     "playWithoutItems": "เล่นต่อ",
     "goToShop": "ไปที่ร้านค้า",
-    "waitForRecharge": "รอ"
+    "waitForRecharge": "รอ",
+    "inventoryTitle": "กระเป๋าไอเทม",
+    "inventoryEmpty": "คุณไม่มีไอเทม",
+    "inventoryLoadFail": "โหลดกระเป๋าไอเทมไม่สำเร็จ"
   },
   "login": {
     "bannedTitle": "Account Suspended",
@@ -747,7 +752,16 @@
     "claim": "Claim",
     "claimed": "Claimed",
     "claimSuccess": "Reward claimed. (+{{pencils}} pencils, +{{notes}} practice notes)",
-    "claimBlockedPencilsFull": "คุณไม่สามารถรับได้เมื่อมีดินสอ 5 แท่งขึ้นไป โปรดใช้ดินสอก่อน"
+    "claimBlockedPencilsFull": "คุณไม่สามารถรับได้เมื่อมีดินสอ 5 แท่งขึ้นไป โปรดใช้ดินสอก่อน",
+    "emptyUnread": "ไม่มีจดหมายที่ยังไม่ได้อ่าน",
+    "emptyRead": "ไม่มีจดหมายที่อ่านแล้ว",
+    "deleteUnread": "ลบ",
+    "deleteUnreadSuccess": "ลบจดหมายที่ยังไม่ได้อ่านแล้ว",
+    "deleteReadAll": "ลบจดหมายที่อ่านแล้วทั้งหมด",
+    "deleting": "กำลังลบ...",
+    "deleteReadAllBlockedByClaimable": "ไม่สามารถลบจดหมายที่อ่านแล้วซึ่งมีรางวัลให้รับได้",
+    "deleteReadAllSuccess": "ลบจดหมายที่อ่านแล้ว {{count}} ฉบับแล้ว",
+    "deleteReadAllSkippedClaimable": "จดหมาย {{count}} ฉบับที่มีรางวัลให้รับจะถูกเก็บไว้"
   },
   "solo": {
     "complete": "จบโหมดเดี่ยว!",

@@ -93,16 +93,16 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>fb3464019873773659</string>
+				<string>fb796298450026260</string>
 			</array>
 		</dict>
 	</array>
 	<key>NSUserTrackingUsageDescription</key>
 	<string>이 앱은 사용자에게 맞춤형 광고를 제공하기 위해 데이터를 사용합니다.</string>
 	<key>FacebookAppID</key>
-	<string>3464019873773659</string>
+	<string>796298450026260</string>
 	<key>FacebookClientToken</key>
-	<string>22f48cb1a3eb30afe859b3720a9a67bc</string>
+	<string>34f169e83a20a0db57d29b97e2600ef1</string>
 	<key>FacebookDisplayName</key>
 	<string>BrainRush</string>
 	<key>LSApplicationQueriesSchemes</key>

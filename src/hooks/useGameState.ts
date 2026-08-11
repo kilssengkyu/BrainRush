@@ -492,12 +492,16 @@ export const useGameState = (roomId: string, myId: string, opponentId: string, b
 
 
     // --- Ghost Replay Timer (Client-Side, 100ms) ---
+    // ghostTimelineRef.current 체크를 effect 진입부에서 하지 않고 interval 내부에서 매 tick마다 체크.
+    // 이유: status가 'playing'이 되는 시점에 ghostTimelineRef가 아직 null일 수 있음(handleUpdate 미수신).
+    // ref 변경은 dependency 변화가 아니므로 effect가 재실행되지 않아 아이템 사용 전까지 점수가 0에 머무는 버그 방지.
     useEffect(() => {
-        if (gameState.status !== 'playing' || !ghostTimelineRef.current || !gameState.startAt) return;
-        const timeline = ghostTimelineRef.current;
+        if (gameState.status !== 'playing' || !gameState.startAt) return;
         const startAtMs = new Date(gameState.startAt).getTime();
 
         const interval = setInterval(() => {
+            if (!ghostTimelineRef.current) return; // handleUpdate가 세팅할 때까지 매 tick 대기
+            const timeline = ghostTimelineRef.current;
             const elapsed = ((Date.now() + serverOffset) - startAtMs) / 1000;
             if (elapsed < 0) return;
 

@@ -21,7 +21,8 @@
     "exitAppConfirm": "要退出应用吗？",
     "open": "打开",
     "exit": "退出",
-    "start": "开始"
+    "start": "开始",
+    "ok": "确定"
   },
   "auth": {
     "loginRequired": "需要登录。",
@@ -46,8 +47,8 @@
     },
     "rank": {
       "title": "排位模式",
-      "subtitle": "全球玩家竞技",
-      "matchRule": "五局三胜",
+      "subtitle": "与实力相近的对手三局两胜",
+      "matchRule": "三局两胜",
       "burningTime": "燃烧时间",
       "burningTimeBenefit": "不消耗铅笔"
     },
@@ -154,7 +155,8 @@
     "dailyFreeGoldAlreadyClaimed": "今日免费金币已经领取过了。",
     "dailyFreeGoldClaimFailed": "免费金币领取失败。",
     "dailyFreePencilAdDesc": "观看广告后，今天还可再领取一次。",
-    "rewardTitle": "已获得"
+    "rewardTitle": "已获得",
+    "premiumTab": "高级"
   },
   "social": {
     "friends": "好友",
@@ -712,7 +714,10 @@
     "noItemDesc": "你没有任何道具，本局将以无道具状态开始。",
     "playWithoutItems": "直接游玩",
     "goToShop": "前往商店",
-    "waitForRecharge": "等待"
+    "waitForRecharge": "等待",
+    "inventoryTitle": "背包",
+    "inventoryEmpty": "你没有持有道具。",
+    "inventoryLoadFail": "无法加载背包。"
   },
   "login": {
     "bannedTitle": "Account Suspended",
@@ -747,7 +752,16 @@
     "claim": "领取",
     "claimed": "已领取",
     "claimSuccess": "奖励已领取。(+{{pencils}} 铅笔, +{{notes}} 练习笔记)",
-    "claimBlockedPencilsFull": "当铅笔达到5支或以上时无法领取。请先使用铅笔。"
+    "claimBlockedPencilsFull": "当铅笔达到5支或以上时无法领取。请先使用铅笔。",
+    "emptyUnread": "没有未读邮件。",
+    "emptyRead": "没有已读邮件。",
+    "deleteUnread": "删除",
+    "deleteUnreadSuccess": "已删除未读邮件。",
+    "deleteReadAll": "删除所有已读邮件",
+    "deleting": "删除中...",
+    "deleteReadAllBlockedByClaimable": "包含可领取奖励的已读邮件无法删除。",
+    "deleteReadAllSuccess": "已删除 {{count}} 封已读邮件。",
+    "deleteReadAllSkippedClaimable": "包含可领取奖励的 {{count}} 封邮件将保留。"
   },
   "solo": {
     "complete": "单人模式完成！",

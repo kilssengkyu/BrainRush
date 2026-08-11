@@ -39,7 +39,8 @@ BEGIN
             FROM ghost_scores gs
             WHERE gs.game_type = p_game_type
               AND gs.final_score > 0
-            ORDER BY ABS(gs.final_score - v_target_score), random()
+              AND gs.final_score < v_target_score
+            ORDER BY gs.final_score DESC, random()
             LIMIT 5
         )
         SELECT ng.score_timeline

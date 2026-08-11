@@ -186,6 +186,7 @@ const AuthDeepLinkErrorListener = () => {
 
 import BGMManager from './components/audio/BGMManager';
 import ForceUpdateCheck from './components/ForceUpdateCheck';
+import ThemeUpdateNotice from './components/ui/ThemeUpdateNotice';
 import { primeRewardedAd } from './utils/rewardedAd';
 import { logAnalyticsEvent } from './lib/analytics';
 
@@ -243,6 +244,7 @@ function App() {
                   <LocalNotificationScheduler />
                   <ForceLogoutListener />
                   <AuthDeepLinkErrorListener />
+                  <ThemeUpdateNotice />
                   <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/game/:roomId" element={<Game />} />

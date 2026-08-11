@@ -3,6 +3,14 @@
     "title": "BrainRush",
     "subtitle": "Speed & Intelligence"
   },
+  "themeUpdate": {
+    "kicker": "NEW LOOK",
+    "title": "BrainRush has a playful new look!",
+    "description": "The new Brain Arcade theme is now the default. You can switch back to the familiar classic theme at any time.",
+    "confirm": "Start with the new theme",
+    "useClassic": "Return to classic theme",
+    "openSettings": "Choose in Settings"
+  },
   "common": {
     "cancel": "Cancel",
     "confirm": "Confirm",
@@ -25,7 +33,8 @@
     "exitAppConfirm": "Do you want to exit the app?",
     "open": "Open",
     "exit": "Exit",
-    "start": "Start"
+    "start": "Start",
+    "ok": "OK"
   },
   "auth": {
     "loginRequired": "Login required.",
@@ -100,8 +109,8 @@
     },
     "rank": {
       "title": "Rank Mode",
-      "subtitle": "Compete globally",
-      "matchRule": "Best of 5 (First to 3)",
+      "subtitle": "Best of 3 against a similar rival",
+      "matchRule": "Best of 3 (First to 2)",
       "burningTime": "Burning Time",
       "burningTimeBenefit": "No pencil cost"
     },
@@ -208,7 +217,8 @@
     "dailyFreeGoldAlreadyClaimed": "You already claimed today’s free gold.",
     "dailyFreeGoldClaimFailed": "Failed to claim the free gold.",
     "dailyFreePencilAdDesc": "Watch an ad to claim it one more time today.",
-    "rewardTitle": "Acquired"
+    "rewardTitle": "Acquired",
+    "premiumTab": "Premium"
   },
   "leaderboard": {
     "button": "Ranking",
@@ -296,6 +306,12 @@
     "notificationNativeHint": "Notification toggle is disabled on the web.",
     "recommended": "Recommended",
     "theme": "Theme",
+    "visualStyle": "UI style",
+    "visualStyleDesc": "Choose the look of menus and game screens.",
+    "playfulTheme": "Brain Arcade",
+    "playfulThemeDesc": "Playful and game-like",
+    "classicTheme": "Classic",
+    "classicThemeDesc": "The familiar original look",
     "themeMode": "Appearance",
     "systemThemeDesc": "Follows your device settings.",
     "darkMode": "Dark mode",
@@ -498,7 +514,10 @@
     "noItemDesc": "You do not have any items, so this match will start without items.",
     "playWithoutItems": "Play Anyway",
     "goToShop": "Go to Shop",
-    "waitForRecharge": "Wait"
+    "waitForRecharge": "Wait",
+    "inventoryTitle": "Inventory",
+    "inventoryEmpty": "You have no items.",
+    "inventoryLoadFail": "Failed to load inventory."
   },
   "rps": {
     "ready": "READY...",
@@ -751,7 +770,16 @@
     "claim": "Claim",
     "claimed": "Claimed",
     "claimSuccess": "Reward claimed. (+{{pencils}} pencils, +{{notes}} practice notes)",
-    "claimBlockedPencilsFull": "You can't claim this while you have 5 or more pencils. Please use pencils first."
+    "claimBlockedPencilsFull": "You can't claim this while you have 5 or more pencils. Please use pencils first.",
+    "emptyUnread": "No unread mail.",
+    "emptyRead": "No read mail.",
+    "deleteUnread": "Delete",
+    "deleteUnreadSuccess": "Unread mail deleted.",
+    "deleteReadAll": "Delete all read mail",
+    "deleting": "Deleting...",
+    "deleteReadAllBlockedByClaimable": "Read mail with claimable rewards cannot be deleted.",
+    "deleteReadAllSuccess": "Deleted {{count}} read mail.",
+    "deleteReadAllSkippedClaimable": "{{count}} mail with claimable rewards will be kept."
   },
   "solo": {
     "complete": "Solo Complete!",

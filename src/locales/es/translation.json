@@ -25,7 +25,8 @@
     "exitAppConfirm": "¿Quieres salir de la app?",
     "open": "Abrir",
     "exit": "Salir",
-    "start": "Empezar"
+    "start": "Empezar",
+    "ok": "Aceptar"
   },
   "auth": {
     "loginRequired": "Se requiere iniciar sesión.",
@@ -99,9 +100,9 @@
       "matchRule": "Al mejor de 3 (gana 2)"
     },
     "rank": {
-      "title": "Modo ranked",
-      "subtitle": "Compite globalmente",
-      "matchRule": "Al mejor de 5 (gana 3)",
+      "title": "Modo clasificatorio",
+      "subtitle": "Al mejor de 3 contra un rival similar",
+      "matchRule": "Al mejor de 3 (gana 2)",
       "burningTime": "Hora de bonificación",
       "burningTimeBenefit": "Sin coste de lápiz"
     },
@@ -208,7 +209,8 @@
     "dailyFreeGoldAlreadyClaimed": "You already claimed today’s free gold.",
     "dailyFreeGoldClaimFailed": "Failed to claim the free gold.",
     "dailyFreePencilAdDesc": "Watch an ad to claim it one more time today.",
-    "rewardTitle": "Obtenido"
+    "rewardTitle": "Obtenido",
+    "premiumTab": "Premium"
   },
   "leaderboard": {
     "button": "Ranking",
@@ -716,7 +718,10 @@
     "noItemDesc": "No tienes objetos, así que esta partida empezará sin objetos.",
     "playWithoutItems": "Jugar igual",
     "goToShop": "Ir a la tienda",
-    "waitForRecharge": "Esperar"
+    "waitForRecharge": "Esperar",
+    "inventoryTitle": "Inventario",
+    "inventoryEmpty": "No tienes objetos.",
+    "inventoryLoadFail": "No se pudo cargar el inventario."
   },
   "login": {
     "bannedTitle": "Account Suspended",
@@ -747,7 +752,16 @@
     "claim": "Claim",
     "claimed": "Claimed",
     "claimSuccess": "Reward claimed. (+{{pencils}} pencils, +{{notes}} practice notes)",
-    "claimBlockedPencilsFull": "No puedes reclamar esto mientras tengas 5 o mas lapices. Usa lapices primero."
+    "claimBlockedPencilsFull": "No puedes reclamar esto mientras tengas 5 o mas lapices. Usa lapices primero.",
+    "emptyUnread": "No hay correo sin leer.",
+    "emptyRead": "No hay correo leido.",
+    "deleteUnread": "Eliminar",
+    "deleteUnreadSuccess": "Correo sin leer eliminado.",
+    "deleteReadAll": "Eliminar todo lo leido",
+    "deleting": "Eliminando...",
+    "deleteReadAllBlockedByClaimable": "No se puede eliminar correo leido con recompensas pendientes.",
+    "deleteReadAllSuccess": "Se eliminaron {{count}} correos leidos.",
+    "deleteReadAllSkippedClaimable": "Se conservaran {{count}} correos con recompensas pendientes."
   },
   "solo": {
     "complete": "¡Modo Solo completado!",
