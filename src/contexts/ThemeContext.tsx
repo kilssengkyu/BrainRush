@@ -21,12 +21,26 @@ const getSystemThemeMode = (): ThemeMode => {
 };
 
 const getInitialThemePreference = (): ThemePreference => {
-    if (typeof window === 'undefined') return 'dark';
+    if (typeof window === 'undefined') return 'light';
 
-    const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
-    if (stored === 'dark' || stored === 'light' || stored === 'system') return stored;
+    try {
+        const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
+        if (stored === 'dark' || stored === 'light' || stored === 'system') return stored;
+    } catch {
+        // Storage can be unavailable in privacy-restricted webviews.
+    }
 
-    return 'dark';
+    return 'light';
+};
+
+const getInitialVisualTheme = (): VisualTheme => {
+    if (typeof window === 'undefined') return 'playful';
+
+    try {
+        return window.localStorage.getItem(VISUAL_THEME_STORAGE_KEY) === 'classic' ? 'classic' : 'playful';
+    } catch {
+        return 'playful';
+    }
 };
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -34,10 +48,7 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     const [themePreference, setThemePreference] = useState<ThemePreference>(getInitialThemePreference);
     const [systemThemeMode, setSystemThemeMode] = useState<ThemeMode>(getSystemThemeMode);
-    const [visualTheme, setVisualTheme] = useState<VisualTheme>(() => {
-        if (typeof window === 'undefined') return 'playful';
-        return window.localStorage.getItem(VISUAL_THEME_STORAGE_KEY) === 'classic' ? 'classic' : 'playful';
-    });
+    const [visualTheme, setVisualTheme] = useState<VisualTheme>(getInitialVisualTheme);
 
     useEffect(() => {
         if (typeof window === 'undefined') return;
@@ -52,29 +63,38 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
         return () => media.removeEventListener('change', handleChange);
     }, []);
 
-    const themeMode: ThemeMode = themePreference === 'system' ? systemThemeMode : themePreference;
+    const effectiveThemePreference: ThemePreference = visualTheme === 'playful' ? 'light' : themePreference;
+    const themeMode: ThemeMode = effectiveThemePreference === 'system' ? systemThemeMode : effectiveThemePreference;
 
     useEffect(() => {
         const root = document.documentElement;
         root.classList.toggle('dark', themeMode === 'dark');
         root.style.colorScheme = themeMode;
-        window.localStorage.setItem(THEME_STORAGE_KEY, themePreference);
+        try {
+            window.localStorage.setItem(THEME_STORAGE_KEY, themePreference);
+        } catch {
+            // Keep the active theme usable even when storage is unavailable.
+        }
     }, [themeMode, themePreference]);
 
     useEffect(() => {
         document.documentElement.dataset.visualTheme = visualTheme;
-        window.localStorage.setItem(VISUAL_THEME_STORAGE_KEY, visualTheme);
+        try {
+            window.localStorage.setItem(VISUAL_THEME_STORAGE_KEY, visualTheme);
+        } catch {
+            // Keep the active theme usable even when storage is unavailable.
+        }
     }, [visualTheme]);
 
     const value = useMemo(
         () => ({
             themeMode,
-            themePreference,
+            themePreference: effectiveThemePreference,
             setThemePreference,
             visualTheme,
             setVisualTheme,
         }),
-        [themeMode, themePreference, visualTheme]
+        [effectiveThemePreference, themeMode, visualTheme]
     );
 
     return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;

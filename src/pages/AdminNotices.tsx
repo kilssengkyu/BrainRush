@@ -442,7 +442,7 @@ const AdminNotices = () => {
   if (loading || !user || !isAdmin) return null;
 
   return (
-    <div className="h-[100dvh] bg-gradient-to-b from-slate-900 via-slate-950 to-black text-white overflow-hidden flex flex-col">
+    <div className="dark h-[100dvh] bg-gradient-to-b from-slate-900 via-slate-950 to-black text-white [color-scheme:dark] overflow-hidden flex flex-col">
       <header className="w-full flex-none z-20 px-6 pt-[calc(env(safe-area-inset-top)+1rem)] pb-3">
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-3">
           <button

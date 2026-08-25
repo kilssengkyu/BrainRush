@@ -384,7 +384,6 @@ const Settings = () => {
                         <div className="visual-theme-picker">
                             <div className="mb-3">
                                 <div className="text-lg font-bold">{t('settings.visualStyle', 'UI style')}</div>
-                                <p className="mt-1 text-sm text-slate-500 dark:text-gray-400">{t('settings.visualStyleDesc', 'Choose the look of menus and game screens.')}</p>
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                                 <button
@@ -394,7 +393,6 @@ const Settings = () => {
                                 >
                                     <span className="visual-theme-option__icon"><Gamepad2 size={24} /></span>
                                     <span className="font-black">{t('settings.playfulTheme', 'Brain Arcade')}</span>
-                                    <small>{t('settings.playfulThemeDesc', 'Playful and game-like')}</small>
                                 </button>
                                 <button
                                     type="button"
@@ -403,12 +401,12 @@ const Settings = () => {
                                 >
                                     <span className="visual-theme-option__icon"><LayoutTemplate size={24} /></span>
                                     <span className="font-black">{t('settings.classicTheme', 'Classic')}</span>
-                                    <small>{t('settings.classicThemeDesc', 'The familiar original look')}</small>
                                 </button>
                             </div>
                         </div>
 
-                        <div className="bg-white dark:bg-white/5 p-6 rounded-xl border border-slate-200 dark:border-white/10 backdrop-blur-md shadow-sm dark:shadow-none">
+                        {visualTheme === 'classic' && (
+                            <div className="bg-white dark:bg-white/5 p-6 rounded-xl border border-slate-200 dark:border-white/10 backdrop-blur-md shadow-sm dark:shadow-none">
                             <div className="space-y-4">
                                 <div>
                                     <div className="text-lg">{t('settings.themeMode')}</div>
@@ -423,10 +421,10 @@ const Settings = () => {
                                 <div className="grid grid-cols-3 gap-2">
                                     <button
                                         onClick={() => { setThemePreference('light'); playSound('click'); }}
-                                        className={`px-3 py-2 rounded-lg border text-sm font-semibold transition-colors ${themePreference === 'light' ? 'bg-amber-100 dark:bg-amber-500 text-amber-700 dark:text-black border-amber-300 dark:border-amber-400' : 'bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/15 text-slate-600 dark:text-gray-200 hover:bg-slate-100 dark:hover:bg-white/10'}`}
+                                        className={`relative px-3 py-2 rounded-lg border text-sm font-semibold transition-colors ${themePreference === 'light' ? 'bg-amber-100 dark:bg-amber-500 text-amber-700 dark:text-black border-amber-300 dark:border-amber-400' : 'bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/15 text-slate-600 dark:text-gray-200 hover:bg-slate-100 dark:hover:bg-white/10'}`}
                                         aria-label={t('settings.lightMode')}
                                     >
-                                        {t('settings.light')}
+                                        <span>{t('settings.light')}</span>
                                     </button>
                                     <button
                                         onClick={() => { setThemePreference('dark'); playSound('click'); }}
@@ -434,10 +432,12 @@ const Settings = () => {
                                         aria-label={t('settings.darkMode')}
                                     >
                                         <span>{t('settings.dark')}</span>
-                                        <span className="pointer-events-none absolute -top-2 -right-2 inline-flex items-center gap-1 rounded-full border border-emerald-300/60 bg-emerald-400/20 px-1.5 py-0.5 text-[10px] font-bold leading-none text-emerald-700 dark:text-emerald-200">
-                                            <Sparkles size={10} />
-                                            {t('settings.recommended')}
-                                        </span>
+                                        {visualTheme === 'classic' && (
+                                            <span className="pointer-events-none absolute -top-2 -right-2 inline-flex items-center gap-1 rounded-full border border-emerald-300/60 bg-emerald-400/20 px-1.5 py-0.5 text-[10px] font-bold leading-none text-emerald-700 dark:text-emerald-200">
+                                                <Sparkles size={10} />
+                                                {t('settings.recommended')}
+                                            </span>
+                                        )}
                                     </button>
                                     <button
                                         onClick={() => { setThemePreference('system'); playSound('click'); }}
@@ -448,7 +448,8 @@ const Settings = () => {
                                     </button>
                                 </div>
                             </div>
-                        </div>
+                            </div>
+                        )}
                     </section>
 
                     {/* Sound Section */}

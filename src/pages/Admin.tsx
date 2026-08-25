@@ -27,7 +27,7 @@ const Admin = () => {
   if (loading || !user || !isAdmin) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-950 to-black text-slate-900 dark:text-white p-6">
+    <div className="dark min-h-screen bg-gradient-to-b from-slate-900 via-slate-950 to-black text-slate-900 dark:text-white [color-scheme:dark] p-6">
       <div className="max-w-4xl mx-auto">
         <button
           onClick={() => {
