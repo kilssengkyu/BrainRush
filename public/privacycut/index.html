@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="사진 속 개인정보를 기기 안에서 찾아 선택한 부분만 가립니다. 개인정보 컷의 기능과 무료·PRO 이용 안내."
+    />
+    <meta name="theme-color" content="#075bc9" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <link
+      rel="canonical"
+      href="https://brain-rush-two.vercel.app/privacycut/"
+    />
+    <meta
+      property="og:url"
+      content="https://brain-rush-two.vercel.app/privacycut/"
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="ko_KR" />
+    <meta property="og:site_name" content="개인정보 컷" />
+    <meta
+      property="og:title"
+      content="개인정보 컷 — 공유하기 전에, 개인정보 컷."
+    />
+    <meta
+      property="og:description"
+      content="사진 속 개인정보를 기기 안에서 찾아 선택한 부분만 가립니다. 개인정보 컷의 기능과 무료·PRO 이용 안내."
+    />
+    <title>개인정보 컷 — 공유하기 전에, 개인정보 컷.</title>
+    <link rel="icon" href="/privacycut/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/privacycut/site.css" />
+  </head>
+  <body>
+    <a class="skip" href="#main">본문으로 건너뛰기</a>
+    <header class="site-header">
+      <div class="wrap header-inner">
+        <a class="brand" href="/privacycut/"
+          ><span class="brand-mark" aria-hidden="true">컷</span
+          ><span>개인정보 컷<span class="brand-dot">.</span></span></a
+        >
+        <nav aria-label="개인정보 컷 메뉴">
+          <a href="/privacycut/" aria-current="page">소개</a
+          ><a href="/privacycut/support/">문의</a
+          ><a href="/privacycut/privacy/">개인정보처리방침</a>
+        </nav>
+      </div>
+    </header>
+    <main id="main" class="wrap" tabindex="-1">
+      <section class="hero" aria-labelledby="intro-title">
+        <div>
+          <p class="eyebrow">사진 속 개인정보 가리기</p>
+          <h1 id="intro-title">
+            공유하기 전에,<br /><span>개인정보 컷.</span>
+          </h1>
+          <p class="lead">
+            사진 속 전화번호, 주소, 얼굴.<br />찾아서 보여주고, 선택한 곳만
+            가려요.
+          </p>
+          <div class="actions">
+            <a class="button" href="#features">기능 알아보기</a
+            ><a class="button secondary" href="/privacycut/support/"
+              >문의하기</a
+            >
+          </div>
+          <p class="small availability">iOS · Android · 출시 준비 중</p>
+        </div>
+        <figure class="sample">
+          <div class="sample-top">
+            <span>공유할 사진</span><span>선택한 부분만 가림</span>
+          </div>
+          <div
+            class="sample-paper"
+            role="img"
+            aria-label="배송 안내의 받는 분, 연락처, 주소가 불투명한 막대로 가려진 예시"
+          >
+            <h2>배송 안내</h2>
+            <div class="sample-row">
+              <span>받는 분</span><span class="mask short"></span>
+            </div>
+            <div class="sample-row">
+              <span>연락처</span><span class="mask"></span>
+            </div>
+            <div class="sample-row">
+              <span>주소</span><span class="mask wide"></span>
+            </div>
+          </div>
+          <div class="sample-bottom">
+            <span aria-hidden="true">✓</span> 사진 분석은 기기 안에서
+          </div>
+          <figcaption>기능을 설명하기 위한 가림 예시입니다.</figcaption>
+        </figure>
+      </section>
+      <section class="section" id="features" aria-labelledby="steps-title">
+        <div class="section-heading">
+          <h2 id="steps-title">고르고, 확인하고, 공유하세요.</h2>
+        </div>
+        <ol class="steps">
+          <li>
+            <span class="step-number">01</span>
+            <h3>사진 선택</h3>
+            <p>사진과 스크린샷을 여러 장 골라 한 번에 검사해요.</p>
+          </li>
+          <li>
+            <span class="step-number">02</span>
+            <h3>가릴 곳 확인</h3>
+            <p>찾아낸 개인정보를 항목별로 선택하고, 놓친 곳은 직접 추가해요.</p>
+          </li>
+          <li>
+            <span class="step-number">03</span>
+            <h3>새 사진으로 저장·공유</h3>
+            <p>
+              가림을 이미지에 적용해 새 파일을 만들어요. 원본 사진은 그대로예요.
+            </p>
+          </li>
+        </ol>
+      </section>
+      <section class="section" aria-labelledby="detection-title">
+        <div class="section-heading">
+          <h2 id="detection-title">일상에서 노출되기 쉬운 정보부터.</h2>
+        </div>
+        <p class="feature-line">
+          전화번호 · 이메일 · 주민·외국인등록번호 · 주소 · 이름 · 계좌번호 ·
+          사업자등록번호 · 카드번호 · 차량번호 · 얼굴 · QR·바코드
+        </p>
+        <p class="small">
+          이름·주소·계좌번호는 주변 문맥도 함께 살펴 후보로 제안합니다.
+        </p>
+        <p class="note">
+          자동 검사는 모든 정보를 찾는다고 보장할 수 없어요. 공유하기 전 결과를
+          확인하고, 빠진 부분은 직접 가려 주세요.
+        </p>
+      </section>
+      <section class="section" aria-labelledby="local-title">
+        <div class="section-heading">
+          <h2 id="local-title">사진은 기기 안에서 처리합니다.</h2>
+          <p>사진과 인식한 글자를 외부 서버나 AI 서비스로 보내지 않습니다.</p>
+        </div>
+        <ol class="steps">
+          <li>
+            <span class="step-number">✓</span>
+            <h3>회원가입 없이</h3>
+            <p>사진 처리에 계정이나 자체 클라우드를 사용하지 않아요.</p>
+          </li>
+          <li>
+            <span class="step-number">✓</span>
+            <h3>사진 정보 삭제 선택</h3>
+            <p>
+              GPS 위치, 촬영 시각, 촬영 기기 등 파일에 담긴 정보를 제거할 수
+              있어요.
+            </p>
+          </li>
+          <li>
+            <span class="step-number">✓</span>
+            <h3>오프라인 사진 처리</h3>
+            <p>기기에 저장된 사진은 인터넷 없이도 검사하고 가릴 수 있어요.</p>
+          </li>
+        </ol>
+        <p class="small" style="margin-top: 22px">
+          클라우드 사진 다운로드·광고·구매·복원에는 인터넷이 필요합니다. 광고
+          SDK의 정보 처리는
+          <a href="/privacycut/privacy/#ads">개인정보처리방침</a>에서 확인할 수
+          있습니다.
+        </p>
+      </section>
+      <section class="section" aria-labelledby="plans-title">
+        <div class="section-heading">
+          <h2 id="plans-title">기본 가림은 무료로, 더 편한 작업은 PRO로.</h2>
+        </div>
+        <div class="plans">
+          <section class="plan" aria-labelledby="free-title">
+            <h3 id="free-title">무료</h3>
+            <ul>
+              <li>하루 처리 횟수 제한 없음</li>
+              <li>한 번에 최대 5장 · 보상 광고로 이번 묶음 최대 10장</li>
+              <li>자동 탐지·수동 가림·검정·흰색 가림</li>
+              <li>사진 정보 삭제·저장·공유</li>
+            </ul>
+          </section>
+          <section class="plan" aria-labelledby="pro-title">
+            <h3 id="pro-title">PRO <span class="badge">1회 구매</span></h3>
+            <ul>
+              <li>한 번에 최대 99장 · 광고 없음</li>
+              <li>블러·모자이크</li>
+              <li>내 이름·가게 이름 등 지정 문구 가리기</li>
+              <li>가림 여유·거울 글자 검사 등 상세 설정</li>
+            </ul>
+          </section>
+        </div>
+        <p class="small" style="margin-top: 18px">
+          가린 내용을 확실히 덮으려면 불투명한 검정·흰색 가림을 사용하세요.
+          블러·모자이크는 원래 내용의 추정을 막는다고 보장할 수 없습니다.
+        </p>
+      </section>
+    </main>
+    <footer class="site-footer">
+      <div class="wrap footer-inner">
+        <div><strong>개인정보 컷</strong><br />© 2026 SK.GIL</div>
+        <div class="footer-links">
+          <a href="/privacycut/support/">문의</a
+          ><a href="/privacycut/privacy/">개인정보처리방침</a
+          ><a href="/">BrainRush</a>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

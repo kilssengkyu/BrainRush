@@ -122,6 +122,16 @@ const Support = () => {
                     </button>
                 </section>
 
+                <section className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-white/10 dark:bg-white/5">
+                    <h2 className="text-base font-semibold text-slate-900 dark:text-white">개인정보 컷</h2>
+                    <p className="mt-2">사진 속 개인정보를 기기 안에서 찾아 가리는 앱입니다.</p>
+                    <div className="mt-3 flex flex-wrap gap-x-5 gap-y-3 text-blue-700 dark:text-blue-300">
+                        <a href="/privacycut/" className="underline underline-offset-4">앱 소개</a>
+                        <a href="/privacycut/support/" className="underline underline-offset-4">문의</a>
+                        <a href="/privacycut/privacy/" className="underline underline-offset-4">개인정보처리방침</a>
+                    </div>
+                </section>
+
                 <footer className="text-center text-gray-500 text-xs pt-4">
                     <p>BrainRush by SK.GIL</p>
                     <p>© 2026 All rights reserved.</p>
