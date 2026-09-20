@@ -1,6 +1,30 @@
 {
     "rewrites": [
         {
+            "source": "/privacycut",
+            "destination": "/privacycut/index.html"
+        },
+        {
+            "source": "/privacycut/",
+            "destination": "/privacycut/index.html"
+        },
+        {
+            "source": "/privacycut/support",
+            "destination": "/privacycut/support/index.html"
+        },
+        {
+            "source": "/privacycut/support/",
+            "destination": "/privacycut/support/index.html"
+        },
+        {
+            "source": "/privacycut/privacy",
+            "destination": "/privacycut/privacy/index.html"
+        },
+        {
+            "source": "/privacycut/privacy/",
+            "destination": "/privacycut/privacy/index.html"
+        },
+        {
             "source": "/(.*)",
             "destination": "/index.html"
         }
