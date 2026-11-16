@@ -53,7 +53,7 @@ createRoot(document.getElementById('root')!).render(
         <h1>{title}</h1>
         {policy ? (
           <>
-            <aside className="draft"><strong>{text.draft}</strong><p>{text.draftDetail}</p></aside>
+            <p className="effective-date">{page === 'privacy' ? text.privacyEffective : text.termsEffective}</p>
             {policy.sections.map((section) => (
               <section key={section.title}>
                 <h2>{section.title}</h2>

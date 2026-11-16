@@ -27,8 +27,7 @@ h1 { font-size: clamp(1.65rem, 5vw, 2.4rem); line-height: 1.25; margin: 0 0 1rem
 h2 { font-size: 1.18rem; line-height: 1.35; margin: 0 0 .5rem; }
 p { margin: .55rem 0; }
 .lead { color: #34516e; font-size: 1.06rem; }
-.draft { margin-block: 1.3rem; padding: .8rem 1rem; border-inline-start: 4px solid #ad7006; background: #fff4dc; }
-.draft p { margin-bottom: 0; }
+.effective-date { color: #34516e; font-size: .93rem; }
 section, .contact { margin-top: 1.4rem; padding-top: 1.25rem; border-top: 1px solid #d7e1ec; }
 .contact { color: #34516e; font-size: .93rem; }
 .business-details { margin: .8rem 0; }
