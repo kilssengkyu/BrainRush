@@ -1,10 +1,16 @@
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { Capacitor } from '@capacitor/core';
 import { ChevronLeft, Mail, MessageCircle, HelpCircle, Shield, AlertTriangle } from 'lucide-react';
 import { useSound } from '../contexts/SoundContext';
+import { messages } from '../galaxy-express/messages';
 
 const Support = () => {
     const navigate = useNavigate();
     const { playSound } = useSound();
+    const { i18n } = useTranslation();
+    const english = i18n.resolvedLanguage === 'en';
+    const galaxy = messages[english ? 'en' : 'ko'];
 
     return (
         <div className={`min-h-[100dvh] relative overflow-x-hidden overflow-y-auto flex flex-col items-center p-6 pt-[calc(env(safe-area-inset-top)+1.5rem)] pb-12 bg-slate-50 dark:bg-gray-950 text-slate-900 dark:text-white`}>
@@ -131,6 +137,15 @@ const Support = () => {
                         <a href="/privacycut/privacy/" className="underline underline-offset-4">개인정보처리방침</a>
                     </div>
                 </section>
+
+                {!Capacitor.isNativePlatform() && (
+                    <section className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-white/10 dark:bg-white/5">
+                        <h2 className="text-base font-semibold text-slate-900 dark:text-white">{galaxy.game}</h2>
+                        <a href={`/galaxy-express/support/${english ? '?lang=en' : ''}`} className="mt-3 inline-block text-blue-700 underline underline-offset-4 dark:text-blue-300">
+                            {galaxy.support}
+                        </a>
+                    </section>
+                )}
 
                 <footer className="text-center text-gray-500 text-xs pt-4">
                     <p>BrainRush by SK.GIL</p>

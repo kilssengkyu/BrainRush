@@ -25,6 +25,14 @@
             "destination": "/privacycut/privacy/index.html"
         },
         {
+            "source": "/galaxy-express/:page(privacy|terms|support|delete-account)",
+            "destination": "/galaxy-express/:page/index.html"
+        },
+        {
+            "source": "/galaxy-express/:page(privacy|terms|support|delete-account)/",
+            "destination": "/galaxy-express/:page/index.html"
+        },
+        {
             "source": "/(.*)",
             "destination": "/index.html"
         }
