@@ -9,6 +9,10 @@ const page = pages.find((item) => item === document.body.dataset.page);
 const language = new URLSearchParams(window.location.search).get('lang') === 'en' ? 'en' : 'ko';
 const text = messages[language];
 const email = 'galaxyexpress.help@gmail.com';
+const businessRegistration = '569-31-01953';
+const commerceRegistration = '2026-고양일산동-0352';
+const commerceAuthority = language === 'ko' ? '경기도 고양시 일산동구' : 'Ilsandong-gu, Goyang-si, Gyeonggi-do, Republic of Korea';
+const sellerRegistry = `https://www.ftc.go.kr/www/selectBizCommView.do?pageUnit=10&pageIndex=1&searchCnd=RPRSVNM&searchKrwd=${encodeURIComponent('길성규')}&key=254&opnSn=2026396012830200331`;
 
 function pageUrl(target: (typeof pages)[number], locale = language) {
   return `/galaxy-express/${target}/${locale === 'en' ? '?lang=en' : ''}`;
@@ -79,6 +83,19 @@ createRoot(document.getElementById('root')!).render(
         <footer className="contact">
           <p>{text.operator}</p>
           <p>{text.contact} <a href={emailUrl}>{email}</a></p>
+          {page === 'privacy' && (
+            <a href="https://unity.com/legal/game-player-and-app-user-privacy-policy">{text.unityPrivacy}</a>
+          )}
+          {(page === 'terms' || page === 'support') && (
+            <>
+              <dl className="business-details">
+                <div><dt>{text.businessRegistration}</dt><dd>{businessRegistration}</dd></div>
+                <div><dt>{text.commerceRegistration}</dt><dd>{commerceRegistration}</dd></div>
+                <div><dt>{text.commerceAuthority}</dt><dd>{commerceAuthority}</dd></div>
+              </dl>
+              <a href={sellerRegistry}>{text.sellerRegistry}</a>
+            </>
+          )}
         </footer>
       </article>
     </main>

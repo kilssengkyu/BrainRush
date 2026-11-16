@@ -18,7 +18,7 @@ export const policyText: Record<'ko' | 'en', Record<'privacy' | 'terms', PolicyD
           title: '처리하는 정보와 이용 목적',
           paragraphs: [
             '계정 생성, 로그인, 진행 저장·복구를 위해 게임 계정 식별자, 로그인 연동 상태, 게임 진행·재화·아이템·이벤트 기록을 처리합니다. Google 또는 Apple 로그인을 선택하면 로그인 제공자가 전달하는 연동 식별자와 인증 결과를 처리합니다.',
-            '공개 프로필, 채팅, 랭킹을 제공하기 위해 닉네임, 프로필 장식, 채팅 내용·발신자·시각, 랭킹 점수를 처리합니다. 공개 화면에 표시되는 정보는 다른 이용자가 볼 수 있습니다. 최근 채팅은 기기에 임시 저장될 수 있습니다.',
+            '공개 프로필, 채팅, 랭킹을 제공하기 위해 닉네임, 프로필 장식, 채팅 내용·발신자·시각, 랭킹 점수를 처리합니다. 공개 화면에 표시되는 정보는 다른 이용자가 볼 수 있습니다. 최근 채팅 일부는 기기에 저장될 수 있습니다.',
             '정식 출시 시 App Store와 Google Play 인앱 구매를 제공할 예정입니다. 구매가 활성화되면 해당 마켓이 결제를 처리하고, 운영자는 상품 식별자, 거래 식별자와 검증에 필요한 영수증 정보, 거래·지급 상태를 구매 확인, 중복 지급 방지, 취소 및 환불 처리에 이용합니다. 결제 카드 정보는 이용한 마켓에서 처리합니다.',
             '정식 출시 시 Google AdMob 보상형 광고를 제공할 예정입니다. 광고가 활성화되면 광고 SDK는 설정과 이용자의 선택에 따라 IP 주소, 기기 또는 광고 식별자, 광고 노출·클릭 등의 이용 기록, 오류·성능 정보를 광고 제공, 성과 측정 및 부정 이용 방지에 처리할 수 있습니다.',
             '서비스 연결과 오류 대응을 위해 접속 정보, 기기·앱 버전 및 진단 정보가 서버와 SDK 설정에 따라 처리될 수 있습니다.',
@@ -37,14 +37,18 @@ export const policyText: Record<'ko' | 'en', Record<'privacy' | 'terms', PolicyD
           paragraphs: [
             '계정 정보는 처리 목적이 달성되거나 계정 삭제가 완료되면 파기합니다. 일반 고객지원 이메일은 후속 대응을 위해 처리 완료일부터 최대 90일간 보관한 후 파기합니다.',
             '법령에 따라 보존해야 하는 기록은 일반 고객지원 이메일과 별개로 해당 목적에 한해 보존합니다. 대한민국 전자상거래법령이 적용되는 경우 계약·청약철회 및 결제·공급 기록은 5년, 소비자 불만·분쟁 처리 기록은 3년, 표시·광고 기록은 6개월 보존합니다.',
-            '보존 의무가 끝난 전자 기록은 복구하기 어려운 방식으로 파기합니다. 채팅, 접속·진단 로그 및 백업의 세부 보존기간과 처리 일정은 정식 서비스의 실제 운영 기준에 맞춰 공개합니다.',
+            '보존 의무가 끝난 전자 기록은 복구하기 어려운 방식으로 파기합니다.',
+            'Unity의 서비스 기본 기준에 따르면 Authentication의 계정 데이터는 이용자나 운영자가 삭제할 때까지, Cloud Save의 저장 데이터는 운영자가 삭제할 때까지 보존됩니다. 계정 삭제 요청은 Authentication과 Cloud Save에서 각각 처리합니다.',
+            'Leaderboards의 순위 기록은 삭제 또는 초기화 전까지 보존되며, 초기화 시 보관 기능이 활성화되어 있으면 기록이 별도로 보존됩니다. Unity의 관리자 삭제 기능은 현재 순위 기록에 적용됩니다. Cloud Code가 자체 수집하는 개인정보는 최대 30일 보존되며, 열람이나 삭제는 운영자가 Unity 지원을 통해 요청할 수 있습니다.',
+            'Vivox의 기본 채팅 이력 저장 기간은 7일이며, 텍스트 증거 관리 기능을 켠 경우 30일입니다. Vivox는 이용자 식별자, 기기 식별자, 일부를 제거한 IP 주소를 기본 최대 30일 보관합니다. 운영자는 Vivox 지원을 통해 해당 정보의 삭제를 요청할 수 있습니다. 정식 환경의 채팅 설정, 보관된 순위 기록의 삭제 방법 및 백업 파기 일정은 확인 후 공개합니다.',
           ],
         },
         {
           title: '외부 서비스와 국외 이전',
           paragraphs: [
-            '게임 계정, 서버 저장과 랭킹에는 Unity Gaming Services를 사용하고 채팅에는 Vivox를 사용합니다. 선택한 로그인에 Google 또는 Apple 로그인 서비스가 관여합니다. 정식 출시용 인앱 결제에는 Apple App Store 또는 Google Play, 보상형 광고에는 Google AdMob을 사용할 예정입니다.',
-            '정식 서비스에 적용되는 수탁자, 처리 업무와 보유기간 및 국외 이전이 있는 경우 이전 국가, 수령자, 목적, 근거와 거부 방법 등은 실제 계약과 운영 구성을 확인해 공개합니다.',
+            'Unity 규약에 따른 수탁자는 Unity Technologies S.F.(미국, dpo@unity3d.com)입니다. Unity Gaming Services는 게임 로그인, 저장, 서버 처리 및 랭킹에, Vivox는 텍스트 채팅에 이용됩니다.',
+            'Unity가 공개한 재수탁자 목록에서 Google Cloud Platform의 해당 서비스 처리 가능 지역은 미국, 독일, 벨기에, 브라질, 싱가포르, 호주, 대만입니다. Vivox에 등재된 Amazon Web Services의 처리 가능 지역은 미국, 독일, 브라질, 싱가포르, 호주이며, Unity는 Vivox의 처리 위치가 고객 설정에 따라 달라진다고 설명합니다. 이 지역들은 Unity가 해당 서비스에 대해 공개한 범위입니다. 정식 게임에 적용되는 처리 국가와 국외 이전의 근거, 시기, 방법 및 거부 방법은 운영 설정을 확인해 공개합니다.',
+            '선택한 로그인에 Google 또는 Apple 로그인 서비스가 관여합니다. 정식 출시용 인앱 결제에는 Apple App Store 또는 Google Play, 보상형 광고에는 Google AdMob을 사용할 예정입니다.',
           ],
         },
         {
@@ -133,7 +137,7 @@ export const policyText: Record<'ko' | 'en', Record<'privacy' | 'terms', PolicyD
           title: 'Information and purposes',
           paragraphs: [
             'We process game account identifiers, sign-in links, and records of progress, items, currency and event activity to provide accounts and to save or restore progress. If you choose Google or Apple sign-in, we process the linked identifier and authentication result received from that provider.',
-            'We process nicknames, profile decorations, chat messages and their senders and timestamps, and rankings to provide those features. Other players can see information shown on public screens. The device may temporarily cache recent chat messages.',
+            'We process nicknames, profile decorations, chat messages and their senders and timestamps, and rankings to provide those features. Other players can see information shown on public screens. Some recent chat messages may be saved on the device.',
             'We plan to offer App Store and Google Play in-app purchases at launch. Once purchases are enabled, your store will process the payment and payment card details. We will use product and transaction identifiers, the receipt information needed for verification, and purchase or delivery status to verify purchases, prevent duplicate grants, and handle cancellations or refunds.',
             'We plan to offer Google AdMob rewarded ads at launch. Once ads are enabled, the advertising SDK may process IP address, device or advertising identifiers, ad impressions and clicks, and crash and performance data for ad delivery, measurement and fraud prevention, depending on its configuration and your choices.',
             'Depending on server and SDK settings, we may process connection details, device and app versions, and diagnostics to maintain the service and resolve errors.',
@@ -152,14 +156,18 @@ export const policyText: Record<'ko' | 'en', Record<'privacy' | 'terms', PolicyD
           paragraphs: [
             'We delete account information when its purpose has been fulfilled or account deletion is complete. We keep ordinary support emails for follow-up for up to 90 days after resolving the request and then delete them.',
             'We retain records separately for the purposes and duration required by applicable law. Where South Korean e-commerce law applies, we retain contract, withdrawal, payment and supply records for five years, consumer complaint and dispute records for three years, and advertising records for six months.',
-            'Electronic records are securely deleted once their retention obligation ends. Retention details for chat, connection and diagnostic logs, and backups will reflect the actual operation of the production service.',
+            'Electronic records are securely deleted once their retention obligation ends.',
+            'Under Unity’s service defaults, Authentication keeps account data until the player or operator deletes it. Cloud Save keeps stored data until the operator deletes it. We process account deletion requests separately in Authentication and Cloud Save.',
+            'Leaderboards keeps rankings until deletion or reset. If archiving is enabled, a reset preserves a separate copy. Unity’s administrative score deletion applies to live rankings. Cloud Code keeps the personal data it collects for up to 30 days. The operator can request access or deletion through Unity support.',
+            'Vivox stores chat history for seven days by default, or 30 days when Text Evidence Management is enabled. By default, Vivox keeps user identifiers, device identifiers and truncated IP addresses for up to 30 days. The operator can request deletion through Vivox support. We will confirm the production chat settings, how archived rankings can be erased, and the backup deletion schedule before publishing those details.',
           ],
         },
         {
           title: 'External services and international transfers',
           paragraphs: [
-            'We use Unity Gaming Services for game accounts, cloud saves and rankings, and Vivox for chat. Google and Apple provide optional sign-in. For launch, we plan to use Apple App Store or Google Play for in-app purchases and Google AdMob for rewarded ads.',
-            'We will disclose production processors, their duties and retention, and, where information is transferred overseas, details such as the country, recipient, purpose, legal basis and how to decline, based on the actual service configuration and agreements.',
+            'Unity Technologies S.F. (United States, dpo@unity3d.com) is the processor under Unity’s terms. We use Unity Gaming Services for game sign-in, cloud saves, server processing and rankings, and Vivox for text chat.',
+            'Unity lists the United States, Germany, Belgium, Brazil, Singapore, Australia and Taiwan as possible processing locations for the relevant services on Google Cloud Platform. It also lists the United States, Germany, Brazil, Singapore and Australia for Amazon Web Services, which is listed for Vivox. Unity says Vivox processing locations depend on the customer’s configuration. These are Unity’s published locations for the services. We will confirm the countries applicable to the production game and then publish the legal basis, timing and method of transfer and how to decline it.',
+            'Google and Apple provide optional sign-in. For launch, we plan to use Apple App Store or Google Play for in-app purchases and Google AdMob for rewarded ads.',
           ],
         },
         {

@@ -31,5 +31,9 @@ p { margin: .55rem 0; }
 .draft p { margin-bottom: 0; }
 section, .contact { margin-top: 1.4rem; padding-top: 1.25rem; border-top: 1px solid #d7e1ec; }
 .contact { color: #34516e; font-size: .93rem; }
+.business-details { margin: .8rem 0; }
+.business-details div { display: flex; flex-wrap: wrap; gap: .1rem .8rem; margin: .35rem 0; }
+.business-details dt { font-weight: 650; }
+.business-details dd { margin: 0; }
 .action { display: inline-flex; align-items: center; min-height: 44px; margin-top: .65rem; padding: .5rem 1rem; color: white; background: #174ea6; border-radius: .45rem; font-weight: 750; text-decoration: none; }
 .action:hover { background: #133f85; }
